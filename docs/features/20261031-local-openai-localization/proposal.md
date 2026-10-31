@@ -13,7 +13,7 @@
 5. **精选播客**：内置本地播客清单，同时保留用户自粘 RSS / Apple 链接的入口。
 6. **模型资源**：保留现有 CDN 下载，不增加本地文件导入。
 7. **转录语言**：收敛为英语，不引入多语言 Whisper。
-8. **额度 UI**：保留只读展示；若配置的是 OpenCode Go，展示该套餐额度。
+8. **用量 UI**：保留一个随当前供应商切换的只读卡片。使用 OpenCode Go 时显示套餐额度与重置时间；使用 DeepSeek / OpenRouter 时显示余额及币种。复用当前供应商的配置与凭据，不另设常驻 OpenCode Go 卡片；金额的账户/Key 范围及查询权限必须标明。
 
 ### 供应商接口依据（官方文档核实，2026-10-31）
 
@@ -36,6 +36,21 @@
 - 计划：Go `$10/月`、Go Plus `$40/月`、Go Teams `$20/人/月`；额度按每月美元上限计，每个模型再分三档：5 小时 = 20%、每周 = 50%、每月 = 100%。
 - Base URL 与套餐绑定：Go 走 `https://opencode.ai/inference/go/openai/v1/chat/completions`（与 pay-as-you-go 不同）。按本提案的「根路径 + `/chat/completions`」规则，用户填 `https://opencode.ai/inference/go/openai/v1`。
 - 额度查询是独立官方接口：`GET https://opencode.ai/zen/go/v1/usage`，Bearer 使用同一把 API Key，返回 `usage.rolling/weekly/monthly` 的 `status`、`percent`、`resetsAt`；403 表示 Key 有效但无 Go 订阅，401 为鉴权失败。
+
+#### 余额查询与 Magpie 参考（2026-10-31 补充）
+
+核对 `yetone/magpie` 提交 `d0a61b856a63b0ff579d662e282c3095b3fc921d`：`internal/provider/balance.go` 按实际供应商主机选择余额接口；DeepSeek 读取 `balance_infos` 并保留币种、赠送/充值构成，OpenRouter 请求 `/api/v1/credits` 并计算 `total_credits - total_usage`。`internal/provider/planquota.go` 对 OpenCode Go 单独请求套餐窗口；`KeyBalances` 对短期请求使用缓存，失败时通过 `keepReading` 保留上次结果。
+
+采用该设计思路：一张卡片，根据供应商获取金额或窗口；不引入 Magpie 的 Go 网关、脚本执行、插件系统或多账号路由。供应商查询并非标准 Chat Completions 的一部分，需要分别适配，不能因没有统一端点就取消展示。
+
+| 供应商 | 查询接口及认证 | 响应与含义 |
+| --- | --- | --- |
+| OpenCode Go | `GET https://opencode.ai/zen/go/v1/usage`，当前 Go Key | `usage.rolling/weekly/monthly` 的 `status`、`percent`、`resetsAt`，展示套餐窗口 |
+| DeepSeek | `GET https://api.deepseek.com/user/balance`，当前推理 Key | `is_available` 与 `balance_infos[]`；每项含 `currency`（CNY / USD）、字符串金额 `total_balance`、`granted_balance`、`topped_up_balance`，展示账户余额及构成 |
+| OpenRouter 账户余额 | `GET https://openrouter.ai/api/v1/credits` | `data.total_credits - data.total_usage`，单位 USD；当前官方文档明确要求 Management Key，权限不足返回 403 |
+| OpenRouter Key 余额 | `GET https://openrouter.ai/api/v1/key`，当前推理 Key | `data.limit_remaining` 为 Key 预算余额，`limit_reset` 为预算周期；还可返回 `effective_budget.remaining_usd`、`usage` 等。不是账户总余额，无上限或缺值不能当成账户余额或 0 |
+
+**证据差异**：Magpie 当前源码直接用供应商 Key 请求 OpenRouter `/credits`；官方接口页现在要求 Management Key。因此借鉴它的卡片与字段映射，权限处理以当前官方文档和实施时响应为准，不保证普通推理 Key 都能读取账户总余额。
 
 #### 关于「现成 AI 集成项目」（LiteLLM 等）
 
@@ -66,7 +81,7 @@
 | `/api/v1/stream/{translate,analyze,lookup-word,lookup-phrase,sense-groups,evaluate-review}` | 翻译、解析、AI 词典、意群、复述评估 | 改为供应商 Chat Completions，客户端持有提示词与结果校验 |
 | `/api/v1/stream/chat/sentence` | 学习助手多轮对话 | 同上，客户端组装系统提示词、上下文与引用 |
 | `/api/v2/user-audio/*` + R2 PUT | 云端字幕转录 | 改用本机 Whisper 转录链路 |
-| `/api/entitlements`、`/api/paddle/*` | 订阅权益、结账、客户门户 | 停止门控与结账；额度 UI 改为只读，改由供应商额度接口提供（见下节） |
+| `/api/entitlements`、`/api/paddle/*` | 订阅权益、结账、客户门户 | 停止门控与结账；用量 UI 改为只读，由当前供应商提供套餐额度或余额（见下节） |
 | `/api/v1/client/config`、区域路由 | 启动配置、全球/中国切换 | 使用本地默认配置；单端点，无区域回退 |
 | `/api/v1/me/preferences`、`/api/v1/me/onboarding` | 偏好与问卷云同步 | 仅本地保存（本地存储与备份已存在） |
 | `/api/v2/collections*` | 社区合集发现、加入、文件与字幕 | 改为本地目录导入；发现页移除（见下节） |
@@ -107,7 +122,8 @@
 
 ### 凭据与配置
 
-- 设置入口提供 Base URL、模型名、API Key 与「连接验证」；验证执行一次最小推理请求，不依赖 `/models` 可用，模型名允许手填。
+- 设置入口提供供应商、Base URL、模型名、API Key 与「连接验证」；OpenCode Go、DeepSeek、OpenRouter 使用对应预设，允许修改实际端点和模型。模型名允许手填，不以 `/models` 可用为前提。连接验证由用户触发一次最小推理请求；套餐/余额查询单独执行，不用推理结果估计余额。
+- 用量卡跟随正在使用的供应商，不要求设计阶段固定一个主供应商。默认复用该供应商当前 Key；OpenRouter 全账户余额如需独立查询凭据，提供可选的余额查询 Key，单独安全保存，仅发送到官方余额端点，不参与推理或其他供应商请求；未提供时仍可使用普通推理 Key 展示其预算余额。
 - Base URL 定义为 API 根路径（如 `https://api.example.com/v1`），拼接时保留用户子路径，拒绝非法 URI 与内嵌账号密码。
 - API Key 存 `flutter_secure_storage`，不写入日志、SharedPreferences、埋点或备份；无 Key 时不发送伪造 Bearer。
 - 独立 Dio：不带 Supabase token、平台/渠道头、权益拦截器，不经区域路由。
@@ -120,23 +136,26 @@
 - 聊天解析 SSE：按空行分事件、`data:` 前缀、`[DONE]` 结束、UTF-8 跨分片；只有确认正常完成才置成功，EOF 不冒充 final；用户停止保留已有文本。
 - 缓存身份加入 `baseUrl|model|promptVersion|feature|targetLanguage|textHash`，Key 不入键；旧后端缓存与新配置隔离，不清库。
 - 保存新配置时作废旧配置的在途请求与聊天上下文，沿用既有 generation / session 守卫。
-- 错误映射：401 → Key/鉴权，404 → 地址或模型，429 → 供应商限流/额度，5xx → 重试一次后失败，超时单独提示。**不再引导登录或升级会员**。
+- 错误映射：401 → Key/鉴权，402 → 供应商余额/套餐不足，404 → 地址或模型，429 → 供应商限流/额度，5xx → 重试一次后失败，超时单独提示。供应商返回的失败仍正常显示；不再套用 Echo Loop 会员升级与权益对账。
 
 ### 解除自有后端耦合
 
 - 在 `sentence_ai_provider`、`lookup_controller`、`chat_session_controller`、`retell_review_evaluation_provider` 移除 `isAuthenticatedProvider` / `featureAccessProvider` / `supabaseSessionProvider` 前置检查与 402 分支；保留取消、generation 与缓存逻辑。
-- 移除订阅门控与结账；额度 UI 改为只读展示（见下节），不再展示无法兑现的会员权益。
-
-### 只读额度展示
-
-- 门控全部移除：不再因为「未登录 / 非会员 / 额度用尽」阻断 AI 调用；额度只用于展示。
-- 仅当配置的 Base URL 属于 OpenCode Go（`opencode.ai/inference/go/...`）时，才请求 `GET https://opencode.ai/zen/go/v1/usage`，Bearer 复用同一把已存的 API Key。
-- 展示三档窗口（5 小时 / 每周 / 每月）的百分比与重置时间；主标题取剩余最少的一档，与 OpenCode 自身展示一致。
-- 状态映射：200 → 正常展示；403 → 「当前 Key 无 Go 订阅」；401 → 「Key 无效」；404 或其他 → 不展示该卡片，只记日志（视为接口漂移，不打扰用户）。
-- `percent = 0` 时上游 `resetsAt` 是占位值，此时不显示倒计时。
-- 额度请求失败不得影响 AI 请求，也不得自动重试轰炸；进入设置页或手动刷新时获取，结果短期缓存。
-- 其他供应商（OpenRouter / DeepSeek）没有统一的额度接口，不展示余额，避免编造。
+- 移除订阅门控与结账；用量 UI 改为只读展示（见下节），显示当前供应商的实际套餐或余额。
 - 远程配置改为本地默认值；`runtimeEndpointRouter` 不再参与 AI 请求。
+
+### 随供应商切换的只读用量卡（已确认）
+
+- 展示层只区分两类实际数据：**套餐窗口**（窗口名、已用百分比、重置时间、供应商状态）与**金额余额**（金额、币种、账户或 Key 范围，可选充值/赠送明细）。同一位置展示当前供应商数据，不把资金余额换算成剩余请求次数，不混加不同币种或不同窗口。
+- **OpenCode Go**：显示 5 小时 / 每周 / 每月窗口，突出剩余最少的有效窗口；`status=rate-limited` 要明确显示已限额，不能因百分比向下取整到 99 就显示仍可用。沿用已核实的 `percent=0` 占位重置时间处理，不显示虚假倒计时。百分比与重置时间从响应读取，不用写死的套餐价格推算。
+- **DeepSeek**：读取 `/user/balance`；主值为 `total_balance`，附带 CNY / USD 币种。返回多币种时分别展示，有值时可展开 `granted_balance` 与 `topped_up_balance`。`is_available` 为供应商的可用状态，不能据此反推一个金额。
+- **OpenRouter**：以 USD 展示账户余额；使用 `/credits` 的 `total_credits - total_usage`。当前官方文档要求 Management Key，因此查询凭据不足时明确区分权限问题，不能标成推理 Key 无效。无该权限时使用当前推理 Key 请求 `/key`，有 `limit_remaining` 时显示“Key 预算余额”；若响应还提供 `effective_budget`，单独注明适用预算与周期。账户总余额与 Key 预算在同卡中明确标注，不能互相冒充。Key 未设预算或字段缺失时显示“账户余额未授权查询 / Key 未设预算”及供应商控制台入口，不用累计消耗或本 App 的 token 计数估算账户余额。
+- 默认复用当前供应商的配置和 Key；仅识别其已确认的官方主机与套餐路径，不以 URL 子串猜供应商，也不向未知代理转发余额查询凭据。用户使用自定义 OpenAI 兼容地址时，未知的用量查询能力显式显示“不支持查询”，不自动拿该 Key 请求某个官方账户。
+- 移除 Echo Loop 自己的登录、会员和额度门控。卡片只读；查询成功、失败、读到 0 或过期都不能在本地阻止 AI 请求。供应商实际拒绝推理时，按推理错误处理。
+- 进入用量页面或手动刷新时查询，短期缓存并合并并发刷新。刷新失败保留上次成功数据，显示“更新失败 / 上次更新时间”；从未成功时显示“暂无法获取”。401、权限不足、无 Go 套餐、端点不存在和响应损坏要能区分；不得把错误置成 0 余额或空白卡片。
+- 切换供应商、端点或 Key 时，取消旧刷新并作废其回调，缓存按配置与凭据版本隔离，避免显示上一账户余额。刷新不会获取浏览器 Cookie，不触发充值、购买或续订，也不记录 Key。只保留有限字段与查询时间，不在日志/备份中保存原始账户响应。
+
+以上取代前一版“仅 OpenCode Go 展示，DeepSeek / OpenRouter 不展示余额”的限制；用户已明确要求按当前供应商展示相应余额或套餐额度。
 
 ### 语音与转录
 
@@ -194,9 +213,9 @@
 
 ## 选择状态
 
-- **已确认**：Android 主平台；供应商 OpenAI 兼容接口 + 用户自带凭据；范围仅限自有后端接口。
-- **推荐**：方案 A（方案 B 已排除）。
-- **未决**：见下节四项，其中供应商与模型影响可行性判断。
+- **已确认**：Android 主平台；供应商 OpenAI 兼容接口 + 用户自带凭据；范围仅限自有后端业务接口（模型 CDN 已明确保留）；目录导入、内置播客清单、英语转录，以及跟随当前供应商的额度/余额卡。
+- **推荐**：方案 A（方案 B 已排除）；用量展示采用 Magpie 的供应商适配思路，以当前官方查询权限为准。
+- **配置方式**：OpenCode Go、DeepSeek、OpenRouter 由用户在运行时选择、填写各自模型与 Key；无需为用量卡另选固定的主供应商或常驻另一张 Go 卡。
 
 ## 可行性问题
 
@@ -209,24 +228,23 @@
 - 决定标准：各必要功能均产出通过结构与语义校验的对象；仅部分通过则记为范围受限，不得宣布整体可行。
 - 当前未执行该实验。协议层能力已由官方文档确认，但模型在具体学习任务上的输出质量与耗时仍未验证；音频端点不在本次依赖范围内。
 
-**其余未决（需用户决定，非实验问题）**
+**已收敛的产品决定与普通验证**
 
-已确定：社区合集改为目录导入；精选播客内置清单并保留自粘链接；CDN 保留；转录收敛为英语；额度 UI 只读展示（含 OpenCode Go）。
+社区合集改为目录导入；精选播客内置清单并保留自粘链接；CDN 保留；转录收敛为英语；用量卡跟随当前供应商——OpenCode Go 显示套餐窗口，DeepSeek / OpenRouter 显示余额。此前“非 Go 时还要不要额外 Go 卡”的问题已撤销。
 
-仍需确认：
+供应商/模型由用户运行时配置，不要求预先选定唯一主供应商。若后续确需 spike，具体模型与可授权的验证凭据属于实验输入，不能把缺少付费 Key 当作卡片产品设计未定；本次未请求或使用任何真实 Key。
 
-1. 首选供应商与模型（OpenRouter / DeepSeek / OpenCode Go，具体模型 id）——决定 spike 的验证对象。
-2. 若主供应商不是 OpenCode Go，是否仍希望保留该额度卡片（需额外填一份 Key）。
-
-**普通实施验证**：Key 不入日志与备份、配置切换后旧回调作废、SSE 跨分片与 `[DONE]`、错误 JSON 不落缓存、取消与断流、静音与长音频转录、复述原录音保留。可沿用 `test/services/sentence_ai_api_client_test.dart`、`test/providers/sentence_ai_provider_test.dart`、`test/providers/retell_review_evaluation_provider_test.dart` 及本地转录相关测试；本轮未执行。
+**普通实施验证**：Key 不入日志与备份、供应商/Key 切换后旧回调作废、SSE 跨分片与 `[DONE]`、错误 JSON 不落缓存、取消与断流、静音与长音频转录、复述原录音保留；额外覆盖三类用量映射、数字字符串与币种、OpenRouter 403 与 Key 预算降级、无预算与未知值、查询失败保留旧数据、额度只读不阻断推理。可沿用 `test/services/sentence_ai_api_client_test.dart`、`test/providers/sentence_ai_provider_test.dart`、`test/providers/retell_review_evaluation_provider_test.dart` 及本地转录相关测试；本轮未执行。
 
 ## 来源与保全
 
-- 用户输入：本会话两轮。第一轮确定「本地 LLM + OpenAI 兼容 + 覆盖远程接口」；第二轮修正为 Android 主平台、供应商模型（不部署）、边界仅限自有后端接口。两点均已在「已确认决策」落文，未删除早期候选，仅记录取代关系。
+- 用户输入：本会话。初始方向经后续澄清为 Android 主平台、供应商模型（不部署）、边界仅限自有后端业务接口；后续确认目录导入、内置播客清单、保留 CDN、英语转录，以及用量卡随供应商分别展示 Go 套餐额度与 DeepSeek / OpenRouter 余额，并要求参考 Magpie。相关选择均已落文；前一版仅支持 Go 用量卡的限制被明确取代，早期候选保留。
 - 代码基线：`5574fe21a676184ada4f562f684e312b250998e4`（应用 `1.0.44`）。工作副本由该提交的本地克隆建立，`origin` 改名为 `source-local`，未推送。
 - 规则与现状：`AGENTS.md`、`CLAUDE.md`、`PLAN.md`、`TASKS.md`、`pubspec.yaml`、`pubspec.lock`。未发现 `GLOSSARY.md`、`docs/learnings/` 或既有同范围 feature 目录。
 - 代码来源：`lib/services/sentence_ai_api_client.dart`、`lib/features/chatbot/{services/chat_api_client.dart,providers/chat_session_controller.dart}`、`lib/providers/sentence_ai_provider.dart`、`lib/providers/retell_review_evaluation_provider.dart`、`lib/services/dictionary/ai_dictionary_source.dart`、`lib/providers/dictionary/lookup_controller.dart`、`lib/services/backend_dio.dart`、`lib/features/subscription/providers/feature_access_provider.dart`、`lib/services/transcription_api_client.dart`、`lib/providers/local_transcription_task_provider.dart`、`lib/services/asr/{sherpa_onnx_engine.dart,asr_model_catalog.dart}`、`lib/models/{sentence_ai_result.dart,dictionary/dictionary_entry.dart,sense_group_result.dart,retell_review_evaluation.dart}`。
 - 供应商与集成方案文档（2026-10-31 经 Jina Reader 与 Exa 读取；本地直连被代理 fake-IP 段拦截，未修改代理配置）：DeepSeek `https://api-docs.deepseek.com/`、`https://api-docs.deepseek.com/guides/json_mode`；OpenRouter `https://openrouter.ai/docs/api_reference/overview`、`/guides/features/structured-outputs`、`/api_reference/streaming`；OpenCode `https://opencode.ai/v2/docs/console/go`、`https://opencode.ai/v2/docs/console/harnesses`；LiteLLM `https://docs.litellm.ai/`。
-- OpenCode Go 额度接口的来源是社区验证与上游 PR（`anomalyco/opencode` PR #16513、issue #16017、#18648），非 OpenCode 官方文档页；实施前应以实际 Key 复核响应形状与 403 语义。
-- 证据限制：代码为静态阅读；供应商侧只读官方文档，未调用任何接口；未读取真实密钥，未运行应用、测试或实验。模型输出质量、耗时与速率限制均未验证。
+- 余额官方文档：`https://api-docs.deepseek.com/api/get-user-balance`、`https://openrouter.ai/docs/api/api-reference/credits/get-remaining-credits`、`https://openrouter.ai/docs/api/api-reference/api-keys/get-current-api-key`；2026-10-31 经 Jina Reader 读取。字段、单位与 OpenRouter Management Key 权限限制已内化到“余额查询与 Magpie 参考”和“只读用量卡”。
+- Magpie 来源：`https://github.com/yetone/magpie`，通过 gh API 读取提交 `d0a61b856a63b0ff579d662e282c3095b3fc921d` 的 `internal/provider/balance.go`、`planquota.go`、`opencode_endpoints.go`，只参考设计与字段处理；不复制代码或引入网关依赖。源码直接请求 OpenRouter `/credits` 与官方当前权限说明的差异已显式保留。
+- OpenCode Go 额度接口的来源是社区验证、上述 Magpie 源码与上游 PR（`anomalyco/opencode` PR #16513、issue #16017、#18648），非 OpenCode 官方文档页；实施前应以实际 Key 复核响应形状与 403 语义。
+- 证据限制：代码为静态阅读；供应商侧只读公开文档，未调用任何余额/套餐/推理接口；未读取真实密钥，未运行应用、测试或实验。实际 Key 权限、模型输出质量、耗时与速率限制均未验证。
 - 覆盖检查：自有后端接口按清单逐项处置，第三方公网接口显式排除；未决事项未被当作已批准删除。无需额外内部附件。
