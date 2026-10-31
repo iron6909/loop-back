@@ -480,3 +480,130 @@ void main() {
 Dart 3.10.7 (stable) (Tue Dec 23 00:01:57 2025 -0800) on "windows_x64"
 checks=41 failures=0
 ```
+
+## Run: 2026-10-31 真实供应商 Key 与 Android 9 设备补证
+
+### 问题与判定标准
+
+沿用候选 A 的前提，本次用户补充了三家供应商凭据和一台 Android 真机，授权继续原有有界验证。此前“无凭据 / 无连接设备”的环境条件不再成立；前次实验方法和结果保留。
+
+1. **真实结构化结果**：每家固定一个模型，对翻译、句子解析、单词、短语、意群、复述各发一次请求。必须得到正常完成的 JSON 对象，并通过代码中明确的字段 / 枚举 / 内容守恒检查；任一必要任务失败，该配置的六任务整体前提即不受支持，不能用重跑或换模型覆盖失败记录。
+2. **聊天 SSE**：至少收到一段正文、正常 `finish_reason=stop` 和 `[DONE]`；记录首段正文与总耗时、usage 帧与空 delta 尾帧。
+3. **真实账户查询**：使用当前推理配置的同一把 Key 查询，只记录 HTTP 状态与有限字段是否符合形状，不保存金额或账户身份。成功仅支持该 Key 在当时的权限，不能推及所有 Key。
+4. **Android SAF 原生能力**：在隔离应用中，用户选择本次创建的合成目录；遍历直接子项、复制并比较字节数 / SHA-256，进程重启后仍能读取。未成功启动不算验证通过；与“仓库已有目录导入实现”是不同问题。
+
+### 方法与条件
+
+- 仓库：当前工作空间 `D:/Workspace/PersonalStudio/loop-back`，起点 `92a6a822b5a3569c4587c4da9b26c7a834c812c6`。初始没有已暂存或已跟踪文件差异；未跟踪的 `.env`、`.pi/` 属用户 / 工具状态，不提交、不修改其跟踪规则。
+- 主机：Windows 10.0.26200；Dart 3.10.7 stable；adb 1.0.41（35.0.2-12147458）。供应商调用在主机的 `dart:io HttpClient` 上执行，**不等于 Android Flutter 网络路径已经验证**。
+- 凭据：仅在进程内读取用户的 `.env`，变量名为 `DeepSeek_APIKEY` / `OpenRouter_APIKEY` / `OpenCode_APIKEY`。未把值写入源码、日志或报告；本轮只用公开造例，未发送设备文件或用户学习材料。早期错误输出包含账户标识，报告仅保留脱敏摘要，附件里的早期探针不适合作为产品日志实现。
+- 样例：原句 `I have been looking forward to this trip for months.`；单词 `trip`；短语 `look forward to`；复述文本 `I look forward to this trip many months ago.`；SSE 问候 `Say hi in one short English sentence.`。完整提示词、请求参数、检查与 Android 构建命令见必需附件 [spike-live-probes.md](./spike-live-probes.md)。
+- 主要矩阵为附件的 `business2.dart`：`temperature=0`、`response_format=json_object`；翻译 / SSE 上限 1200 tokens，意群 1500，其余任务 3000。DeepSeek 显式发送 `thinking:{type:'disabled'}`；Go 使用真实客户端名 `EchoLoop-feasibility-spike/0.1` 与同一组会话内稳定的随机 `x-opencode-session`。不伪装其他客户端。每项一次，失败返回非零，不自动重试。
+- OpenRouter 模型由目录中正价格、单项价格不高于 0.000001/token 且宣称支持 `structured_outputs` 的候选按输入价与输出价之和选出。本次为 `mistralai/mistral-nemo`（合计价 5.9e-8/token）；这是单样例探针选取，不是产品默认模型选择。目录声明不保证实际路由按所有模式工作。
+- 时延是单次串行请求的主机墙钟观测，含联网与供应商路由波动，不能当成统计性能基准。结构化请求没有测正文首字；只对 SSE 测首段正文。
+- Android：Redmi Note 7 Pro，Android 9 / API 28；SDK platform android-35、build-tools 35.0.0、JDK 17 已安装。独立原生 APK 使用平台 `DocumentsContract`，无 AndroidX / Flutter / Gradle 新依赖，不申请网络或存储权限；包名 `dev.echoloop.spike.a3f1`，只接受合成目录 `Download/EchoLoopSpike_a3f1`。目标 SDK 为 28，本次不能代表现代 targetSdk 的存储限制。
+- 本轮没有运行 Flutter 构建、应用测试或 `scripts/check.sh`，因为只增加证据文档、没有修改产品代码，且未建立 Flutter package_config。首次从项目根目录执行主机探针时出现 Flutter 依赖求解告警，但随后真实 HTTP 请求确实执行；复现应先切换到临时目录，避免该无关步骤。主要三份 Dart 探针的定向 analyze 为 `No issues found`。
+
+### 观察结果
+
+#### 1. 初版失败与协议差异
+
+先做模型目录与只读接口探测，再跑初版 `business.dart`。保留失败，不把下列更正合并成“首次全部成功”：
+
+- DeepSeek 模型目录 `GET https://api.deepseek.com/models` 返回 200，含 `deepseek-flash` 与 `deepseek-v4-pro`。初版只通过翻译（1/6），另外五项正文为空、响应含推理字段；当时上限分别为 600 / 600 / 700 / 400 / 700 tokens。该初版没有记录 `finish_reason`，所以“推理吃满预算”是文档与现象支持的解释，**不能声称当时已实测 finish=length**。
+- DeepSeek 当前 [Thinking Mode 官方文档](https://api-docs.deepseek.com/guides/thinking_mode/) 写明默认开启 thinking、默认 effort high，OpenAI 格式通过 `thinking.type=disabled` 关闭。第二版同时关闭 thinking 并提高上限，因此它不是仅改一个变量的因果实验。
+- Go 的 `.../inference/go/openai/v1/models` 与再追加 `/v1/models` 返回 404；`/zen/go/v1/models`、`/inference/go/v1/models` 均返回 200。Chat Completions 根路径仍是 `https://opencode.ai/inference/go/openai/v1`，模型目录不能机械地从该路径推导。
+- 初版 Go 六项均返回 HTTP 400 `MissingSessionID`，没有业务结果；补稳定会话头和真实客户端名后才获得下一节结果。
+- Go [官方文档“Where can I use it?”](https://opencode.ai/v2/docs/console/go/#where-can-i-use-it) 明确写面向 OpenCode / 其他编码代理，要求 typical coding agent traffic、自有 User-Agent、每段会话稳定的 `x-opencode-session`。**本英语学习场景是否得到服务支持未被证实**；不能通过伪装编码请求 / 客户端来推导适用性。两份官方页面均在本轮经 agent-reach 的 Jina Reader 路由读取。
+- 初版 OpenRouter 模型 ID 被探针误抄成 `xingchen-agi/xing4.0-29b-a4f:free`，而目录为 `...-a4b:free`；返回 400 invalid model ID。这是探针输入错误，不能归咎为免费模型不可用。第二版改为从目录动态取低价付费模型。
+
+#### 2. 六任务结构化矩阵（json_object）
+
+表中为主矩阵单次总耗时，单位秒；失败时间同样保留。
+
+| 任务 | DeepSeek / deepseek-flash | Go / deepseek-v4.1-flash | OpenRouter / mistral-nemo |
+| --- | --- | --- | --- |
+| 翻译 | 通过，1.655 | 通过，2.042 | 通过，3.515 |
+| 句子解析 | 通过，3.361 | 通过，7.839 | 通过，3.356 |
+| 单词 | 通过，4.079 | **失败，23.887：finish=length** | 通过，32.678 |
+| 短语 | 通过，3.943 | 通过，10.154 | 通过，36.923 |
+| 意群 | 通过，1.049 | 通过，9.353 | **失败，4.741：字段类型导致 TypeError** |
+| 复述 | 通过，2.866 | 通过，10.710 | 通过，21.932 |
+| 结构化检查合计 | **6/6** | **5/6** | **5/6** |
+
+- Go 单词请求的 `finish_reason=length`、`completion_tokens=3000`，所以明确拒绝；没有因其返回 HTTP 200 就算成功。未继续增加 token 重跑，不推断增加预算就必能成功。
+- OpenRouter 意群的外层完成原因为 `stop`，但模型结果的 medium 或 fine 是字符串而非数组，现有 `SenseGroupResult.fromJson` 触发 `type 'String' is not a subtype of type 'List<dynamic>?'`。原始 JSON 未保存，不能回溯断言究竟是哪一个字段。
+- DeepSeek 的意群 medium 长度为 **1**、fine 为 3；通过现有内容守恒不代表节奏拆分质量合格。Go 为 2 / 3。复述评级 DeepSeek 为 poor，Go 与 OpenRouter 为 fair；没有人工评分基准，不能用有效枚举认定评分准确。
+- 所有“通过”指本附件内明确执行的检查。尚未覆盖全部嵌套字段上限、目标语言一致性、恶意提示词、复杂句、多个样例或重复运行稳定性；不称为完整产品 schema 或模型质量验收。
+- 主矩阵 21 项（18 结构化 + 3 SSE）中失败 2 项，`failures=2`，退出码 1。这是两个不支持结果的证据，不是成功测试套件。
+
+#### 3. SSE 尾帧与首段正文
+
+| 供应商 | 首段正文 ms | 总耗时 ms | 正文分片 | usage 帧 | 空 choices 帧 | 空正文 finish 帧 | stop / DONE |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DeepSeek | 1174 | 1266 | 3 | 1 | 0 | 1 | 均收到 |
+| Go | 1182 | 1332 | 4 | 1 | 0 | 0 | 均收到 |
+| OpenRouter | 3036 | 3102 | 2 | 1 | 0 | 2 | 均收到 |
+
+OpenRouter 本次出现两个不带正文的 finish 帧，支持“尾部重复完成信息不可当作新增正文”的处理。未人为断网、取消或切换配置，没有证明异常 EOF、跨所有网络边界和取消逻辑正确。
+
+#### 4. 真实账户接口
+
+| 请求 | HTTP | 只记录的结果 |
+| --- | --- | --- |
+| DeepSeek `/user/balance` | 200 | 1 个币种；三种金额均可解析；is_available 是 bool |
+| OpenRouter `/api/v1/credits` | 200 | total_credits 与 total_usage 均为数值 |
+| OpenRouter `/api/v1/key` | 200 | limit_remaining、limit、limit_reset 均为 null；无 effective_budget 对象 |
+| Go `/zen/go/v1/usage` | 200 | rolling / weekly / monthly 三窗口的 status、percent、resetsAt 均符合读取形状 |
+
+- OpenRouter **本次同一把能推理的 Key 也能查询 /credits**。没有枚举该 Key 的管理角色，不能证明所有“普通推理 Key”都可读取，更不能断言权限文档错误。此前对“普通 Key 已获余额”的口头描述过强，以本条界定为准；仍应保留 401 / 403 权限处理与 Key 预算为空分支。
+- Go 初次观测 rolling.percent=0 且带 resetsAt。该现象只证明“0 值仍有时间字段”存在，不能单靠该响应证明时间一定是占位值；丢弃零值时间是提案既有保守展示策略。
+- 本次未测无 Go 套餐的 403、失效 Key、余额为零、真实 rate-limited、多币种余额与额度恢复；前次合成边界仍只是合成边界。
+- 前次把三家样例统称“官方示例”不精确：Go 用量形状来自提案已列的 Magpie / 社区来源；本次真实 200 补充了运行证据，并不倒推其最初来源是官方。
+
+#### 5. 意群类型边界更正与严格 Schema 对照
+
+前次五模型均可解析空对象、SentenceAnalysis 可容忍所测错误类型，这些观察保留；**“五种模型在类型错误下一律静默成功”不成立**。源码明确将 medium / fine 强转为 List，独立对照探针分别传入字符串验证该边界。产品端需在模型构造之前做严格结构校验，并映射异常，不能把展示半成品的容错约定当作信任边界校验。
+
+严格 Schema 对照：固定同一 OpenRouter 模型、原句、提示词、1500 token 上限，仅改为 `json_schema`（strict、required、additionalProperties=false）并加 `provider.require_parameters=true`。只执行一次，返回 HTTP 200、`finish_reason=stop`；两组均为非空字符串数组，均通过现有内容守恒，总耗时 **6437 ms**。中粒度 1 段、细粒度 11 段；没有人工节奏质量评判，不能把形状正确当作有教学价值的切分。
+
+独立探针实际输出如下；前两项是本地类型边界断言，后两项才是真实网络对照：
+
+```text
+LOCAL medium=String throws TypeError=true
+LOCAL fine=String throws TypeError=true
+SCHEMA http=200 ms=6430
+SCHEMA PASS finish=stop medium=1 fine=11 conserved=true totalMs=6437
+```
+
+探针退出码 0，支持“该模式在本模型、本样例上能返回通过检查的数组”。这次同时改变了输出模式与路由约束，且供应商内部路由可能变化，因此不证明单一参数的因果效果、所有模型均支持严格 Schema，或重复运行稳定。上一矩阵的 `json_object` 失败不被覆盖。
+
+#### 6. Android 安装阻塞
+
+独立 APK 在已装 SDK / JDK 下编译、DEX、签名及签名验证成功（`BUILD PASS probe.apk`）；创建了合成目录的 5 个顶层文件和 1 个子目录，子目录含 1 个文件。媒体扩展名文件的内容是短文本标记，**只用于 URI 字节读取，不可当音频解码样本**。
+
+两次 `adb install -r probe.apk` 均被 MIUI 拒绝，错误为 `INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`；屏幕通知显示手机管家已拦截 USB 安装。已唤醒设备并确认可进入主屏幕，第二次仍被拦截。没有关闭安全开关、绕过限制或尝试访问其他目录；已向用户说明需在设备侧放行。当前没有成功启动 APK，没有得到 tree URI 或读取结果，因此不能记为 Android SAF 验证成功。
+
+### 结论与限制
+
+| 问题 | 结论 | 精确范围 |
+| --- | --- | --- |
+| DeepSeek 六任务的初步结构化可用性 | **Supported（本样例）** | 关闭 thinking，使用本次 token 上限，6/6 通过所列检查；意群质量与评分准确性仍未证明 |
+| Go 六任务在本配置下全部可用 | **Not supported** | 5/6；单词触发 length；另有编码代理用途适配未证实 |
+| OpenRouter json_object 六任务全部可用 | **Not supported** | 5/6；意群字段类型不符；严格 Schema 是单独对照，不覆盖此失败 |
+| OpenRouter 严格 Schema 意群对照 | **Supported（本样例）** | 同模型一次返回合规数组且守恒，6437 ms；中粒度仍为整句，未证明拆分质量或稳定性 |
+| SSE 正常完成 | **Supported（本次正常连接）** | 三家都有正文、stop、DONE 与 usage；取消 / 断流未验证 |
+| 用同一 Key 读取真实用量 | **Supported（这三把 Key）** | 四请求 200，字段可读；不推及其他账号、Key 角色或错误分支 |
+| 意群类型错误不抛异常 | **Not supported** | medium / fine 分别传入字符串均实测抛 TypeError；更正前次过宽概括 |
+| Android 目录选择、复制与重启授权 | **Inconclusive** | 设备已连接，安装被设备安全策略拦截；从“缺设备”更新为“需设备放行” |
+
+### 对设计的影响与停止条件
+
+1. 标准 Chat Completions 可承载本例学习任务，但兼容供应商仍需明确的端点、thinking / token、session 和输出模式适配；不等于三家所有必要功能都已可用。
+2. 最终结果必须同时检查正常完成、JSON 类型、必填字段与业务守恒；语法正确 / HTTP 200 / fromJson 不抛均不够。Go 的截断与 OpenRouter 的类型错误提供了真实拒绝样本。
+3. OpenRouter 余额查询宜按实际权限降级，不能强制将所有同类 Key 视为“可查”或“不可查”；无预算为 null，不能替代账户余额。
+4. Go 用于英语学习的服务适用性需交回 ideate 处理，不能通过请求伪装解决。
+5. 本次严格 Schema 对照已给出“本例结构可修正”的有限证据；不再扩充模型、样例或反复试到全绿。Android 等待用户放行，原生可行性与应用端到端结果仍是证据缺口。仅为继续该设备探针保留本轮临时 APK 与原生源码；供应商探针源码已完整入附件，未加入产品。
+6. 文档检查已确认前次报告原文完整保留、附件 10 份源码可逐字重建、代码围栏成对，且两份文档均不含 `.env` 中的 Key 值；从附件提取的三份主要 Dart 探针定向 analyze 无问题。探针主矩阵的两个负面结果不改写为测试成功；未执行 `scripts/check.sh`，原因是本次交付仅为证据文档，没有产品代码变更。
+
+本轮不修改 proposal.md、产品代码或下游合同，不选型、不进入实现；证据交回 **ideate** 比较候选与必要的约束。
