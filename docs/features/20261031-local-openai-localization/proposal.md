@@ -9,6 +9,11 @@
 1. **客户端平台**：以 Android 为主；iOS / macOS 不作为本次验收目标。
 2. **模型来源**：使用供应商提供的模型，不部署推理服务，不在设备或局域网运行本地 LLM。客户端保存 Base URL、模型名与 API Key。
 3. **远程边界**：仅指本 App 自有后端接口。RSS 订阅、播客、音视频直链、网页词典、iTunes 搜索等第三方公网接口**不在改造范围**，保持原样。
+4. **社区合集**：接受功能变化——移除发现页，改为用户直接选目录导入本地合集，不做清单文件。
+5. **精选播客**：内置本地播客清单，同时保留用户自粘 RSS / Apple 链接的入口。
+6. **模型资源**：保留现有 CDN 下载，不增加本地文件导入。
+7. **转录语言**：收敛为英语，不引入多语言 Whisper。
+8. **额度 UI**：保留只读展示；若配置的是 OpenCode Go，展示该套餐额度。
 
 ### 供应商接口依据（官方文档核实，2026-10-31）
 
@@ -25,6 +30,20 @@
 
 - 两家 Base URL 形态不同（一个有 `/v1`，一个没有）。客户端必须把 Base URL 定义为**直接追加 `/chat/completions` 的根路径**，不做 `/v1` 自动补全。
 - OpenRouter 流末尾额外发送带 `usage` 的分片，其 `choices[0].delta` 内容为空但重复 `finish_reason`。解析时不得把它当新文本，也不得在 `delta` 缺失时崩溃。
+
+#### OpenCode Go（第三个候选供应商）
+
+- 计划：Go `$10/月`、Go Plus `$40/月`、Go Teams `$20/人/月`；额度按每月美元上限计，每个模型再分三档：5 小时 = 20%、每周 = 50%、每月 = 100%。
+- Base URL 与套餐绑定：Go 走 `https://opencode.ai/inference/go/openai/v1/chat/completions`（与 pay-as-you-go 不同）。按本提案的「根路径 + `/chat/completions`」规则，用户填 `https://opencode.ai/inference/go/openai/v1`。
+- 额度查询是独立官方接口：`GET https://opencode.ai/zen/go/v1/usage`，Bearer 使用同一把 API Key，返回 `usage.rolling/weekly/monthly` 的 `status`、`percent`、`resetsAt`；403 表示 Key 有效但无 Go 订阅，401 为鉴权失败。
+
+#### 关于「现成 AI 集成项目」（LiteLLM 等）
+
+- LiteLLM 是 **Python SDK + 自托管网关**（docker 部署），把 100+ 供应商归一成 OpenAI 格式，并提供虚拟 Key、预算与成本记录；它不是 Dart 库，**无法嵌入 Flutter 客户端**。
+- 采用 LiteLLM 等于运行一个代理进程，即本提案已排除的方案 B：多一个进程，却不减少客户端工作（门控、提示词、校验仍在客户端）。
+- 兼容收益不依赖它：客户端只讲标准 Chat Completions，将来若需要路由/回退/预算，可以**不改客户端**把 Base URL 指向 LiteLLM 或任何网关。这是设计留出的兼容面，不是运行时依赖。
+- Dart 侧 `openai_dart` 之类包也不解决供应商差异，只是把几行 Dio 包一层，故不引入。
+- 需处理的差异已被枚举且很少：Base URL 形态、`response_format` 模式（`json_schema` vs `json_object`）、OpenRouter 末尾 `usage` 分片。一个薄适配层即可覆盖。
 
 ### 取代的前置前提
 
@@ -47,14 +66,14 @@
 | `/api/v1/stream/{translate,analyze,lookup-word,lookup-phrase,sense-groups,evaluate-review}` | 翻译、解析、AI 词典、意群、复述评估 | 改为供应商 Chat Completions，客户端持有提示词与结果校验 |
 | `/api/v1/stream/chat/sentence` | 学习助手多轮对话 | 同上，客户端组装系统提示词、上下文与引用 |
 | `/api/v2/user-audio/*` + R2 PUT | 云端字幕转录 | 改用本机 Whisper 转录链路 |
-| `/api/entitlements`、`/api/paddle/*` | 订阅权益、结账、客户门户 | 停用：本地 AI 不再由后端裁决额度，会员门控失去权威来源 |
+| `/api/entitlements`、`/api/paddle/*` | 订阅权益、结账、客户门户 | 停止门控与结账；额度 UI 改为只读，改由供应商额度接口提供（见下节） |
 | `/api/v1/client/config`、区域路由 | 启动配置、全球/中国切换 | 使用本地默认配置；单端点，无区域回退 |
 | `/api/v1/me/preferences`、`/api/v1/me/onboarding` | 偏好与问卷云同步 | 仅本地保存（本地存储与备份已存在） |
-| `/api/v2/collections*` | 社区合集发现、加入、文件与字幕 | 改为本地合集导入；发现页无本地等价物（见下节） |
-| `/api/v1/featured-podcasts` | 精选播客目录 | 改为本地目录或移除入口；RSS 订阅本身不依赖后端（见下节） |
+| `/api/v2/collections*` | 社区合集发现、加入、文件与字幕 | 改为本地目录导入；发现页移除（见下节） |
+| `/api/v1/featured-podcasts` | 精选播客目录 | 改为内置本地清单，保留自粘链接入口（见下节） |
 | `/api/v1/netdisk/baidu/oauth/*` | 百度网盘导入 | 改为本地文件导入（已有批量导入能力） |
 | `/version.json` | 应用更新检查 | 停用自更新检查，改用安装包手动更新 |
-| `cdn.echo-loop.top` / `.cn` | ASR、TTS、词典、发音包下载 | 静态资源托管而非业务接口；默认保留，可选本地导入（见下节） |
+| `cdn.echo-loop.top` / `.cn` | ASR、TTS、词典、发音包下载 | 保留：静态资源托管而非业务接口（见下节） |
 
 **明确不在范围**：iTunes 搜索、播客 RSS、音视频直链、网页词典、商店与帮助外链、PostHog / Firebase / 友盟上报。它们保持现状。
 
@@ -106,7 +125,17 @@
 ### 解除自有后端耦合
 
 - 在 `sentence_ai_provider`、`lookup_controller`、`chat_session_controller`、`retell_review_evaluation_provider` 移除 `isAuthenticatedProvider` / `featureAccessProvider` / `supabaseSessionProvider` 前置检查与 402 分支；保留取消、generation 与缓存逻辑。
-- 停用订阅与 AI 额度 UI（其权威来源随 `/api/entitlements` 消失），避免展示无法兑现的权益。
+- 移除订阅门控与结账；额度 UI 改为只读展示（见下节），不再展示无法兑现的会员权益。
+
+### 只读额度展示
+
+- 门控全部移除：不再因为「未登录 / 非会员 / 额度用尽」阻断 AI 调用；额度只用于展示。
+- 仅当配置的 Base URL 属于 OpenCode Go（`opencode.ai/inference/go/...`）时，才请求 `GET https://opencode.ai/zen/go/v1/usage`，Bearer 复用同一把已存的 API Key。
+- 展示三档窗口（5 小时 / 每周 / 每月）的百分比与重置时间；主标题取剩余最少的一档，与 OpenCode 自身展示一致。
+- 状态映射：200 → 正常展示；403 → 「当前 Key 无 Go 订阅」；401 → 「Key 无效」；404 或其他 → 不展示该卡片，只记日志（视为接口漂移，不打扰用户）。
+- `percent = 0` 时上游 `resetsAt` 是占位值，此时不显示倒计时。
+- 额度请求失败不得影响 AI 请求，也不得自动重试轰炸；进入设置页或手动刷新时获取，结果短期缓存。
+- 其他供应商（OpenRouter / DeepSeek）没有统一的额度接口，不展示余额，避免编造。
 - 远程配置改为本地默认值；`runtimeEndpointRouter` 不再参与 AI 请求。
 
 ### 语音与转录
@@ -114,7 +143,7 @@
 - 云端字幕入口改走 `LocalTranscriptionTaskManager`：ffmpeg 转 16 kHz WAV → 分段转录 → SRT + 合成词级时间戳 → 写库。合成词级时间戳与云端真实对齐不等价，需在合同中明确精度预期。
 - 复述评估：读取当前录音已有且同 attempt 的有效本地转写，否则独立引擎转写（**不传 VAD 路径**，避开已知 native 崩溃面，但不等于所有机型稳定），再把原文与转写交供应商 LLM 评估；转写失败不进入评估，不把 ASR 错误当作确定的语言错误。
 - 不复用为云端上传准备的 AAC / 2 MB 上限合同；原录音不被覆盖，临时文件与引擎按既有生命周期清理。
-- 多语言：界面实际只提供 `en` 与 `auto`（自动检测）两项；`audio_items.transcript_language` 的注释写作 `'en' / 'multi'` 属历史遗留，`'multi'` 仅出现在测试中。云端是把 `language=auto` 交给后端自动识别。本地 Whisper 只有英语模型，无法识别其他语种，须收敛为英语或引入多语言 Whisper。
+- 多语言：已确认**收敛为英语**。界面实际只提供 `en` 与 `auto`（自动检测）两项；`audio_items.transcript_language` 的注释写作 `'en' / 'multi'` 属历史遗留，`'multi'` 仅出现在测试中。本地 Whisper 只有英语模型，改造后移除 `auto` 选项，已有 `transcriptLanguage='auto'` 的历史字幕仅作展示，不重新生成。
 
 ### 社区合集：现状与本地替代
 
@@ -126,11 +155,12 @@
 - 媒体下载使用 `mediaUrl` / `mediaUrlChina`（按地区二选一），交给后台下载器落盘。
 - 因此该功能是「远端目录 + 远端媒体 + 本地学习数据」三层耦合，不是单纯的列表接口。
 
-**本地替代**
+**本地替代（已确认）**
 
-- 保留 `collections`、`collection_audio_items`、`audio_items` 与全部学习数据，只替换数据来源：新增「导入本地合集」，按用户选定的目录或清单创建 `source='local'` 合集，批量导入音频与字幕（现有单文件导入、字幕导入与本地转录可直接复用）。
-- 清单取最小可用格式 `manifest.json`：合集名、可选封面、`files[]`（路径、标题、可选难度、可选字幕路径），路径相对清单所在目录；缺字幕时走现有本地转录。
-- 发现页（浏览远端公开合集）没有本地等价物，建议移除入口、保留「我的合集」。这属于功能变化，需用户确认。
+- 保留 `collections`、`collection_audio_items`、`audio_items` 与全部学习数据，只替换数据来源：新增「导入本地合集」，**用户直接选目录**，不引入清单文件。
+- 合集名取目录名；音频按文件名自然排序；同名 `.srt` / `.vtt` / `.lrc` 自动配对（复用现有导入的同名配对规则）；缺字幕时走现有本地转录。
+- 不支持、不展示远端 `remoteId`、地区镜像、难度徽标等仅远端存在的字段；`source='community'` 的历史合集保留只读，不再同步。
+- 发现页（浏览远端公开合集）移除，保留「我的合集」。
 
 ### 精选播客：现状与本地替代
 
@@ -140,11 +170,12 @@
 - 订阅动作本身不经过后端：`subscriptionInputUrl` 优先 Apple URL、回退 RSS，交给现有 `PodcastUrlResolver` / `PodcastRepository` 直接订阅，播放与字幕都在第三方公网路径上。
 - 所以自有后端只提供「精选清单」这一层。
 
-**本地替代**
+**本地替代（已确认）**
 
-- 方案一（最省）：移除精选入口，用户手动粘贴 RSS / Apple 链接订阅。该路径已存在且不依赖自有后端，无需新增代码。
-- 方案二：内置或可导入本地 `catalog.json`（字段与现有 `FeaturedPodcast.fromJson` 一致），把「精选」变成随包目录，保留编辑推荐位。
-- 建议先做方案一；确有推荐位需求再加方案二。
+- 内置本地 `catalog.json`（随包发布，字段与现有 `FeaturedPodcast.fromJson` 一致：`id`、`applePodcastUrl`、`rssUrl`、`imageUrl`、`title`、`description`），把「精选」变成随包目录。
+- 移除远端分页刷新与 `cursor` 逻辑；本地清单不再需要网络、缓存 meta 与 sha256 校验。
+- 保留用户自粘 RSS / Apple 链接的订阅入口（现有 `PodcastUrlResolver` / `PodcastRepository` 路径不变）。
+- 清单更新随版本发布；不引入远程清单下载，否则又回到依赖自有后端。
 
 ### 模型资源 CDN：现状与本地替代
 
@@ -156,11 +187,10 @@
 - 各 manager 已有 `baseUrlOverride` 注入点，测试与自建镜像可改地址。
 - 性质上是静态资源托管：无用户数据、无鉴权、无业务逻辑。
 
-**本地替代**
+**本地替代（已确认）**
 
-- 默认建议保留 CDN。它与 RSS 同类，属静态分发，不构成对自有后端服务的依赖。
-- 若要完全脱离：为每个资源增加「从文件导入」，复用现有校验与原子安装，要求用户提供符合 `archivePath` 结构的归档；或将 `baseUrlOverride` 指向自建镜像。
-- 需用户决定：保留 CDN，还是增加本地导入（一次性 UI 与校验成本）。
+- 保留 CDN 下载。它属静态资源分发（无用户数据、无鉴权、无业务逻辑），与 RSS 同类，不构成对自有后端服务的依赖。
+- 各 manager 的 `baseUrlOverride` 保持现状，便于将来指向自建镜像；「从文件导入」不在本次范围。
 
 ## 选择状态
 
@@ -181,11 +211,12 @@
 
 **其余未决（需用户决定，非实验问题）**
 
-1. 社区合集：接受「移除发现页 + 仅支持本地目录/清单导入」吗？清单用 `manifest.json`，还是直接选目录即可？
-2. 精选播客：移除入口（推荐，订阅路径已不依赖后端），还是内置本地 `catalog.json`？
-3. 模型 CDN：保留（推荐），还是增加本地文件导入？
-4. 转录语言：收敛为英语，还是引入多语言 Whisper（体积与速度成本更高）？
-5. 订阅与 AI 额度 UI：直接移除，还是保留只读展示？
+已确定：社区合集改为目录导入；精选播客内置清单并保留自粘链接；CDN 保留；转录收敛为英语；额度 UI 只读展示（含 OpenCode Go）。
+
+仍需确认：
+
+1. 首选供应商与模型（OpenRouter / DeepSeek / OpenCode Go，具体模型 id）——决定 spike 的验证对象。
+2. 若主供应商不是 OpenCode Go，是否仍希望保留该额度卡片（需额外填一份 Key）。
 
 **普通实施验证**：Key 不入日志与备份、配置切换后旧回调作废、SSE 跨分片与 `[DONE]`、错误 JSON 不落缓存、取消与断流、静音与长音频转录、复述原录音保留。可沿用 `test/services/sentence_ai_api_client_test.dart`、`test/providers/sentence_ai_provider_test.dart`、`test/providers/retell_review_evaluation_provider_test.dart` 及本地转录相关测试；本轮未执行。
 
@@ -195,6 +226,7 @@
 - 代码基线：`5574fe21a676184ada4f562f684e312b250998e4`（应用 `1.0.44`）。工作副本由该提交的本地克隆建立，`origin` 改名为 `source-local`，未推送。
 - 规则与现状：`AGENTS.md`、`CLAUDE.md`、`PLAN.md`、`TASKS.md`、`pubspec.yaml`、`pubspec.lock`。未发现 `GLOSSARY.md`、`docs/learnings/` 或既有同范围 feature 目录。
 - 代码来源：`lib/services/sentence_ai_api_client.dart`、`lib/features/chatbot/{services/chat_api_client.dart,providers/chat_session_controller.dart}`、`lib/providers/sentence_ai_provider.dart`、`lib/providers/retell_review_evaluation_provider.dart`、`lib/services/dictionary/ai_dictionary_source.dart`、`lib/providers/dictionary/lookup_controller.dart`、`lib/services/backend_dio.dart`、`lib/features/subscription/providers/feature_access_provider.dart`、`lib/services/transcription_api_client.dart`、`lib/providers/local_transcription_task_provider.dart`、`lib/services/asr/{sherpa_onnx_engine.dart,asr_model_catalog.dart}`、`lib/models/{sentence_ai_result.dart,dictionary/dictionary_entry.dart,sense_group_result.dart,retell_review_evaluation.dart}`。
-- 供应商文档（2026-10-31 经 Jina Reader 读取官方页面；本地直连被代理 fake-IP 段拦截，未修改代理配置）：`https://api-docs.deepseek.com/`、`https://api-docs.deepseek.com/guides/json_mode`、`https://openrouter.ai/docs/api_reference/overview`、`https://openrouter.ai/docs/guides/features/structured-outputs`、`https://openrouter.ai/docs/api_reference/streaming`。
+- 供应商与集成方案文档（2026-10-31 经 Jina Reader 与 Exa 读取；本地直连被代理 fake-IP 段拦截，未修改代理配置）：DeepSeek `https://api-docs.deepseek.com/`、`https://api-docs.deepseek.com/guides/json_mode`；OpenRouter `https://openrouter.ai/docs/api_reference/overview`、`/guides/features/structured-outputs`、`/api_reference/streaming`；OpenCode `https://opencode.ai/v2/docs/console/go`、`https://opencode.ai/v2/docs/console/harnesses`；LiteLLM `https://docs.litellm.ai/`。
+- OpenCode Go 额度接口的来源是社区验证与上游 PR（`anomalyco/opencode` PR #16513、issue #16017、#18648），非 OpenCode 官方文档页；实施前应以实际 Key 复核响应形状与 403 语义。
 - 证据限制：代码为静态阅读；供应商侧只读官方文档，未调用任何接口；未读取真实密钥，未运行应用、测试或实验。模型输出质量、耗时与速率限制均未验证。
 - 覆盖检查：自有后端接口按清单逐项处置，第三方公网接口显式排除；未决事项未被当作已批准删除。无需额外内部附件。
