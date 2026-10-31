@@ -607,3 +607,97 @@ SCHEMA PASS finish=stop medium=1 fine=11 conserved=true totalMs=6437
 6. 文档检查已确认前次报告原文完整保留、附件 10 份源码可逐字重建、代码围栏成对，且两份文档均不含 `.env` 中的 Key 值；从附件提取的三份主要 Dart 探针定向 analyze 无问题。探针主矩阵的两个负面结果不改写为测试成功；未执行 `scripts/check.sh`，原因是本次交付仅为证据文档，没有产品代码变更。
 
 本轮不修改 proposal.md、产品代码或下游合同，不选型、不进入实现；证据交回 **ideate** 比较候选与必要的约束。
+
+## Run: 2026-10-31 Android SAF 目录读取补证
+
+### 问题与判定标准
+
+**候选**：`ideate` 修订后的 S3a——新增原生 SAF tree picker（`ACTION_OPEN_DOCUMENT_TREE` + `DocumentsContract` 子项遍历 + `openInputStream` 读取 + 持久化读权限），目录内文件交给现有 `classifyImportFiles` / `matchSubtitlesForAudios`。
+
+**依赖的设计选择**：S3a 是否可替代 `file_picker` 的目录接口（S3b）；若 S3a 在真机不可行，S3 需重新比较。
+
+**判定标准**（全部满足才算 Supported）：
+
+1. 用户选择本次创建的合成目录后，探针能遍历出 5 个直接子项与 1 个子目录，且不递归进入子目录。
+2. 每个文件经 `ContentResolver.openInputStream` 读出后，字节数与 SHA-256 与主机按同一输入算出的期望值逐一相等。
+3. `takePersistableUriPermission` 生效：进程被 `am force-stop` 杀死后重新启动，仍能在无新授权的情况下读到同一批字节。
+4. 只接受该合成目录；误选或越界应被拒绝而不是继续读取。
+
+前次运行此项为 **Inconclusive**，原因是 MIUI 拒绝安装探针（`INSTALL_FAILED_USER_RESTRICTED`），未产生任何 SAF 结果。本次目标是补上该缺口。
+
+### 方法与条件
+
+- 设备：Redmi Note 7 Pro，Android 9 / API 28，USB 调试已授权。产品 `android/app/build.gradle.kts` 使用 `minSdk 24` 与 `flutter.targetSdkVersion`；本机 Flutter 3.10.7 的 `FlutterExtension.targetSdkVersion = 36`，故产品实际为 **targetSdk 36**。
+- 探针：独立原生 APK，包名 `dev.echoloop.spike.a3f1`，无 AndroidX / Flutter / Gradle 依赖，不申请网络与存储权限，只接受 `Download/EchoLoopSpike_a3f1`。源码与构建脚本见必需附件 [spike-live-probes.md](./spike-live-probes.md)。
+- 两种构建：**A 版** `minSdk 26 / targetSdk 28`（沿用前次产物）；**B 版** `minSdk 24 / targetSdk 36`（与产品一致）。B 版经 `aapt2 dump badging` 确认 `minSdkVersion:'24'`、`targetSdkVersion:'36'`。
+- 合成输入：`01.mp3`(30 B)、`01.srt`(45 B)、`02.MP3`(26 B)、`02.vtt`(32 B)、`notes.txt`(7 B)，加子目录 `sub/inner.mp3`(6 B)。媒体扩展名文件内容是短文本标记，**只用于 URI 字节读取，不是可解码音频样本**。期望 SHA-256 由主机按同一 UTF-8 输入预先算出。
+- 驱动方式：`am start` 启动探针 → `input tap` 点击选择按钮 → 在系统 DocumentsUI 中确认目录 → 读 `logcat -s EchoLoopSpike_a3f1:I`；随后 `am force-stop` 并以 `--ez check true` 重启复验持久化。选择动作由真实 DocumentsUI 完成，未绕过系统授权界面。
+
+### 观察结果
+
+#### 1. A 版（targetSdk 28）通过全部四项
+
+安装首次成功（此前同一命令连续失败两次，`INSTALL_FAILED_USER_RESTRICTED`）。启动后 `DocumentsUI` 直接定位到目标目录，界面显示 `sub/` 与 5 个文件，名称与大小与 fixture 一致。
+
+选择后日志：
+
+```text
+PHASE picked persisted=true files=5 directories=1
+FILE 01.mp3 bytes=30 sha256=c19e23aa122e2a69acaf31fb882a16939b74c7c1a851e49b0d5c2b71ed7eb524
+FILE 01.srt bytes=45 sha256=490f2542b4fe9b875f80fa1c0a8dec5161da8f214f497b07f5a3ffa3fb01dfc7
+FILE 02.MP3 bytes=26 sha256=3845f85a816777e82d97a17c6f55fd98ffd4ff70d40a8f88e7727ce13dce1537
+FILE 02.vtt bytes=32 sha256=e1dcfceb7592f776940af39adf26183f3377f2e53651d9c14b31c07aeadc7031
+FILE notes.txt bytes=7 sha256=3514cf816e5407a39cb7a1c1e1243f176dda121e06398a8934edb1dc426b0b34
+END picked
+```
+
+`force-stop` 后以 `--ez check true` 重启（进程 PID 由 9866 变为 10287），持久化授权仍可用：
+
+```text
+PHASE persisted persisted=true files=5 directories=1
+FILE 01.mp3 bytes=30 sha256=c19e23aa122e2a69acaf31fb882a16939b74c7c1a851e49b0d5c2b71ed7eb524
+... （其余 4 项与上一段逐一相同）
+END persisted
+```
+
+五个文件的字节数与 SHA-256 与主机期望值**全部相等**；`directories=1` 且 `sub/inner.mp3` 未被列出，说明遍历只取直接子项、未递归。`02.MP3` 的大写扩展名被原样保留为显示名，符合现有 `_extensionOf` 的小写归一化前提。
+
+一次未解释的异常：首次启动瞬间（19:08:09）记录到一条 `CANCELLED no read attempted`，当时未弹出选择器，随后点击按钮正常进入。该条日志的触发来源未能确定，未影响后续结果；不将其解释为通过或失败。
+
+#### 2. B 版（targetSdk 36）未能执行
+
+为消除「测的是另一种存储制度」的代表性缺口，我卸载 A 版以撤销旧授权（保证 B 版是干净的一次授权），重装 B 版。此后 MIUI 再次拦截，且这次没有任何可见确认界面：
+
+- `adb install -r` 连续失败：`INSTALL_FAILED_USER_RESTRICTED: Install canceled by user`。
+- 唤醒并解锁设备后重试仍失败；`dumpsys window` 焦点始终是 `StatusBar` 或桌面，未出现安装确认弹窗；手机管家通知区有拦截角标。
+- 改用设备端安装器路径（`adb push` 到 `Download/` 后 `am start -a android.intent.action.VIEW -t application/vnd.android.package-archive -d file:///...`）也未弹出界面，`pm list packages dev.echoloop.spike.a3f1` 仍为空。
+- 未修改任何设备安全设置、未关闭手机管家、未尝试其他绕过手段。
+
+因此 **B 版（产品 targetSdk 36）的 SAF 行为没有任何实测数据**；A 版证据保留，当前设备上探针已不在安装状态。
+
+#### 3. 未执行的部分
+
+- 误选非目标目录时的拒绝分支：未在设备上实测（探针有该检查，但未触发）。
+- 取消选择、空目录、现代 Android（API 29+）分区存储、非 `externalstorage` 的 document provider：均未测。
+- `classifyImportFiles` / `matchSubtitlesForAudios` 用真机返回的文件名跑一遍：未执行。二者位于 `lib/features/audio_import/subtitle_pairing.dart`，其依赖链 `audio_item.dart → app_data_dir.dart` 引入 `package:flutter/foundation.dart` 与 `path_provider`，纯 Dart 探针无法导入；改用 Flutter 测试需要 `flutter pub get` 生成 `package_config.json`，会改动仓库状态，超出本次范围。
+- 应用端到端（真实 Echo Loop 里选目录导入并入库）：未执行，本轮只验证原生能力。
+
+### 结论与限制
+
+| 问题 | 结论 | 精确范围 |
+| --- | --- | --- |
+| SAF 目录选择 + 子项遍历 + 字节读取 | **Supported** | Android 9 / API 28，targetSdk 28，探针 APK；5 文件哈希逐一相等，子目录未递归 |
+| 持久化授权跨进程重启 | **Supported** | 同一设备，`force-stop` 后新 PID 仍可读；未测跨应用升级、跨重启或长期有效 |
+| 同一行为在产品 targetSdk 36 下成立 | **Inconclusive** | B 版安装被 MIUI 拦截，零实测数据 |
+| 误选拒绝分支 | **Inconclusive** | 代码存在但未在设备上触发 |
+| 目录内文件可交给现有配对逻辑 | **Inconclusive** | 仅确认显示名为干净文件名；配对函数未在真机数据上运行 |
+
+本轮确立：SAF 机制在这台 Android 9 设备上确实能完成「选目录 → 列子项 → 读字节 → 重启后仍可读」，且字节级正确。它**不**确立：产品 targetSdk 36 下同样成立、其他 Android 版本或厂商 ROM 行为一致、错误分支可靠、应用层集成可用。
+
+### 对设计的影响与剩余缺口
+
+1. S3a 的核心机制前提已得到真机支持，`file_picker`（S3b）不再是必需项；但该支持只在 targetSdk 28 下取得。
+2. targetSdk 差异的残余风险需要说明：SAF 读取走 content URI 与 `ContentResolver`，不受分区存储对文件路径的限制，理论上与 targetSdk 无关；但这只是推理，本轮没有实测，不能当作已验证。
+3. 未解释的首次启动 `CANCELLED` 与 MIUI 的安装拦截都属环境噪声，说明该机型上的系统 UI 行为不完全可预期；实施时不能假定选择器一定弹出、一定返回 OK。
+4. 建议 `ideate` 据此更新 S3 的推荐：保留 S3a，并把「在 targetSdk 36 下重跑本探针」列为实施首步验收，而不是选型前置条件。
+5. 未修改 `proposal.md`、产品代码或下游合同；本轮仅新增证据。设备上仍留有合成目录 `Download/EchoLoopSpike_a3f1` 与 `Download/EchoLoopSpike_a3f1_probe.apk`，用于后续重试，清理待本轮验证结束后进行。

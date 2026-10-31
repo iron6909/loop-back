@@ -1319,3 +1319,53 @@ try {
 } finally { $env:JAVA_HOME = $taskPreviousJava }
 Write-Output 'BUILD PASS probe.apk'
 ```
+
+## android/target36/AndroidManifest.xml
+
+与产品 `minSdk 24 / targetSdk 36` 一致的变体（产品值来自 `android/app/build.gradle.kts` 的 `flutter.targetSdkVersion`；本机 Flutter 3.10.7 的 `FlutterExtension.targetSdkVersion = 36`）。上一节是 targetSdk 28 的版本，探针逻辑相同。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.echoloop.spike.a3f1">
+  <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="36" />
+  <application android:label="EchoLoop SAF spike" android:debuggable="true" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+    <activity android:name=".ProbeActivity" android:exported="true" />
+  </application>
+</manifest>
+```
+
+## android/target36/build.ps1
+
+对应构建脚本；与上一节的差异仅为 `--min-api 24` 与 `--target-sdk-version 36`。该版本 APK 经 `aapt2 dump badging` 确认 `minSdkVersion:'24'`、`targetSdkVersion:'36'`，但**安装被 MIUI 拦截，未在设备上运行**。
+
+```powershell
+# [SPIKE-a3f1-e] 仅使用已安装 Android SDK / JDK；不安装依赖，不连接 Gradle。
+$ErrorActionPreference = 'Stop'
+Set-Location $PSScriptRoot
+$taskSdk = 'D:/Application/Android/Sdk'
+$taskBuild = "$taskSdk/build-tools/35.0.0"
+$taskJdk = 'D:/Application/Scoop/apps/corretto17-jdk/current'
+$taskAndroid = "$taskSdk/platforms/android-35/android.jar"
+function Invoke-Checked([scriptblock]$action) {
+  & $action
+  if ($LASTEXITCODE -ne 0) { throw "Build command failed ($LASTEXITCODE)" }
+}
+New-Item -ItemType Directory -Path 'classes','dex' -Force | Out-Null
+Invoke-Checked { & "$taskJdk/bin/javac.exe" -source 8 -target 8 -encoding UTF-8 -classpath $taskAndroid -d classes ProbeActivity.java }
+Invoke-Checked { & "$taskJdk/bin/jar.exe" cf classes.jar -C classes . }
+$taskPreviousJava = $env:JAVA_HOME
+try {
+  $env:JAVA_HOME = $taskJdk
+  Invoke-Checked { & "$taskBuild/d8.bat" --lib $taskAndroid --min-api 24 --output dex classes.jar }
+  Invoke-Checked { & "$taskBuild/aapt2.exe" link -I $taskAndroid --manifest AndroidManifest.xml --min-sdk-version 24 --target-sdk-version 36 -o unsigned.apk }
+  $taskDexPath = (Resolve-Path dex).Path
+  Invoke-Checked { & "$taskJdk/bin/jar.exe" uf unsigned.apk -C $taskDexPath classes.dex }
+  Invoke-Checked { & "$taskBuild/zipalign.exe" -f 4 unsigned.apk aligned.apk }
+  if (-not (Test-Path spike.keystore)) {
+    Invoke-Checked { & "$taskJdk/bin/keytool.exe" -genkeypair -keystore spike.keystore -storepass android -keypass android -alias spike -keyalg RSA -validity 2 -dname 'CN=temporary synthetic spike' }
+  }
+  Invoke-Checked { & "$taskBuild/apksigner.bat" sign --ks spike.keystore --ks-key-alias spike --ks-pass pass:android --key-pass pass:android --out probe.apk aligned.apk }
+  Invoke-Checked { & "$taskBuild/apksigner.bat" verify probe.apk }
+} finally { $env:JAVA_HOME = $taskPreviousJava }
+Write-Output 'BUILD PASS probe.apk'
+```
