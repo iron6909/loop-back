@@ -10,6 +10,22 @@
 2. **模型来源**：使用供应商提供的模型，不部署推理服务，不在设备或局域网运行本地 LLM。客户端保存 Base URL、模型名与 API Key。
 3. **远程边界**：仅指本 App 自有后端接口。RSS 订阅、播客、音视频直链、网页词典、iTunes 搜索等第三方公网接口**不在改造范围**，保持原样。
 
+### 供应商接口依据（官方文档核实，2026-10-31）
+
+| 项目 | OpenRouter | DeepSeek |
+| --- | --- | --- |
+| Base URL | `https://openrouter.ai/api/v1` | `https://api.deepseek.com` |
+| 对话端点 | `POST /api/v1/chat/completions` | `POST /chat/completions` |
+| 协议自述 | 请求/响应 schema “very similar to OpenAI's APIs”，跨供应商归一化 | 兼容 OpenAI / Anthropic 格式 |
+| 结构化输出 | `response_format: {type:'json_schema', json_schema:{strict:true,...}}`；仅部分模型/端点支持，可用 `require_parameters:true` 限定路由 | `response_format: {type:'json_object'}`（JSON Output） |
+| 流式 | SSE：`data:` 行 + `[DONE]` | `stream: true` |
+| 模型名 | 由目录决定，客户端手填 | `deepseek-flash`、`deepseek-v4-pro` |
+
+由此确定两条设计约束：
+
+- 两家 Base URL 形态不同（一个有 `/v1`，一个没有）。客户端必须把 Base URL 定义为**直接追加 `/chat/completions` 的根路径**，不做 `/v1` 自动补全。
+- OpenRouter 流末尾额外发送带 `usage` 的分片，其 `choices[0].delta` 内容为空但重复 `finish_reason`。解析时不得把它当新文本，也不得在 `delta` 缺失时崩溃。
+
 ### 取代的前置前提
 
 上一版本把「整个应用禁止公网访问」列为候选边界并据此设计了资源导入、统计关闭、WebView 移除等方案。用户已明确排除该边界，本节取代该分支；早期提案仍保留在提交历史中，其对应内容不再作为设计依据。第三方公网接口既不在范围内，也不因本次改造被删除或降级。
@@ -34,9 +50,11 @@
 | `/api/entitlements`、`/api/paddle/*` | 订阅权益、结账、客户门户 | 停用：本地 AI 不再由后端裁决额度，会员门控失去权威来源 |
 | `/api/v1/client/config`、区域路由 | 启动配置、全球/中国切换 | 使用本地默认配置；单端点，无区域回退 |
 | `/api/v1/me/preferences`、`/api/v1/me/onboarding` | 偏好与问卷云同步 | 仅本地保存（本地存储与备份已存在） |
-| `/api/v2/collections*`、`/api/v1/featured-podcasts`、`/api/v1/netdisk/baidu/oauth/*` | 社区合集、精选播客、百度网盘导入 | **无本地等价物**，需决定隐藏入口或保留（保留则仍依赖自有后端） |
+| `/api/v2/collections*` | 社区合集发现、加入、文件与字幕 | 改为本地合集导入；发现页无本地等价物（见下节） |
+| `/api/v1/featured-podcasts` | 精选播客目录 | 改为本地目录或移除入口；RSS 订阅本身不依赖后端（见下节） |
+| `/api/v1/netdisk/baidu/oauth/*` | 百度网盘导入 | 改为本地文件导入（已有批量导入能力） |
 | `/version.json` | 应用更新检查 | 停用自更新检查，改用安装包手动更新 |
-| `cdn.echo-loop.top` / `.cn` | ASR、TTS、词典、发音包下载 | 自有 CDN，需决定继续使用或增加本地导入 |
+| `cdn.echo-loop.top` / `.cn` | ASR、TTS、词典、发音包下载 | 静态资源托管而非业务接口；默认保留，可选本地导入（见下节） |
 
 **明确不在范围**：iTunes 搜索、播客 RSS、音视频直链、网页词典、商店与帮助外链、PostHog / Firebase / 友盟上报。它们保持现状。
 
@@ -96,7 +114,53 @@
 - 云端字幕入口改走 `LocalTranscriptionTaskManager`：ffmpeg 转 16 kHz WAV → 分段转录 → SRT + 合成词级时间戳 → 写库。合成词级时间戳与云端真实对齐不等价，需在合同中明确精度预期。
 - 复述评估：读取当前录音已有且同 attempt 的有效本地转写，否则独立引擎转写（**不传 VAD 路径**，避开已知 native 崩溃面，但不等于所有机型稳定），再把原文与转写交供应商 LLM 评估；转写失败不进入评估，不把 ASR 错误当作确定的语言错误。
 - 不复用为云端上传准备的 AAC / 2 MB 上限合同；原录音不被覆盖，临时文件与引擎按既有生命周期清理。
-- 多语言：本地模型仅英语，原云端支持 `multi`。保留该选项需另配多语言离线模型，否则须明确降级为英语。
+- 多语言：界面实际只提供 `en` 与 `auto`（自动检测）两项；`audio_items.transcript_language` 的注释写作 `'en' / 'multi'` 属历史遗留，`'multi'` 仅出现在测试中。云端是把 `language=auto` 交给后端自动识别。本地 Whisper 只有英语模型，无法识别其他语种，须收敛为英语或引入多语言 Whisper。
+
+### 社区合集：现状与本地替代
+
+**现状（代码事实）**
+
+- 三个匿名只读接口：`GET /api/v2/collections`（20 条游标分页）、`GET /api/v2/collections/{id}`（合集 + 文件分页）、`GET /api/v2/collections/{id}/files/{fileId}`（单文件元数据 + 字幕 `sentences` / `words`）。不需要登录。
+- 目录分页缓存在应用缓存目录 `community_collection_catalog/`，正文与 `meta` 分离，`meta` 保存 sha256 与 `lastFetchedAt`。
+- 「加入」把远端 `remoteId` 写入本地 `collections` 行（`source='community'`）；`CommunitySyncService` 之后按**每合集 2 小时**基线同步：拉全部分页 → 按 `remoteAudioId` upsert `audio_items` → 维护 `collection_audio_items.sortOrder` → 远端已消失的文件交给 `CommunityFileLifecycleService.markUnavailable`（有本地进度/收藏则标记不可用，否则删除）。
+- 媒体下载使用 `mediaUrl` / `mediaUrlChina`（按地区二选一），交给后台下载器落盘。
+- 因此该功能是「远端目录 + 远端媒体 + 本地学习数据」三层耦合，不是单纯的列表接口。
+
+**本地替代**
+
+- 保留 `collections`、`collection_audio_items`、`audio_items` 与全部学习数据，只替换数据来源：新增「导入本地合集」，按用户选定的目录或清单创建 `source='local'` 合集，批量导入音频与字幕（现有单文件导入、字幕导入与本地转录可直接复用）。
+- 清单取最小可用格式 `manifest.json`：合集名、可选封面、`files[]`（路径、标题、可选难度、可选字幕路径），路径相对清单所在目录；缺字幕时走现有本地转录。
+- 发现页（浏览远端公开合集）没有本地等价物，建议移除入口、保留「我的合集」。这属于功能变化，需用户确认。
+
+### 精选播客：现状与本地替代
+
+**现状（代码事实）**
+
+- `GET /api/v1/featured-podcasts?cursor=` 返回 `items[]` + `nextCursor`，每项含 `id`、`applePodcastUrl`、`rssUrl`、`imageUrl`、`title`、`description`；响应原文按页缓存（`catalog.json` / `page-<hash>.json` + sha256 meta）。
+- 订阅动作本身不经过后端：`subscriptionInputUrl` 优先 Apple URL、回退 RSS，交给现有 `PodcastUrlResolver` / `PodcastRepository` 直接订阅，播放与字幕都在第三方公网路径上。
+- 所以自有后端只提供「精选清单」这一层。
+
+**本地替代**
+
+- 方案一（最省）：移除精选入口，用户手动粘贴 RSS / Apple 链接订阅。该路径已存在且不依赖自有后端，无需新增代码。
+- 方案二：内置或可导入本地 `catalog.json`（字段与现有 `FeaturedPodcast.fromJson` 一致），把「精选」变成随包目录，保留编辑推荐位。
+- 建议先做方案一；确有推荐位需求再加方案二。
+
+### 模型资源 CDN：现状与本地替代
+
+**现状（代码事实）**
+
+- 是，全部走自有 CDN：`RuntimeEndpointRouter.modelCdnUri()` → `cdn.echo-loop.top` / `cdn.echo-loop.cn`，路径 `/model/<archivePath>`。
+- 使用方：ASR（`silero-vad`、`whisper-tiny/base/small.en`）、Kokoro TTS、Piper TTS（多音色）、离线词典（`dict-en_zh-CN-v1` 等）、发音包（`pronunciation-v2`）。
+- 每个资源在目录中固定 `archivePath` + `sha256` + 预估体积；下载后校验整包 SHA-256 → staging 解包并校验关键文件 → 写安装清单 → 原子替换（`ResourceArchiveInstaller` / `AsrArchiveInstaller`）。
+- 各 manager 已有 `baseUrlOverride` 注入点，测试与自建镜像可改地址。
+- 性质上是静态资源托管：无用户数据、无鉴权、无业务逻辑。
+
+**本地替代**
+
+- 默认建议保留 CDN。它与 RSS 同类，属静态分发，不构成对自有后端服务的依赖。
+- 若要完全脱离：为每个资源增加「从文件导入」，复用现有校验与原子安装，要求用户提供符合 `archivePath` 结构的归档；或将 `baseUrlOverride` 指向自建镜像。
+- 需用户决定：保留 CDN，还是增加本地导入（一次性 UI 与校验成本）。
 
 ## 选择状态
 
@@ -109,17 +173,19 @@
 **优先有界问题：选定供应商与模型能否稳定产出可用结构化结果。**
 
 - 依赖决策：是否需为该供应商调整提示词、改用 JSON Schema 模式，或更换模型。
-- 待补输入：供应商名称、模型 id、是否支持 `response_format` 与 SSE、速率/额度限制。
+- 已确认（官方文档）：两家均为 OpenAI 兼容 Chat Completions，支持 SSE 流式；OpenRouter 支持 `json_schema`（限特定模型/端点），DeepSeek 支持 `json_object`。
+- 仍待确认：目标模型 id、速率/额度限制、各学习功能上的实际 JSON 有效性与耗时。
 - 建议后续 `spike` 边界：用脱敏固定样例覆盖带上下文翻译、句子解析、单词、短语、意群、复述结构；记录有效 JSON 率、意群内容守恒、首字与总耗时。
 - 决定标准：各必要功能均产出通过结构与语义校验的对象；仅部分通过则记为范围受限，不得宣布整体可行。
-- 当前未执行该实验，也未认定任何供应商支持上述能力。
+- 当前未执行该实验。协议层能力已由官方文档确认，但模型在具体学习任务上的输出质量与耗时仍未验证；音频端点不在本次依赖范围内。
 
 **其余未决（需用户决定，非实验问题）**
 
-1. 自有后端内容功能（社区合集、精选播客、百度网盘导入）隐藏入口，还是保留（即仍依赖自有后端）？
-2. ASR / TTS / 词典模型继续从自有 CDN 下载，还是增加本地文件导入？
-3. 云端转录的 `multi` 多语言是否保留（本地模型仅英语）？
-4. 订阅与 AI 额度 UI 直接移除，还是保留只读展示？
+1. 社区合集：接受「移除发现页 + 仅支持本地目录/清单导入」吗？清单用 `manifest.json`，还是直接选目录即可？
+2. 精选播客：移除入口（推荐，订阅路径已不依赖后端），还是内置本地 `catalog.json`？
+3. 模型 CDN：保留（推荐），还是增加本地文件导入？
+4. 转录语言：收敛为英语，还是引入多语言 Whisper（体积与速度成本更高）？
+5. 订阅与 AI 额度 UI：直接移除，还是保留只读展示？
 
 **普通实施验证**：Key 不入日志与备份、配置切换后旧回调作废、SSE 跨分片与 `[DONE]`、错误 JSON 不落缓存、取消与断流、静音与长音频转录、复述原录音保留。可沿用 `test/services/sentence_ai_api_client_test.dart`、`test/providers/sentence_ai_provider_test.dart`、`test/providers/retell_review_evaluation_provider_test.dart` 及本地转录相关测试；本轮未执行。
 
@@ -129,5 +195,6 @@
 - 代码基线：`5574fe21a676184ada4f562f684e312b250998e4`（应用 `1.0.44`）。工作副本由该提交的本地克隆建立，`origin` 改名为 `source-local`，未推送。
 - 规则与现状：`AGENTS.md`、`CLAUDE.md`、`PLAN.md`、`TASKS.md`、`pubspec.yaml`、`pubspec.lock`。未发现 `GLOSSARY.md`、`docs/learnings/` 或既有同范围 feature 目录。
 - 代码来源：`lib/services/sentence_ai_api_client.dart`、`lib/features/chatbot/{services/chat_api_client.dart,providers/chat_session_controller.dart}`、`lib/providers/sentence_ai_provider.dart`、`lib/providers/retell_review_evaluation_provider.dart`、`lib/services/dictionary/ai_dictionary_source.dart`、`lib/providers/dictionary/lookup_controller.dart`、`lib/services/backend_dio.dart`、`lib/features/subscription/providers/feature_access_provider.dart`、`lib/services/transcription_api_client.dart`、`lib/providers/local_transcription_task_provider.dart`、`lib/services/asr/{sherpa_onnx_engine.dart,asr_model_catalog.dart}`、`lib/models/{sentence_ai_result.dart,dictionary/dictionary_entry.dart,sense_group_result.dart,retell_review_evaluation.dart}`。
-- 证据限制：仅静态代码与仓库文档；未读取真实密钥，未调用任何供应商或自有后端接口，未运行应用、测试或实验。供应商兼容性、模型质量与耗时均未验证。
+- 供应商文档（2026-10-31 经 Jina Reader 读取官方页面；本地直连被代理 fake-IP 段拦截，未修改代理配置）：`https://api-docs.deepseek.com/`、`https://api-docs.deepseek.com/guides/json_mode`、`https://openrouter.ai/docs/api_reference/overview`、`https://openrouter.ai/docs/guides/features/structured-outputs`、`https://openrouter.ai/docs/api_reference/streaming`。
+- 证据限制：代码为静态阅读；供应商侧只读官方文档，未调用任何接口；未读取真实密钥，未运行应用、测试或实验。模型输出质量、耗时与速率限制均未验证。
 - 覆盖检查：自有后端接口按清单逐项处置，第三方公网接口显式排除；未决事项未被当作已批准删除。无需额外内部附件。
