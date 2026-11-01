@@ -41,6 +41,36 @@ class AndroidLocalAudioFilePicker {
     ]);
   }
 
+  /// 选取目录并仅列出直接子项；子目录不递归读取。
+  Future<PickedAudioDirectory?> pickDirectory() async {
+    final result = await _channel.invokeMethod<Object?>('pickDirectory');
+    if (result == null) return null;
+    if (result case {
+      'name': final String name,
+      'children': final List<Object?> children,
+    } when name.trim().isNotEmpty) {
+      final files = <PlatformFile>[];
+      var ignoredDirectories = 0;
+      for (final child in children) {
+        if (child case {'isDirectory': final bool directory}) {
+          if (directory) {
+            ignoredDirectories++;
+          } else {
+            files.add(_platformFileFrom(child));
+          }
+        } else {
+          throw const LocalAudioFilePickerException('Invalid directory entry');
+        }
+      }
+      return PickedAudioDirectory(
+        name: name,
+        files: files,
+        ignoredDirectories: ignoredDirectories,
+      );
+    }
+    throw const LocalAudioFilePickerException('Invalid directory metadata');
+  }
+
   /// 读取 [uri] 的全部字节。仅用于字幕这类小文件，原生侧对体积设了上限。
   Future<Uint8List> readBytes(String uri) async {
     final bytes = await _channel.invokeMethod<Uint8List>('readBytes', {
@@ -132,6 +162,18 @@ class AndroidLocalAudioFilePicker {
     }
     return PlatformFile(identifier: uri, name: name, size: size);
   }
+}
+
+/// SAF 返回的目录快照，只含直接文件与被忽略子目录的数量。
+class PickedAudioDirectory {
+  const PickedAudioDirectory({
+    required this.name,
+    required this.files,
+    this.ignoredDirectories = 0,
+  });
+  final String name;
+  final List<PlatformFile> files;
+  final int ignoredDirectories;
 }
 
 class LocalAudioFilePickerException implements Exception {
