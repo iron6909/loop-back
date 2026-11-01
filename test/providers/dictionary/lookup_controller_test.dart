@@ -40,9 +40,7 @@ class _RecordingUsageTracker implements UsageTracker {
 /// （只看最终结果 != null + 源类型）。
 class _FakeAiSource extends AiDictionarySource {
   _FakeAiSource({this.result, this.error})
-    : super(
-        apiClient: () => throw UnimplementedError(),
-      );
+    : super(apiClient: () => throw UnimplementedError());
 
   final DictionaryLookupResult? result;
   final Object? error;
@@ -60,10 +58,7 @@ class _FakeAiSource extends AiDictionarySource {
 /// 可控 AI 源：每次 lookupStream 返回一个可手动驱动的 StreamController，
 /// 用于编排流式多帧 / 竞态时序。满足 `is AiDictionarySource`。
 class _ControllableAiSource extends AiDictionarySource {
-  _ControllableAiSource()
-    : super(
-        apiClient: () => throw UnimplementedError(),
-      );
+  _ControllableAiSource() : super(apiClient: () => throw UnimplementedError());
 
   final List<StreamController<DictionaryLookupResult?>> calls = [];
 

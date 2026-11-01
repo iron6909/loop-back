@@ -40,8 +40,6 @@ import 'package:echo_loop/services/sentence_ai_api_client.dart';
 import 'package:echo_loop/services/audio_playback_service.dart';
 import 'package:echo_loop/services/audio_preview_controller.dart';
 import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_availability.dart';
-import 'package:echo_loop/features/subscription/models/ai_quota_rejection.dart';
 import 'package:echo_loop/widgets/common/playback_controls.dart';
 import 'package:echo_loop/widgets/common/recording_button.dart';
 import 'package:echo_loop/widgets/common/masked_sentence_tile.dart';

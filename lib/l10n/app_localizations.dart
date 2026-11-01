@@ -9991,6 +9991,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expand sidebar'**
   String get expandSidebar;
+
+  /// No description provided for @usageScopeAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account balance'**
+  String get usageScopeAccount;
+
+  /// No description provided for @usageScopeKeyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Key budget'**
+  String get usageScopeKeyBudget;
+
+  /// No description provided for @usageScopePlanWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan windows'**
+  String get usageScopePlanWindow;
+
+  /// No description provided for @usageRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get usageRefresh;
+
+  /// No description provided for @usageRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get usageRetry;
+
+  /// No description provided for @usageUpdatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String usageUpdatedAt(String time);
+
+  /// No description provided for @usageUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed · last {time}'**
+  String usageUpdateFailed(String time);
+
+  /// No description provided for @usageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently unavailable'**
+  String get usageUnavailable;
+
+  /// No description provided for @usageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This address does not support usage queries'**
+  String get usageUnsupported;
+
+  /// No description provided for @usageRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limited'**
+  String get usageRateLimited;
+
+  /// No description provided for @usageBudgetNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No budget set for this key'**
+  String get usageBudgetNotSet;
+
+  /// No description provided for @usageAccountUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Account balance not authorized'**
+  String get usageAccountUnauthorized;
+
+  /// No description provided for @usageOpenConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Open provider console'**
+  String get usageOpenConsole;
+
+  /// No description provided for @usageWindowRolling.
+  ///
+  /// In en, this message translates to:
+  /// **'5 hours'**
+  String get usageWindowRolling;
+
+  /// No description provided for @usageWindowWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get usageWindowWeekly;
+
+  /// No description provided for @usageWindowMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get usageWindowMonthly;
+
+  /// No description provided for @usageGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Granted {amount}'**
+  String usageGranted(String amount);
+
+  /// No description provided for @usageToppedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Topped up {amount}'**
+  String usageToppedUp(String amount);
+
+  /// No description provided for @usageEffectiveBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective budget applied'**
+  String get usageEffectiveBudget;
+
+  /// No description provided for @usageResetsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {time}'**
+  String usageResetsAt(String time);
+
+  /// No description provided for @aiServiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI service'**
+  String get aiServiceTitle;
 }
 
 class _AppLocalizationsDelegate

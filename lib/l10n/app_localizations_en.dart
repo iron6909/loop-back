@@ -5666,4 +5666,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expandSidebar => 'Expand sidebar';
+
+  @override
+  String get usageScopeAccount => 'Account balance';
+
+  @override
+  String get usageScopeKeyBudget => 'Key budget';
+
+  @override
+  String get usageScopePlanWindow => 'Plan windows';
+
+  @override
+  String get usageRefresh => 'Refresh';
+
+  @override
+  String get usageRetry => 'Retry';
+
+  @override
+  String usageUpdatedAt(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String usageUpdateFailed(String time) {
+    return 'Update failed · last $time';
+  }
+
+  @override
+  String get usageUnavailable => 'Currently unavailable';
+
+  @override
+  String get usageUnsupported => 'This address does not support usage queries';
+
+  @override
+  String get usageRateLimited => 'Rate limited';
+
+  @override
+  String get usageBudgetNotSet => 'No budget set for this key';
+
+  @override
+  String get usageAccountUnauthorized => 'Account balance not authorized';
+
+  @override
+  String get usageOpenConsole => 'Open provider console';
+
+  @override
+  String get usageWindowRolling => '5 hours';
+
+  @override
+  String get usageWindowWeekly => 'Weekly';
+
+  @override
+  String get usageWindowMonthly => 'Monthly';
+
+  @override
+  String usageGranted(String amount) {
+    return 'Granted $amount';
+  }
+
+  @override
+  String usageToppedUp(String amount) {
+    return 'Topped up $amount';
+  }
+
+  @override
+  String get usageEffectiveBudget => 'Effective budget applied';
+
+  @override
+  String usageResetsAt(String time) {
+    return 'Resets $time';
+  }
+
+  @override
+  String get aiServiceTitle => 'AI service';
 }

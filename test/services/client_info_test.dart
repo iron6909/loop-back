@@ -131,6 +131,5 @@ void main() {
       expect(client.defaultHeaders[kAppVersionHeader], '9.9.9');
       client.dispose();
     });
-
   });
 }

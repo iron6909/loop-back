@@ -5410,4 +5410,77 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get expandSidebar => '展开侧边栏';
+
+  @override
+  String get usageScopeAccount => '账户余额';
+
+  @override
+  String get usageScopeKeyBudget => 'Key 预算';
+
+  @override
+  String get usageScopePlanWindow => '套餐窗口';
+
+  @override
+  String get usageRefresh => '刷新';
+
+  @override
+  String get usageRetry => '重试';
+
+  @override
+  String usageUpdatedAt(String time) {
+    return '更新于 $time';
+  }
+
+  @override
+  String usageUpdateFailed(String time) {
+    return '更新失败 · 上次 $time';
+  }
+
+  @override
+  String get usageUnavailable => '暂无法获取';
+
+  @override
+  String get usageUnsupported => '该地址不支持用量查询';
+
+  @override
+  String get usageRateLimited => '已限额';
+
+  @override
+  String get usageBudgetNotSet => 'Key 未设预算';
+
+  @override
+  String get usageAccountUnauthorized => '账户余额未授权查询';
+
+  @override
+  String get usageOpenConsole => '打开供应商控制台';
+
+  @override
+  String get usageWindowRolling => '5 小时';
+
+  @override
+  String get usageWindowWeekly => '每周';
+
+  @override
+  String get usageWindowMonthly => '每月';
+
+  @override
+  String usageGranted(String amount) {
+    return '赠送 $amount';
+  }
+
+  @override
+  String usageToppedUp(String amount) {
+    return '充值 $amount';
+  }
+
+  @override
+  String get usageEffectiveBudget => '已应用有效预算';
+
+  @override
+  String usageResetsAt(String time) {
+    return '$time 重置';
+  }
+
+  @override
+  String get aiServiceTitle => 'AI 服务';
 }
