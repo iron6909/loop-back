@@ -7,7 +7,7 @@
 ## Constraints
 
 - 不新增依赖；复用现有 `dio`、`flutter_secure_storage`、`drift`、`sherpa_onnx`、`ffmpeg`。
-- Android 为主要验收平台；iOS / macOS 不得因改动无法编译。
+- 以 Android 为验收目标（用户后续明确）：只运行 Android 与共享逻辑相关检查；Windows/macOS/iOS 专属用例不作门槛，不处理其平台基线问题。共享 Dart 代码仍须可编译。
 - 后续开发以本机 Flutter SDK 为准（用户选择前置依赖修复 B）；允许更新 `pubspec.lock`、`pubspec.yaml` 中必要的依赖兼容约束与对应插件生成文件。先完成前置修复，再执行 Task 1；不新增依赖。
 - 不处理上游既有 yamllint 告警与 `AndroidSpeechPlatformHandler` 相关 Kotlin 告警，避免无关 diff。
 - 不削弱既有测试；不得为了让新代码通过而修改既有断言。
@@ -102,6 +102,7 @@
 
 **Covers:** REQ-1, REQ-2, REQ-3, REQ-4, REQ-5, REQ-6, REQ-7, REQ-10, REQ-11, REQ-25
 **Depends on:** Task 7, 8
+**Implementation boundary:** 复述入口的门控解除与 Task 13 的上传协议替换必须同一增量验证，否则会保留一条已失效后端请求；两任务仍分别记录 REQ 与验收证据。
 **Files:** 改造 `lib/providers/sentence_ai_provider.dart`、`lib/services/sentence_ai_api_client.dart`、`lib/services/dictionary/ai_dictionary_source.dart`、`lib/providers/dictionary/lookup_controller.dart`、`lib/providers/retell_review_evaluation_provider.dart`、`lib/features/chatbot/providers/chat_session_controller.dart` 与相关 UI 门控；新增配置生命周期 provider。
 **Change:** 将句子、词典与聊天入口接到 Task 7/8 客户端，共用配置身份与取消守卫，移除旧缓存重复写入和对无效结果的自动重试。移除 `isAuthenticatedProvider`、`featureAccessProvider`、`supabaseSessionProvider` 前置检查与 402 分支；保留取消、generation/session 守卫与缓存。AI 入口不再跳转 paywall。
 **Check:** `flutter test test/providers/sentence_ai_provider_test.dart test/providers/retell_review_evaluation_provider_test.dart` → 未登录时调用不再被拦截；既有通过用例保持通过。
@@ -181,7 +182,7 @@
 ## Final verification
 
 - Run: `flutter analyze` → 无新增问题（既有告警文件不计）。
-- Run: `flutter test` → 全绿。
+- Run: Android 与共享逻辑相关的 `flutter test` → 全绿；已证明只针对其它平台的用例不作验收门槛，记录排除原因。
 - Run: `flutter test test/services/provider/ test/features/audio_import/` → 新增模块全绿。
 - Manual（Android 真机，实施时执行）：选目录导入、缺字幕转写、历史合集缺媒体禁用播放、AI 服务页各状态。
 - 说明：本轮不具备运行真实供应商调用的条件，模型质量不作为验收门槛（见 spec 证据限制）。
