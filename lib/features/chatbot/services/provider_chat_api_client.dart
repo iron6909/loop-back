@@ -24,7 +24,7 @@ import 'ndjson_text_stream.dart';
 /// 不能「有正文就提前返回」——否则会丢掉 stop 信号。
 typedef _EventOutcome = ({bool content, bool stop, bool truncated});
 
-const _EventIgnored = (content: false, stop: false, truncated: false);
+const _eventIgnored = (content: false, stop: false, truncated: false);
 
 /// 走用户自配供应商的聊天客户端。
 class ProviderChatApiClient implements ChatApi {
@@ -96,13 +96,13 @@ class ProviderChatApiClient implements ChatApi {
     } on FormatException {
       throw const ChatStreamException();
     }
-    if (decoded is! Map<String, dynamic>) return _EventIgnored;
+    if (decoded is! Map<String, dynamic>) return _eventIgnored;
 
     final choices = decoded['choices'];
     // usage 等帧的 choices 为空数组，直接忽略。
-    if (choices is! List || choices.isEmpty) return _EventIgnored;
+    if (choices is! List || choices.isEmpty) return _eventIgnored;
     final choice = choices.first;
-    if (choice is! Map<String, dynamic>) return _EventIgnored;
+    if (choice is! Map<String, dynamic>) return _eventIgnored;
 
     final finish = choice['finish_reason'];
     if (finish == 'length') {
