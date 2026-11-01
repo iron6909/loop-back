@@ -8,7 +8,8 @@
 
 - 不新增依赖；复用现有 `dio`、`flutter_secure_storage`、`drift`、`sherpa_onnx`、`ffmpeg`。
 - Android 为主要验收平台；iOS / macOS 不得因改动无法编译。
-- 不修改上游既有告警文件（`pubspec.yaml`、`AndroidSpeechPlatformHandler` 相关 Kotlin），避免无关 diff。
+- 后续开发以本机 Flutter SDK 为准（用户选择前置依赖修复 B）；允许更新 `pubspec.lock`、`pubspec.yaml` 中必要的依赖兼容约束与对应插件生成文件。先完成前置修复，再执行 Task 1；不新增依赖。
+- 不处理上游既有 yamllint 告警与 `AndroidSpeechPlatformHandler` 相关 Kotlin 告警，避免无关 diff。
 - 不削弱既有测试；不得为了让新代码通过而修改既有断言。
 - 真实供应商调用不进自动化测试；测试一律用注入的假 transport / 假 Dio。
 - 保持 `AGENTS.md`：中文注释、类型安全（避免 `dynamic`/`as` 强转/`!`）、单文件 ≤500 行、单函数 ≤50 行。
