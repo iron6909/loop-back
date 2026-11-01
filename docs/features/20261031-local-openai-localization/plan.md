@@ -151,8 +151,8 @@
 
 **Covers:** REQ-19
 **Depends on:** Task 14
-**Files:** 新增 `lib/features/audio_import/community_directory_import.dart`；改造 `lib/widgets/import_audio_sheet.dart` 与 `lib/widgets/import_audio_selection_list.dart`；新增 `test/features/audio_import/community_directory_import_test.dart`
-**Change:** 目录名作合集名；`classifyImportFiles` 过滤；`matchSubtitlesForAudios` 配对；自然序写 `sortOrder`；子目录与不支持扩展名计数并在汇总展示；空目录不创建合集。
+**Files:** 新增 `lib/features/audio_import/community_directory_import.dart`；改造 `lib/widgets/import_audio_sheet.dart`、`lib/widgets/add_audio_dialog.dart` 与 `lib/widgets/import_audio_selection_list.dart`；新增 `test/features/audio_import/community_directory_import_test.dart`
+**Change:** 目录名作合集名；`classifyImportFiles` 过滤；复用 `AddAudioDialog` 的 `matchSubtitlesForAudios` 配对、逐文件复制与去重；自然序写 `sortOrder`；子目录与不支持扩展名计数并在汇总展示；导入有成功或重复结果后再事务创建合集，空目录和全部失败不创建合集。
 **Check:** `flutter test test/features/audio_import/community_directory_import_test.dart` → 配对、排序、忽略计数、空目录失败、全部重复的汇总。
 
 ### Task 16: 历史社区合集只读与移除发现页
