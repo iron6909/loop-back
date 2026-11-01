@@ -2804,5 +2804,7 @@
   "providerKindDeepSeek": "DeepSeek",
   "providerKindOpenRouter": "OpenRouter",
   "providerKindCustom": "Custom",
-  "usageViewAll": "View all"
+  "usageViewAll": "View all",
+  "legacyAutoTranscript": "Existing auto-detected subtitles are kept for viewing; regeneration is unavailable.",
+  "transcriptionTimingNotice": "Word timing is estimated and may be inaccurate."
 }

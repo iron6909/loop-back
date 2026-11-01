@@ -1,7 +1,6 @@
 /// 本地（离线）转录任务管理 Provider。
 ///
-/// 云端 [TranscriptionTaskManager] 的离线对偶：用设备已下载的 Whisper 模型
-/// 在本机转录音频生成字幕，不上传、不登录。
+/// 用设备已下载的 Whisper 英语模型在本机生成字幕，不上传、不登录。
 /// keepAlive：弹窗关闭后任务继续在后台运行。
 ///
 /// 流水线：ffmpeg 解码为 16kHz WAV → 专用引擎按所选档位分段转录（段级真实时间戳）
@@ -124,6 +123,8 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
     required AsrModelInfo model,
     bool autoMergeShortSentences = true,
   }) async {
+    // 历史自动检测字幕只读展示，不以英语模型重新生成（REQ-18）。
+    if (audioItem.transcriptLanguage == 'auto') return;
     final audioId = audioItem.id;
 
     // 防重入：进行中忽略。

@@ -2305,5 +2305,7 @@
   "providerKindDeepSeek": "DeepSeek",
   "providerKindOpenRouter": "OpenRouter",
   "providerKindCustom": "自定义",
-  "usageViewAll": "查看全部"
+  "usageViewAll": "查看全部",
+  "legacyAutoTranscript": "历史自动检测字幕仅保留展示，无法重新生成。",
+  "transcriptionTimingNotice": "词级时间戳为估算值，可能不准确。"
 }

@@ -5555,4 +5555,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get usageViewAll => '查看全部';
+
+  @override
+  String get legacyAutoTranscript => '历史自动检测字幕仅保留展示，无法重新生成。';
+
+  @override
+  String get transcriptionTimingNotice => '词级时间戳为估算值，可能不准确。';
 }

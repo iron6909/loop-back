@@ -19,11 +19,11 @@ import 'package:echo_loop/features/audio_import/audio_import_models.dart';
 import 'package:echo_loop/features/audio_import/audio_import_provider.dart';
 import 'package:echo_loop/features/community_collections/download/download_progress.dart';
 import 'package:echo_loop/features/community_collections/download/community_download_notifier.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
+import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/audio_list_tile.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
@@ -102,23 +102,6 @@ class _FailingAudioImportController extends PodcastDownloadController {
     );
     return false;
   }
-}
-
-Session _signedInSession() {
-  final user = User(
-    id: 'user-1',
-    appMetadata: const {'provider': 'email'},
-    userMetadata: const {},
-    aud: 'authenticated',
-    email: 'learner@example.com',
-    createdAt: '2026-06-12T00:00:00.000Z',
-  );
-  return Session(
-    accessToken: 'token',
-    tokenType: 'bearer',
-    user: user,
-    refreshToken: 'refresh',
-  );
 }
 
 void main() {
@@ -1070,7 +1053,9 @@ void main() {
       );
     });
 
-    testWidgets('菜单管理字幕 AI 转录音频过长时显示弹窗内错误提示', (tester) async {
+    testWidgets('菜单管理字幕直接提供本机英语转录，不再显示云端限制', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
       final item = createTestAudioItem(
         name: 'Long Audio',
         totalDuration: 31 * 60, // 超过 AI 转录 30 分钟上限
@@ -1085,11 +1070,8 @@ void main() {
             audioLibraryProvider.overrideWith(
               () => TestAudioLibrary(AudioLibraryState(audioItems: [item])),
             ),
-            supabaseSessionProvider.overrideWith(
-              (ref) => Stream<Session?>.value(_signedInSession()),
-            ),
-            // 已登录用户视为已解锁（Pro），转录机制测试不被额度闸拦截。
-            subscriptionEntitlementOverride(),
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            offlineAsrOverride(),
           ],
         ),
       );
@@ -1100,20 +1082,9 @@ void main() {
       await tester.tap(find.text('Manage Subtitles'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Cloud Transcription'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(
-        find.widgetWithText(FilledButton, 'Start Transcription'),
-      );
-      await tester.pump();
-
-      expect(find.textContaining('Audio too long'), findsOneWidget);
-      expect(find.byType(SnackBar), findsNothing);
-
-      await tester.pump(const Duration(seconds: 12));
-      await tester.pumpAndSettle();
-
+      expect(find.text('On-Device Transcription'), findsOneWidget);
+      expect(find.text('English'), findsOneWidget);
+      expect(find.text('Cloud Transcription'), findsNothing);
       expect(find.textContaining('Audio too long'), findsNothing);
     });
 

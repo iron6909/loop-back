@@ -10261,6 +10261,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View all'**
   String get usageViewAll;
+
+  /// No description provided for @legacyAutoTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing auto-detected subtitles are kept for viewing; regeneration is unavailable.'**
+  String get legacyAutoTranscript;
+
+  /// No description provided for @transcriptionTimingNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Word timing is estimated and may be inaccurate.'**
+  String get transcriptionTimingNotice;
 }
 
 class _AppLocalizationsDelegate

@@ -31,7 +31,7 @@ import '../features/community_collections/models/community_collection_models.dar
 import '../features/community_collections/widgets/community_difficulty_badge.dart';
 import 'guide_flow.dart';
 import 'learning_progress_icon.dart';
-import '../providers/transcription_task_provider.dart';
+import '../providers/local_transcription_task_provider.dart';
 import 'dialogs/text_input_dialog.dart';
 import '../features/audio_import/audio_import_models.dart';
 import '../features/audio_import/audio_import_provider.dart';
@@ -131,7 +131,7 @@ class AudioListTile extends ConsumerWidget {
 
     // 监听后台转录任务状态
     final transcriptionTask = ref.watch(
-      transcriptionTaskManagerProvider.select((map) => map[audioItem.id]),
+      localTranscriptionTaskManagerProvider.select((map) => map[audioItem.id]),
     );
     // 本单项的下载进度（播客单集 / 社区合集音频共用同一套行内进度展示）。
     // double? 语义：null 表示未在下载本项；非 null（含 -1 不定态）表示正在下载。
@@ -357,15 +357,14 @@ class AudioListTile extends ConsumerWidget {
     LearningProgress? progress,
     List<String> collectionNames,
     List<Tag> tagData,
-    TranscriptionTaskState? transcriptionTask,
+    LocalTranscriptionState? transcriptionTask,
     double? downloadProgress,
     CommunityDifficulty? communityDifficulty,
   ) {
     // 是否有进行中的转录任务
     final isTranscribing =
-        transcriptionTask is TranscriptionHashing ||
-        transcriptionTask is TranscriptionUploading ||
-        transcriptionTask is TranscriptionProcessing;
+        transcriptionTask is LocalTranscriptionDecoding ||
+        transcriptionTask is LocalTranscriptionTranscribing;
 
     final metaParts = <InlineSpan>[];
     final accessibleMetaParts = <String>[];

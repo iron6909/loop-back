@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
@@ -6,7 +5,6 @@ import 'package:echo_loop/database/app_database.dart' as db;
 import 'package:echo_loop/database/daos/audio_item_dao.dart';
 import 'package:echo_loop/models/audio_item.dart' show TranscriptSource;
 import 'package:echo_loop/models/word_timestamp.dart';
-import 'package:echo_loop/services/transcription_api_client.dart';
 import 'package:echo_loop/utils/sense_group_service.dart';
 
 import '../helpers/mock_providers.dart';
@@ -29,8 +27,6 @@ void main() {
       final words = await service.fetchWordTimestamps(
         audioItemId: 'audio-1',
         dao: dao,
-        api: TranscriptionApiClient.withDio(Dio()),
-        accessToken: null,
       );
 
       expect(words, isNotNull);
@@ -42,6 +38,20 @@ void main() {
       expect(stored, isNotNull);
       final decoded = decodeWordTimestamps(stored!);
       expect(decoded!.map((w) => w.word), ['Hello,', 'world.']);
+    });
+
+    test('历史云端字幕缺时间戳也只从 SRT 合成', () async {
+      final dao = _AudioItemDaoWithRow(
+        _audioItem(
+          transcriptSource: TranscriptSource.ai.index,
+          transcriptSrt: '1\n00:00:00,000 --> 00:00:01,000\nOld words\n',
+        ),
+      );
+      final words = await SenseGroupService().fetchWordTimestamps(
+        audioItemId: 'audio-1',
+        dao: dao,
+      );
+      expect(words?.map((w) => w.word), ['Old', 'words']);
     });
 
     test('已有词级时间戳时，非 AI 字幕也直接使用 DB 数据', () async {
@@ -63,8 +73,6 @@ void main() {
       final words = await service.fetchWordTimestamps(
         audioItemId: 'audio-1',
         dao: dao,
-        api: TranscriptionApiClient.withDio(Dio()),
-        accessToken: null,
       );
 
       expect(words!.single.word, 'Cached.');

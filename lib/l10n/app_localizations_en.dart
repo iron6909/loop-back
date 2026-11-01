@@ -5813,4 +5813,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get usageViewAll => 'View all';
+
+  @override
+  String get legacyAutoTranscript =>
+      'Existing auto-detected subtitles are kept for viewing; regeneration is unavailable.';
+
+  @override
+  String get transcriptionTimingNotice =>
+      'Word timing is estimated and may be inaccurate.';
 }

@@ -7,25 +7,20 @@ library;
 import 'package:dio/dio.dart';
 
 import '../database/daos/audio_item_dao.dart';
-import '../models/audio_item.dart';
 import '../models/sense_group_result.dart';
 import '../models/word_timestamp.dart';
 import '../providers/sentence_ai_provider.dart';
-import '../services/app_logger.dart';
-import '../services/transcription_api_client.dart';
 import 'sense_group_timing.dart';
 import 'synthetic_word_timestamps.dart';
 
 /// 意群数据服务
 class SenseGroupService {
-  /// 加载词级时间戳（DB 优先，未命中则从 API 拉取并保存）
+  /// 加载本地词级时间戳；缺失时从既有 SRT 合成，不再访问后端。
   ///
   /// 返回词级时间戳列表，无数据时返回 null。
   Future<List<WordTimestamp>?> fetchWordTimestamps({
     required String audioItemId,
     required AudioItemDao dao,
-    required TranscriptionApiClient api,
-    required String? accessToken,
   }) async {
     final audioItem = await dao.getById(audioItemId);
     if (audioItem == null) return null;
@@ -39,40 +34,13 @@ class SenseGroupService {
       await dao.updateWordTimestamps(audioItemId, null);
     }
 
-    // 2. 非 AI 字幕没有远端词级数据，缺失时从 DB 中的 SRT 懒生成并回写。
-    if (audioItem.transcriptSource != TranscriptSource.ai.index) {
-      final srt =
-          audioItem.transcriptSrt ?? await dao.getTranscriptSrt(audioItemId);
-      if (srt == null || srt.isEmpty) return null;
-      final words = await generateSyntheticWordTimestampsFromSrt(srt);
-      if (words.isEmpty) return null;
-      await dao.updateWordTimestamps(audioItemId, encodeWordTimestamps(words));
-      return words;
-    }
-
-    // 3. AI 转录 DB 未命中，从 API 拉取并保存
-    final sha256 = audioItem.audioSha256;
-    final language = audioItem.transcriptLanguage;
-    if (sha256 == null || language == null) return null;
-    if (accessToken == null || accessToken.isEmpty) return null;
-
-    try {
-      final result = await api.getTranscript(
-        sha256,
-        language,
-        accessToken: accessToken,
-      );
-      if (result.words != null && result.words!.isNotEmpty) {
-        await dao.updateWordTimestamps(
-          audioItemId,
-          encodeWordTimestamps(result.words!),
-        );
-        return result.words;
-      }
-    } catch (e) {
-      AppLogger.log('SenseGroup', '❌ 获取词级时间戳失败 | $e');
-    }
-    return null;
+    final srt =
+        audioItem.transcriptSrt ?? await dao.getTranscriptSrt(audioItemId);
+    if (srt == null || srt.isEmpty) return null;
+    final words = await generateSyntheticWordTimestampsFromSrt(srt);
+    if (words.isEmpty) return null;
+    await dao.updateWordTimestamps(audioItemId, encodeWordTimestamps(words));
+    return words;
   }
 
   /// 流式请求 AI 拆分意群

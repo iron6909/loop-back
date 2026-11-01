@@ -287,6 +287,58 @@ void main() {
       expect(leftover, isEmpty);
     });
 
+    test('转录失败保留原音频、既有字幕与时间戳', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      await database.audioItemDao.saveTranscriptContent(
+        item.id,
+        srt: 'original subtitles',
+        wordTimestampsJson: 'original timestamps',
+      );
+      final source = File('${dataDir.path}/${item.audioPath}');
+      await source.parent.create(recursive: true);
+      await source.writeAsBytes([1, 2, 3, 4]);
+      final container = buildContainer(
+        engine: _FakeEngine(const [], throwOnTranscribe: true),
+        transcode: _FakeTranscode(),
+        items: [item],
+      );
+      addTearDown(container.dispose);
+      await container
+          .read(localTranscriptionTaskManagerProvider.notifier)
+          .startLocalTranscription(item, model: model);
+      expect(
+        await database.audioItemDao.getTranscriptSrt(item.id),
+        'original subtitles',
+      );
+      expect(
+        await database.audioItemDao.getWordTimestamps(item.id),
+        'original timestamps',
+      );
+      expect(await source.readAsBytes(), [1, 2, 3, 4]);
+      expect(
+        container.read(audioLibraryProvider).audioItems.single.audioPath,
+        item.audioPath,
+      );
+    });
+
+    test('历史 auto 字幕仅展示，不发起转录覆盖', () async {
+      final item = _testAudioItem().copyWith(transcriptLanguage: 'auto');
+      final engine = _FakeEngine(const []);
+      final transcode = _FakeTranscode();
+      final container = buildContainer(
+        engine: engine,
+        transcode: transcode,
+        items: [item],
+      );
+      addTearDown(container.dispose);
+      await container
+          .read(localTranscriptionTaskManagerProvider.notifier)
+          .startLocalTranscription(item, model: model);
+      expect(transcode.calls, 0);
+      expect(engine.initializeCalls, 0);
+    });
+
     test('空分段 → EmptyResult，不写库', () async {
       final item = _testAudioItem();
       await _seedRow(database, item);
