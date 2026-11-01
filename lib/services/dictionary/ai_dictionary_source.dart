@@ -3,15 +3,14 @@ library;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import '../../database/daos/sentence_ai_cache_dao.dart';
 import '../../models/dictionary/dictionary_lookup_result.dart';
 import '../../utils/text_normalize.dart';
 import '../sentence_ai_api_client.dart';
 import 'dictionary_source.dart';
 
 class AiDictionarySource implements DictionarySource {
-  AiDictionarySource({required ValueGetter<SentenceAiCacheDao> cacheDao,
-    required ValueGetter<SentenceAiApiClient> apiClient}) : _api = apiClient;
+  AiDictionarySource({required ValueGetter<SentenceAiApiClient> apiClient})
+    : _api = apiClient;
   final ValueGetter<SentenceAiApiClient> _api;
   static const sourceId = 'ai';
   @override

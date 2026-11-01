@@ -404,14 +404,11 @@ void main() {
     expect(find.byIcon(Icons.arrow_upward), findsOneWidget); // 回到发送态
   });
 
-  testWidgets('已登录未解锁 → 发送触发 quotaExceeded 升级 banner', (tester) async {
+  testWidgets('不再有会员门控：未解锁也直接发送，不出现升级 banner', (tester) async {
     await pumpChatWidget(
       tester,
       wrap(ChatView(config: config())),
-      overrides: overrides(
-        _ScriptApi(() => const Stream.empty()),
-        policy: _DenyPolicy(),
-      ),
+      overrides: overrides(_ScriptApi(() => const Stream.empty())),
     );
     await tester.pump();
 
@@ -421,13 +418,10 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    // gate banner 升级入口出现
-    expect(find.text('Upgrade'), findsOneWidget);
+    // 旧的升级 banner 已随会员门控移除；输入区照常可用。
+    expect(find.text('Upgrade'), findsNothing);
     expect(find.byType(ChatComposer), findsOneWidget);
   });
 }
 
-class _DenyPolicy implements FreeAllowancePolicy {
-  @override
-  bool allows(PremiumFeature feature) => false;
-}
+

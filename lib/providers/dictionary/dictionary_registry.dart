@@ -8,7 +8,6 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../database/providers.dart';
 import '../../services/dictionary/ai_dictionary_source.dart';
 import '../../services/dictionary/dictionary_source.dart';
 import '../../services/dictionary/local_dictionary_source.dart';
@@ -28,7 +27,6 @@ LocalDictionarySource localDictionarySource(Ref ref) =>
 /// 依赖延迟解析（lookup 时才读），避免枚举注册表即初始化数据库/网络栈。
 @Riverpod(keepAlive: true)
 AiDictionarySource aiDictionarySource(Ref ref) => AiDictionarySource(
-  cacheDao: () => ref.read(sentenceAiCacheDaoProvider),
   apiClient: () => ref.read(sentenceAiApiClientProvider),
 );
 

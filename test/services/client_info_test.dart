@@ -1,7 +1,9 @@
-/// 客户端平台/版本标识（AI 请求公共 header）测试。
+/// 客户端平台/版本标识测试。
 ///
-/// 覆盖：平台名合法性、headers 组装（版本缺省时省略）、API client 构造时
-/// 已把标识写入 Dio 公共 headers；Linux 等未知测试宿主按 fail-open 省略平台标识。
+/// 覆盖：平台名合法性、headers 组装（版本缺省时省略）、转录客户端构造时已把标识
+/// 写入 Dio 公共 headers；Linux 等未知测试宿主按 fail-open 省略平台标识。
+///
+/// 句子 AI 已改由用户自配供应商直连，不再携带平台/渠道/版本头，故不在此断言。
 library;
 
 import 'dart:io' show Platform;

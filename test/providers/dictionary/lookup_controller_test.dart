@@ -1,8 +1,6 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
-import 'package:echo_loop/features/subscription/models/ai_quota_rejection.dart';
 import 'package:echo_loop/features/usage/usage_counters.dart';
 import 'package:echo_loop/features/usage/usage_event.dart';
 import 'package:echo_loop/features/usage/usage_providers.dart';
@@ -17,7 +15,6 @@ import 'package:echo_loop/services/dictionary/dictionary_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 记录 record 事件的 tracker 桩，用于断言成功计数是否被触发
 class _RecordingUsageTracker implements UsageTracker {
@@ -44,7 +41,6 @@ class _RecordingUsageTracker implements UsageTracker {
 class _FakeAiSource extends AiDictionarySource {
   _FakeAiSource({this.result, this.error})
     : super(
-        cacheDao: () => throw UnimplementedError(),
         apiClient: () => throw UnimplementedError(),
       );
 
@@ -66,7 +62,6 @@ class _FakeAiSource extends AiDictionarySource {
 class _ControllableAiSource extends AiDictionarySource {
   _ControllableAiSource()
     : super(
-        cacheDao: () => throw UnimplementedError(),
         apiClient: () => throw UnimplementedError(),
       );
 
@@ -83,30 +78,7 @@ class _ControllableAiSource extends AiDictionarySource {
   }
 }
 
-/// 按请求 token 决定结果的 AI 源：用于验证登录事件会续跑同一 controller。
-class _AuthAwareAiSource extends AiDictionarySource {
-  _AuthAwareAiSource({required this.result})
-    : super(
-        cacheDao: () => throw UnimplementedError(),
-        apiClient: () => throw UnimplementedError(),
-      );
-
-  final DictionaryLookupResult result;
-  final List<DictionaryLookupRequest> requests = [];
-
-  @override
-  Stream<DictionaryLookupResult?> lookupStream(
-    DictionaryLookupRequest request, {
-    CancelToken? cancelToken,
-  }) async* {
-    requests.add(request);
-    if (request.accessToken == null || request.accessToken!.isEmpty) {
-      throw const DictionaryAuthRequiredException();
-    }
-    yield result;
-  }
-}
-
+/// 按请求 token 决定结果的 AI 源（登录续跑行为已移除，此替身仅供旧用例兼容）。
 /// 构造一个 AI 结果（部分/完整均可，只需 headword）
 AiDictResult _aiResult(String headword) => AiDictResult(
   DictionaryEntry(
@@ -155,19 +127,6 @@ DictionaryLookupResult _result(String word) => WebDictResult(
   sourceId: 'cambridge',
   url: Uri.parse('https://x/$word'),
   word: word,
-);
-
-Session _session(String accessToken) => Session(
-  accessToken: accessToken,
-  tokenType: 'bearer',
-  refreshToken: 'refresh-token',
-  user: User(
-    id: 'user-1',
-    appMetadata: const {},
-    userMetadata: const {},
-    aud: 'authenticated',
-    createdAt: '2026-08-30T00:00:00.000Z',
-  ),
 );
 
 void main() {
@@ -288,53 +247,6 @@ void main() {
     );
   });
 
-  test('登录成功后自动续跑当前 AI 查询，并使用最新 token', () async {
-    final authEvents = StreamController<Session?>.broadcast();
-    addTearDown(authEvents.close);
-    final ai = _AuthAwareAiSource(result: _aiResult('run'));
-    final c = ProviderContainer(
-      overrides: [
-        dictionarySourcesByIdProvider.overrideWithValue({'ai': ai}),
-        resolvedDefaultSourceIdProvider.overrideWithValue('ai'),
-        supabaseSessionProvider.overrideWith((ref) => authEvents.stream),
-        dictionaryLookupContextProvider.overrideWith((ref) {
-          final session = ref.watch(supabaseSessionProvider).valueOrNull;
-          return DictionaryLookupContext(
-            accessToken: session?.accessToken,
-            targetLanguage: 'zh-CN',
-          );
-        }),
-        usageTrackerProvider.overrideWithValue(_RecordingUsageTracker()),
-      ],
-    );
-    addTearDown(c.dispose);
-    start(c, 'run');
-
-    await pump();
-    expect(ai.requests, hasLength(1));
-    expect(ai.requests.single.accessToken, isNull);
-    expect(
-      c.read(dictionaryLookupControllerProvider('run')).current,
-      isA<LookupAuthRequired>(),
-    );
-
-    authEvents.add(_session('fresh-token'));
-    await pump();
-    await pump();
-
-    expect(ai.requests, hasLength(2));
-    expect(ai.requests.last.accessToken, 'fresh-token');
-    expect(
-      c.read(dictionaryLookupControllerProvider('run')).current,
-      isA<LookupLoaded>(),
-    );
-
-    // token 刷新仍是已登录态，不应把已加载的 AI 结果重复请求一次。
-    authEvents.add(_session('refreshed-token'));
-    await pump();
-    expect(ai.requests, hasLength(2));
-  });
-
   test('词组过长 → LookupPhraseTooLong', () async {
     final a = ControllableSource('a');
     final c = makeContainer({'a': a});
@@ -371,7 +283,7 @@ void main() {
     );
   });
 
-  test('后端 402（本月额度用尽）→ LookupQuotaExceeded', () async {
+  test('供应商 402 余额不足 → 记为可重试错误', () async {
     final a = ControllableSource('a');
     final c = makeContainer({'a': a});
     start(c, 'run');
@@ -388,11 +300,11 @@ void main() {
     await pump();
     expect(
       c.read(dictionaryLookupControllerProvider('run')).current,
-      isA<LookupQuotaExceeded>(),
+      isA<LookupError>(),
     );
   });
 
-  test('后端 402 quota_exceeded + limit=0 → 免费版不支持原因', () async {
+  test('供应商 402 携带原因码 → 仍记为可重试错误', () async {
     final source = ControllableSource('a');
     final container = makeContainer({'a': source});
     start(container, 'run');
@@ -415,11 +327,7 @@ void main() {
     final state = container
         .read(dictionaryLookupControllerProvider('run'))
         .current;
-    expect(state, isA<LookupQuotaExceeded>());
-    expect(
-      (state as LookupQuotaExceeded).reason,
-      AiQuotaRejectionReason.unsupportedForFreePlan,
-    );
+    expect(state, isA<LookupError>());
   });
 
   test('同源竞态：旧查询晚到被丢弃，只保留新结果', () async {

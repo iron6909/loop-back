@@ -361,7 +361,7 @@ void main() {
   }
 
   group('RetellPlayerScreen — SegmentedButton 位置', () {
-    testWidgets('AI 复述评估额度用尽时先提示，确认升级后才进入订阅页', (tester) async {
+    testWidgets('AI 复述评估失败显示供应商错误提示，不跳订阅页', (tester) async {
       final reviewController = _ManualRetellReviewController();
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
@@ -370,7 +370,6 @@ void main() {
         createTestWidget(
           extraOverrides: [
             retellReviewEvaluationProvider.overrideWith(() => reviewController),
-            subscriptionAvailabilityProvider.overrideWithValue(true),
             sharedPreferencesProvider.overrideWithValue(prefs),
           ],
         ),
@@ -381,51 +380,18 @@ void main() {
         const RetellReviewEvaluationState(
           attemptKey: 'retell:a1:0:/tmp/retell-review.m4a',
           phase: RetellReviewEvaluationPhase.failed,
-          errorCode: 'quota_exceeded',
-          quotaReason: AiQuotaRejectionReason.unsupportedForFreePlan,
+          errorCode: 'insufficientBalance',
         ),
       );
       await tester.pumpAndSettle();
 
+      // 供应商余额不足：只给一次性提示，不出现会员升级入口。
       expect(
-        find.text("The free plan doesn't support AI retell review"),
+        find.text('Provider balance or plan is insufficient'),
         findsOneWidget,
       );
       expect(find.text('Paywall'), findsNothing);
-
-      await tester.tap(find.text('Got it'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text("The free plan doesn't support AI retell review"),
-        findsNothing,
-      );
-
-      // 用户再次主动评估时仍应可看到提示，而不是被已展示记录静默抑制。
-      reviewController.emit(
-        const RetellReviewEvaluationState(
-          attemptKey: 'retell:a1:0:/tmp/retell-review.m4a',
-          phase: RetellReviewEvaluationPhase.loading,
-        ),
-      );
-      reviewController.emit(
-        const RetellReviewEvaluationState(
-          attemptKey: 'retell:a1:0:/tmp/retell-review.m4a',
-          phase: RetellReviewEvaluationPhase.failed,
-          errorCode: 'quota_exceeded',
-          quotaReason: AiQuotaRejectionReason.unsupportedForFreePlan,
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        find.text("The free plan doesn't support AI retell review"),
-        findsOneWidget,
-      );
-
-      await tester.tap(find.text('Upgrade Now'));
-      await tester.pumpAndSettle();
-      expect(find.text('Paywall'), findsOneWidget);
     });
-
     testWidgets('SegmentedButton 存在且位于句子列表之后', (tester) async {
       await tester.pumpWidget(createTestWidget());
       await tester.pumpAndSettle();

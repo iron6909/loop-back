@@ -1,7 +1,6 @@
-import 'dart:convert';
-
+/// AI 词典源：只负责路由（单词/词组）与逐帧转发；缓存与凭据由统一客户端处理。
+library;
 import 'package:dio/dio.dart';
-import 'package:echo_loop/database/daos/sentence_ai_cache_dao.dart';
 import 'package:echo_loop/models/dictionary/dictionary_entry.dart';
 import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
 import 'package:echo_loop/services/dictionary/ai_dictionary_source.dart';
@@ -9,8 +8,6 @@ import 'package:echo_loop/services/dictionary/dictionary_source.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-class MockCacheDao extends Mock implements SentenceAiCacheDao {}
 
 class MockApiClient extends Mock implements SentenceAiApiClient {}
 
@@ -25,9 +22,9 @@ DictionaryEntry _entry(String headword) => DictionaryEntry(
   learnerTips: const [],
 );
 
-MultiWordDictionaryEntry _multiEntry(String headword) =>
+MultiWordDictionaryEntry _multiEntry(String expression) =>
     MultiWordDictionaryEntry(
-      originalExpression: headword,
+      originalExpression: expression,
       naturalness: '',
       category: '术语',
       pronunciationTips: const [],
@@ -39,419 +36,172 @@ MultiWordDictionaryEntry _multiEntry(String headword) =>
       background: '',
     );
 
-/// 中途抛错的流：先发一帧，再抛异常（模拟取消/流内错误，均在写缓存前发生）
-Stream<AiDictionaryStreamFrame> _throwingStream(
-  AiDictionaryEntry first,
-  Object error,
-) async* {
-  yield AiDictionaryStreamFrame(entry: first, isFinal: false);
-  throw error;
-}
+Stream<AiDictionaryStreamFrame> _frames(AiDictionaryEntry entry,
+        {bool isFinal = true}) =>
+    Stream.value(AiDictionaryStreamFrame(entry: entry, isFinal: isFinal));
 
 void main() {
-  late MockCacheDao dao;
   late MockApiClient api;
   late AiDictionarySource source;
 
   setUp(() {
-    dao = MockCacheDao();
     api = MockApiClient();
-    source = AiDictionarySource(cacheDao: () => dao, apiClient: () => api);
+    source = AiDictionarySource(apiClient: () => api);
   });
 
-  /// 默认桩：L2 未命中 + upsert 成功
-  void stubCacheMissAndUpsert() {
-    when(
-      () => dao.getByHash(any(), 'ai_dictionary_v2'),
-    ).thenAnswer((_) async => null);
-    when(
-      () => dao.upsert(any(), 'ai_dictionary_v2', any()),
-    ).thenAnswer((_) async {});
-  }
+  DictionaryLookupRequest request(String word, {String? token}) =>
+      DictionaryLookupRequest(
+        word: word,
+        accessToken: token,
+        targetLanguage: 'zh-CN',
+      );
 
-  List<AiDictionaryStreamFrame> streamFrames(
-    List<AiDictionaryEntry> entries, {
-    bool markLastFinal = true,
-  }) => [
-    for (var i = 0; i < entries.length; i++)
-      AiDictionaryStreamFrame(
-        entry: entries[i],
-        isFinal: markLastFinal && i == entries.length - 1,
-      ),
-  ];
-
-  void stubWordStream(String word, List<AiDictionaryEntry> frames) {
+  test('单词（无空格）路由到 lookupWordStreamFrames', () async {
     when(
       () => api.lookupWordStreamFrames(
-        word,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
+        'run',
+        targetLanguage: 'zh-CN',
         cancelToken: any(named: 'cancelToken'),
       ),
-    ).thenAnswer((_) => Stream.fromIterable(streamFrames(frames)));
-  }
+    ).thenAnswer((_) => _frames(_entry('run')));
 
-  void stubPhraseStream(String phrase, List<AiDictionaryEntry> frames) {
-    when(
-      () => api.lookupPhraseStreamFrames(
-        phrase,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    ).thenAnswer((_) => Stream.fromIterable(streamFrames(frames)));
-  }
-
-  const word = 'run';
-  const tokenReq = DictionaryLookupRequest(
-    word: word,
-    accessToken: 'tok',
-    targetLanguage: 'zh-CN',
-  );
-
-  test('元数据', () {
-    expect(source.id, 'ai');
-    expect(source.canBeDisabled, isFalse);
-    expect(source.requiresNetwork, isTrue);
-  });
-
-  test('缓存未命中且无 accessToken → 抛登录异常', () {
-    stubCacheMissAndUpsert();
-
-    expect(
-      source.lookup(const DictionaryLookupRequest(word: word)),
-      throwsA(isA<DictionaryAuthRequiredException>()),
-    );
-  });
-
-  test('未登录命中 L1 内存缓存 → 返回缓存结果且不调用 API', () async {
-    stubCacheMissAndUpsert();
-    stubWordStream(word, [_entry(word)]);
-
-    await source.lookup(tokenReq);
-    final result = await source.lookup(
-      const DictionaryLookupRequest(word: word, targetLanguage: 'zh-CN'),
-    );
-
-    expect((result! as AiDictResult).entry.headword, word);
-    verify(
-      () => api.lookupWordStreamFrames(
-        word,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    ).called(1);
-  });
-
-  test('单词（无空格）路由到 lookupWordStream，返回结果并写 L1+L2', () async {
-    stubCacheMissAndUpsert();
-    stubWordStream(word, [_entry(word)]);
-
-    final result = await source.lookup(tokenReq);
+    final result = await source.lookup(request('run'));
 
     expect(result, isA<AiDictResult>());
-    expect((result! as AiDictResult).entry.headword, word);
-    verify(() => dao.upsert(any(), 'ai_dictionary_v2', any())).called(1);
+    verify(
+      () => api.lookupWordStreamFrames(
+        'run',
+        targetLanguage: 'zh-CN',
+        cancelToken: any(named: 'cancelToken'),
+      ),
+    ).called(1);
     verifyNever(
       () => api.lookupPhraseStreamFrames(
         any(),
-        accessToken: any(named: 'accessToken'),
         targetLanguage: any(named: 'targetLanguage'),
         cancelToken: any(named: 'cancelToken'),
       ),
     );
   });
 
-  test('词组（含空格）路由到 lookupPhraseStream', () async {
-    stubCacheMissAndUpsert();
-    stubPhraseStream('machine learning', [_multiEntry('machine learning')]);
-
-    final result = await source.lookup(
-      const DictionaryLookupRequest(
-        word: 'machine learning',
-        accessToken: 'tok',
+  test('词组（含空格）路由到 lookupPhraseStreamFrames', () async {
+    when(
+      () => api.lookupPhraseStreamFrames(
+        'machine learning',
         targetLanguage: 'zh-CN',
-      ),
-    );
-
-    final entry = (result! as AiDictResult).entry;
-    expect(entry, isA<MultiWordDictionaryEntry>());
-    verify(() => dao.upsert(any(), 'ai_dictionary_v2', any())).called(1);
-    verifyNever(
-      () => api.lookupWordStreamFrames(
-        any(),
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
         cancelToken: any(named: 'cancelToken'),
       ),
-    );
+    ).thenAnswer((_) => _frames(_multiEntry('machine learning')));
+
+    final result = await source.lookup(request('machine learning'));
+
+    expect(result, isA<AiDictResult>());
+    verify(
+      () => api.lookupPhraseStreamFrames(
+        'machine learning',
+        targetLanguage: 'zh-CN',
+        cancelToken: any(named: 'cancelToken'),
+      ),
+    ).called(1);
   });
 
-  test('流式逐帧：lookupStream 每帧 yield AiDictResult，末帧写缓存', () async {
-    stubCacheMissAndUpsert();
-    // 部分快照 → 完整对象
-    stubWordStream(word, [_entry(''), _entry(word)]);
-
-    final results = await source.lookupStream(tokenReq).toList();
-
-    expect(results.length, 2);
-    expect((results.last! as AiDictResult).entry.headword, word);
-    // 完整完成才写一次缓存（末帧）
-    verify(() => dao.upsert(any(), 'ai_dictionary_v2', any())).called(1);
-  });
-
-  test('流正常结束但未收到 final → 抛 DictionaryStreamException 且不写缓存', () async {
-    stubCacheMissAndUpsert();
+  test('不再要求登录：无 accessToken 也直接查', () async {
     when(
       () => api.lookupWordStreamFrames(
-        word,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
+        'run',
+        targetLanguage: 'zh-CN',
+        cancelToken: any(named: 'cancelToken'),
+      ),
+    ).thenAnswer((_) => _frames(_entry('run')));
+
+    final result = await source.lookup(request('run', token: null));
+
+    expect(result, isA<AiDictResult>());
+  });
+
+  test('逐帧转发，不自行截断', () async {
+    final partial = _entry('run');
+    when(
+      () => api.lookupWordStreamFrames(
+        'run',
+        targetLanguage: 'zh-CN',
         cancelToken: any(named: 'cancelToken'),
       ),
     ).thenAnswer(
-      (_) => Stream.fromIterable(
-        streamFrames([_entry(''), _entry(word)], markLastFinal: false),
+      (_) => Stream.fromIterable([
+        AiDictionaryStreamFrame(entry: partial, isFinal: false),
+        AiDictionaryStreamFrame(entry: partial, isFinal: true),
+      ]),
+    );
+
+    final frames = await source.lookupStream(request('run')).toList();
+
+    expect(frames, hasLength(2));
+  });
+
+  test('流内错误向上传播，不被吞掉', () async {
+    when(
+      () => api.lookupWordStreamFrames(
+        'run',
+        targetLanguage: 'zh-CN',
+        cancelToken: any(named: 'cancelToken'),
+      ),
+    ).thenAnswer(
+      (_) => Stream<AiDictionaryStreamFrame>.error(
+        const DictionaryStreamException(),
       ),
     );
 
     await expectLater(
-      source.lookupStream(tokenReq).toList(),
+      source.lookupStream(request('run')).toList(),
       throwsA(isA<DictionaryStreamException>()),
     );
-    verifyNever(() => dao.upsert(any(), 'ai_dictionary_v2', any()));
   });
 
-  test('request.word（保留大小写）原样发往后端', () async {
-    stubCacheMissAndUpsert();
-    stubWordStream('NASA', [_entry('run')]);
-
-    await source.lookup(
-      const DictionaryLookupRequest(
-        word: 'NASA',
-        accessToken: 'tok',
-        targetLanguage: 'zh-CN',
-      ),
-    );
-
-    verify(
-      () => api.lookupWordStreamFrames(
-        'NASA',
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    ).called(1);
-  });
-
-  test('缓存 key 按小写复用：NASA 与 nasa 只调一次 API', () async {
-    stubCacheMissAndUpsert();
-    stubWordStream('NASA', [_entry('NASA')]);
-
-    await source.lookup(
-      const DictionaryLookupRequest(
-        word: 'NASA',
-        accessToken: 'tok',
-        targetLanguage: 'zh-CN',
-      ),
-    );
-    // 第二次不同大小写：L1 命中（同缓存键），不再调 API
-    await source.lookup(
-      const DictionaryLookupRequest(
-        word: 'nasa',
-        accessToken: 'tok',
-        targetLanguage: 'zh-CN',
-      ),
-    );
-
-    verify(
-      () => api.lookupWordStreamFrames(
-        'NASA',
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    ).called(1);
-  });
-
-  test('L1 内存命中 → 第二次即时单帧、不调 API', () async {
-    stubCacheMissAndUpsert();
-    stubWordStream(word, [_entry(word)]);
-
-    await source.lookup(tokenReq);
-    await source.lookup(tokenReq);
-
-    verify(
-      () => api.lookupWordStreamFrames(
-        word,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    ).called(1);
-  });
-
-  test('clearMemoryCache 后重查再走 L3', () async {
-    stubCacheMissAndUpsert();
-    stubWordStream(word, [_entry(word)]);
-
-    await source.lookup(tokenReq);
-    source.clearMemoryCache();
-    await source.lookup(tokenReq);
-
-    verify(
-      () => api.lookupWordStreamFrames(
-        word,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    ).called(2);
-  });
-
-  test('L2 SQLite 命中 → 即时单帧、不调 API', () async {
-    when(
-      () => dao.getByHash(any(), 'ai_dictionary_v2'),
-    ).thenAnswer((_) async => jsonEncode(_entry(word).toJson()));
-
-    final result = await source.lookup(tokenReq);
-
-    expect((result! as AiDictResult).entry.headword, word);
-    verifyNever(
-      () => api.lookupWordStreamFrames(
-        any(),
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    );
-  });
-
-  test('未登录命中 L2 SQLite 缓存 → 返回缓存结果且不调用 API', () async {
-    when(
-      () => dao.getByHash(any(), 'ai_dictionary_v2'),
-    ).thenAnswer((_) async => jsonEncode(_entry(word).toJson()));
-
-    final result = await source.lookup(
-      const DictionaryLookupRequest(word: word, targetLanguage: 'zh-CN'),
-    );
-
-    expect((result! as AiDictResult).entry.headword, word);
-    verifyNever(
-      () => api.lookupWordStreamFrames(
-        any(),
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    );
-  });
-
-  test('L2 SQLite 命中多词表达 → MultiWordDictionaryEntry', () async {
-    when(() => dao.getByHash(any(), 'ai_dictionary_v2')).thenAnswer(
-      (_) async => jsonEncode(_multiEntry('machine learning').toJson()),
-    );
-
-    final result = await source.lookup(
-      const DictionaryLookupRequest(
-        word: 'machine learning',
-        accessToken: 'tok',
-        targetLanguage: 'zh-CN',
-      ),
-    );
-
-    expect((result! as AiDictResult).entry, isA<MultiWordDictionaryEntry>());
-  });
-
-  test('转发 cancelToken 给 API（流式路径尊重取消）', () async {
-    stubCacheMissAndUpsert();
-    stubWordStream(word, [_entry(word)]);
-
+  test('取消后不再转发后续帧', () async {
     final token = CancelToken();
-    await source.lookup(tokenReq, cancelToken: token);
-
-    verify(
-      () => api.lookupWordStreamFrames(
-        word,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: token,
-      ),
-    ).called(1);
-  });
-
-  test('中途取消（流抛 cancel）→ 不写缓存', () async {
-    stubCacheMissAndUpsert();
     when(
       () => api.lookupWordStreamFrames(
-        word,
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
+        'run',
+        targetLanguage: 'zh-CN',
         cancelToken: any(named: 'cancelToken'),
       ),
     ).thenAnswer(
-      (_) => _throwingStream(
-        _entry(''),
-        DioException(
-          requestOptions: RequestOptions(path: '/x'),
-          type: DioExceptionType.cancel,
-        ),
-      ),
+      (_) async* {
+        yield AiDictionaryStreamFrame(entry: _entry('run'), isFinal: false);
+        token.cancel('closed');
+        yield AiDictionaryStreamFrame(entry: _entry('run'), isFinal: true);
+      },
     );
 
-    await expectLater(
-      source.lookupStream(tokenReq).toList(),
-      throwsA(isA<DioException>()),
-    );
-    // 未完整完成 → 不落缓存
-    verifyNever(() => dao.upsert(any(), 'ai_dictionary_v2', any()));
+    final frames = await source
+        .lookupStream(request('run'), cancelToken: token)
+        .toList();
+
+    expect(frames, hasLength(1));
   });
 
-  test('词组过长（API 抛 DictionaryPhraseTooLongException）→ 冒泡且不落缓存', () async {
-    stubCacheMissAndUpsert();
-    when(
-      () => api.lookupPhraseStreamFrames(
-        any(),
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
-        cancelToken: any(named: 'cancelToken'),
-      ),
-    ).thenThrow(const DictionaryPhraseTooLongException());
-
-    await expectLater(
-      source.lookup(
-        const DictionaryLookupRequest(
-          word: 'a b c d e f g h i',
-          accessToken: 'tok',
-          targetLanguage: 'zh-CN',
-        ),
-      ),
-      throwsA(isA<DictionaryPhraseTooLongException>()),
-    );
-    verifyNever(() => dao.upsert(any(), 'ai_dictionary_v2', any()));
-  });
-
-  test('其它 DioException 原样冒泡', () async {
-    stubCacheMissAndUpsert();
+  test('lookup 返回最后一帧', () async {
     when(
       () => api.lookupWordStreamFrames(
-        any(),
-        accessToken: any(named: 'accessToken'),
-        targetLanguage: any(named: 'targetLanguage'),
+        'run',
+        targetLanguage: 'zh-CN',
         cancelToken: any(named: 'cancelToken'),
       ),
-    ).thenThrow(
-      DioException(
-        requestOptions: RequestOptions(path: '/x'),
-        response: Response(
-          requestOptions: RequestOptions(path: '/x'),
-          statusCode: 500,
-        ),
-        type: DioExceptionType.badResponse,
-      ),
+    ).thenAnswer(
+      (_) => Stream.fromIterable([
+        AiDictionaryStreamFrame(entry: _entry('partial'), isFinal: false),
+        AiDictionaryStreamFrame(entry: _entry('final'), isFinal: true),
+      ]),
     );
 
-    await expectLater(source.lookup(tokenReq), throwsA(isA<DioException>()));
+    final result = await source.lookup(request('run'));
+
+    expect(result?.headword, 'final');
+  });
+
+  test('清缓存委托给统一客户端', () {
+    source.clearMemoryCache();
+    verify(() => api.clearMemoryCache()).called(1);
   });
 }
