@@ -423,5 +423,3 @@ void main() {
     expect(find.byType(ChatComposer), findsOneWidget);
   });
 }
-
-
