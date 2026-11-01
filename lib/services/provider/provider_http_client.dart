@@ -5,6 +5,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
@@ -168,6 +169,34 @@ class ProviderHttpClient {
     >= 500 => ProviderErrorKind.serverError,
     _ => ProviderErrorKind.network,
   };
+
+  /// 流式请求：返回原始字节流，SSE 解析交给调用方。
+  ///
+  /// 与 [postChatCompletions] 共用地址拼接、头部与空 Key 校验；不重试，
+  /// 避免半截流被重发后与已展示文本拼接出错。
+  Future<Stream<Uint8List>> postChatCompletionsStream(
+    Object body, {
+    CancelToken? cancelToken,
+  }) async {
+    if (_apiKey.trim().isEmpty || RegExp(r'[\r\n]').hasMatch(_apiKey)) {
+      throw const ProviderHttpException(ProviderErrorKind.unauthorized);
+    }
+    final response = await _dio.post<ResponseBody>(
+      _endpoint,
+      data: body,
+      options: Options(
+        headers: _headers,
+        responseType: ResponseType.stream,
+      ),
+      cancelToken: cancelToken,
+    );
+    final status = response.statusCode ?? 0;
+    final stream = response.data?.stream;
+    if (status < 200 || status >= 300 || stream == null) {
+      throw ProviderHttpException(_mapStatus(status), statusCode: status);
+    }
+    return stream;
+  }
 
   /// 取错误体文本供回落判定；只保留前 2 KB，避免把大正文带进内存或日志。
   String? _bodyText(Object? data) {
