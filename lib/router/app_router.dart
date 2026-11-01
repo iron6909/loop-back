@@ -37,6 +37,7 @@ import '../screens/collection_detail_screen.dart';
 import '../screens/study_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/settings_screen.dart';
+import '../features/provider_settings/screens/ai_service_screen.dart';
 import '../screens/learning_plan_screen.dart';
 import '../screens/media_playback_screen.dart';
 import '../screens/blind_listen_player_screen.dart';
@@ -523,6 +524,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/settings',
                 builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'ai-service',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (_, _) => const AiServiceScreen(),
+                  ),
+                ],
               ),
             ],
           ),

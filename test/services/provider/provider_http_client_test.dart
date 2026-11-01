@@ -306,6 +306,31 @@ void main() {
     });
   });
 
+  group('用量 GET 边界', () {
+    test('拒绝把凭据发往不同 origin', () async {
+      await expectLater(
+        client().getJson(Uri.parse('https://elsewhere.example/usage')),
+        throwsArgumentError,
+      );
+      expect(adapter.requests, isEmpty);
+    });
+
+    test('GET 超时映射为领域错误', () async {
+      adapter.enqueueError(DioExceptionType.receiveTimeout);
+      await expectLater(
+        client().getJson(Uri.parse('https://api.deepseek.com/user/balance')),
+        throwsA(
+          isA<ProviderHttpException>().having(
+            (e) => e.kind,
+            'kind',
+            ProviderErrorKind.timeout,
+          ),
+        ),
+      );
+      expect(adapter.requests, hasLength(1));
+    });
+  });
+
   group('响应解析', () {
     test('非 JSON 对象响应判无效响应', () async {
       adapter.enqueueJson(<Object?>[]);

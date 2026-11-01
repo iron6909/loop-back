@@ -8,6 +8,8 @@
 /// 用量是附加信息：任何失败都不得阻止推理请求。
 library;
 
+import 'package:dio/dio.dart';
+
 import 'provider_config.dart';
 import 'provider_http_client.dart';
 import 'usage_mapper.dart';
@@ -58,6 +60,7 @@ class UsageQueryService {
   UsageView _view = const UsageView();
   Future<UsageView>? _inflight;
   int _generation = 0;
+  CancelToken? _cancel;
 
   /// 当前展示态（不触发请求）。
   UsageView get current => _view;
@@ -65,6 +68,7 @@ class UsageQueryService {
   /// 配置或 Key 变更时作废旧刷新，避免旧结果写回新配置界面。
   void invalidate() {
     _generation++;
+    _cancel?.cancel('provider changed');
     _inflight = null;
     _view = const UsageView();
   }
@@ -80,20 +84,22 @@ class UsageQueryService {
     if (fresh) return Future.value(_view);
 
     final generation = _generation;
-    final pending = _fetch(generation);
+    final token = CancelToken();
+    _cancel = token;
+    final pending = _fetch(generation, token);
     _inflight = pending;
     return pending.whenComplete(() {
       if (generation == _generation) _inflight = null;
     });
   }
 
-  Future<UsageView> _fetch(int generation) async {
+  Future<UsageView> _fetch(int generation, CancelToken token) async {
     final uri = _endpoint();
     if (uri == null) {
       return _commit(const UsageView(unsupported: true), generation);
     }
     try {
-      final snapshot = await _request(uri);
+      final snapshot = await _request(uri, token);
       if (snapshot == null) {
         return _commit(
           UsageView(
@@ -134,33 +140,33 @@ class UsageQueryService {
     if (base.host == 'opencode.ai') {
       return Uri.parse('$origin/zen/go/v1/usage');
     }
-    return switch (_config.kind) {
-      ProviderKind.deepseek => Uri.parse('$origin/user/balance'),
-      ProviderKind.openrouter => Uri.parse('$origin/api/v1/credits'),
-      ProviderKind.custom => null,
+    return switch (base.host) {
+      'api.deepseek.com' => Uri.parse('$origin/user/balance'),
+      'openrouter.ai' => Uri.parse('$origin/api/v1/credits'),
+      _ => null,
     };
   }
 
   /// OpenRouter 账户余额需 Management Key；无权限时回退到 Key 预算。
-  Future<UsageSnapshot?> _request(Uri uri) async {
-    if (_config.kind == ProviderKind.openrouter) {
+  Future<UsageSnapshot?> _request(Uri uri, CancelToken token) async {
+    if (uri.host == 'openrouter.ai') {
       try {
-        final credits = mapOpenRouterCredits(await _http.getJson(uri));
+        final credits = mapOpenRouterCredits(
+          await _http.getJson(uri, cancelToken: token),
+        );
         if (credits != null) return credits;
-      } on ProviderHttpException {
-        // 403 等：账户余额不可查，改查 Key 预算。
+      } on ProviderHttpException catch (error) {
+        // 只有权限拒绝回退；超时与取消不再发第二个请求。
+        if (error.statusCode != 403) rethrow;
       }
       final keyUri = uri.replace(path: '/api/v1/key');
-      return mapOpenRouterKey(await _http.getJson(keyUri));
+      return mapOpenRouterKey(await _http.getJson(keyUri, cancelToken: token));
     }
-    final body = await _http.getJson(uri);
-    return switch (_config.kind) {
-      ProviderKind.deepseek => mapDeepSeekBalance(body),
-      ProviderKind.custom => mapOpenCodeGoUsage(body),
-      ProviderKind.openrouter => null,
-    };
+    final body = await _http.getJson(uri, cancelToken: token);
+    return uri.host == 'api.deepseek.com'
+        ? mapDeepSeekBalance(body)
+        : mapOpenCodeGoUsage(body);
   }
 
-  /// 释放底层连接。
-  void dispose() => _http.dispose();
+  // 连接由 ProviderRuntime 独占持有，本服务不重复关闭共享的 HTTP 客户端。
 }

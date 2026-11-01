@@ -205,20 +205,27 @@ class ProviderHttpClient {
     if (_apiKey.trim().isEmpty || RegExp(r'[\r\n]').hasMatch(_apiKey)) {
       throw const ProviderHttpException(ProviderErrorKind.unauthorized);
     }
-    final response = await _dio.get<Object?>(
-      uri.toString(),
-      options: Options(headers: _headers),
-      cancelToken: cancelToken,
-    );
-    final status = response.statusCode ?? 0;
-    if (status < 200 || status >= 300) {
-      throw ProviderHttpException(
-        _mapStatus(status),
-        statusCode: status,
-        body: _bodyText(response.data),
-      );
+    if (uri.origin != Uri.parse(_endpoint).origin) {
+      throw ArgumentError('用量查询不可跨供应商发送凭据');
     }
-    return _decode(response.data);
+    try {
+      final response = await _dio.get<Object?>(
+        uri.toString(),
+        options: Options(headers: _headers),
+        cancelToken: cancelToken,
+      );
+      final status = response.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw ProviderHttpException(
+          _mapStatus(status),
+          statusCode: status,
+          body: _bodyText(response.data),
+        );
+      }
+      return _decode(response.data);
+    } on DioException catch (error) {
+      throw _mapDioException(error);
+    }
   }
 
   /// 取错误体文本供回落判定；只保留前 2 KB，避免把大正文带进内存或日志。

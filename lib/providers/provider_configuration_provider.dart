@@ -17,7 +17,8 @@ import '../services/provider/provider_config_store.dart';
 import '../services/provider/provider_http_client.dart';
 import '../services/provider/structured_ai_client.dart';
 
-export '../services/provider/provider_config.dart' show ProviderNotConfiguredException;
+export '../services/provider/provider_config.dart'
+    show ProviderNotConfiguredException;
 
 /// 配置与凭据的持久化入口。
 final providerConfigStoreProvider = Provider<ProviderConfigStore>(
@@ -75,8 +76,13 @@ class ProviderConfigurationNotifier extends AsyncNotifier<ProviderRuntime?> {
   Future<void> save(ProviderConfig config, {String? apiKey}) async {
     _disposeCurrent();
     state = const AsyncValue.loading();
-    await ref.read(providerConfigStoreProvider).save(config, apiKey: apiKey);
-    await _rebuild();
+    try {
+      await ref.read(providerConfigStoreProvider).save(config, apiKey: apiKey);
+      await _rebuild();
+    } catch (error, stack) {
+      state = AsyncError(error, stack);
+      rethrow;
+    }
   }
 
   /// 删除 Key，回到未配置状态。
@@ -100,7 +106,7 @@ class ProviderConfigurationNotifier extends AsyncNotifier<ProviderRuntime?> {
   }
 
   void _disposeCurrent() {
-    if (state.value case final runtime?) runtime.dispose();
+    if (state.valueOrNull case final runtime?) runtime.dispose();
   }
 
   /// 缓存读写直接对接既有 DAO：缓存写入只发生在结构化客户端一处。
@@ -135,6 +141,12 @@ final providerConfigurationProvider =
     AsyncNotifierProvider<ProviderConfigurationNotifier, ProviderRuntime?>(
       ProviderConfigurationNotifier.new,
     );
+
+/// 不含 Key 的已保存配置；即使 Key 尚未填写，设置页仍能继续编辑。
+final savedProviderConfigProvider = FutureProvider<ProviderConfig?>((ref) {
+  ref.watch(providerConfigurationProvider);
+  return ref.read(providerConfigStoreProvider).read();
+});
 
 /// AI 服务是否可用：默认取决于是否已保存供应商配置。
 ///

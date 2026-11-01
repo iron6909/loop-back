@@ -5483,4 +5483,76 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiServiceTitle => 'AI 服务';
+
+  @override
+  String get aiServiceProvider => '供应商';
+
+  @override
+  String get aiServiceBaseUrl => 'Base URL';
+
+  @override
+  String get aiServiceModel => '模型';
+
+  @override
+  String get aiServiceApiKey => 'API Key';
+
+  @override
+  String get aiServiceKeySaved => '已保存';
+
+  @override
+  String get aiServiceKeyNotSet => '未设置';
+
+  @override
+  String get aiServiceConnectionTest => '连接验证';
+
+  @override
+  String get aiServiceTest => '测试';
+
+  @override
+  String get aiServiceTesting => '测试中…';
+
+  @override
+  String get aiServiceTestSuccess => '连接正常';
+
+  @override
+  String get aiServiceTestUnauthorized => '鉴权失败：请检查 API Key';
+
+  @override
+  String get aiServiceTestNotFound => '地址或模型不存在';
+
+  @override
+  String get aiServiceTestTimeout => '网络超时';
+
+  @override
+  String get aiServiceUntested => '未验证';
+
+  @override
+  String get aiServiceNotConfigured => '尚未配置 AI 服务';
+
+  @override
+  String get aiServiceConfigureProvider => '配置供应商';
+
+  @override
+  String get aiServicePromptVersion => '提示词版本';
+
+  @override
+  String get aiServiceAbout => '关于';
+
+  @override
+  String get aiServiceBaseUrlInvalid => '请填写完整的 HTTP 或 HTTPS 地址';
+
+  @override
+  String get aiServiceKeyHint => '留空并保存即删除已保存的 Key';
+
+  @override
+  String get providerKindDeepSeek => 'DeepSeek';
+
+  @override
+  String get providerKindOpenRouter => 'OpenRouter';
+
+  @override
+  String get providerKindCustom => '自定义';
+
+  @override
+  String get usageViewAll => '查看全部';
 }

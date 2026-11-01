@@ -66,7 +66,7 @@ class UsageCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.xs),
-              Expanded(child: _body(context, l10n)),
+              _body(context, l10n),
               if (view.hasData) _footer(context, l10n),
             ],
           ),
@@ -108,8 +108,8 @@ class UsageCard extends StatelessWidget {
     if (snapshot == null) return _Skeleton(theme: theme);
     return switch (snapshot.scope) {
       UsageScope.planWindow => _windows(context, l10n, snapshot),
-      UsageScope.account || UsageScope.keyBudget =>
-        _amounts(context, l10n, snapshot),
+      UsageScope.account ||
+      UsageScope.keyBudget => _amounts(context, l10n, snapshot),
     };
   }
 
@@ -155,13 +155,18 @@ class UsageCard extends StatelessWidget {
                 ),
                 if (window.rateLimited) ...[
                   const SizedBox(width: AppSpacing.xs),
-                  Icon(Icons.warning_amber_rounded,
-                      size: 16, color: theme.colorScheme.error),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: theme.colorScheme.error,
+                  ),
                   Text(l10n.usageRateLimited, style: theme.textTheme.bodySmall),
-                ] else if (window.resetsAt case final resetsAt?) ...[
+                ] else if (window.resetsAt case final resetsAt?
+                    when window.usedPercent > 0) ...[
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     l10n.usageResetsAt(_clock(resetsAt)),
+                    overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -188,7 +193,18 @@ class UsageCard extends StatelessWidget {
     final theme = Theme.of(context);
     final reset = snapshot.limitReset;
     if (snapshot.scope == UsageScope.keyBudget && snapshot.budgetNotSet) {
-      return _Notice(icon: Icons.savings_outlined, text: l10n.usageBudgetNotSet);
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _Notice(icon: Icons.savings_outlined, text: l10n.usageBudgetNotSet),
+          Text(l10n.usageAccountUnauthorized),
+          if (onOpenConsole != null)
+            TextButton(
+              onPressed: onOpenConsole,
+              child: Text(l10n.usageOpenConsole),
+            ),
+        ],
+      );
     }
     if (snapshot.amounts.isEmpty) {
       return _Notice(icon: Icons.info_outline, text: l10n.usageUnavailable);
@@ -197,7 +213,7 @@ class UsageCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        for (final amount in snapshot.amounts)
+        for (final amount in snapshot.amounts.take(3))
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: Column(
@@ -206,19 +222,34 @@ class UsageCard extends StatelessWidget {
               children: [
                 Text(
                   _money(amount),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
                 if (amount.granted case final granted?)
                   Text(
-                    '${l10n.usageGranted(_plain(granted, amount.currency))}'
-                    '${amount.toppedUp == null ? '' : ' \u00b7 ${l10n.usageToppedUp(_plain(amount.toppedUp!, amount.currency))}'}',
+                    [
+                      l10n.usageGranted(_plain(granted, amount.currency)),
+                      if (amount.toppedUp case final toppedUp?)
+                        l10n.usageToppedUp(_plain(toppedUp, amount.currency)),
+                    ].join(' · '),
                     style: theme.textTheme.bodySmall,
                   ),
               ],
             ),
           ),
+        if (snapshot.amounts.length > 3)
+          ExpansionTile(
+            title: Text(l10n.usageViewAll),
+            children: [
+              for (final amount in snapshot.amounts.skip(3))
+                Text(_money(amount)),
+            ],
+          ),
+        if (snapshot.scope == UsageScope.keyBudget)
+          Text(l10n.usageAccountUnauthorized),
         if (snapshot.scope == UsageScope.keyBudget && reset != null)
           Text(reset, style: theme.textTheme.bodySmall),
         if (snapshot.hasEffectiveBudget)
@@ -257,7 +288,10 @@ class UsageCard extends StatelessWidget {
         if (view.failed) const SizedBox(width: AppSpacing.xs),
         Expanded(child: Text(text, style: theme.textTheme.bodySmall)),
         if (view.failed)
-          TextButton(onPressed: () => onRefresh(), child: Text(l10n.usageRetry)),
+          TextButton(
+            onPressed: () => onRefresh(),
+            child: Text(l10n.usageRetry),
+          ),
       ],
     );
   }
@@ -302,9 +336,15 @@ class _Notice extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      Icon(icon, size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
+      Icon(
+        icon,
+        size: 18,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
       const SizedBox(width: AppSpacing.s),
-      Expanded(child: Text(text, style: Theme.of(context).textTheme.bodyMedium)),
+      Expanded(
+        child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+      ),
     ],
   );
 }

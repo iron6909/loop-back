@@ -144,6 +144,14 @@ void main() {
       expect(view.snapshot?.windows, hasLength(3));
     });
 
+    test('修改预设地址后未知主机也不猜测查询路径', () async {
+      final view = await service(
+        baseUrl: 'https://unrecognized.example/v1',
+      ).refresh();
+      expect(view.unsupported, isTrue);
+      expect(adapter.requests, isEmpty);
+    });
+
     test('自定义未知主机返回不支持，且不发任何请求', () async {
       final view = await service(
         kind: ProviderKind.custom,
@@ -256,6 +264,16 @@ void main() {
       expect(view.snapshot?.scope, UsageScope.keyBudget);
       expect(view.snapshot?.budgetNotSet, isTrue);
       expect(view.snapshot?.amounts, isEmpty);
+    });
+
+    test('OpenRouter 服务器失败不回退发第二个请求', () async {
+      adapter.enqueueJson({'error': 'server'}, status: 500);
+      final view = await service(
+        kind: ProviderKind.openrouter,
+        baseUrl: 'https://openrouter.ai/api/v1',
+      ).refresh();
+      expect(view.failed, isTrue);
+      expect(adapter.requests, hasLength(1));
     });
 
     test('invalidate 后在途结果不写回', () async {

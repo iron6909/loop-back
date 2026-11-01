@@ -333,6 +333,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context,
       title: l10n.learningSection,
       children: [
+        ListTile(leading: const Icon(Icons.auto_awesome_outlined),
+          title: Text(l10n.aiServiceTitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/settings/ai-service')),
         ListTile(
           leading: _settingsSvgIcon('assets/icon/bell.svg'),
           title: Text(l10n.reminderSettings),

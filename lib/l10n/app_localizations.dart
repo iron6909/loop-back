@@ -10117,6 +10117,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI service'**
   String get aiServiceTitle;
+
+  /// No description provided for @aiServiceProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get aiServiceProvider;
+
+  /// No description provided for @aiServiceBaseUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL'**
+  String get aiServiceBaseUrl;
+
+  /// No description provided for @aiServiceModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get aiServiceModel;
+
+  /// No description provided for @aiServiceApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get aiServiceApiKey;
+
+  /// No description provided for @aiServiceKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get aiServiceKeySaved;
+
+  /// No description provided for @aiServiceKeyNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get aiServiceKeyNotSet;
+
+  /// No description provided for @aiServiceConnectionTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection test'**
+  String get aiServiceConnectionTest;
+
+  /// No description provided for @aiServiceTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get aiServiceTest;
+
+  /// No description provided for @aiServiceTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing…'**
+  String get aiServiceTesting;
+
+  /// No description provided for @aiServiceTestSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection OK'**
+  String get aiServiceTestSuccess;
+
+  /// No description provided for @aiServiceTestUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed: check the API key'**
+  String get aiServiceTestUnauthorized;
+
+  /// No description provided for @aiServiceTestNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Address or model not found'**
+  String get aiServiceTestNotFound;
+
+  /// No description provided for @aiServiceTestTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Network timeout'**
+  String get aiServiceTestTimeout;
+
+  /// No description provided for @aiServiceUntested.
+  ///
+  /// In en, this message translates to:
+  /// **'Not tested'**
+  String get aiServiceUntested;
+
+  /// No description provided for @aiServiceNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'AI service is not configured'**
+  String get aiServiceNotConfigured;
+
+  /// No description provided for @aiServiceConfigureProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure provider'**
+  String get aiServiceConfigureProvider;
+
+  /// No description provided for @aiServicePromptVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt version'**
+  String get aiServicePromptVersion;
+
+  /// No description provided for @aiServiceAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aiServiceAbout;
+
+  /// No description provided for @aiServiceBaseUrlInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a complete HTTP or HTTPS address'**
+  String get aiServiceBaseUrlInvalid;
+
+  /// No description provided for @aiServiceKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to remove the saved key'**
+  String get aiServiceKeyHint;
+
+  /// No description provided for @providerKindDeepSeek.
+  ///
+  /// In en, this message translates to:
+  /// **'DeepSeek'**
+  String get providerKindDeepSeek;
+
+  /// No description provided for @providerKindOpenRouter.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter'**
+  String get providerKindOpenRouter;
+
+  /// No description provided for @providerKindCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get providerKindCustom;
+
+  /// No description provided for @usageViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get usageViewAll;
 }
 
 class _AppLocalizationsDelegate

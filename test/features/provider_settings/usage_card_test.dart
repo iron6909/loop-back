@@ -1,5 +1,6 @@
 /// 用量卡九态：只读展示，任何状态都不显示 0 或虚构数字（ui-spec S2）。
 library;
+
 import 'package:echo_loop/features/provider_settings/widgets/usage_card.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/services/provider/usage_models.dart';
@@ -33,8 +34,10 @@ void main() {
     await tester.pump();
   }
 
-  UsageSnapshot amounts(List<UsageAmount> values, {UsageScope scope = UsageScope.account}) =>
-      UsageSnapshot(scope: scope, amounts: values);
+  UsageSnapshot amounts(
+    List<UsageAmount> values, {
+    UsageScope scope = UsageScope.account,
+  }) => UsageSnapshot(scope: scope, amounts: values);
 
   testWidgets('首次加载：骨架占位，不显示任何数字', (tester) async {
     await pump(tester, const UsageView());
@@ -51,7 +54,12 @@ void main() {
       tester,
       UsageView(
         snapshot: amounts([
-          const UsageAmount(currency: 'CNY', total: 110, granted: 10, toppedUp: 100),
+          const UsageAmount(
+            currency: 'CNY',
+            total: 110,
+            granted: 10,
+            toppedUp: 100,
+          ),
         ]),
         fetchedAt: DateTime(2026, 11, 1, 11, 20),
       ),
@@ -83,7 +91,10 @@ void main() {
     await pump(
       tester,
       UsageView(
-        snapshot: const UsageSnapshot(scope: UsageScope.keyBudget, budgetNotSet: true),
+        snapshot: const UsageSnapshot(
+          scope: UsageScope.keyBudget,
+          budgetNotSet: true,
+        ),
         fetchedAt: DateTime(2026, 11, 1, 8),
       ),
     );
@@ -112,7 +123,11 @@ void main() {
               rateLimited: false,
               resetsAt: null,
             ),
-            UsageWindow(kind: UsageWindowKind.monthly, usedPercent: 5, rateLimited: false),
+            UsageWindow(
+              kind: UsageWindowKind.monthly,
+              usedPercent: 5,
+              rateLimited: false,
+            ),
           ],
         ),
         fetchedAt: DateTime(2026, 11, 1, 7),
@@ -154,7 +169,10 @@ void main() {
       providerName: 'Custom',
     );
 
-    expect(find.text('This address does not support usage queries'), findsOneWidget);
+    expect(
+      find.text('This address does not support usage queries'),
+      findsOneWidget,
+    );
     expect(find.textContaining('%'), findsNothing);
     expect(find.textContaining('00'), findsNothing);
   });

@@ -5739,4 +5739,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiServiceTitle => 'AI service';
+
+  @override
+  String get aiServiceProvider => 'Provider';
+
+  @override
+  String get aiServiceBaseUrl => 'Base URL';
+
+  @override
+  String get aiServiceModel => 'Model';
+
+  @override
+  String get aiServiceApiKey => 'API key';
+
+  @override
+  String get aiServiceKeySaved => 'Saved';
+
+  @override
+  String get aiServiceKeyNotSet => 'Not set';
+
+  @override
+  String get aiServiceConnectionTest => 'Connection test';
+
+  @override
+  String get aiServiceTest => 'Test';
+
+  @override
+  String get aiServiceTesting => 'Testing…';
+
+  @override
+  String get aiServiceTestSuccess => 'Connection OK';
+
+  @override
+  String get aiServiceTestUnauthorized =>
+      'Authentication failed: check the API key';
+
+  @override
+  String get aiServiceTestNotFound => 'Address or model not found';
+
+  @override
+  String get aiServiceTestTimeout => 'Network timeout';
+
+  @override
+  String get aiServiceUntested => 'Not tested';
+
+  @override
+  String get aiServiceNotConfigured => 'AI service is not configured';
+
+  @override
+  String get aiServiceConfigureProvider => 'Configure provider';
+
+  @override
+  String get aiServicePromptVersion => 'Prompt version';
+
+  @override
+  String get aiServiceAbout => 'About';
+
+  @override
+  String get aiServiceBaseUrlInvalid =>
+      'Enter a complete HTTP or HTTPS address';
+
+  @override
+  String get aiServiceKeyHint => 'Leave empty to remove the saved key';
+
+  @override
+  String get providerKindDeepSeek => 'DeepSeek';
+
+  @override
+  String get providerKindOpenRouter => 'OpenRouter';
+
+  @override
+  String get providerKindCustom => 'Custom';
+
+  @override
+  String get usageViewAll => 'View all';
 }
