@@ -31,7 +31,10 @@ class _FakeAdapter implements HttpClientAdapter {
 
   void enqueueError(DioExceptionType type) {
     _responses.add(
-      DioException(requestOptions: RequestOptions(path: ''), type: type),
+      DioException(
+        requestOptions: RequestOptions(path: ''),
+        type: type,
+      ),
     );
   }
 
@@ -75,7 +78,7 @@ void main() {
     String model = 'deepseek-flash',
   }) => ProviderHttpClient(
     config: ProviderConfig(kind: kind, baseUrl: baseUrl, model: model),
-    apiKey: 'sk-test-key',
+    apiKey: 'fixture-key',
     dio: dio,
     appVersion: '1.0.44',
   );
@@ -93,9 +96,9 @@ void main() {
 
     test('保留用户填写的子路径', () async {
       adapter.enqueueJson({'choices': <Object?>[]});
-      await client(baseUrl: 'https://openrouter.ai/api/v1').postChatCompletions(
-        {'model': 'm'},
-      );
+      await client(
+        baseUrl: 'https://openrouter.ai/api/v1',
+      ).postChatCompletions({'model': 'm'});
 
       expect(
         adapter.requests.single.uri.toString(),
@@ -105,9 +108,9 @@ void main() {
 
     test('基址尾部斜杠不会产生双斜杠', () async {
       adapter.enqueueJson({'choices': <Object?>[]});
-      await client(baseUrl: 'https://api.deepseek.com/').postChatCompletions({
-        'model': 'm',
-      });
+      await client(
+        baseUrl: 'https://api.deepseek.com/',
+      ).postChatCompletions({'model': 'm'});
 
       expect(
         adapter.requests.single.uri.toString(),
@@ -128,9 +131,35 @@ void main() {
       await client().postChatCompletions({'model': 'm'});
 
       final headers = adapter.requests.single.headers;
-      expect(headers['Authorization'], 'Bearer sk-test-key');
+      expect(headers['Authorization'], 'Bearer fixture-key');
       expect('${headers['User-Agent']}', contains('EchoLoop'));
-      expect(headers.keys.where((k) => k.toLowerCase().startsWith('x-')), isEmpty);
+      expect(
+        headers.keys.where((k) => k.toLowerCase().startsWith('x-')),
+        isEmpty,
+      );
+    });
+
+    test('空 Key 时不发请求', () async {
+      final http = ProviderHttpClient(
+        config: const ProviderConfig(
+          kind: ProviderKind.deepseek,
+          baseUrl: 'https://api.deepseek.com',
+          model: 'm',
+        ),
+        apiKey: '',
+        dio: dio,
+      );
+      await expectLater(
+        http.postChatCompletions({}),
+        throwsA(isA<ProviderHttpException>()),
+      );
+      expect(adapter.requests, isEmpty);
+    });
+
+    test('禁止自动重定向，避免凭据随地址跳转', () async {
+      adapter.enqueueJson({'choices': <Object?>[]});
+      await client().postChatCompletions({});
+      expect(adapter.requests.single.followRedirects, isFalse);
     });
 
     test('请求体原样透传', () async {
@@ -247,7 +276,9 @@ void main() {
       adapter.enqueueJson({'error': 'x'}, status: 500);
       adapter.enqueueJson({
         'choices': [
-          {'message': {'content': '{}'}},
+          {
+            'message': {'content': '{}'},
+          },
         ],
       });
 

@@ -24,9 +24,7 @@ import '../../utils/sense_group_validate.dart';
 
 /// 校验失败原因。
 ///
-/// 调用方据此决定提示文案与是否可回落：只有 [notJsonObject] 且供应商明确表示不支持
-/// `response_format` 时才允许回落一次 `json_object`；其余原因一律判失败（见 spec
-/// 「输出模式选择」）。
+/// 校验失败一律不能触发回落；只有传输层明确报告不支持输出模式才能回落。
 enum ValidationFailureReason {
   /// 响应正文为空（含纯空白）。
   emptyBody,
@@ -45,6 +43,9 @@ enum ValidationFailureReason {
 
   /// 意群拼接无法还原原文。
   notConserved,
+
+  /// 响应因输出预算耗尽被截断（`finish_reason=length`）。
+  truncated,
 }
 
 /// 校验结果：成功携带领域对象，失败携带原因。
@@ -59,7 +60,7 @@ final class ValidationSuccess<T> extends ValidationOutcome<T> {
   final T value;
 }
 
-/// 校验失败，[reason] 为不可回落之外的失败分类。
+/// 校验失败，[reason] 用于用户提示；结果不能落缓存。
 final class ValidationFailure<T> extends ValidationOutcome<T> {
   const ValidationFailure(this.reason);
 

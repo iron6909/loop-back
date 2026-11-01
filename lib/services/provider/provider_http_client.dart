@@ -43,10 +43,13 @@ enum ProviderErrorKind {
 
 /// 供应商调用失败。[toString] 只含分类与状态码，不含请求头或正文。
 class ProviderHttpException implements Exception {
-  const ProviderHttpException(this.kind, {this.statusCode});
+  const ProviderHttpException(this.kind, {this.statusCode, this.body});
 
   final ProviderErrorKind kind;
   final int? statusCode;
+
+  /// 非 2xx 的原始正文（已截断），仅供回落判定；不写入日志。
+  final String? body;
 
   @override
   String toString() =>
@@ -67,9 +70,14 @@ class ProviderHttpClient {
        _sessionId = const Uuid().v4(),
        _appVersion = appVersion,
        _dio = dio ?? Dio() {
+    if (baseUrlError(config.baseUrl) != null) {
+      throw ArgumentError('供应商地址无效');
+    }
     _dio.options
       ..connectTimeout = const Duration(seconds: 15)
       ..receiveTimeout = const Duration(seconds: 120)
+      ..followRedirects = false
+      ..headers.clear()
       ..validateStatus = (_) => true;
   }
 
@@ -90,9 +98,7 @@ class ProviderHttpClient {
   Map<String, String> get _headers => {
     'Authorization': 'Bearer $_apiKey',
     'Content-Type': 'application/json',
-    'User-Agent': _appVersion.isEmpty
-        ? 'EchoLoop'
-        : 'EchoLoop/$_appVersion',
+    'User-Agent': _appVersion.isEmpty ? 'EchoLoop' : 'EchoLoop/$_appVersion',
     // OpenCode Go 要求稳定的会话标识以识别同一客户端；其他主机不发送。
     if (_isOpenCodeHost) 'x-opencode-session': _sessionId,
   };
@@ -105,6 +111,9 @@ class ProviderHttpClient {
     Object body, {
     CancelToken? cancelToken,
   }) async {
+    if (_apiKey.trim().isEmpty || RegExp(r'[\r\n]').hasMatch(_apiKey)) {
+      throw const ProviderHttpException(ProviderErrorKind.unauthorized);
+    }
     for (var attempt = 0; ; attempt++) {
       try {
         final response = await _dio.post<Object?>(
@@ -118,7 +127,11 @@ class ProviderHttpClient {
 
         final kind = _mapStatus(status);
         if (kind == ProviderErrorKind.serverError && attempt == 0) continue;
-        throw ProviderHttpException(kind, statusCode: status);
+        throw ProviderHttpException(
+          kind,
+          statusCode: status,
+          body: _bodyText(response.data),
+        );
       } on DioException catch (error) {
         throw _mapDioException(error);
       }
@@ -155,6 +168,17 @@ class ProviderHttpClient {
     >= 500 => ProviderErrorKind.serverError,
     _ => ProviderErrorKind.network,
   };
+
+  /// 取错误体文本供回落判定；只保留前 2 KB，避免把大正文带进内存或日志。
+  String? _bodyText(Object? data) {
+    final text = switch (data) {
+      String() => data,
+      Map<String, dynamic>() => jsonEncode(data),
+      _ => null,
+    };
+    if (text == null || text.isEmpty) return null;
+    return text.length <= 2048 ? text : text.substring(0, 2048);
+  }
 
   ProviderHttpException _mapDioException(DioException error) {
     final kind = switch (error.type) {

@@ -53,7 +53,7 @@ OutputMode? fallbackOutputMode({
 /// 判据同时满足才算：
 /// 1. 状态码为 400 或 422（其余状态码由重试或错误映射处理）；
 /// 2. 错误体同时出现输出模式关键字（`response_format` / `json_schema`）与
-///    拒绝用语（unsupported / not supported / invalid / unknown）。
+///    明确不支持的用语（unsupported / not supported / unknown parameter）。
 ///
 /// 只凭关键字之一就回落会把「模型不存在」这类 400 误判成模式不支持。
 bool indicatesUnsupportedOutputMode({
@@ -70,6 +70,6 @@ bool indicatesUnsupportedOutputMode({
 
   return body.contains('unsupported') ||
       body.contains('not supported') ||
-      body.contains('invalid') ||
-      body.contains('unknown');
+      body.contains('unknown parameter') ||
+      body.contains('unrecognized request argument');
 }

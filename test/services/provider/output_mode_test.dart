@@ -134,6 +134,17 @@ void main() {
       );
     });
 
+    test('schema 本身非法不能误判为不支持', () {
+      expect(
+        indicatesUnsupportedOutputMode(
+          statusCode: 400,
+          errorBody:
+              'invalid json_schema: required must include every property',
+        ),
+        isFalse,
+      );
+    });
+
     test('缺少状态码或错误体时不判为不支持', () {
       expect(
         indicatesUnsupportedOutputMode(statusCode: null, errorBody: 'oops'),
