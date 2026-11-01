@@ -701,3 +701,90 @@ END persisted
 3. 未解释的首次启动 `CANCELLED` 与 MIUI 的安装拦截都属环境噪声，说明该机型上的系统 UI 行为不完全可预期；实施时不能假定选择器一定弹出、一定返回 OK。
 4. 建议 `ideate` 据此更新 S3 的推荐：保留 S3a，并把「在 targetSdk 36 下重跑本探针」列为实施首步验收，而不是选型前置条件。
 5. 未修改 `proposal.md`、产品代码或下游合同；本轮仅新增证据。设备上仍留有合成目录 `Download/EchoLoopSpike_a3f1` 与 `Download/EchoLoopSpike_a3f1_probe.apk`，用于后续重试，清理待本轮验证结束后进行。
+
+## Run: 2026-11-01 targetSdk 36 补证
+
+### 问题与判定标准
+
+**候选**：S3a（原生 SAF tree picker），与上一轮相同。
+
+**唯一未决问题**：上一轮在 `targetSdk 28` 下全部通过，但产品实际是 `targetSdk 36`（`android/app/build.gradle.kts` 的 `flutter.targetSdkVersion`；本机 Flutter 3.10.7 下为 36），B 版安装被 MIUI 拦截、零实测，故该行记为 Inconclusive。本次用同一判定标准重跑 B 版，**显式取代**上一轮「同一行为在产品 targetSdk 36 下成立 = Inconclusive」这一行；上一轮的安装失败记录与结论原样保留。
+
+判定标准不变：遍历出 5 个直接子项 + 1 个子目录且不递归、五个文件字节数与 SHA-256 与主机期望值逐一相等、`force-stop` 后仍可读、只接受该合成目录。
+
+### 方法与条件
+
+- 设备与 fixture 同上一轮（Redmi Note 7 Pro / Android 9 / API 28；`Download/EchoLoopSpike_a3f1` 五个文件 + `sub/inner.mp3`），fixture 未重建。
+- APK：B 版 `minSdk 24 / targetSdk 36`，经 `aapt2 dump badging` 复核 `minSdkVersion:'24'`、`targetSdkVersion:'36'`。构建输入见附件 [spike-live-probes.md](./spike-live-probes.md) 的 `android/target36/*`。
+- 安装：先解锁并回到桌面，再执行 `adb install -r`，在 MIUI 确认框出现后 2.4 秒由 `adb shell input tap` 点击「继续安装」，随后安装返回 `Success`。
+- 选择：`am start` 启动探针 → `input tap` 点击选择按钮 → 系统 `DocumentsUI` 定位到目标目录并确认 → `logcat -s EchoLoopSpike_a3f1:I` 取结果；随后 `am force-stop` 并以 `--ez check true` 重启复验。
+
+### 观察结果
+
+安装环节暴露了上一轮失败的真实机制。安装瞬间的系统日志：
+
+```text
+I ActivityManager: START u0 {act=android.intent.action.VIEW dat=file:///data/app/vmdl1979077131.tmp ...
+  cmp=com.miui.securitycenter/com.miui.permcenter.install.AdbInstallActivity (has extras)} from uid 1000
+I ActivityManager: Displayed com.miui.securitycenter/...AdbInstallActivity: +166ms
+...
+E Pm      : install msg : Failure [INSTALL_CANCELED_BY_USER]
+I PackageManagerServiceInjector: MIUILOG- INSTALL_FAILED_USER_RESTRICTED  uid: 2000 pkg : null
+E PackageInstaller: Commit of session 1979077131 failed: Install canceled by user
+```
+
+即：MIUI 把 `adb install` 转成一个自己的确认 Activity，约 **12 秒**无人点击就自动判为取消（首次 `Displayed` 到失败相隔约 11.6 秒）。上一轮的「无弹窗」判断是错的——弹窗存在，只是当时设备息屏、或开发者选项页面占着前台，所以既没看到也没截到。确认框结构（`uiautomator dump`）：
+
+```text
+USB安装提示
+EchoLoop SAF spike
+正在通过USB安装此应用，是否继续?
+拒绝后下次安装不再提示   [120,1880][960,1950]
+继续安装                [80,1990][520,2130]
+拒绝(2)                 [559,1990][1000,2130]
+```
+
+「USB安装」开关打开后该确认框**并未消失**，仍需在窗口内确认一次。
+
+点击「继续安装」后 `adb install` 返回 `Success`，`pm list packages` 出现 `dev.echoloop.spike.a3f1`。
+
+选择目录后：
+
+```text
+PHASE picked persisted=true files=5 directories=1
+FILE 01.mp3 bytes=30 sha256=c19e23aa122e2a69acaf31fb882a16939b74c7c1a851e49b0d5c2b71ed7eb524
+FILE 01.srt bytes=45 sha256=490f2542b4fe9b875f80fa1c0a8dec5161da8f214f497b07f5a3ffa3fb01dfc7
+FILE 02.MP3 bytes=26 sha256=3845f85a816777e82d97a17c6f55fd98ffd4ff70d40a8f88e7727ce13dce1537
+FILE 02.vtt bytes=32 sha256=e1dcfceb7592f776940af39adf26183f3377f2e53651d9c14b31c07aeadc7031
+FILE notes.txt bytes=7 sha256=3514cf816e5407a39cb7a1c1e1243f176dda121e06398a8934edb1dc426b0b34
+END picked
+```
+
+`force-stop` 后以 `--ez check true` 重启（PID 15549 → 15761），持久化授权仍可用，五个哈希与上一段逐一相同：
+
+```text
+PHASE persisted persisted=true files=5 directories=1
+... （5 项与 picked 阶段完全一致）
+END persisted
+```
+
+与 `targetSdk 28` 那次的结果逐字段相同：文件数、目录数、每个文件的字节数与 SHA-256 全部一致，`sub/inner.mp3` 未被递归列出。
+
+### 结论与限制
+
+| 问题 | 结论 | 精确范围 |
+| --- | --- | --- |
+| SAF 目录选择 + 子项遍历 + 字节读取（targetSdk 36） | **Supported** | 同机 Android 9 / API 28；5 文件哈希逐一相等，子目录未递归 |
+| 持久化授权跨进程重启（targetSdk 36） | **Supported** | `force-stop` 后新 PID 仍可读 |
+| 上一轮「targetSdk 36 未验证」的 Inconclusive | **已取代** | 现为 Supported；上一轮的安装失败记录保留为方法史 |
+
+本次确立：S3a 的机制前提在**产品实际的 targetSdk 36** 下同样成立，且结果与 targetSdk 28 逐字节一致。它**不**确立：Android 10+ 设备行为、其他厂商 ROM、错误分支（误选/取消/空目录）、应用层集成、`classifyImportFiles` / `matchSubtitlesForAudios` 在真机数据上的表现——这些仍未测。
+
+安装环节的发现也说明：把「手机端不弹确认」当作既定条件是不安全的。MIUI 即便开了「USB安装」仍会要求一次窗口内确认，脚本化安装必须显式处理这个 12 秒窗口，否则会稳定失败。
+
+### 对设计的影响与剩余缺口
+
+1. S3a 现在有 `targetSdk 28` 与 `targetSdk 36` 两组一致的实测支持，`ideate` 可直接据此定 S3，不必再把 targetSdk 作为选型前置条件。
+2. 仍未测的项按上一轮列出的清单保留，其中「误选拒绝分支」与「配对函数在真机数据上的表现」是最贴近产品行为的两项，适合作为 `spec` 的实施验收点。
+3. 自动化构建脚本若要在 CI 或本机脚本里装到 MIUI 设备，必须处理安装确认窗口；这不是产品代码问题，但会影响开发脚本的可靠性。
+4. 未修改 `proposal.md`、产品代码或下游合同；本轮仅新增证据。设备上仍留有合成目录与探针 APK，清理待本轮确认结束。
