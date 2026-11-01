@@ -4,7 +4,6 @@ library;
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/chatbot/models/chat_message.dart';
 import 'package:echo_loop/features/chatbot/models/chat_role.dart';
 import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
@@ -13,17 +12,10 @@ import 'package:echo_loop/features/chatbot/providers/chat_session_controller.dar
 import 'package:echo_loop/features/chatbot/services/chat_api_client.dart';
 import 'package:echo_loop/features/chatbot/services/ndjson_text_stream.dart';
 import 'package:echo_loop/features/chatbot/state/chat_session_state.dart';
-import 'package:echo_loop/features/subscription/models/entitlement.dart';
-import 'package:echo_loop/features/subscription/models/ai_quota_rejection.dart';
-import 'package:echo_loop/features/subscription/models/premium_feature.dart';
-import 'package:echo_loop/features/subscription/providers/ai_trial_usage_provider.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
-import 'package:echo_loop/features/subscription/services/free_allowance_policy.dart';
-import 'package:echo_loop/features/subscription/state/entitlement_state.dart';
+import 'package:echo_loop/services/provider/provider_http_client.dart';
 import 'package:echo_loop/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mock_providers.dart';
 
@@ -58,40 +50,6 @@ class _ScriptApi implements ChatApi {
   void dispose() {}
 }
 
-/// 记录 consume 调用次数的试用计数替身。
-class _RecordingTrialUsage extends AiTrialUsageNotifier {
-  int consumeCount = 0;
-  @override
-  Map<PremiumFeature, int> build() => const {};
-  @override
-  void consume(PremiumFeature feature) => consumeCount++;
-}
-
-class _FixedSubscription extends SubscriptionController {
-  _FixedSubscription(this._state);
-  final EntitlementState _state;
-  @override
-  EntitlementState build() => _state;
-}
-
-class _DenyPolicy implements FreeAllowancePolicy {
-  const _DenyPolicy();
-  @override
-  bool allows(PremiumFeature feature) => false;
-}
-
-Session _session() => Session(
-  accessToken: 'test-token',
-  tokenType: 'bearer',
-  user: const User(
-    id: 'u',
-    appMetadata: {},
-    userMetadata: {},
-    aud: 'authenticated',
-    createdAt: '2026-07-13T00:00:00.000Z',
-  ),
-);
-
 const _config = ChatbotConfig(
   sessionId: 's1',
   endpoint: '/chat',
@@ -100,15 +58,8 @@ const _config = ChatbotConfig(
   inputPlaceholder: 'P',
 );
 
-const _pro = EntitlementState(
-  status: EntitlementStatus.premium,
-  entitlement: Entitlement(isPremium: true),
-);
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  late _RecordingTrialUsage trialUsage;
 
   /// 构造容器：默认已登录 + 免费 + 放行。
   ///
@@ -117,26 +68,12 @@ void main() {
   /// 避免误判 AsyncLoading → authRequired。
   Future<ProviderContainer> make(
     _ScriptApi api, {
-    bool authenticated = true,
-    bool hasSession = true,
-    EntitlementState subscription = const EntitlementState.free(),
-    FreeAllowancePolicy policy = const AlwaysAllowPolicy(),
     bool holdListener = true,
   }) async {
-    trialUsage = _RecordingTrialUsage();
     final container = ProviderContainer(
       overrides: [
         analyticsOverride(),
         chatApiClientProvider.overrideWithValue(api),
-        isAuthenticatedProvider.overrideWithValue(authenticated),
-        supabaseSessionProvider.overrideWith(
-          (ref) => Stream<Session?>.value(hasSession ? _session() : null),
-        ),
-        subscriptionControllerProvider.overrideWith(
-          () => _FixedSubscription(subscription),
-        ),
-        freeAllowancePolicyProvider.overrideWithValue(policy),
-        aiTrialUsageProvider.overrideWith(() => trialUsage),
         appSettingsProvider.overrideWith(
           () =>
               TestAppSettings(const AppSettingsState(nativeLanguage: 'zh-CN')),
@@ -153,7 +90,6 @@ void main() {
         fireImmediately: true,
       );
     }
-    await container.read(supabaseSessionProvider.future); // 等 session 落定
     return container;
   }
 
@@ -180,17 +116,30 @@ void main() {
     expect(msgs[1].content, '它表示……');
     expect(msgs[1].status, ChatMessageStatus.done);
     expect(st(c).status, ChatSessionStatus.idle);
-    expect(trialUsage.consumeCount, 1);
     expect(api.lastContext, {'sentence': 'The fox'});
     expect(api.lastTargetLanguage, 'zh-CN');
   });
 
-  test('会员成功不 consume', () async {
+  test('未登录也能发送并完成（不再有登录门控）', () async {
     final api = _ScriptApi((_) => okStream());
-    final c = await make(api, subscription: _pro);
+    final c = await make(api);
     await ctrl(c).send('hi');
-    expect(trialUsage.consumeCount, 0);
+    expect(st(c).gate, ChatGate.none);
     expect(st(c).messages.last.status, ChatMessageStatus.done);
+    expect(api.callCount, 1);
+  });
+
+  test('供应商 402 → 该条 error 可重试，不跳会员', () async {
+    final api = _ScriptApi(
+      (_) => Stream<ChatTextFrame>.error(
+        const ProviderHttpException(ProviderErrorKind.insufficientBalance,
+          statusCode: 402),
+      ),
+    );
+    final c = await make(api);
+    await ctrl(c).send('hi');
+    expect(st(c).messages.last.status, ChatMessageStatus.error);
+    expect(st(c).gate, ChatGate.none);
   });
 
   test('空文本 / 流式中 send 无效', () async {
@@ -199,80 +148,6 @@ void main() {
     await ctrl(c).send('   ');
     expect(st(c).messages, isEmpty);
     expect(api.callCount, 0);
-  });
-
-  test('未登录 send → gate=authRequired，不发请求', () async {
-    final api = _ScriptApi((_) => okStream());
-    final c = await make(api, authenticated: false);
-    await ctrl(c).send('hi');
-    expect(st(c).gate, ChatGate.authRequired);
-    expect(st(c).messages, isEmpty);
-    expect(api.callCount, 0);
-  });
-
-  test('已登录未解锁 send → gate=quotaExceeded，不发请求', () async {
-    final api = _ScriptApi((_) => okStream());
-    final c = await make(api, policy: const _DenyPolicy());
-    await ctrl(c).send('hi');
-    expect(st(c).gate, ChatGate.quotaExceeded);
-    expect(api.callCount, 0);
-  });
-
-  test('后端 402 → 该条 quotaBlocked（gate 不变）', () async {
-    final api = _ScriptApi(
-      (_) => Stream<ChatTextFrame>.error(
-        DioException(
-          requestOptions: RequestOptions(path: '/chat'),
-          response: Response(
-            requestOptions: RequestOptions(path: '/chat'),
-            statusCode: 402,
-          ),
-          type: DioExceptionType.badResponse,
-        ),
-      ),
-    );
-    final c = await make(api);
-    await ctrl(c).send('hi');
-    expect(st(c).messages.last.status, ChatMessageStatus.quotaBlocked);
-    expect(st(c).gate, ChatGate.none);
-    expect(trialUsage.consumeCount, 0);
-  });
-
-  test('后端 402 quota_exceeded + limit=0 → 消息保留免费版不支持原因', () async {
-    final api = _ScriptApi(
-      (_) => Stream<ChatTextFrame>.error(
-        DioException(
-          requestOptions: RequestOptions(path: '/chat'),
-          response: Response(
-            requestOptions: RequestOptions(path: '/chat'),
-            statusCode: 402,
-            data: {
-              'code': 'quota_exceeded',
-              'quota': {'used': 0, 'limit': 0},
-            },
-          ),
-          type: DioExceptionType.badResponse,
-        ),
-      ),
-    );
-    final c = await make(api);
-    await ctrl(c).send('hi');
-
-    expect(
-      st(c).messages.last.quotaReason,
-      AiQuotaRejectionReason.unsupportedForFreePlan,
-    );
-  });
-
-  test('后端 401（token 过期）→ 该条 authRequired（gate 不变）', () async {
-    final api = _ScriptApi(
-      (_) => Stream<ChatTextFrame>.error(const ChatAuthRequiredException()),
-    );
-    final c = await make(api);
-    await ctrl(c).send('hi');
-    expect(st(c).messages.last.status, ChatMessageStatus.authRequired);
-    expect(st(c).gate, ChatGate.none);
-    expect(trialUsage.consumeCount, 0);
   });
 
   test('流内错误 → 该条 error', () async {
@@ -295,7 +170,7 @@ void main() {
     expect(st(c).messages.last.content, '半截');
   });
 
-  test('stop → cancel 抛异常 → 保留部分文本为 done，不报错、不 consume', () async {
+  test('stop → cancel 抛异常 → 保留部分文本为 done，不报错', () async {
     final api = _ScriptApi((ct) async* {
       yield const ChatTextFrame(text: '部分', isFinal: false);
       while (!(ct?.isCancelled ?? false)) {
@@ -315,7 +190,6 @@ void main() {
     expect(st(c).messages.last.status, ChatMessageStatus.done);
     expect(st(c).messages.last.content, '部分');
     expect(st(c).status, ChatSessionStatus.idle);
-    expect(trialUsage.consumeCount, 0);
   });
 
   test('stop 后流以自然结束形态收尾 → _stopRequested 兜底仍为 done', () async {
@@ -353,7 +227,7 @@ void main() {
     expect(st(c).messages.last.role, ChatRole.user);
   });
 
-  test('retry → 移除最后 user 及其后消息，复用闸门重新流式', () async {
+  test('retry → 移除最后 user 及其后消息，重新流式', () async {
     // 首轮失败
     var first = true;
     final api = _ScriptApi((_) {
@@ -373,7 +247,6 @@ void main() {
     expect(msgs, hasLength(2)); // 仍是 1 user + 1 assistant（旧的失败对被移除）
     expect(msgs.last.status, ChatMessageStatus.done);
     expect(msgs.last.content, '它表示……');
-    expect(trialUsage.consumeCount, 1);
   });
 
   test('send 带 quote → user 消息存 quote，发后端 content 并入 blockquote', () async {

@@ -1,31 +1,32 @@
-/// ChatApi 单例 provider。
+/// 聊天客户端按调用时的供应商配置解析；配置 provider 持有连接生命周期。
 library;
 
-import 'package:flutter_riverpod/flutter_riverpod.dart' show Ref;
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import '../../../config/api_config.dart';
-import '../../auth/providers/auth_providers.dart';
-import '../../../providers/package_info_provider.dart';
-import '../chatbot_flags.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/provider_configuration_provider.dart';
+import '../models/chat_message.dart';
 import '../services/chat_api_client.dart';
-import '../../../services/runtime_endpoint_router.dart';
-import '../services/fake_chat_api_client.dart';
+import '../services/ndjson_text_stream.dart';
+import '../services/provider_chat_api_client.dart';
 
-part 'chat_api_client_provider.g.dart';
-
-/// ChatApi 单例（keepAlive）。
-///
-/// kChatbotUseFakeApi=true（仅 debug 联调用）时返回假实现；否则构造真实网络客户端。
-@Riverpod(keepAlive: true)
-ChatApi chatApiClient(Ref ref) {
-  if (kChatbotUseFakeApi) return const FakeChatApiClient();
-  final client = ChatApiClient(
-    baseUrl: apiBaseUrl,
-    endpointRouter: runtimeEndpointRouter,
-    appVersion: readAppVersion(ref),
-    tokenCoordinator: ref.read(supabaseTokenCoordinatorProvider),
-  );
-  ref.onDispose(client.dispose);
-  return client;
+class _ConfiguredChatApi implements ChatApi {
+  const _ConfiguredChatApi(this._runtime);
+  final Future<ProviderRuntime?> Function() _runtime;
+  @override
+  Stream<ChatTextFrame> streamChat({required String endpoint,
+    required List<ChatMessage> history, required Map<String, Object?> context,
+    required String followUpInstruction, String? targetLanguage,
+    required String accessToken, CancelToken? cancelToken}) async* {
+    final runtime = await _runtime();
+    if (runtime == null) throw const ProviderNotConfiguredException();
+    yield* ProviderChatApiClient(config: runtime.config, http: runtime.http)
+      .streamChat(endpoint: endpoint, history: history, context: context,
+        followUpInstruction: followUpInstruction, targetLanguage: targetLanguage,
+        accessToken: '', cancelToken: cancelToken);
+  }
+  @override
+  void dispose() {}
 }
+
+final chatApiClientProvider = Provider<ChatApi>((ref) => _ConfiguredChatApi(
+  () => ref.read(providerConfigurationProvider.future)));

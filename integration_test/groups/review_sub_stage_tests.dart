@@ -48,7 +48,7 @@ void reviewSubStageTests() {
     }
 
     /// 为 review 阶段预置所有前置阶段的 completedKeys。
-    void _seedAllPriorKeys(
+    void seedAllPriorKeys(
       WidgetTester tester,
       String audioItemId,
       LearningStage currentStage,
@@ -86,7 +86,7 @@ void reviewSubStageTests() {
         createTestAppWithAudio(progressOverride: progress),
       );
       // 必须在导航前补充 completion keys
-      _seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review0);
+      seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review0);
       await navigateToLearningPlan(tester);
 
       // 验证 review0 标题和子步骤（v2 plan: 难句补练 + 全文盲听）
@@ -110,7 +110,7 @@ void reviewSubStageTests() {
         createTestAppWithAudio(progressOverride: progress),
       );
       // 必须在导航前补充 completion keys
-      _seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review0);
+      seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review0);
       await navigateToLearningPlan(tester);
 
       // 预置书签数据（难句补练需要 bookmarked 句子）
@@ -183,7 +183,7 @@ void reviewSubStageTests() {
         createTestAppWithAudio(progressOverride: progress),
       );
       // 必须在导航前补充 completion keys
-      _seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review0);
+      seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review0);
       await navigateToLearningPlan(tester);
 
       // 点击"Continue Learning"
@@ -210,7 +210,7 @@ void reviewSubStageTests() {
         createTestAppWithAudio(progressOverride: progress),
       );
       // 必须在导航前补充 review0 + firstLearn 的 completion keys
-      _seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review1);
+      seedAllPriorKeys(tester, 'test-audio-1', LearningStage.review1);
       await navigateToLearningPlan(tester);
 
       // 验证 review1 标题可见，当前步骤为全文盲听
@@ -245,7 +245,7 @@ void reviewSubStageTests() {
           container.read(learningSessionProvider.notifier)
               as TestLearningSession;
       await session.enterReviewDifficultPracticeMode(
-        'test-audio-1', createTestSentences(),
+        createTestAudioItem(), createTestSentences(),
       );
 
       final player =
@@ -293,7 +293,7 @@ void reviewSubStageTests() {
           container.read(learningSessionProvider.notifier)
               as TestLearningSession;
       await session.enterReviewDifficultPracticeMode(
-        'test-audio-1', createTestSentences(),
+        createTestAudioItem(), createTestSentences(),
       );
 
       final player =

@@ -63,6 +63,16 @@ class ProviderConfig {
   }
 }
 
+/// 尚未配置供应商；AI 入口据此提示去配置，不得发出推理请求。
+///
+/// 定义在服务层，使客户端无需依赖 providers 层即可报出该错误。
+class ProviderNotConfiguredException implements Exception {
+  const ProviderNotConfiguredException();
+
+  @override
+  String toString() => 'ProviderNotConfiguredException';
+}
+
 /// 拒绝带凭据、查询串及片段的地址，避免凭据经 URL 或日志泄漏。
 String? baseUrlError(String value) {
   final uri = Uri.tryParse(value);

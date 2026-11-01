@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/models/sense_group_result.dart';
 import 'package:echo_loop/models/sentence_ai_result.dart';
-import 'package:echo_loop/providers/sentence_ai_provider.dart';
+import 'package:echo_loop/services/provider/provider_http_client.dart';
 import 'package:echo_loop/utils/sense_group_timing.dart';
 import 'package:echo_loop/widgets/common/shimmer_placeholder.dart';
 import 'package:echo_loop/widgets/practice/selectable_sentence_text.dart';
@@ -279,7 +279,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 翻译失败时显示 SnackBar
-      expect(find.text('Translation failed, please retry'), findsOneWidget);
+      expect(find.text('AI returned an invalid result. Try again'), findsOneWidget);
       expect(callCount, 1);
     });
 
@@ -293,7 +293,7 @@ void main() {
             onRequestTranslation: (_, __) {
               callCount++;
               return Stream<String>.error(
-                const AiFeatureQuotaExceededException(),
+                const ProviderHttpException(ProviderErrorKind.unauthorized),
               );
             },
           ),
@@ -562,7 +562,7 @@ void main() {
             onRequestAnalysis: (_, __) {
               callCount++;
               return Stream<SentenceAnalysis>.error(
-                const AiFeatureQuotaExceededException(),
+                const ProviderHttpException(ProviderErrorKind.unauthorized),
               );
             },
           ),

@@ -10,7 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../features/auth/providers/auth_providers.dart';
+import '../provider_configuration_provider.dart';
 import '../../features/subscription/models/ai_quota_rejection.dart';
 import '../../features/usage/usage_event.dart';
 import '../../features/usage/usage_providers.dart';
@@ -110,15 +110,10 @@ class DictionaryLookupState {
 /// 查词请求上下文（鉴权 + 目标语言），收敛为单一 provider 便于测试覆盖
 @riverpod
 DictionaryLookupContext dictionaryLookupContext(Ref ref) {
-  final accessToken = ref
-      .watch(supabaseSessionProvider)
-      .valueOrNull
-      ?.accessToken;
   final targetLanguage = ref.watch(
     appSettingsProvider.select((s) => s.nativeLanguage),
   );
   return DictionaryLookupContext(
-    accessToken: accessToken,
     targetLanguage: targetLanguage,
   );
 }
@@ -172,25 +167,12 @@ class DictionaryLookupController extends _$DictionaryLookupController {
         if (!t.isCancelled) t.cancel('controller disposed');
       }
     });
-    // 登录前停在 AI 登录引导的当前查询，在认证态转为有效后自动续跑。
-    // 只恢复仍被用户选中的 AI 源，避免用户已切词/切源后后台发起旧请求。
-    ref.listen(supabaseSessionProvider, (previous, next) {
-      final session = next.valueOrNull;
-      final wasAnonymous = previous?.valueOrNull == null;
-      if (session == null || !wasAnonymous) return;
-      if (state.selectedSourceId != AiDictionarySource.sourceId ||
-          state.current is! LookupAuthRequired) {
-        return;
-      }
-      _traceDictionaryLookup(
-        'resume-after-sign-in word="$word" source=${AiDictionarySource.sourceId}',
-      );
-      // 认证事件中的 token 比异步刷新的查词上下文更及时，避免刚登录便再次落入
-      // LookupAuthRequired；目标语言仍从当前设置读取。
-      _lookup(
-        AiDictionarySource.sourceId,
-        accessTokenOverride: session.accessToken,
-      );
+    ref.listen(providerConfigurationProvider, (previous, _) {
+      if (previous == null || previous.isLoading) return;
+      final id = AiDictionarySource.sourceId;
+      _tokens[id]?.cancel('provider changed');
+      _seq[id] = (_seq[id] ?? 0) + 1;
+      state = state.copyWith(bySource: {...state.bySource}..remove(id));
     });
     final defaultId = _resolveInitialSourceId(preferredSourceId);
     _traceDictionaryLookup(
@@ -314,12 +296,6 @@ class DictionaryLookupController extends _$DictionaryLookupController {
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) return; // 主动取消不报错
       if (_dropResult(id, seq)) return;
-      // 后端本月免费额度用尽 → 由 UI 引导订阅（区别于普通网络错误）。
-      if (e.response?.statusCode == 402) {
-        final rejection = AiQuotaRejection.fromResponseData(e.response?.data);
-        _setState(id, LookupQuotaExceeded(reason: rejection.reason));
-        return;
-      }
       _setState(id, LookupError(e));
     } catch (e) {
       if (_dropResult(id, seq)) return;

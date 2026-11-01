@@ -17,13 +17,7 @@ import '../services/provider/provider_config_store.dart';
 import '../services/provider/provider_http_client.dart';
 import '../services/provider/structured_ai_client.dart';
 
-/// 尚未配置供应商；AI 入口据此提示去配置，不得发出推理请求。
-class ProviderNotConfiguredException implements Exception {
-  const ProviderNotConfiguredException();
-
-  @override
-  String toString() => 'ProviderNotConfiguredException';
-}
+export '../services/provider/provider_config.dart' show ProviderNotConfiguredException;
 
 /// 配置与凭据的持久化入口。
 final providerConfigStoreProvider = Provider<ProviderConfigStore>(
@@ -58,7 +52,6 @@ class ProviderRuntime {
   /// 释放连接与在途请求。
   void dispose() {
     structured.dispose();
-    http.dispose();
   }
 }
 
@@ -71,7 +64,9 @@ class ProviderConfigurationNotifier extends AsyncNotifier<ProviderRuntime?> {
     if (config == null) return null;
     final apiKey = await store.readApiKey();
     if (apiKey == null) return null;
-    return _assemble(config, apiKey);
+    final runtime = _assemble(config, apiKey);
+    ref.onDispose(runtime.dispose);
+    return runtime;
   }
 
   /// 保存配置；[apiKey] 为 null 表示保留现有 Key。

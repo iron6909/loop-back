@@ -14,14 +14,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../features/auth/providers/auth_providers.dart';
-import '../../features/auth/sign_in_required_dialog.dart';
 import '../../features/chatbot/chatbot_flags.dart';
 import '../../features/chatbot/sentence_passage.dart';
 import '../../features/chatbot/widgets/sentence_chat_button.dart';
 import '../../features/remote_config/remote_config.dart';
 import '../../features/remote_config/remote_config_providers.dart';
-import '../../features/subscription/widgets/ai_quota_exceeded_dialog.dart';
 import '../../features/usage/usage_event.dart';
 import '../../features/usage/usage_providers.dart';
 import '../../database/providers.dart';
@@ -41,6 +38,7 @@ import '../../providers/settings_provider.dart';
 import '../../providers/word_highlight_provider.dart';
 import '../../providers/saved_sense_group_provider.dart';
 import '../../services/app_logger.dart';
+import '../../services/provider/provider_error_text.dart';
 import '../../services/dictionary/ai_dictionary_source.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/sense_group_service.dart';
@@ -256,7 +254,6 @@ class _SentenceExplanationViewState
   bool _isShowingSyntheticTimingNotice = false;
 
   /// quota 提醒弹窗是否正在展示，防止翻译/解析并发失败时叠多个弹窗。
-  bool _isShowingAiQuotaDialog = false;
 
   // --- 意群快捷菜单 Overlay ---
   OverlayEntry? _actionBarOverlay;
@@ -451,10 +448,6 @@ class _SentenceExplanationViewState
     // 必须回退到 Provider，避免工具栏请求回调为空而整组 AI 按钮被禁用。
     final ai = widget.aiNotifier ?? ref.read(sentenceAiNotifierProvider);
     if (ai == null) return;
-    final accessToken = ref
-        .read(supabaseSessionProvider)
-        .valueOrNull
-        ?.accessToken;
 
     ref.read(usageTrackerProvider).record(UsageEvent.senseGroupTapped);
 
@@ -474,7 +467,7 @@ class _SentenceExplanationViewState
         .streamSenseGroups(
           text: _text,
           ai: ai,
-          accessToken: accessToken,
+          accessToken: null,
           sentenceStartMs: startMs,
           sentenceEndMs: endMs,
           wordTimestamps: _wordTimestamps,
@@ -500,27 +493,10 @@ class _SentenceExplanationViewState
             completeAll();
             _sgSub = null;
             if (!mounted) return;
-            if (e is AiFeatureAuthRequiredException) {
-              _showAiFeatureSignInDialog();
-            } else if (e is AiFeatureQuotaExceededException) {
-              unawaited(
-                _showAiQuotaExceededDialog(
-                  e,
-                  force: source == SentenceAiRequestSource.userTap,
-                ),
-              );
-            } else {
-              AppLogger.log('SenseGroup', '请求意群失败: $e');
-              final l10n = AppLocalizations.of(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    l10n?.senseGroupLoadFailed ??
-                        'Failed to load sense groups, please retry',
-                  ),
-                ),
-              );
-            }
+            AppLogger.log('SenseGroup', '请求意群失败: $e');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(providerErrorText(context, e))),
+            );
           },
           onDone: () {
             // 流正常结束：medium/fine 均完整（缓存/校验/计费由 provider 负责）
@@ -548,41 +524,6 @@ class _SentenceExplanationViewState
     final done = _sgAllDone;
     if (done == null || done.isCompleted) return;
     await done.future;
-  }
-
-  /// 展示云端 AI 能力的登录引导弹窗。
-  ///
-  /// 只在确实需要请求 L3 API 且当前无 Supabase session 时出现；
-  /// 已缓存的 L1/L2 结果不会触发登录门槛。
-  Future<void> _showAiFeatureSignInDialog() async {
-    final l10n = AppLocalizations.of(context);
-    if (l10n == null) return;
-    await ensureSignedInForAction(
-      context: context,
-      ref: ref,
-      title: l10n.senseGroupSignInRequiredTitle,
-      message: l10n.senseGroupSignInRequiredMessage,
-    );
-  }
-
-  /// 已登录但未解锁 AI 功能时展示统一额度提示。
-  Future<void> _showAiQuotaExceededDialog(
-    AiFeatureQuotaExceededException error, {
-    bool force = false,
-  }) async {
-    if (_isShowingAiQuotaDialog || !mounted) return;
-    _isShowingAiQuotaDialog = true;
-    try {
-      await showAiQuotaExceededDialog(
-        context: context,
-        ref: ref,
-        feature: error.feature,
-        reason: error.reason,
-        respectReminderCooldown: !force,
-      );
-    } finally {
-      _isShowingAiQuotaDialog = false;
-    }
   }
 
   /// 意群粒度切换回调
@@ -1018,21 +959,15 @@ class _SentenceExplanationViewState
     final cachedAnalysis = autoShowAiAnalysis
         ? ai?.getCachedAnalysis(_text, targetLanguage: nativeLanguage)
         : null;
-    final accessToken = ref
-        .watch(supabaseSessionProvider)
-        .valueOrNull
-        ?.accessToken;
-    // 讲解视图自包含：是否自动请求只由认证状态和用户 AI 设置决定，
-    // 宿主无需额外传入“启用自动加载”的开关。
-    final shouldAutoLoadSentenceAi =
-        accessToken != null && accessToken.isNotEmpty;
+    // 自动展示只由学习设置决定；没有供应商配置时显示配置提示，不触网。
+    const shouldAutoLoadSentenceAi = true;
     final willStartAutoLoad =
         shouldAutoLoadSentenceAi &&
         (autoShowAiAnalysis ||
             autoShowAiSenseGroups ||
             (autoShowAiTranslation && translationContextReady));
     _logAutoLoadDecision(
-      hasAccessToken: accessToken != null && accessToken.isNotEmpty,
+      hasAccessToken: true,
       autoShowAiTranslation: autoShowAiTranslation,
       autoShowAiAnalysis: autoShowAiAnalysis,
       autoShowAiSenseGroups: autoShowAiSenseGroups,
@@ -1124,91 +1059,26 @@ class _SentenceExplanationViewState
                 onToolbarStateChanged: _toolbarNotifier.notify,
                 onRequestTranslation: ai != null
                     ? (cancelToken, source) async* {
-                        var hasContent = false;
-                        try {
-                          final (requestPreviousText, requestNextText) =
-                              await resolveTranslationContext();
-                          // await for（非 yield*）确保流内 auth/quota 错误在本
-                          // try 内重抛，从而弹登录/订阅（与 onRequestAnalysis 语义一致）。
-                          await for (final t in ai.getTranslationStream(
-                            _text,
-                            previous: requestPreviousText,
-                            next: requestNextText,
-                            targetLanguage: nativeLanguage,
-                            accessToken: accessToken,
-                            cancelToken: cancelToken,
-                            respectLocalQuotaReset:
-                                source == SentenceAiRequestSource.automatic,
-                          )) {
-                            if (t.translation.isNotEmpty) {
-                              hasContent = true;
-                            }
-                            yield t.translation;
-                          }
-                          if (hasContent) {
-                            ref
-                                .read(usageTrackerProvider)
-                                .record(UsageEvent.translationSucceeded);
-                          }
-                        } on AiFeatureAuthRequiredException {
-                          if (mounted) {
-                            unawaited(_showAiFeatureSignInDialog());
-                          }
-                          rethrow;
-                        } on AiFeatureQuotaExceededException catch (e) {
-                          if (mounted) {
-                            unawaited(
-                              _showAiQuotaExceededDialog(
-                                e,
-                                force:
-                                    source == SentenceAiRequestSource.userTap,
-                              ),
-                            );
-                          }
-                          rethrow;
+                        final (previous, next) = await resolveTranslationContext();
+                        await for (final t in ai.getTranslationStream(
+                          _text, previous: previous, next: next,
+                          targetLanguage: nativeLanguage, cancelToken: cancelToken,
+                        )) {
+                          if (t.translation.isNotEmpty) ref.read(usageTrackerProvider)
+                            .record(UsageEvent.translationSucceeded);
+                          yield t.translation;
                         }
                       }
                     : null,
                 onRequestAnalysis: ai != null
                     ? (cancelToken, source) async* {
-                        var hasContent = false;
-                        try {
-                          // await for 确保流内 auth/quota 错误进入本层 catch，
-                          // 从而触发登录或订阅导航，并由卡片恢复按钮状态。
-                          await for (final analysis in ai.getAnalysisStream(
-                            _text,
-                            targetLanguage: nativeLanguage,
-                            accessToken: accessToken,
-                            cancelToken: cancelToken,
-                            respectLocalQuotaReset:
-                                source == SentenceAiRequestSource.automatic,
-                          )) {
-                            if (analysis.isNotEmpty) {
-                              hasContent = true;
-                            }
-                            yield analysis;
-                          }
-                          if (hasContent) {
-                            ref
-                                .read(usageTrackerProvider)
-                                .record(UsageEvent.analysisSucceeded);
-                          }
-                        } on AiFeatureAuthRequiredException {
-                          if (mounted) {
-                            unawaited(_showAiFeatureSignInDialog());
-                          }
-                          rethrow;
-                        } on AiFeatureQuotaExceededException catch (e) {
-                          if (mounted) {
-                            unawaited(
-                              _showAiQuotaExceededDialog(
-                                e,
-                                force:
-                                    source == SentenceAiRequestSource.userTap,
-                              ),
-                            );
-                          }
-                          rethrow;
+                        await for (final analysis in ai.getAnalysisStream(
+                          _text, targetLanguage: nativeLanguage,
+                          cancelToken: cancelToken,
+                        )) {
+                          if (analysis.isNotEmpty) ref.read(usageTrackerProvider)
+                            .record(UsageEvent.analysisSucceeded);
+                          yield analysis;
                         }
                       }
                     : null,

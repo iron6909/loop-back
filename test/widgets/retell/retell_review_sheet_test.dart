@@ -582,8 +582,6 @@ void main() {
                 preview: preview,
                 onBeforePlayback: () async {},
                 onRetry: () async {},
-                onUpgrade: () async {},
-                onSignIn: () async {},
               ),
               child: const Text('open'),
             ),
@@ -632,8 +630,6 @@ void main() {
                 preview: preview,
                 onBeforePlayback: () => beforePlayback.future,
                 onRetry: () async {},
-                onUpgrade: () async {},
-                onSignIn: () async {},
               ),
               child: const Text('open'),
             ),
@@ -754,150 +750,6 @@ void main() {
     );
   });
 
-  testWidgets('失败态按错误码给文案，点击重试触发回调', (tester) async {
-    var retried = 0;
-    await tester.pumpWidget(
-      wrap(
-        Builder(
-          builder: (context) => Center(
-            child: TextButton(
-              onPressed: () => showRetellReviewSheet(
-                context,
-                recordingPath: '/tmp/retell.m4a',
-                preview: preview,
-                onBeforePlayback: () async {},
-                onRetry: () async => retried++,
-                onUpgrade: () async {},
-                onSignIn: () async {},
-              ),
-              child: const Text('open'),
-            ),
-          ),
-        ),
-        overrides: [
-          retellReviewEvaluationProvider.overrideWith(
-            () => _FixedReviewController(
-              const RetellReviewEvaluationState(
-                attemptKey: 'retell:a1:0',
-                phase: RetellReviewEvaluationPhase.failed,
-                errorCode: 'audio_too_large',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text('The prepared recording exceeds the 2 MB limit.'),
-      findsOneWidget,
-    );
-
-    await tester.tap(find.text('Retry'));
-    await tester.pumpAndSettle();
-
-    expect(retried, 1);
-  });
-
-  testWidgets('额度用尽给升级入口而不是重试', (tester) async {
-    // 重试必然再撞同一堵墙，还白跑一次本地转码与 2MB 上传，所以这里不能给重试。
-    var upgraded = 0;
-    await tester.pumpWidget(
-      wrap(
-        Builder(
-          builder: (context) => Center(
-            child: TextButton(
-              onPressed: () => showRetellReviewSheet(
-                context,
-                recordingPath: '/tmp/retell.m4a',
-                preview: preview,
-                onBeforePlayback: () async {},
-                onRetry: () async {},
-                onUpgrade: () async => upgraded++,
-                onSignIn: () async {},
-              ),
-              child: const Text('open'),
-            ),
-          ),
-        ),
-        overrides: [
-          retellReviewEvaluationProvider.overrideWith(
-            () => _FixedReviewController(
-              const RetellReviewEvaluationState(
-                attemptKey: 'retell:a1:0',
-                phase: RetellReviewEvaluationPhase.failed,
-                errorCode: 'quota_exceeded',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.text("This month's free AI retell review quota is used up"),
-      findsOneWidget,
-    );
-    expect(find.text('Retry'), findsNothing);
-
-    await tester.tap(find.text('Upgrade Now'));
-    await tester.pumpAndSettle();
-
-    expect(upgraded, 1);
-  });
-
-  testWidgets('未登录给登录入口而不是重试', (tester) async {
-    var signedIn = 0;
-    await tester.pumpWidget(
-      wrap(
-        Builder(
-          builder: (context) => Center(
-            child: TextButton(
-              onPressed: () => showRetellReviewSheet(
-                context,
-                recordingPath: '/tmp/retell.m4a',
-                preview: preview,
-                onBeforePlayback: () async {},
-                onRetry: () async {},
-                onUpgrade: () async {},
-                onSignIn: () async => signedIn++,
-              ),
-              child: const Text('open'),
-            ),
-          ),
-        ),
-        overrides: [
-          retellReviewEvaluationProvider.overrideWith(
-            () => _FixedReviewController(
-              const RetellReviewEvaluationState(
-                attemptKey: 'retell:a1:0',
-                phase: RetellReviewEvaluationPhase.failed,
-                errorCode: 'auth_required',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Sign in to use AI retell review'), findsOneWidget);
-    expect(find.text('Retry'), findsNothing);
-
-    await tester.tap(find.text('Sign In'));
-    await tester.pumpAndSettle();
-
-    expect(signedIn, 1);
-  });
-
   testWidgets('首帧到达前显示骨架而非报告', (tester) async {
     await tester.pumpWidget(
       wrap(
@@ -910,8 +762,6 @@ void main() {
                 preview: preview,
                 onBeforePlayback: () async {},
                 onRetry: () async {},
-                onUpgrade: () async {},
-                onSignIn: () async {},
               ),
               child: const Text('open'),
             ),
