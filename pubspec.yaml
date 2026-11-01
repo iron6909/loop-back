@@ -155,6 +155,9 @@ dev_dependencies:
 dependency_overrides:
   charset_converter:
     path: third_party/charset_converter
+  # pdf 3.12.0 限制 archive <4.1.0，与 image 4.11.0 的 decodeLazy 调用不兼容。
+  # ponytail: 暂用 4.10.0；pdf/image 的 archive 约束兼容后移除此覆盖。
+  image: 4.10.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

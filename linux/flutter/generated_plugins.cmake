@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   charset_converter
+  ffmpeg_kit_flutter_new_min
   flutter_secure_storage_linux
   flutter_timezone
   gtk
@@ -17,6 +18,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  jni
   sherpa_onnx_linux
 )
 
