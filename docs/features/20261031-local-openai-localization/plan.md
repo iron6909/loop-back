@@ -82,11 +82,11 @@
 **Change:** 独立 `Dio` 实例：不挂 Supabase token、平台/渠道头、权益拦截器、区域路由。拼接 `{baseUrl}/chat/completions`（不自动补 `/v1`）。连接 15s / 接收 120s。按 spec 映射 401/402/404/429/5xx/超时到领域错误枚举；5xx 重试一次。对 `opencode.ai` 主机附带稳定 `x-opencode-session` 与本应用 UA，其他主机不附加。
 **Check:** `flutter test test/services/provider/provider_http_client_test.dart` → 用假 adapter 断言请求 URL/头部/超时配置、错误分类、重试次数、非 Go 主机无会话头。
 
-### Task 7: 结构化 AI 客户端接入
+### Task 7: 结构化 AI 客户端本体
 
 **Covers:** REQ-2, REQ-5, REQ-6, REQ-7, REQ-10, REQ-11
 **Depends on:** Task 1, 2, 3, 5, 6
-**Files:** 新增 `lib/services/provider/structured_ai_client.dart`；改造 `lib/providers/sentence_ai_provider.dart`、`lib/providers/dictionary/lookup_controller.dart` 的调用点；新增 `test/services/provider/structured_ai_client_test.dart`
+**Files:** 新增 `lib/services/provider/structured_ai_client.dart`、`structured_prompts.dart`；补充 HTTP 错误体与校验失败分类；新增 `test/services/provider/structured_ai_client_test.dart`。调用点接线并入 Task 9，与旧缓存、重试及门控清理一次完成。
 **Change:** 六功能统一走「组提示词 → 发请求（Task 3 选模式）→ Task 1 校验 → 命中写缓存（Task 2 键）→ 产出单个 `isFinal=true` 帧」。带 generation 守卫：配置变更或取消时旧回调丢弃。失败不写缓存。
 **Check:** `flutter test test/services/provider/structured_ai_client_test.dart` → 六功能各一条成功路径与一条校验失败路径；失败不调用 cache upsert；generation 变更后旧响应被丢弃。
 
@@ -98,12 +98,12 @@
 **Change:** 用标准 Chat Completions SSE：按空行分事件、`data:` 前缀、`[DONE]` 结束、UTF-8 跨分片；忽略空正文的 finish 帧；仅当见过 `finish_reason=stop` 且收到 `[DONE]` 才判完成；EOF 不算完成。用户停止时保留已累积文本。
 **Check:** `flutter test test/features/chatbot/services/chat_api_client_sse_test.dart` → 正常流、尾帧含空正文、断流无 `[DONE]`、跨分片 UTF-8、停止保留文本。
 
-### Task 9: 解除登录与会员门控
+### Task 9: 供应商接线并解除登录与会员门控
 
-**Covers:** REQ-4, REQ-25
-**Depends on:** Task 7
-**Files:** 改造 `lib/providers/sentence_ai_provider.dart`、`lib/providers/dictionary/lookup_controller.dart`、`lib/providers/retell_review_evaluation_provider.dart`、`lib/features/chatbot/providers/chat_session_controller.dart`
-**Change:** 移除 `isAuthenticatedProvider`、`featureAccessProvider`、`supabaseSessionProvider` 前置检查与 402 分支；保留取消、generation/session 守卫与缓存。AI 入口不再跳转 paywall。
+**Covers:** REQ-1, REQ-2, REQ-3, REQ-4, REQ-5, REQ-6, REQ-7, REQ-10, REQ-11, REQ-25
+**Depends on:** Task 7, 8
+**Files:** 改造 `lib/providers/sentence_ai_provider.dart`、`lib/services/sentence_ai_api_client.dart`、`lib/services/dictionary/ai_dictionary_source.dart`、`lib/providers/dictionary/lookup_controller.dart`、`lib/providers/retell_review_evaluation_provider.dart`、`lib/features/chatbot/providers/chat_session_controller.dart` 与相关 UI 门控；新增配置生命周期 provider。
+**Change:** 将句子、词典与聊天入口接到 Task 7/8 客户端，共用配置身份与取消守卫，移除旧缓存重复写入和对无效结果的自动重试。移除 `isAuthenticatedProvider`、`featureAccessProvider`、`supabaseSessionProvider` 前置检查与 402 分支；保留取消、generation/session 守卫与缓存。AI 入口不再跳转 paywall。
 **Check:** `flutter test test/providers/sentence_ai_provider_test.dart test/providers/retell_review_evaluation_provider_test.dart` → 未登录时调用不再被拦截；既有通过用例保持通过。
 
 ### Task 10: 用量查询服务
