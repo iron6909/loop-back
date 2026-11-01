@@ -184,10 +184,7 @@ class ProviderHttpClient {
     final response = await _dio.post<ResponseBody>(
       _endpoint,
       data: body,
-      options: Options(
-        headers: _headers,
-        responseType: ResponseType.stream,
-      ),
+      options: Options(headers: _headers, responseType: ResponseType.stream),
       cancelToken: cancelToken,
     );
     final status = response.statusCode ?? 0;
@@ -196,6 +193,32 @@ class ProviderHttpClient {
       throw ProviderHttpException(_mapStatus(status), statusCode: status);
     }
     return stream;
+  }
+
+  /// 用量类只读 GET：只接受调用方用**已配置主机**拼出的绝对地址。
+  ///
+  /// 与聊天请求共用超时、空 Key 与重定向限制；不重试，用量失败不影响推理。
+  Future<Map<String, dynamic>> getJson(
+    Uri uri, {
+    CancelToken? cancelToken,
+  }) async {
+    if (_apiKey.trim().isEmpty || RegExp(r'[\r\n]').hasMatch(_apiKey)) {
+      throw const ProviderHttpException(ProviderErrorKind.unauthorized);
+    }
+    final response = await _dio.get<Object?>(
+      uri.toString(),
+      options: Options(headers: _headers),
+      cancelToken: cancelToken,
+    );
+    final status = response.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw ProviderHttpException(
+        _mapStatus(status),
+        statusCode: status,
+        body: _bodyText(response.data),
+      );
+    }
+    return _decode(response.data);
   }
 
   /// 取错误体文本供回落判定；只保留前 2 KB，避免把大正文带进内存或日志。
