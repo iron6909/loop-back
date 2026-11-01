@@ -135,3 +135,11 @@ final providerConfigurationProvider =
     AsyncNotifierProvider<ProviderConfigurationNotifier, ProviderRuntime?>(
       ProviderConfigurationNotifier.new,
     );
+
+/// AI 服务是否可用：默认取决于是否已保存供应商配置。
+///
+/// 界面据此决定是否自动发起请求；测试可覆盖为 true 以验证自动加载路径，
+/// 无需构造真实供应商运行时。
+final aiServiceAvailableProvider = Provider<bool>(
+  (ref) => ref.watch(providerConfigurationProvider).valueOrNull != null,
+);

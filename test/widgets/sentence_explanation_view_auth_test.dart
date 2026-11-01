@@ -27,9 +27,9 @@ import 'package:echo_loop/models/sentence_ai_result.dart';
 import 'package:echo_loop/providers/audio_sentences_provider.dart';
 import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
 import 'package:echo_loop/providers/learning_settings_provider.dart';
+import 'package:echo_loop/providers/provider_configuration_provider.dart';
 import 'package:echo_loop/providers/sentence_ai_provider.dart';
 import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/services/provider/provider_http_client.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
 import 'package:echo_loop/widgets/practice/sentence_annotation_card.dart';
 import 'package:echo_loop/widgets/practice/sentence_explanation_view.dart';
@@ -323,6 +323,7 @@ void main() {
           savedWordDaoProvider.overrideWithValue(savedWordDao),
           audioEngineProvider.overrideWith(() => _NoopAudioEngine()),
           subscriptionAvailabilityProvider.overrideWithValue(true),
+          aiServiceAvailableProvider.overrideWithValue(true),
           ...extraOverrides,
         ],
         child: MaterialApp.router(

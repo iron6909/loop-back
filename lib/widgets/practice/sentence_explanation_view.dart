@@ -33,6 +33,7 @@ import '../../models/word_highlight_binding.dart';
 import '../../providers/audio_engine/audio_engine_provider.dart';
 import '../../providers/audio_sentences_provider.dart';
 import '../../providers/learning_settings_provider.dart';
+import '../../providers/provider_configuration_provider.dart';
 import '../../providers/sentence_ai_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/word_highlight_provider.dart';
@@ -959,8 +960,9 @@ class _SentenceExplanationViewState
     final cachedAnalysis = autoShowAiAnalysis
         ? ai?.getCachedAnalysis(_text, targetLanguage: nativeLanguage)
         : null;
-    // 自动展示只由学习设置决定；没有供应商配置时显示配置提示，不触网。
-    const shouldAutoLoadSentenceAi = true;
+    // 自动加载只在“已注入 notifier”或“已配置供应商”时发生：未配置时不应发起
+    // 任何推理请求，用户手动点击才显示未配置提示（REQ-1）。
+    final shouldAutoLoadSentenceAi = ref.watch(aiServiceAvailableProvider);
     final willStartAutoLoad =
         shouldAutoLoadSentenceAi &&
         (autoShowAiAnalysis ||
@@ -1064,8 +1066,11 @@ class _SentenceExplanationViewState
                           _text, previous: previous, next: next,
                           targetLanguage: nativeLanguage, cancelToken: cancelToken,
                         )) {
-                          if (t.translation.isNotEmpty) ref.read(usageTrackerProvider)
-                            .record(UsageEvent.translationSucceeded);
+                          if (t.translation.isNotEmpty) {
+                            ref
+                                .read(usageTrackerProvider)
+                                .record(UsageEvent.translationSucceeded);
+                          }
                           yield t.translation;
                         }
                       }
@@ -1076,8 +1081,11 @@ class _SentenceExplanationViewState
                           _text, targetLanguage: nativeLanguage,
                           cancelToken: cancelToken,
                         )) {
-                          if (analysis.isNotEmpty) ref.read(usageTrackerProvider)
-                            .record(UsageEvent.analysisSucceeded);
+                          if (analysis.isNotEmpty) {
+                            ref
+                                .read(usageTrackerProvider)
+                                .record(UsageEvent.analysisSucceeded);
+                          }
                           yield analysis;
                         }
                       }

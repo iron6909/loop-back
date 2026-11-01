@@ -10,6 +10,7 @@ import '../database/daos/sentence_ai_cache_dao.dart';
 import '../database/providers.dart';
 import '../models/sense_group_result.dart';
 import '../models/sentence_ai_result.dart';
+import '../services/app_logger.dart';
 import '../services/provider/structured_ai_client.dart';
 import '../services/provider/structured_prompts.dart';
 import '../services/provider/structured_result_validator.dart';
@@ -165,6 +166,8 @@ class SentenceAiNotifier {
     StructuredAiRequest(feature: StructuredFeature.senseGroups, text: text),
     (value) => validateSenseGroups(value, original: text), _groups, hashText(text));
 
+  /// 预加载是尽力而为：任何失败（未配置、旧替身不返回 Future、损坏行）都当作
+  /// “无缓存”处理，不能阻断讲解页首次渲染。
   Future<bool> _preload<T>(StructuredAiRequest request,
     ValidationOutcome<T> Function(Object?) validate, Map<String, T> memory,
     String key) async {
@@ -175,6 +178,9 @@ class SentenceAiNotifier {
       memory[key] = value;
       return true;
     } on ProviderNotConfiguredException {
+      return false;
+    } catch (error) {
+      AppLogger.log('SentenceAI', '预加载缓存失败: ${error.runtimeType}');
       return false;
     }
   }
