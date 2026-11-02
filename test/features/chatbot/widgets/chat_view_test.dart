@@ -19,6 +19,8 @@ import 'package:echo_loop/features/subscription/models/premium_feature.dart';
 import 'package:echo_loop/features/subscription/providers/ai_trial_usage_provider.dart';
 import 'package:echo_loop/features/subscription/services/free_allowance_policy.dart';
 import 'package:echo_loop/providers/settings_provider.dart';
+import 'package:echo_loop/services/provider/provider_config.dart';
+import 'package:echo_loop/services/provider/provider_http_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -121,6 +123,59 @@ void main() {
     greeting: greeting,
     contextSummary: summary,
   );
+
+  for (final failure in <(Object, String)>[
+    (
+      const ProviderNotConfiguredException(),
+      'Configure AI service in Settings first',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.unauthorized),
+      'API key is invalid or unauthorized',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.insufficientBalance),
+      'Provider balance or plan is insufficient',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.notFound),
+      'Provider address or model was not found',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.rateLimited),
+      'Provider rate limit reached. Try again later',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.serverError),
+      'Provider is temporarily unavailable',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.timeout),
+      'Provider request timed out. Try again',
+    ),
+  ]) {
+    testWidgets('助教显示可操作的供应商错误：${failure.$2}', (tester) async {
+      await pumpChatWidget(
+        tester,
+        ChatView(config: config()),
+        overrides: overrides(
+          _ScriptApi(() async* {
+            yield const ChatTextFrame(text: 'partial answer', isFinal: false);
+            throw failure.$1;
+          }),
+        ),
+      );
+      await tester.enterText(find.byType(TextField), 'Explain');
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.arrow_upward));
+      await tester.pumpAndSettle();
+
+      expect(find.text(failure.$2), findsOneWidget);
+      expect(find.text('partial answer', findRichText: true), findsWidgets);
+      expect(find.text('Upgrade Now'), findsNothing);
+      expect(find.text('Sign In'), findsNothing);
+    });
+  }
 
   testWidgets('空态显示 greeting + context chip', (tester) async {
     await pumpChatWidget(

@@ -18,7 +18,6 @@ import '../../../providers/settings_provider.dart';
 import '../../../providers/provider_configuration_provider.dart';
 import '../../../services/provider/provider_http_client.dart';
 import '../../../services/app_logger.dart';
-import '../../subscription/models/ai_quota_rejection.dart';
 import '../models/chat_message.dart';
 import '../models/chat_role.dart';
 import '../models/chatbot_config.dart';
@@ -209,19 +208,22 @@ class ChatSessionController extends _$ChatSessionController {
     } catch (e) {
       if (_disposed || seq != _seq) return;
       final status = _mapRunError(e);
-      final quotaReason = _quotaReasonFor(e);
+      final errorCode = switch (e) {
+        ProviderNotConfiguredException() => 'not_configured',
+        ProviderHttpException(:final kind) => kind.name,
+        _ => 'invalidResponse',
+      };
       // 用户主动取消（cancel→done）不算失败，不打 error 日志。
       if (status != ChatMessageStatus.done) {
         _log('流式失败 botId=$botId status=$status error=$e');
       }
-      _finishTurn(botId, status, quotaReason: quotaReason);
+      _finishTurn(botId, status, errorCode: errorCode);
     }
   }
 
   /// 异常 → 该条 assistant 消息的终态（气泡 inline 表达，不设会话级错误）。
   /// - DioException(cancel)（用户停止）→ done，保留已生成部分；
-  /// - DioException(402)（额度权威判定）→ quotaBlocked（气泡 inline 升级入口）；
-  /// - 供应商 401（Key 无效）→ error，由气泡提示检查供应商设置；
+  /// - 供应商失败 → error，气泡按安全错误代码显示设置、余额或重试提示；
   /// - ChatStreamException / 其余 → error。
   ChatMessageStatus _mapRunError(Object e) {
     if (e is DioException && e.type == DioExceptionType.cancel) {
@@ -231,14 +233,6 @@ class ChatSessionController extends _$ChatSessionController {
       return ChatMessageStatus.done;
     }
     return ChatMessageStatus.error;
-  }
-
-  /// 供应商明确返回 402 且给出额度原因时才使用对应文案。
-  AiQuotaRejectionReason _quotaReasonFor(Object error) {
-    if (error is! DioException || error.response?.statusCode != 402) {
-      return AiQuotaRejectionReason.exhausted;
-    }
-    return AiQuotaRejection.fromResponseData(error.response?.data).reason;
   }
 
   /// 组装发后端的历史：剔除 greeting / 占位 / 失败消息，取最近 [_historyLimit] 条。
@@ -268,7 +262,7 @@ class ChatSessionController extends _$ChatSessionController {
   void _finishTurn(
     String id,
     ChatMessageStatus status, {
-    AiQuotaRejectionReason quotaReason = AiQuotaRejectionReason.exhausted,
+    String? errorCode,
   }) {
     final target = state.messages.where((m) => m.id == id).firstOrNull;
     final removeEmpty =
@@ -280,7 +274,7 @@ class ChatSessionController extends _$ChatSessionController {
       if (m.id != id) {
         next.add(m); // 非目标消息原样保留
       } else if (!removeEmpty) {
-        next.add(m.copyWith(status: status, quotaReason: quotaReason));
+        next.add(m.copyWith(status: status, errorCode: errorCode));
       }
       // removeEmpty && 目标 → 跳过（移除空占位）
     }
