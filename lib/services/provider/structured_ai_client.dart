@@ -266,6 +266,10 @@ class StructuredAiClient {
     StructuredFeature.word || StructuredFeature.phrase => hashText(
       '${normalizeWord(request.text)}|${request.targetLanguage ?? 'zh-CN'}',
     ),
+    // 同一原文的每次复述都可能不同，缓存身份必须同时包含实际转写。
+    StructuredFeature.retell => hashText(
+      jsonEncode([request.text, request.previousText]),
+    ),
     _ => hashText(request.text),
   };
 

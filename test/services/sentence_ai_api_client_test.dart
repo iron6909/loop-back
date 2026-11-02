@@ -59,6 +59,41 @@ void main() {
     expect(retell.evaluation.transcript, 'I said');
   });
 
+  test('同一原文的不同复述转写分别评估，相同转写才复用缓存', () async {
+    const original = 'The student walked to school.';
+    Map<String, Object?> evaluation(String summary) => {
+      'rating': 'good',
+      'summary': summary,
+      'keyPoints': [
+        {'keyPoint': 'walked to school', 'status': 'covered'},
+      ],
+      'corrections': [],
+    };
+    fixture.adapter.completion(evaluation('first attempt'));
+    fixture.adapter.completion(evaluation('second attempt'));
+
+    final first = await client.evaluateTranscriptStream(
+      transcript: 'The student go school.',
+      originalText: original,
+      targetLanguage: 'en',
+    ).last;
+    final second = await client.evaluateTranscriptStream(
+      transcript: 'The student walked to school.',
+      originalText: original,
+      targetLanguage: 'en',
+    ).last;
+    final repeated = await client.evaluateTranscriptStream(
+      transcript: 'The student walked to school.',
+      originalText: original,
+      targetLanguage: 'en',
+    ).last;
+
+    expect(fixture.adapter.requests, hasLength(2));
+    expect(first.evaluation.summary, 'first attempt');
+    expect(second.evaluation.summary, 'second attempt');
+    expect(repeated.evaluation.summary, 'second attempt');
+  });
+
   test('finish_reason=length 判失败，不写缓存', () async {
     fixture.adapter.completion({'translation': '半截'}, finish: 'length');
     await expectLater(client.translateStream('Hello').toList(),
