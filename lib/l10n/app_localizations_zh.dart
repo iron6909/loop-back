@@ -3944,6 +3944,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get communityFileUnavailable => '该文件已从共享合集中移除';
 
   @override
+  String get communitySyncStoppedBadge => '已停止同步';
+
+  @override
+  String get communityReadOnlyNotice => '该合集来自旧版社区，内容已不再更新。';
+
+  @override
+  String get communityMediaNotDownloaded => '媒体未下载';
+
+  @override
+  String get communityMediaNotDownloadedMessage => '该媒体从未下载过，共享合集已不再提供下载。';
+
+  @override
   String communityFilesRemoved(int count) {
     return '共享合集中有 $count 个文件已移除';
   }

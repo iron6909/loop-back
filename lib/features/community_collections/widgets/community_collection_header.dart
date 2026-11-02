@@ -10,6 +10,7 @@ class CommunityCollectionHeader extends StatefulWidget {
   final String? authorNickname;
   final DateTime? updatedAt;
   final int fileCount;
+  final bool showAuthor;
 
   const CommunityCollectionHeader({
     super.key,
@@ -17,6 +18,7 @@ class CommunityCollectionHeader extends StatefulWidget {
     required this.authorNickname,
     this.updatedAt,
     required this.fileCount,
+    this.showAuthor = true,
   });
 
   @override
@@ -173,7 +175,7 @@ class _CommunityCollectionHeaderState extends State<CommunityCollectionHeader> {
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                authorItem,
+                if (widget.showAuthor) authorItem,
                 if (updateItem != null) updateItem,
                 countItem,
               ],

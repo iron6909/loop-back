@@ -187,7 +187,7 @@ void main() {
       expect(find.byKey(const Key('community_difficulty_badge')), findsNothing);
     });
 
-    testWidgets('合集社区材料显示 CEFR 难度，窄屏长标题仍可布局', (tester) async {
+    testWidgets('历史社区材料隐藏远端难度，窄屏长标题仍可布局', (tester) async {
       final item = createTestAudioItem(
         name:
             'A very long community lesson title that needs to fit on a narrow screen',
@@ -198,21 +198,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('B1'), findsOneWidget);
+      expect(find.text('B1'), findsNothing);
+      expect(find.byKey(const Key('community_difficulty_badge')), findsNothing);
       expect(
-        find.byKey(const Key('community_difficulty_badge')),
+        find.byKey(const Key('audio_list_tile_metadata_row')),
         findsOneWidget,
-      );
-      final badge = find.byKey(const Key('community_difficulty_badge'));
-      final scheduleIcon = find.byIcon(Icons.schedule_outlined);
-      final metadataRow = find.byKey(const Key('audio_list_tile_metadata_row'));
-      expect(
-        tester.getCenter(badge).dy,
-        closeTo(tester.getCenter(metadataRow).dy, 1),
-      );
-      expect(
-        tester.getTopLeft(badge).dx,
-        lessThan(tester.getTopLeft(scheduleIcon).dx),
       );
       expect(tester.takeException(), isNull);
     });
@@ -417,7 +407,7 @@ void main() {
       );
     });
 
-    testWidgets('社区音频下载中菜单显示并支持取消下载', (tester) async {
+    testWidgets('社区音频不再提供下载或取消下载入口', (tester) async {
       final item = createTestAudioItem(
         name: 'Official Audio',
       ).copyWith(audioPath: null, remoteAudioId: 'remote-1');
@@ -437,10 +427,6 @@ void main() {
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('audio_list_tile_menu_hit_area')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Cancel Download'), findsOneWidget);
-      await tester.tap(find.text('Cancel Download'));
       await tester.pumpAndSettle();
 
       expect(find.text('Cancel Download'), findsNothing);
@@ -947,7 +933,7 @@ void main() {
       );
     });
 
-    testWidgets('未下载社区音频左侧显示下载图标而非进度环', (tester) async {
+    testWidgets('未下载的社区音频显示不可用图标且点击说明无法下载', (tester) async {
       final item = createTestAudioItem(
         name: 'Official Audio',
         transcriptPath: null,
@@ -968,17 +954,28 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // 社区合集已停止同步：未下载过的媒体不再提供下载入口。
+      expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
       expect(
         find.byKey(const Key('audio_list_tile_download_icon')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
         find.byKey(const Key('audio_list_tile_downloading_icon')),
         findsNothing,
       );
+
+      await tester.tap(find.text('Official Audio'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'This media was never downloaded, and shared collections no longer provide downloads.',
+        ),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('社区音频下载中时左侧显示下载进度环', (tester) async {
+    testWidgets('社区音频下载中也不再展示下载进度环', (tester) async {
       final item = createTestAudioItem(
         name: 'Official Audio',
         transcriptPath: null,
@@ -1002,20 +999,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // 已停止同步后不再有任何社区下载路径，残留下载态也不应展示进度。
+      expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
       expect(
         find.byKey(const Key('audio_list_tile_downloading_icon')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('audio_list_tile_download_icon')),
         findsNothing,
       );
-      // 社区下载与播客一致：行内进度条（无弹窗）。
       expect(
         find.byKey(const Key('audio_list_tile_download_progress')),
-        findsOneWidget,
+        findsNothing,
       );
-      expect(find.textContaining('Downloading 42%'), findsOneWidget);
     });
 
     testWidgets('已下载社区音频左侧显示学习进度图标而非下载图标', (tester) async {
@@ -1300,7 +1293,7 @@ void main() {
       expect(find.text('Unpin'), findsOneWidget);
     });
 
-    testWidgets('社区音频菜单显示更新字幕，不显示管理字幕', (tester) async {
+    testWidgets('社区音频不再显示更新字幕，也不显示管理字幕', (tester) async {
       final communityItem = baseItem.copyWith(
         remoteAudioId: 'remote-audio-1',
         transcriptPath: null,
@@ -1313,7 +1306,8 @@ void main() {
       await tester.tap(find.byKey(const Key('audio_list_tile_menu_hit_area')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Update Subtitles'), findsOneWidget);
+      // 共享合集停止同步后，远端字幕更新入口一并移除。
+      expect(find.text('Update Subtitles'), findsNothing);
       expect(find.text('Manage Subtitles'), findsNothing);
       expect(find.text('Edit subtitles'), findsNothing);
     });
@@ -1388,7 +1382,7 @@ void main() {
       expect(find.byType(PopupMenuDivider), findsOneWidget);
     });
 
-    testWidgets('点击社区更新字幕先弹出清空进度确认框', (tester) async {
+    testWidgets('社区音频菜单保留本地学习操作，不再有远端字幕更新', (tester) async {
       final communityItem = baseItem.copyWith(
         remoteAudioId: 'remote-audio-1',
         transcriptPath: 'transcripts/official_x.srt',
@@ -1400,14 +1394,9 @@ void main() {
 
       await tester.tap(find.byKey(const Key('audio_list_tile_menu_hit_area')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Update Subtitles'));
-      await tester.pumpAndSettle();
 
-      expect(find.text('Update subtitles?'), findsOneWidget);
-      expect(
-        find.textContaining('clearing all saved sentences'),
-        findsOneWidget,
-      );
+      expect(find.text('Update Subtitles'), findsNothing);
+      expect(find.text('Export PDF'), findsOneWidget);
     });
   });
 

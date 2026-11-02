@@ -4131,6 +4131,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'This file was removed from the shared collection';
 
   @override
+  String get communitySyncStoppedBadge => 'Sync stopped';
+
+  @override
+  String get communityReadOnlyNotice =>
+      'This collection came from the old community. Content is no longer updated.';
+
+  @override
+  String get communityMediaNotDownloaded => 'Media not downloaded';
+
+  @override
+  String get communityMediaNotDownloadedMessage =>
+      'This media was never downloaded, and shared collections no longer provide downloads.';
+
+  @override
   String communityFilesRemoved(int count) {
     return '$count files were removed from shared collections';
   }

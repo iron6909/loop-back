@@ -26,6 +26,7 @@ void main() {
     id: 'audio-1',
     name: 'Short lesson',
     audioPath: null,
+    remoteAudioId: 'remote-audio-1',
     addedDate: DateTime(2026, 6, 12),
   );
 
@@ -79,7 +80,7 @@ void main() {
     return syncService;
   }
 
-  testWidgets('短社区合集列表下拉强制同步当前合集', (tester) async {
+  testWidgets('历史社区合集显示只读说明，下拉不再同步且保留本地条目', (tester) async {
     final syncService = await pumpScreen(
       tester,
       audioItems: [audioItem()],
@@ -89,11 +90,13 @@ void main() {
     await tester.drag(find.byType(ListView).first, const Offset(0, 500));
     await tester.pumpAndSettle();
 
-    verify(() => syncService.syncCollection('community-local-1')).called(1);
-    expect(find.byType(SnackBar), findsOneWidget);
+    verifyNever(() => syncService.syncCollection('community-local-1'));
+    expect(find.byKey(const Key('community-read-only-notice')), findsOneWidget);
+    expect(find.text('Short lesson'), findsOneWidget);
+    expect(find.byType(RefreshIndicator), findsNothing);
   });
 
-  testWidgets('空社区合集也可以下拉强制同步当前合集', (tester) async {
+  testWidgets('空历史社区合集保留只读说明且不发同步', (tester) async {
     final syncService = await pumpScreen(
       tester,
       audioItems: const [],
@@ -103,11 +106,12 @@ void main() {
     await tester.drag(find.byType(ListView).first, const Offset(0, 500));
     await tester.pumpAndSettle();
 
-    verify(() => syncService.syncCollection('community-local-1')).called(1);
-    expect(find.byType(SnackBar), findsNothing);
+    verifyNever(() => syncService.syncCollection('community-local-1'));
+    expect(find.byKey(const Key('community-read-only-notice')), findsOneWidget);
+    expect(find.byType(RefreshIndicator), findsNothing);
   });
 
-  testWidgets('同步完全失败时显示错误反馈', (tester) async {
+  testWidgets('历史远端不可用不会触发同步或删除学习材料', (tester) async {
     final syncService = await pumpScreen(
       tester,
       audioItems: [audioItem()],
@@ -117,7 +121,8 @@ void main() {
     await tester.drag(find.byType(ListView).first, const Offset(0, 500));
     await tester.pumpAndSettle();
 
-    verify(() => syncService.syncCollection('community-local-1')).called(1);
-    expect(find.byType(SnackBar), findsOneWidget);
+    verifyNever(() => syncService.syncCollection('community-local-1'));
+    expect(find.text('Short lesson'), findsOneWidget);
+    expect(find.byType(SnackBar), findsNothing);
   });
 }

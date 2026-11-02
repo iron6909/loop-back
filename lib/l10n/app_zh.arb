@@ -1699,6 +1699,10 @@
   "communityCollectionDeprecated": "该合集已移除，本地副本仍可继续使用。",
   "communityCollectionRefreshFailed": "同步失败，下拉重试",
   "communityFileUnavailable": "该文件已从共享合集中移除",
+  "communitySyncStoppedBadge": "已停止同步",
+  "communityReadOnlyNotice": "该合集来自旧版社区，内容已不再更新。",
+  "communityMediaNotDownloaded": "媒体未下载",
+  "communityMediaNotDownloadedMessage": "该媒体从未下载过，共享合集已不再提供下载。",
   "communityFilesRemoved": "共享合集中有 {count} 个文件已移除",
   "@communityFilesRemoved": {
     "placeholders": {

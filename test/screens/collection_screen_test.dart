@@ -225,7 +225,9 @@ void main() {
 
         expect(find.text('Local'), findsOneWidget);
         expect(find.text('Shared'), findsOneWidget);
+        expect(find.text('Sync stopped'), findsOneWidget);
         expect(find.text('Podcast'), findsOneWidget);
+        expect(find.text('Discover Resources'), findsNothing);
       });
 
       testWidgets('来源角标位于合集 meta 信息下方', (tester) async {

@@ -20,8 +20,6 @@ import '../features/auth/screens/email_sign_in_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/password_sign_in_screen.dart';
 import '../features/auth/providers/auth_providers.dart';
-import '../features/community_collections/screens/discover_collections_screen.dart';
-import '../features/community_collections/screens/community_collection_detail_screen.dart';
 import '../features/community_collections/community_collection_routes.dart';
 import '../features/podcast/podcast_models.dart';
 import '../features/podcast/screens/podcast_discovery_screen.dart';
@@ -66,8 +64,6 @@ final rootRouteObserver = RouteTransitionObserver();
 abstract class AppRoutes {
   static const collections = '/collections';
 
-  /// 发现资源列表和合集详情留在资源库主导航壳中的路径。
-  static const discoverResources = CommunityCollectionRoutes.discoverResources;
   static const study = '/study';
   static const favorites = '/favorites';
   static const settings = '/settings';
@@ -92,10 +88,6 @@ abstract class AppRoutes {
   /// 合集详情页路径
   static String collectionDetail(String collectionId) =>
       '/collections/$collectionId';
-
-  /// 发现资源中的公开合集详情页路径。
-  static String discoverCollection(String remoteId) =>
-      CommunityCollectionRoutes.discoverCollection(remoteId);
 
   /// 学习计划页路径
   /// [autoStart] 为 true 时进入后自动弹出学习任务
@@ -316,6 +308,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (ref.read(shouldShowSurveyProvider)) {
         return AppRoutes.onboardingSurvey;
       }
+      // 兼容旧发现页链接，停用远端内容后统一回到我的合集。
+      if (state.uri.path == '/collections/discover' ||
+          state.uri.path.startsWith('/collections/discover/')) {
+        return AppRoutes.collections;
+      }
       if (state.uri.path == '/') return AppRoutes.study;
       return null;
     },
@@ -331,26 +328,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const LibraryScreen(),
                 routes: [
                   _pdfPreviewRoute(),
-                  // 发现页属于资源库入口流程，留在 branch-0 内以持续显示主导航。
-                  GoRoute(
-                    path: CommunityCollectionRoutes.discoverSegment,
-                    builder: (context, state) =>
-                        const DiscoverCommunityCollectionsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: ':remoteId',
-                        builder: (context, state) {
-                          final remoteId = state.pathParameters['remoteId'];
-                          if (remoteId == null) {
-                            return const _RestoredRoutePopper();
-                          }
-                          return CommunityCollectionDetailScreen(
-                            remoteId: remoteId,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
                   // Podcast 搜索和单集预览共用资源库 branch，保持主导航可见。
                   GoRoute(
                     path: AppRoutes.podcastSubscribeSegment,
@@ -610,21 +587,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ReviewStatisticsScreen(),
       ),
-      // 兼容已发出的旧发现页链接，统一导向资源库主导航壳内的新路径。
+      // 发现页已移除；旧链接统一回到我的合集，避免死链。
       GoRoute(
         path: CommunityCollectionRoutes.legacyDiscover,
-        redirect: (context, state) =>
-            state.uri.path == CommunityCollectionRoutes.legacyDiscover
-            ? AppRoutes.discoverResources
-            : null,
+        redirect: (context, state) => AppRoutes.collections,
         routes: [
           GoRoute(
             path: ':remoteId',
-            redirect: (context, state) {
-              final remoteId = state.pathParameters['remoteId'];
-              if (remoteId == null) return AppRoutes.discoverResources;
-              return AppRoutes.discoverCollection(remoteId);
-            },
+            redirect: (context, state) => AppRoutes.collections,
           ),
         ],
       ),

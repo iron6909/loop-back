@@ -605,6 +605,9 @@ class _CollectionListTile extends ConsumerWidget {
                                   source: collection.source,
                                   isDeprecated: collection.isDeprecated,
                                 ),
+                                // 社区合集已停止同步，明确告知内容不再更新。
+                                if (collection.isCommunity)
+                                  const CommunitySyncStoppedBadge(),
                                 if (collection.isPodcast &&
                                     podcastHasRefreshError(collection))
                                   _PodcastRefreshFailedChip(l10n: l10n),

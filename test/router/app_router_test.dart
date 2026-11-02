@@ -59,7 +59,6 @@ void main() {
   group('AppRoutes', () {
     test('路径常量正确', () {
       expect(AppRoutes.collections, '/collections');
-      expect(AppRoutes.discoverResources, '/collections/discover');
       expect(AppRoutes.study, '/study');
       expect(AppRoutes.favorites, '/favorites');
       expect(AppRoutes.settings, '/settings');
@@ -68,13 +67,6 @@ void main() {
 
     test('collectionDetail 构建正确路径', () {
       expect(AppRoutes.collectionDetail('abc-123'), '/collections/abc-123');
-    });
-
-    test('发现资源详情构建正确路径', () {
-      expect(
-        AppRoutes.discoverCollection('remote-123'),
-        '/collections/discover/remote-123',
-      );
     });
 
     test('learningPlan 构建正确路径', () {
@@ -171,18 +163,6 @@ void main() {
                         const Scaffold(body: Text('library')),
                     routes: [
                       GoRoute(
-                        path: CommunityCollectionRoutes.discoverSegment,
-                        builder: (context, state) =>
-                            const Scaffold(body: Text('discover')),
-                        routes: [
-                          GoRoute(
-                            path: ':remoteId',
-                            builder: (context, state) =>
-                                const Scaffold(body: Text('discover-detail')),
-                          ),
-                        ],
-                      ),
-                      GoRoute(
                         path: AppRoutes.podcastSubscribeSegment,
                         builder: (context, state) =>
                             const Scaffold(body: Text('podcast-search')),
@@ -229,20 +209,14 @@ void main() {
               ),
             ],
           ),
+          // 发现页已移除，旧链接回到我的合集。
           GoRoute(
             path: CommunityCollectionRoutes.legacyDiscover,
-            redirect: (context, state) =>
-                state.uri.path == CommunityCollectionRoutes.legacyDiscover
-                ? AppRoutes.discoverResources
-                : null,
+            redirect: (context, state) => AppRoutes.collections,
             routes: [
               GoRoute(
                 path: ':remoteId',
-                redirect: (context, state) {
-                  final remoteId = state.pathParameters['remoteId'];
-                  if (remoteId == null) return AppRoutes.discoverResources;
-                  return AppRoutes.discoverCollection(remoteId);
-                },
+                redirect: (context, state) => AppRoutes.collections,
               ),
             ],
           ),
@@ -254,24 +228,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('library'), findsOneWidget);
 
+      // 旧发现页链接一律回到我的合集，不再有发现页。
       router.push<void>(CommunityCollectionRoutes.legacyDiscover);
       await tester.pumpAndSettle();
-      expect(find.text('discover'), findsOneWidget);
-      expect(find.byKey(const ValueKey('main-navigation')), findsOneWidget);
-
-      router.push<void>(AppRoutes.discoverCollection('remote-123'));
-      await tester.pumpAndSettle();
-      expect(find.text('discover-detail'), findsOneWidget);
-      expect(find.byKey(const ValueKey('main-navigation')), findsOneWidget);
-
-      router.pop();
-      await tester.pumpAndSettle();
-      expect(find.text('discover'), findsOneWidget);
+      expect(find.text('library'), findsOneWidget);
       expect(find.byKey(const ValueKey('main-navigation')), findsOneWidget);
 
       router.go('${CommunityCollectionRoutes.legacyDiscover}/remote-123');
       await tester.pumpAndSettle();
-      expect(find.text('discover-detail'), findsOneWidget);
+      expect(find.text('library'), findsOneWidget);
       expect(find.byKey(const ValueKey('main-navigation')), findsOneWidget);
 
       router.push<void>(AppRoutes.podcastSubscribe);

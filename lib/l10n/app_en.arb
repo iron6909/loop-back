@@ -2173,6 +2173,10 @@
   "communityCollectionDeprecated": "This collection has been removed. You can still use the local copy.",
   "communityCollectionRefreshFailed": "Sync failed. Pull down to retry.",
   "communityFileUnavailable": "This file was removed from the shared collection",
+  "communitySyncStoppedBadge": "Sync stopped",
+  "communityReadOnlyNotice": "This collection came from the old community. Content is no longer updated.",
+  "communityMediaNotDownloaded": "Media not downloaded",
+  "communityMediaNotDownloadedMessage": "This media was never downloaded, and shared collections no longer provide downloads.",
   "communityFilesRemoved": "{count} files were removed from shared collections",
   "@communityFilesRemoved": {
     "placeholders": {

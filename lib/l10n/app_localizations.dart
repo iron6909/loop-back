@@ -7202,6 +7202,30 @@ abstract class AppLocalizations {
   /// **'This file was removed from the shared collection'**
   String get communityFileUnavailable;
 
+  /// No description provided for @communitySyncStoppedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync stopped'**
+  String get communitySyncStoppedBadge;
+
+  /// No description provided for @communityReadOnlyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This collection came from the old community. Content is no longer updated.'**
+  String get communityReadOnlyNotice;
+
+  /// No description provided for @communityMediaNotDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Media not downloaded'**
+  String get communityMediaNotDownloaded;
+
+  /// No description provided for @communityMediaNotDownloadedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This media was never downloaded, and shared collections no longer provide downloads.'**
+  String get communityMediaNotDownloadedMessage;
+
   /// No description provided for @communityFilesRemoved.
   ///
   /// In en, this message translates to:

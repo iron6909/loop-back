@@ -42,7 +42,6 @@ import 'services/media_kit_debug_initializer.dart';
 import 'services/user_id_service.dart';
 import 'widgets/app_notice_presenter.dart';
 import 'widgets/app_startup_gate.dart';
-import 'features/community_collections/data/trigger_community_sync.dart';
 import 'features/community_collections/download/community_download_notifier.dart';
 import 'features/onboarding_survey/data/onboarding_survey_storage.dart';
 import 'features/onboarding_survey/providers/onboarding_survey_provider.dart';
@@ -327,7 +326,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     final pendingIntent = bridge.takePendingIntent();
     if (pendingIntent != null) _handleNotificationIntent(pendingIntent);
 
-    Future.delayed(const Duration(seconds: 3), _triggerCommunitySync);
   }
 
   /// 业务内容提交后再预热，不让原生播放器依赖阻塞进入学习页。
@@ -445,9 +443,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     AppLogger.log('Lifecycle', 'state=${state.name}');
     switch (state) {
       case AppLifecycleState.resumed:
-        if (ref.read(localStartupProvider).hasValue) {
-          _triggerCommunitySync();
-        }
         final session = ref.read(supabaseSessionProvider).valueOrNull;
         if (session != null) {
           unawaited(ref.read(onboardingSyncProvider).onAppResumed());
@@ -480,16 +475,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
       case AppLifecycleState.hidden:
       // no-op
     }
-  }
-
-  /// 全局唯一社区合集同步入口；后台调用由 service 统一执行 2h 节流。
-  void _triggerCommunitySync({bool force = false}) {
-    if (!mounted) return;
-    unawaited(
-      triggerCommunitySync(ref, force: force).then((outcome) {
-        AppLogger.log('main', 'CommunitySync outcome=${outcome.runtimeType}');
-      }),
-    );
   }
 
   void _handleNotificationIntent(NotificationIntent intent) {
