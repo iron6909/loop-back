@@ -11,6 +11,7 @@ import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
 import 'package:echo_loop/features/chatbot/providers/chat_api_client_provider.dart';
 import 'package:echo_loop/features/chatbot/providers/chat_session_controller.dart';
 import 'package:echo_loop/features/chatbot/services/chat_api_client.dart';
+import 'package:echo_loop/features/chatbot/services/provider_chat_api_client.dart';
 import 'package:echo_loop/features/chatbot/services/ndjson_text_stream.dart';
 import 'package:echo_loop/features/chatbot/widgets/chat_composer.dart';
 import 'package:echo_loop/features/chatbot/widgets/chat_view.dart';
@@ -29,6 +30,7 @@ import 'package:gpt_markdown/gpt_markdown.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mock_providers.dart';
+import '../../../helpers/provider_fixture.dart' show FixtureAdapter;
 import 'chatbot_widget_harness.dart';
 
 class _ScriptApi implements ChatApi {
@@ -123,6 +125,43 @@ void main() {
     greeting: greeting,
     contextSummary: summary,
   );
+
+  testWidgets('真实聊天传输的连接超时在气泡中显示超时提示', (tester) async {
+    final adapter = FixtureAdapter();
+    adapter.replies.add(
+      (options) => throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.connectionTimeout,
+      ),
+    );
+    const provider = ProviderConfig(
+      kind: ProviderKind.custom,
+      baseUrl: 'https://provider.example/v1',
+      model: 'test-model',
+    );
+    final client = ProviderChatApiClient(
+      config: provider,
+      http: ProviderHttpClient(
+        config: provider,
+        apiKey: 'synthetic-chat-timeout',
+        dio: Dio()..httpClientAdapter = adapter,
+      ),
+    );
+    addTearDown(client.dispose);
+    addTearDown(adapter.arrived.close);
+    await pumpChatWidget(
+      tester,
+      ChatView(config: config()),
+      overrides: overrides(client),
+    );
+    await tester.enterText(find.byType(TextField), 'Explain');
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.arrow_upward));
+    await tester.pumpAndSettle();
+    expect(find.text('Provider request timed out. Try again'), findsOneWidget);
+    expect(find.text('AI returned an invalid result. Try again'), findsNothing);
+    expect(adapter.requests, hasLength(1));
+  });
 
   for (final failure in <(Object, String)>[
     (

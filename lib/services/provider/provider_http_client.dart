@@ -181,18 +181,26 @@ class ProviderHttpClient {
     if (_apiKey.trim().isEmpty || RegExp(r'[\r\n]').hasMatch(_apiKey)) {
       throw const ProviderHttpException(ProviderErrorKind.unauthorized);
     }
-    final response = await _dio.post<ResponseBody>(
-      _endpoint,
-      data: body,
-      options: Options(headers: _headers, responseType: ResponseType.stream),
-      cancelToken: cancelToken,
-    );
-    final status = response.statusCode ?? 0;
-    final stream = response.data?.stream;
-    if (status < 200 || status >= 300 || stream == null) {
-      throw ProviderHttpException(_mapStatus(status), statusCode: status);
+    try {
+      final response = await _dio.post<ResponseBody>(
+        _endpoint,
+        data: body,
+        options: Options(headers: _headers, responseType: ResponseType.stream),
+        cancelToken: cancelToken,
+      );
+      final status = response.statusCode ?? 0;
+      final stream = response.data?.stream;
+      if (status < 200 || status >= 300 || stream == null) {
+        throw ProviderHttpException(_mapStatus(status), statusCode: status);
+      }
+      // 响应头返回后的超时也从这里映射，保留此前已经产出的字节。
+      return stream.handleError((Object error) {
+        if (error is DioException) throw _mapDioException(error);
+        throw error;
+      });
+    } on DioException catch (error) {
+      throw _mapDioException(error);
     }
-    return stream;
   }
 
   /// 用量类只读 GET：只接受调用方用**已配置主机**拼出的绝对地址。
