@@ -1388,7 +1388,7 @@ void main() {
       );
     });
 
-    testWidgets('添加字幕入口 AI 转录音频过长时显示弹窗内错误提示', (tester) async {
+    testWidgets('添加字幕入口走本机转录，不再有云端时长上限', (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1460,13 +1460,9 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.textContaining('Audio too long'), findsOneWidget);
-      expect(find.byType(SnackBar), findsNothing);
-
-      await tester.pump(const Duration(seconds: 12));
-      await tester.pumpAndSettle();
-
+      // 云端转录的 30 分钟上限已随该路径移除；本机转录只受模型是否就绪限制。
       expect(find.textContaining('Audio too long'), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
     });
 
     testWidgets('已完成盲听步骤可点击直接进入自由练习', (tester) async {

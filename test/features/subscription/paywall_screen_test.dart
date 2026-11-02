@@ -398,7 +398,7 @@ void main() {
     expect(find.text('Restore Purchases'), findsNothing);
   });
 
-  testWidgets('打开 Paywall 时后台强制刷新 remote config', (tester) async {
+  testWidgets('打开 Paywall 不再后台刷新远程配置', (tester) async {
     final remoteConfigService = _SpyRemoteConfigService();
     await tester.pumpWidget(
       _harness(
@@ -410,7 +410,8 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(remoteConfigService.fetchCalls, 1);
+    // 远程配置已停用：服务存在但不会再被触发拉取。
+    expect(remoteConfigService.fetchCalls, 0);
   });
 
   testWidgets('Direct Paywall 进入时强制刷新 Paddle 价格', (tester) async {
