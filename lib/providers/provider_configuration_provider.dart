@@ -89,8 +89,13 @@ class ProviderConfigurationNotifier extends AsyncNotifier<ProviderRuntime?> {
   Future<void> clearKey() async {
     _disposeCurrent();
     state = const AsyncValue.loading();
-    await ref.read(providerConfigStoreProvider).clearKey();
-    await _rebuild();
+    try {
+      await ref.read(providerConfigStoreProvider).clearKey();
+      await _rebuild();
+    } catch (error, stack) {
+      state = AsyncError(error, stack);
+      rethrow;
+    }
   }
 
   /// 从存储重新读取（例如备份恢复后）。
@@ -116,7 +121,8 @@ class ProviderConfigurationNotifier extends AsyncNotifier<ProviderRuntime?> {
       apiKey: apiKey,
       dio: ref.read(providerDioFactoryProvider)(),
     );
-    final dao = ref.read(sentenceAiCacheDaoProvider);
+    // 运行时持有缓存 DAO，切库时连同旧请求和内存结果一起作废。
+    final dao = ref.watch(sentenceAiCacheDaoProvider);
     return ProviderRuntime(
       config: config,
       apiKey: apiKey,
