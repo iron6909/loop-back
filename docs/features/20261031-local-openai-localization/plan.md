@@ -175,9 +175,9 @@
 
 **Covers:** REQ-23
 **Depends on:** None
-**Files:** 移除 `lib/features/baidu_netdisk/` 入口与 `lib/widgets/import_audio_sheet.dart` 中的云盘来源；移除 `lib/services/app_update_checker.dart` 调用；调整 `lib/features/remote_config/`
-**Change:** 移除网盘导入入口、商店网页结账兜底、`/version.json` 检查；远程配置改用本地默认值，移除失效字段。
-**Check:** `flutter analyze` 无新增问题；`flutter test test/widgets/import_audio_sheet_test.dart` 通过。
+**Files:** 移除 `lib/features/baidu_netdisk/` 入口与 `lib/widgets/import_audio_sheet.dart` 中的云盘来源；移除 `lib/services/app_update_checker.dart` 调用；调整 `lib/features/remote_config/`、`lib/features/user_region/`、`lib/main.dart`、`lib/providers/startup_bootstrap_provider.dart`、`lib/router/`、`lib/screens/settings_screen.dart`；停用问卷/偏好同步与旧云端转录、聊天死链。
+**Change:** 移除网盘导入入口、商店网页结账兜底、`/version.json` 检查；远程配置改用本地默认值，移除失效字段。停止启动/回前台的 Supabase、订阅权益及后台偏好同步；设置移除登录/会员入口，旧路由回到设置。问卷与偏好仅本地持久化；第三方分析、RSS/Apple 与模型 CDN 保留。清理无消费者的旧云端转录和聊天实现。
+**Check:** `flutter analyze` 无新增问题；导入、设置、路由、启动、配置/地区、播客与本地偏好相关回归通过；假传输验证启动/回前台/停用入口不产生自有后端请求。
 
 ### Task 19: 本机 Flutter 的 Android 构建工具兼容
 
