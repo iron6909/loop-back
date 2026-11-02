@@ -1,14 +1,14 @@
 # Echo Loop 项目规划
 
-> 最后更新：2026-09-21（本地数据启动失败降级到首页并保留日志入口）
-> 当前焦点：录音 + 识别功能；首要阻塞为 Android 离线 ASR 结束录音闪退
+> 最后更新：2026-11-02（供应商直连与自有后端本地化）
+> 当前焦点：Android 本地化改造收尾；代码已交付，最终真机验收待设备。规格与实施计划见 [spec.md](./docs/features/20261031-local-openai-localization/spec.md)、[plan.md](./docs/features/20261031-local-openai-localization/plan.md)。
 
 ## 产品目标
 
 Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI 辅助”的英语学习应用。核心目标：
 
 - 让用户围绕真实音频材料完成首次学习与后续复习。
-- 保持主学习闭环免费，AI 与订阅能力只增强体验，不阻断核心流程。
+- 保持主学习闭环免费，AI 由用户配置的供应商提供，不阻断本地学习流程。
 - 优先保证播放器、学习流转、状态一致性和多平台稳定性。
 
 ## 当前状态
@@ -19,14 +19,14 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 - 首次学习主流程：全文盲听、逐句精听、难句跟读、段落复述。
 - 收藏体系：句子、单词、意群、收藏复习。
 - 词典体系：本地词典、AI 词典、网页词典、多源切换、非 modal 面板。
-- AI 能力：翻译、句子解析、单词深度解析、转录。
+- AI 能力：翻译、句子解析、词典、意群、复述评估与学习助手直连用户配置的供应商；字幕与复述录音转写使用本机英语模型。
 - PDF 导出：学习材料导出为可打印 PDF。
-- 订阅体系：平台/渠道识别、native RevenueCat、direct Paddle 后端结账、AI 配额后端裁决。
+- 本地内容：Android 目录导入为合集，精选播客随包读取；账号、会员结账、云端字幕、社区同步、网盘导入与自更新已停用，历史学习数据保留。
 
 当前主要风险：
 
 - Android 离线 ASR 在部分机型结束录音后触发 native 崩溃，仍未定位到最终 root cause。
-- 订阅链路主干已打通，但仍需要继续做渠道验证、回归和生产配置收尾。
+- 供应商直连与本地化改造仍待 Android 真机验证：目录入库、缺字幕转录、历史缺媒体禁用及 AI 服务页各状态；自动化检查不能替代这些设备证据。
 - 冷启动已将重型初始化移出首帧路径，并以 Riverpod `AsyncValue` 统一管理本地数据初始化状态；本地数据失败时不再阻断导航壳，首页提供重试与日志入口。仍需在受影响 iOS 真机上用启动日志核验迁移失败原因和首帧实际耗时。
 
 ## 当前里程碑
@@ -55,25 +55,20 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 - 多平台体验对齐（iOS / Android / macOS）。
 - 播放、词典、PDF、字幕编辑等高频链路体验打磨。
 - CI / Release / 更新链路稳定性完善。
-- AI 对话助手（通用 chatbot 组件）：多轮对话式 AI 助手，一套可插拔组件接入不同位置（首接入点为句子讲解页；2026-07-23 起逐句精听 / 难句跟读 / 难句复习 / 收藏复习 4 个句子级任务页 AppBar 也接入，共享 `SentenceChatButton` 单一入口来源），复用现有 NDJSON 流式与 402 额度门链路。发布由 `kChatbotEnabled` + remote config 双开关控制。规格见 [docs/chatbot-implementation-plan.md](./docs/chatbot-implementation-plan.md)。
+- AI 对话助手：保留通用载体与 `SentenceChatButton`，请求改为供应商 Chat Completions SSE；不再依赖登录、会员或自有后端配额。当前契约以 [本地化规格](./docs/features/20261031-local-openai-localization/spec.md) 为准，旧 [chatbot 实施文档](./docs/chatbot-implementation-plan.md) 保留为历史。
 
-### 🚧 Milestone 5：支付订阅（Echo Loop Premium）
+### ⏸ Milestone 5：支付订阅（本分支已停用）
 
-当前状态：
+本地化改造停止 RevenueCat、Paddle、账号与 AI 配额门控，不再进行本分支的支付联调。AI 费用由用户配置的供应商处理。
 
-- 已完成：客户端 RevenueCat 接入、订阅页、平台/渠道识别、direct Paddle Checkout 与 Customer Portal、AI 配额后端裁决、release 渠道注入、权益单一来源重构 P0（后端 `/api/entitlements` 唯一权威 + forceReconcile 成交收敛，见 [docs/subscription-single-source-plan.md](./docs/subscription-single-source-plan.md)）。
-- 待继续：真实生产环境验证（Paddle 会员在商店包手动回归，见 plan §11；P0+P1 需后端同步部署）、退款/撤销回退、多设备/换机验证、更多渠道回归。P1 智能刷新（E7/E6/E8）已全部完成（2026-07-23）；E9 Realtime 推送为可选项未实现。
-
-参考文档：
-
-- [订阅配置与发布说明](./docs/subscription-setup.md)
+历史设计保留：[权益单一来源](./docs/subscription-single-source-plan.md)、[订阅配置与发布说明](./docs/subscription-setup.md)。
 
 ## 近阶段工作重点
 
-1. 解决 Android 离线 ASR 闪退。
-2. 完成启动埋点权限快照的手动验证。
-3. 继续收敛录音识别模块复用边界。
-4. 维持 release / 渠道 / 订阅链路的一致性。
+1. 在 Android 真机完成目录导入、本机转录、历史缺媒体与供应商设置验收。
+2. 解决既有 Android 离线 ASR 闪退，保持独立复述转写不传 VAD 路径。
+3. 完成启动埋点权限快照的手动验证。
+4. 继续收敛录音识别模块复用边界与发布构建验证。
 
 ## 架构约束（精简版）
 
@@ -94,7 +89,7 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 - 媒体引擎与前台引擎分离：避免锁屏媒体会话与前台试听互相污染。
 - 统一 TTS 架构：合成 → 文件 → 缓存 → 播放，支持平台 TTS 与 Kokoro 本地 TTS。
 - 离线转录与本地模型：复用统一音频处理与模型下载能力。
-- 平台 + 渠道统一识别：`platform + distribution` 决定支付实现和后端配额策略。
+- 平台 + 渠道统一识别：既有发布/分析识别保留；支付与自有后端配额策略在本分支停用。
 - 通用记忆调度基础设施：以独立调度快照与只追加复习事件建模；上层依赖应用自有接口，FSRS 仅限 adapter 内部，按逐项固定 Profile 保障可迁移与可审计性（见 [memory-scheduler-infrastructure-plan.md](./docs/memory-scheduler-infrastructure-plan.md)）。
 
 详细历史与旧版长文档已归档：
