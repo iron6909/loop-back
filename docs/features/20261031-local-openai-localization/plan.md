@@ -8,7 +8,7 @@
 
 - 不新增依赖；复用现有 `dio`、`flutter_secure_storage`、`drift`、`sherpa_onnx`、`ffmpeg`。
 - 以 Android 为验收目标（用户后续明确）：只运行 Android 与共享逻辑相关检查；Windows/macOS/iOS 专属用例不作门槛，不处理其平台基线问题。共享 Dart 代码仍须可编译。
-- 后续开发以本机 Flutter SDK 为准（用户选择前置依赖修复 B）；允许更新 `pubspec.lock`、`pubspec.yaml` 中必要的依赖兼容约束与对应插件生成文件。先完成前置修复，再执行 Task 1；不新增依赖。
+- 后续开发以本机 Flutter SDK 为准（用户选择前置依赖修复 B）；允许更新 `pubspec.lock`、`pubspec.yaml` 中必要的依赖兼容约束与对应插件生成文件。先完成前置修复，再执行 Task 1；不新增依赖。Android 构建工具的最低兼容版本修复见 Task 19，在 Task 14/15 原生构建验收前完成。
 - 不处理上游既有 yamllint 告警与 `AndroidSpeechPlatformHandler` 相关 Kotlin 告警，避免无关 diff。
 - 不削弱既有测试；不得为了让新代码通过而修改既有断言。
 - 真实供应商调用不进自动化测试；测试一律用注入的假 transport / 假 Dio。
@@ -178,6 +178,14 @@
 **Files:** 移除 `lib/features/baidu_netdisk/` 入口与 `lib/widgets/import_audio_sheet.dart` 中的云盘来源；移除 `lib/services/app_update_checker.dart` 调用；调整 `lib/features/remote_config/`
 **Change:** 移除网盘导入入口、商店网页结账兜底、`/version.json` 检查；远程配置改用本地默认值，移除失效字段。
 **Check:** `flutter analyze` 无新增问题；`flutter test test/widgets/import_audio_sheet_test.dart` 通过。
+
+### Task 19: 本机 Flutter 的 Android 构建工具兼容
+
+**Covers:** REQ-19, REQ-23（既有任务的构建前置，不新增产品范围）
+**Depends on:** None
+**Files:** `android/gradle/wrapper/gradle-wrapper.properties`、`android/settings.gradle.kts`、`android/gradle.properties`
+**Change:** 根据本机 Flutter 3.47.9 的 DependencyVersionChecker，将 Gradle / AGP / Kotlin 更新至受支持的最低兼容版本；保留 Flutter 迁移器的 Kotlin / DSL 兼容选项。任务 1–18 的编号、历史、行为与验证条件不变，不修改 AndroidSpeechPlatformHandler。
+**Check:** `flutter build apk --debug --flavor dev --target-platform android-arm64 --no-pub`，不使用跳过版本检查选项。
 
 ## Final verification
 
