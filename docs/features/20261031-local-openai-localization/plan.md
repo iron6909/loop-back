@@ -183,8 +183,8 @@
 
 **Covers:** REQ-19, REQ-23（既有任务的构建前置，不新增产品范围）
 **Depends on:** None
-**Files:** `android/gradle/wrapper/gradle-wrapper.properties`、`android/settings.gradle.kts`、`android/gradle.properties`
-**Change:** 根据本机 Flutter 3.47.9 的 DependencyVersionChecker，将 Gradle / AGP / Kotlin 更新至受支持的最低兼容版本；保留 Flutter 迁移器的 Kotlin / DSL 兼容选项。任务 1–18 的编号、历史、行为与验证条件不变，不修改 AndroidSpeechPlatformHandler。
+**Files:** `android/gradle/wrapper/gradle-wrapper.properties`、`android/settings.gradle.kts`、`android/gradle.properties`、`android/build.gradle.kts`
+**Change:** 根据本机 Flutter 3.47.9 的 DependencyVersionChecker，将 Gradle / AGP / Kotlin 更新至受支持的最低兼容版本；保留 Flutter 迁移器的 Kotlin / DSL 兼容选项；友盟 Kotlin 目标匹配其 Java 8，关闭跨盘符失败的 Kotlin 增量缓存。任务 1–18 的编号、历史、行为与验证条件不变，不修改 AndroidSpeechPlatformHandler。
 **Check:** `flutter build apk --debug --flavor dev --target-platform android-arm64 --no-pub`，不使用跳过版本检查选项。
 
 ## Final verification
