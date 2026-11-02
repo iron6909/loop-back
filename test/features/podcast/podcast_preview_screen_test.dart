@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:echo_loop/features/auth/providers/auth_providers.dart';
+import 'package:echo_loop/features/podcast/podcast_repository.dart';
 import 'package:echo_loop/features/podcast/podcast_feed_parser.dart';
 import 'package:echo_loop/features/podcast/podcast_models.dart';
 import 'package:echo_loop/features/podcast/podcast_preview_provider.dart';
@@ -38,6 +40,25 @@ class _FakeDio extends Fake implements Dio {
       data: bodyProvider() as T,
       statusCode: 200,
       requestOptions: RequestOptions(path: path),
+    );
+  }
+}
+
+class _SubscribeRepository extends Fake implements PodcastRepository {
+  final subscribed = <String>[];
+
+  @override
+  Future<Collection> createAndFetch(
+    String inputUrl, {
+    String? knownFeedUrl,
+  }) async {
+    subscribed.add(inputUrl);
+    return Collection(
+      id: 'subscribed',
+      name: '6 Minute English',
+      createdDate: DateTime(2026, 1, 1),
+      source: CollectionSource.podcast,
+      podcastFeedUrl: knownFeedUrl,
     );
   }
 }
@@ -181,6 +202,35 @@ void main() {
   });
 
   group('PodcastPreviewScreen', () {
+    testWidgets('未登录可从预览页订阅，不读取认证状态', (tester) async {
+      final repository = _SubscribeRepository();
+      await tester.pumpWidget(
+        createTestApp(
+          const PodcastPreviewScreen(
+            arg: PodcastPreviewArg(
+              title: '6 Minute English',
+              feedUrl: _feedUrl,
+            ),
+          ),
+          overrides: [
+            isAuthenticatedProvider.overrideWith((ref) {
+              fail('预览订阅不应读取认证状态');
+            }),
+            podcastRepositoryProvider.overrideWithValue(repository),
+            podcastPreviewProvider(
+              _feedUrl,
+            ).overrideWith((ref) async => _previewData),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add to My Collections'));
+      await tester.pumpAndSettle();
+
+      expect(repository.subscribed, [_feedUrl]);
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
     testWidgets('失败后重试只发起一次强制请求', (tester) async {
       final dio = _FakeDio(
         body: _rss,

@@ -222,7 +222,7 @@ void main() {
     expect(badgeRect.bottom, lessThan(checkRect.top));
   });
 
-  testWidgets('未登录订阅精选 Podcast 显示登录提示且不调用仓库', (tester) async {
+  testWidgets('未登录可订阅精选 Podcast，不读取认证状态', (tester) async {
     final fakeRepo = _FakePodcastRepository();
     final service = _serviceWithPodcasts([_featuredPodcast()]);
     await tester.pumpWidget(
@@ -230,7 +230,9 @@ void main() {
         const PodcastDiscoveryScreen(),
         overrides: [
           featuredPodcastServiceProvider.overrideWithValue(service),
-          isAuthenticatedProvider.overrideWithValue(false),
+          isAuthenticatedProvider.overrideWith((ref) {
+            fail('播客订阅不应读取认证状态');
+          }),
           podcastRepositoryProvider.overrideWithValue(fakeRepo),
         ],
       ),
@@ -240,8 +242,8 @@ void main() {
     await tester.tap(find.byIcon(Icons.add_circle_outline).first);
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsOneWidget);
-    expect(fakeRepo.subscribed, isEmpty);
+    expect(find.byType(AlertDialog), findsNothing);
+    expect(fakeRepo.subscribed, ['https://example.com/feed.xml']);
   });
 
   testWidgets('进入页面时搜索框不会自动聚焦', (tester) async {
@@ -316,5 +318,46 @@ void main() {
 
     expect(find.text('Example Cast'), findsOneWidget);
     expect(find.text('Subscribe to this link'), findsNothing);
+  });
+
+  testWidgets('未登录可订阅粘贴的 RSS 和 Apple 链接', (tester) async {
+    for (final url in [
+      'https://example.com/feed.xml',
+      'https://podcasts.apple.com/us/podcast/example/id123456',
+    ]) {
+      final fakeRepo = _FakePodcastRepository();
+      await tester.pumpWidget(
+        createTestApp(
+          const PodcastDiscoveryScreen(),
+          overrides: [
+            featuredPodcastServiceProvider.overrideWithValue(
+              _serviceWithPodcasts(const []),
+            ),
+            isAuthenticatedProvider.overrideWith((ref) {
+              fail('粘贴链接订阅不应读取认证状态');
+            }),
+            podcastRepositoryProvider.overrideWithValue(fakeRepo),
+            podcastPreviewProvider(url).overrideWith(
+              (ref) async => const PodcastPreviewData(
+                meta: PodcastFeedMeta(
+                  title: 'Example Cast',
+                  feedUrl: 'https://example.com/feed.xml',
+                ),
+                episodes: [],
+              ),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), url);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+      await tester.pumpAndSettle();
+
+      expect(fakeRepo.subscribed, [url]);
+      expect(find.byType(AlertDialog), findsNothing);
+    }
   });
 }
