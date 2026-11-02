@@ -30,6 +30,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   LibraryViewType _currentView = LibraryViewType.collections;
   int _libraryTitleTapCount = 0;
   bool _showAllAudioShortcut = false;
+  String? _focusedCollectionId;
 
   final _keyCreateCollection = GlobalKey();
 
@@ -107,7 +108,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         body: IndexedStack(
           index: _currentView.index,
           children: [
-            const _CollectionListBody(),
+            _CollectionListBody(focusedCollectionId: _focusedCollectionId),
             AudioListView(
               guideFirstAudioMenu: true,
               guideEnabled: _currentView == LibraryViewType.audio,
@@ -138,14 +139,23 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     });
   }
 
+  /// 导入完成后留在我的合集，并把新建合集滚动到可见位置。
+  Future<void> _importCollection() async {
+    final id = await showImportAudioSheet(context, allowDirectoryImport: true);
+    if (mounted && id != null) setState(() => _focusedCollectionId = id);
+  }
+
   /// 根据当前视图构建 AppBar actions
   List<Widget> _buildActions(AppLocalizations l10n, GuideStep createStep) {
     if (_currentView == LibraryViewType.collections) {
       return [
         // 合集排序
         const CollectionSortButton(),
-        // 「发现社区合集」入口已改为列表顶部的 DiscoverEntryBanner，更醒目；
-        // AppBar 这里不再放 compass icon，避免重复。
+        TextButton.icon(
+          onPressed: _importCollection,
+          icon: const Icon(Icons.create_new_folder_outlined),
+          label: Text(l10n.importLocalCollection),
+        ),
         // 创建合集
         GuideTarget(
           step: createStep,
@@ -173,7 +183,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
 /// 合集列表视图体（不含 Scaffold/AppBar）
 class _CollectionListBody extends ConsumerWidget {
-  const _CollectionListBody();
+  const _CollectionListBody({this.focusedCollectionId});
+  final String? focusedCollectionId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -192,6 +203,10 @@ class _CollectionListBody extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.isEmpty) return const CollectionEmptyState();
-    return CollectionListView(collections: state.collections);
+    return CollectionListView(
+      key: ValueKey(focusedCollectionId),
+      collections: state.collections,
+      focusedCollectionId: focusedCollectionId,
+    );
   }
 }

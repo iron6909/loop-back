@@ -2806,5 +2806,14 @@
   "providerKindCustom": "Custom",
   "usageViewAll": "View all",
   "legacyAutoTranscript": "Existing auto-detected subtitles are kept for viewing; regeneration is unavailable.",
-  "transcriptionTimingNotice": "Word timing is estimated and may be inaccurate."
+  "transcriptionTimingNotice": "Word timing is estimated and may be inaccurate.",
+  "importLocalCollection": "Import Local Collection",
+  "importAudioFromFolder": "Import from Folder",
+  "importAudioFromFolderDescription": "Import a folder as a collection; subfolders are skipped",
+  "folderEmptyNoAudio": "This folder has no importable audio",
+  "folderAllDuplicates": "All files are duplicates; existing audio added to the new collection",
+  "folderIgnoredSubdirectories": "Subfolders skipped: {count}",
+  "@folderIgnoredSubdirectories": { "placeholders": { "count": { "type": "int" } } },
+  "folderUnsupportedFiles": "Unsupported files ignored: {count}",
+  "@folderUnsupportedFiles": { "placeholders": { "count": { "type": "int" } } }
 }

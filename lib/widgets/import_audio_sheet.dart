@@ -5,6 +5,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../features/audio_import/audio_import_models.dart';
 import '../features/audio_import/audio_import_provider.dart';
+import '../features/audio_import/community_directory_import.dart';
+import '../features/audio_import/local_audio_file_picker.dart';
+import '../database/providers.dart';
+import '../providers/collection_provider.dart';
 import '../features/audio_import/subtitle_pairing.dart';
 import '../features/baidu_netdisk/models/cloud_drive_models.dart';
 import '../features/baidu_netdisk/models/baidu_account_profile.dart';
@@ -22,21 +26,27 @@ import 'import_audio_selection_list.dart';
 import 'media_type_icon.dart';
 
 /// 显示统一的音频导入流程。
-Future<void> showImportAudioSheet(
+Future<String?> showImportAudioSheet(
   BuildContext context, {
   String? collectionId,
+  bool allowDirectoryImport = false,
 }) async {
-  await showModalBottomSheet<void>(
+  final result = await showModalBottomSheet<Object?>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => ImportAudioFlowSheet(collectionId: collectionId),
+    builder: (_) => ImportAudioFlowSheet(
+      collectionId: collectionId,
+      allowDirectoryImport: allowDirectoryImport,
+    ),
   );
+  return result is String ? result : null;
 }
 
 enum _ImportStep {
   chooseSource,
   localFile,
+  localDirectory,
   directUrl,
   cloudDrive,
   baiduNetdisk,
@@ -44,9 +54,16 @@ enum _ImportStep {
 }
 
 class ImportAudioFlowSheet extends ConsumerStatefulWidget {
-  const ImportAudioFlowSheet({super.key, this.collectionId});
+  const ImportAudioFlowSheet({
+    super.key,
+    this.collectionId,
+    this.allowDirectoryImport = false,
+  });
 
   final String? collectionId;
+
+  /// 从「我的合集」进入时提供目录导入；普通添加音频不展示该来源。
+  final bool allowDirectoryImport;
 
   @override
   ConsumerState<ImportAudioFlowSheet> createState() =>
@@ -60,6 +77,12 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
   AudioImportOutcome _outcome = (added: const [], duplicates: const []);
   bool _baiduConfirming = false;
   bool _localImporting = false;
+  PickedAudioDirectory? _directory;
+  String? _directoryError;
+  String? _createdCollectionId;
+
+  /// 每次重新选目录都换 key，强制重建面板丢弃上一次的已选列表与状态。
+  int _directorySelectionId = 0;
 
   @override
   void dispose() {
@@ -115,6 +138,10 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
                   onClose: () => Navigator.pop(context),
                 ),
                 const SizedBox(height: AppSpacing.m),
+                if (_directoryError case final message?) ...[
+                  _InlineInfoCard(message: message),
+                  const SizedBox(height: AppSpacing.s),
+                ],
                 Flexible(
                   child: SingleChildScrollView(
                     controller: _sheetScrollController,
@@ -196,6 +223,8 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
     return switch (_step) {
       _ImportStep.chooseSource => l10n.importAudio,
       _ImportStep.localFile => l10n.importAudioFromFile,
+      _ImportStep.localDirectory =>
+        _directory?.name ?? l10n.importAudioFromFolder,
       _ImportStep.directUrl => l10n.importAudioFromUrl,
       _ImportStep.cloudDrive => l10n.importAudioFromCloudDrive,
       _ImportStep.baiduNetdisk =>
@@ -219,7 +248,9 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
         _ImportStep.chooseSource => _ChooseSourcePanel(
           key: const ValueKey('choose-source'),
           showCloudDrive: cloudDriveImportEnabled,
+          showDirectory: widget.allowDirectoryImport,
           onLocalFile: () => setState(() => _step = _ImportStep.localFile),
+          onDirectory: _pickDirectory,
           onDirectUrl: () => setState(() => _step = _ImportStep.directUrl),
           onCloudDrive: () => setState(() => _step = _ImportStep.cloudDrive),
         ),
@@ -233,6 +264,17 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
             setState(() => _localImporting = isImporting);
           },
           onPickerDismissedEmpty: _goBackToSource,
+        ),
+        _ImportStep.localDirectory => AddAudioDialog(
+          key: ValueKey('local-directory-$_directorySelectionId'),
+          embedded: true,
+          initialDirectory: _directory,
+          onImported: _handleDirectoryImported,
+          onDone: () => Navigator.pop(context, _createdCollectionId),
+          onImportingChanged: (isImporting) {
+            if (_localImporting == isImporting || !mounted) return;
+            setState(() => _localImporting = isImporting);
+          },
         ),
         _ImportStep.directUrl => _DirectUrlPanel(
           key: const ValueKey('direct-url'),
@@ -262,6 +304,47 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
         ),
       },
     );
+  }
+
+  /// 只在目录内确有音频时进入确认页，空目录保留来源页和内联错误。
+  Future<void> _pickDirectory() async {
+    try {
+      final directory = await AndroidLocalAudioFilePicker().pickDirectory();
+      if (!mounted || directory == null) return;
+      final plan = CommunityDirectoryImport(directory);
+      setState(() {
+        _directoryError = plan.isEmpty
+            ? AppLocalizations.of(context)!.folderEmptyNoAudio
+            : null;
+        if (!plan.isEmpty) {
+          _directory = PickedAudioDirectory(
+            name: directory.name,
+            files: plan.files,
+            ignoredDirectories: directory.ignoredDirectories,
+            unsupportedCount: plan.unsupportedCount,
+          );
+          _createdCollectionId = null;
+          _directorySelectionId++;
+          _step = _ImportStep.localDirectory;
+        }
+      });
+    } catch (error) {
+      if (mounted) {
+        setState(
+          () => _directoryError =
+              '${AppLocalizations.of(context)!.pickAudioFileFailed}: $error',
+        );
+      }
+    }
+  }
+
+  Future<void> _handleDirectoryImported(List<String> audioIds) async {
+    final directory = _directory;
+    if (directory == null || audioIds.isEmpty) return;
+    _createdCollectionId ??= await CommunityDirectoryImport(
+      directory,
+    ).commit(ref.read(appDatabaseProvider), audioIds);
+    await ref.read(collectionListProvider.notifier).loadCollections();
   }
 
   void _goBackToSource() {
@@ -654,11 +737,15 @@ class _ChooseSourcePanel extends StatelessWidget {
     super.key,
     required this.showCloudDrive,
     required this.onLocalFile,
+    required this.showDirectory,
+    required this.onDirectory,
     required this.onDirectUrl,
     required this.onCloudDrive,
   });
 
   final bool showCloudDrive;
+  final bool showDirectory;
+  final VoidCallback onDirectory;
   final VoidCallback onLocalFile;
   final VoidCallback onDirectUrl;
   final VoidCallback onCloudDrive;
@@ -676,6 +763,16 @@ class _ChooseSourcePanel extends StatelessWidget {
           title: l10n.importAudioFromFile,
           onTap: onLocalFile,
         ),
+        if (showDirectory) ...[
+          const SizedBox(height: 8),
+          _ImportOptionTile(
+            key: const ValueKey('import-option-directory'),
+            icon: Icons.folder_open_outlined,
+            title: l10n.importAudioFromFolder,
+            description: l10n.importAudioFromFolderDescription,
+            onTap: onDirectory,
+          ),
+        ],
         if (showCloudDrive) ...[
           const SizedBox(height: 8),
           _ImportOptionTile(

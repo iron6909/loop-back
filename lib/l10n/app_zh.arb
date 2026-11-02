@@ -2307,5 +2307,14 @@
   "providerKindCustom": "自定义",
   "usageViewAll": "查看全部",
   "legacyAutoTranscript": "历史自动检测字幕仅保留展示，无法重新生成。",
-  "transcriptionTimingNotice": "词级时间戳为估算值，可能不准确。"
+  "transcriptionTimingNotice": "词级时间戳为估算值，可能不准确。",
+  "importLocalCollection": "导入本地合集",
+  "importAudioFromFolder": "从文件夹导入",
+  "importAudioFromFolderDescription": "把一个文件夹导入为合集，子文件夹会跳过",
+  "folderEmptyNoAudio": "该文件夹里没有可导入的音频",
+  "folderAllDuplicates": "全部为重复项，已将已有音频关联到新合集",
+  "folderIgnoredSubdirectories": "已忽略子文件夹 {count} 个",
+  "@folderIgnoredSubdirectories": { "placeholders": { "count": { "type": "int" } } },
+  "folderUnsupportedFiles": "已忽略不支持的文件 {count} 个",
+  "@folderUnsupportedFiles": { "placeholders": { "count": { "type": "int" } } }
 }

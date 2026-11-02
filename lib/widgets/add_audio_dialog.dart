@@ -80,6 +80,15 @@ class AddAudioDialog extends ConsumerStatefulWidget {
   /// 面板创建后是否立即唤起文件选择器（用于「点入口即选择」的流程）。
   final bool autoPickOnStart;
 
+  /// 目录导入：直接使用已枚举的直接子项，不再唤起文件选择器。
+  final PickedAudioDirectory? initialDirectory;
+
+  /// 导入完成后的结果回调（目录导入需要在有结果后才创建合集）。
+  final Future<void> Function(List<String> audioIds)? onImported;
+
+  /// 目录导入完成后的收尾动作（由宿主关闭面板并回传新建合集）。
+  final VoidCallback? onDone;
+
   /// 通知嵌入式导入流程的宿主：本地文件处理是否正在运行。
   final ValueChanged<bool>? onImportingChanged;
 
@@ -93,6 +102,9 @@ class AddAudioDialog extends ConsumerStatefulWidget {
     this.importSourceType = AudioImportSourceType.local,
     this.preferDownloadsDirectory = true,
     this.autoPickOnStart = false,
+    this.initialDirectory,
+    this.onImported,
+    this.onDone,
     this.onImportingChanged,
     this.onPickerDismissedEmpty,
   });
@@ -132,6 +144,12 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
   /// 已完成导入的原始结果，供非 embedded 调用方在点击「完成」后继续接收。
   AudioImportOutcome? _completedOutcome;
 
+  /// 目录导入的新增或重复项最终音频 ID，按选择顺序去重后用于建合集。
+  final Map<String, String> _directoryAudioIds = {};
+
+  /// 合集创建失败时主按钮改为重试，避免重新复制已导入音频。
+  bool _directoryCommitFailed = false;
+
   /// 用户选择的合集 ID（仅 collectionId == null 时使用）
   String? _selectedCollectionId;
 
@@ -142,9 +160,21 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
   /// 文件选择器是否正在唤起中（用于展示占位加载态）
   bool _isPicking = false;
 
+  /// 目录导入时被忽略的子目录与不支持文件数，只在汇总区展示。
+  int _ignoredDirectories = 0;
+  int _unsupportedCount = 0;
+
   @override
   void initState() {
     super.initState();
+    final directory = widget.initialDirectory;
+    if (directory != null) {
+      // 目录已枚举完成，直接进入确认列表；不需要再唤起选择器。
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _applyDirectory(directory);
+      });
+      return;
+    }
     // 「点入口即选择」：面板挂载后立即唤起系统文件选择器。
     if (widget.autoPickOnStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -220,8 +250,13 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
       return SizedBox(
         width: double.infinity,
         child: FilledButton(
-          onPressed: () => Navigator.pop(context, _completedOutcome),
-          child: Text(l10n.done),
+          onPressed: _isLoading
+              ? null
+              : _directoryCommitFailed
+              ? _finishDirectory
+              : widget.onDone ??
+                    () => Navigator.pop(context, _completedOutcome),
+          child: Text(_directoryCommitFailed ? l10n.retry : l10n.done),
         ),
       );
     }
@@ -334,8 +369,17 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
             maxHeight: maxFileListHeight,
           ),
         ],
+        if (_importSummary case final summary?
+            when widget.initialDirectory != null &&
+                summary.addedCount == 0 &&
+                summary.skippedCount > 0 &&
+                summary.failedCount == 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(l10n.folderAllDuplicates),
+          ),
         // 无 collectionId 时显示合集下拉框
-        if (widget.collectionId == null) ...[
+        if (widget.collectionId == null && widget.initialDirectory == null) ...[
           const SizedBox(height: 16),
           _buildCollectionDropdown(l10n),
         ],
@@ -552,108 +596,7 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
         return;
       }
 
-      // 1. 建立文件名 → 文件映射，并按扩展名分类（音频 / 字幕 / 不支持）。
-      final byName = <String, PlatformFile>{
-        for (final f in result.files) f.name: f,
-      };
-      final classification = classifyImportFiles(byName.keys);
-      // 音频在前、视频在后，一并进入后续同名字幕配对与入库流程。
-      final audioFiles = [
-        for (final n in classification.audioNames) byName[n]!,
-        for (final n in classification.videoNames) byName[n]!,
-      ];
-      final subtitleFiles = <String, PlatformFile>{
-        for (final n in classification.subtitleNames) n: byName[n]!,
-      };
-      final rejectedExts = classification.rejectedExtensions;
-
-      // 2. 同名配对（音频文件名 → 字幕文件名）。
-      final pairing = matchSubtitlesForAudios(byName.keys);
-
-      // 3. 配对到的字幕就地解码（文本很小，文本+扩展名留到入库时转 SRT）。
-      //    音频不在此复制/算指纹——那些重活延后到点击「添加」时做，保证预览秒出。
-      final List<_PickedAudio> picked = [];
-      var matchedCount = 0;
-      for (final file in audioFiles) {
-        final sourcePath = file.path;
-        final sourceName = file.name.isNotEmpty
-            ? file.name
-            : sourcePath == null
-            ? 'file'
-            : path.basename(sourcePath);
-
-        String? subtitleText;
-        String? subtitleExt;
-        final matchedName = pairing[file.name];
-        final subtitleFile = matchedName == null
-            ? null
-            : subtitleFiles[matchedName];
-        if (matchedName != null && subtitleFile != null) {
-          try {
-            final bytes = await _readPlatformFileBytes(subtitleFile);
-            // 仅解码取文本；具体格式（srt/vtt/lrc）解析交给入库时按扩展名处理。
-            final decoded = await decodeTranscriptBytes(bytes);
-            subtitleText = decoded.text;
-            subtitleExt = _extOf(matchedName);
-            matchedCount++;
-          } catch (e) {
-            // 字幕解码失败不影响音频导入，仅记录。
-            AppLogger.log(
-              'AudioImport',
-              'decode subtitle "$matchedName" for "${file.name}" failed: $e',
-            );
-          }
-        }
-
-        picked.add((
-          file: file,
-          name: path.basenameWithoutExtension(sourceName),
-          displayName: sourceName,
-          fileSize: file.size,
-          subtitleText: subtitleText,
-          subtitleExt: subtitleExt,
-        ));
-      }
-
-      AppLogger.log(
-        'AudioImport',
-        'picked audios=${audioFiles.length} subtitles=${subtitleFiles.length} '
-            'matched=$matchedCount rejected=${rejectedExts.length}',
-      );
-
-      if (!mounted) return;
-      if (rejectedExts.isNotEmpty) {
-        final l10n = AppLocalizations.of(context)!;
-        final extList = rejectedExts.toSet().map((e) => '.$e').join(', ');
-        _showInlineError(
-          _InlineError(
-            _AudioErrorKind.unsupportedFormat,
-            l10n.audioUnsupportedFormat(extList),
-          ),
-        );
-      } else if (picked.isEmpty) {
-        // 只选中了字幕（字幕不能单独导入）：不给提示的话面板会一直空着，
-        // 用户不知道为什么什么都没发生。有不支持格式时上面那条已经解释过了，
-        // 两条错误只能显示一条，不叠加。
-        final l10n = AppLocalizations.of(context)!;
-        _showInlineError(
-          _InlineError(
-            _AudioErrorKind.noAudioSelected,
-            l10n.audioNoAudioSelected,
-          ),
-        );
-      }
-      if (picked.isNotEmpty) {
-        setState(() {
-          _pickedFiles = picked;
-          _processedCount = 0;
-          _importStatuses.clear();
-          _duplicateExistingNames.clear();
-          _addedSubtitleStates.clear();
-          _importSummary = null;
-          _completedOutcome = null;
-        });
-      }
+      await _applyFiles(result.files);
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
@@ -666,6 +609,125 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
       }
     } finally {
       if (mounted) setState(() => _isPicking = false);
+    }
+  }
+
+  /// 目录直接子项沿用文件导入的分类与字幕配对，不预先复制音频。
+  Future<void> _applyDirectory(PickedAudioDirectory directory) => _applyFiles(
+    directory.files,
+    ignoredDirectories: directory.ignoredDirectories,
+    unsupportedCount: directory.unsupportedCount,
+  );
+
+  /// 一批文件先生成确认列表；复制与入库延后至用户点击导入。
+  Future<void> _applyFiles(
+    List<PlatformFile> files, {
+    int ignoredDirectories = 0,
+    int unsupportedCount = 0,
+  }) async {
+    // 1. 建立文件名 → 文件映射，并按扩展名分类（音频 / 字幕 / 不支持）。
+    final byName = <String, PlatformFile>{for (final f in files) f.name: f};
+    final classification = classifyImportFiles(byName.keys);
+    // 音频在前、视频在后，一并进入后续同名字幕配对与入库流程。
+    final audioFiles = [
+      for (final n in classification.audioNames) byName[n]!,
+      for (final n in classification.videoNames) byName[n]!,
+    ];
+    final subtitleFiles = <String, PlatformFile>{
+      for (final n in classification.subtitleNames) n: byName[n]!,
+    };
+    final rejectedExts = classification.rejectedExtensions;
+
+    // 2. 同名配对（音频文件名 → 字幕文件名）。
+    final pairing = matchSubtitlesForAudios(byName.keys);
+
+    // 3. 配对到的字幕就地解码（文本很小，文本+扩展名留到入库时转 SRT）。
+    //    音频不在此复制/算指纹——那些重活延后到点击「添加」时做，保证预览秒出。
+    final List<_PickedAudio> picked = [];
+    var matchedCount = 0;
+    for (final file in audioFiles) {
+      final sourcePath = file.path;
+      final sourceName = file.name.isNotEmpty
+          ? file.name
+          : sourcePath == null
+          ? 'file'
+          : path.basename(sourcePath);
+
+      String? subtitleText;
+      String? subtitleExt;
+      final matchedName = pairing[file.name];
+      final subtitleFile = matchedName == null
+          ? null
+          : subtitleFiles[matchedName];
+      if (matchedName != null && subtitleFile != null) {
+        try {
+          final bytes = await _readPlatformFileBytes(subtitleFile);
+          // 仅解码取文本；具体格式（srt/vtt/lrc）解析交给入库时按扩展名处理。
+          final decoded = await decodeTranscriptBytes(bytes);
+          subtitleText = decoded.text;
+          subtitleExt = _extOf(matchedName);
+          matchedCount++;
+        } catch (e) {
+          // 字幕解码失败不影响音频导入，仅记录。
+          AppLogger.log(
+            'AudioImport',
+            'decode subtitle "$matchedName" for "${file.name}" failed: $e',
+          );
+        }
+      }
+
+      picked.add((
+        file: file,
+        name: path.basenameWithoutExtension(sourceName),
+        displayName: sourceName,
+        fileSize: file.size,
+        subtitleText: subtitleText,
+        subtitleExt: subtitleExt,
+      ));
+    }
+
+    AppLogger.log(
+      'AudioImport',
+      'picked audios=${audioFiles.length} subtitles=${subtitleFiles.length} '
+          'matched=$matchedCount rejected=${rejectedExts.length}',
+    );
+
+    if (!mounted) return;
+    if (rejectedExts.isNotEmpty) {
+      final l10n = AppLocalizations.of(context)!;
+      final extList = rejectedExts.toSet().map((e) => '.$e').join(', ');
+      _showInlineError(
+        _InlineError(
+          _AudioErrorKind.unsupportedFormat,
+          l10n.audioUnsupportedFormat(extList),
+        ),
+      );
+    } else if (picked.isEmpty) {
+      // 只选中了字幕（字幕不能单独导入）：不给提示的话面板会一直空着，
+      // 用户不知道为什么什么都没发生。有不支持格式时上面那条已经解释过了，
+      // 两条错误只能显示一条，不叠加。
+      final l10n = AppLocalizations.of(context)!;
+      _showInlineError(
+        _InlineError(
+          _AudioErrorKind.noAudioSelected,
+          l10n.audioNoAudioSelected,
+        ),
+      );
+    }
+    if (picked.isNotEmpty) {
+      setState(() {
+        _pickedFiles = picked;
+        _ignoredDirectories = ignoredDirectories;
+        _unsupportedCount = unsupportedCount + rejectedExts.length;
+        _directoryAudioIds.clear();
+        _directoryCommitFailed = false;
+        _processedCount = 0;
+        _importStatuses.clear();
+        _duplicateExistingNames.clear();
+        _addedSubtitleStates.clear();
+        _importSummary = null;
+        _completedOutcome = null;
+      });
     }
   }
 
@@ -714,7 +776,9 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
     final bytes = file.bytes;
     if (bytes != null) return bytes;
     final identifier = file.identifier;
-    if (identifier != null && !kIsWeb && Platform.isAndroid) {
+    if (identifier != null &&
+        !kIsWeb &&
+        (Platform.isAndroid || widget.initialDirectory != null)) {
       return _localAudioFilePicker.readBytes(identifier);
     }
     final readStream = file.readStream;
@@ -792,7 +856,9 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
           destination: tempFile,
           cancelToken: cancelToken,
         );
-      } else if (identifier != null && !kIsWeb && Platform.isAndroid) {
+      } else if (identifier != null &&
+          !kIsWeb &&
+          (Platform.isAndroid || widget.initialDirectory != null)) {
         await _localAudioFilePicker.copyToFile(
           identifier,
           tmpPath,
@@ -983,86 +1049,118 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
               'size=${file.file.size}',
         );
 
-        // 落沙盒 + 算内容指纹（重活）在此进行，受下方进度条覆盖。
-        // 视频落 videos/、音频落 audios/，按扩展名区分，目录职责清晰。
-        final ext = path
-            .extension(file.displayName)
-            .replaceFirst('.', '')
-            .toLowerCase();
-        final subdir = isVideoImportExtension(ext) ? 'videos' : 'audios';
-        final saved = await _savePickedFileToSandbox(
-          file.file,
-          subdir,
-          cancelToken,
-        );
-        _activeImportStage = 'registration';
-        AppLogger.log(
-          'AudioImportLocal',
-          'registration_begin trace=$traceId index=${i + 1}',
-        );
-        final AudioRegistrationResult result;
         try {
-          result = await registrationService.registerSandboxedAudio(
-            input: SandboxedAudioRegistrationInput(
-              name: file.name,
-              relativePath: saved.path,
-              importSourceType: widget.importSourceType,
-              audioSha256: saved.audioSha256,
-              originalAudioSha256: saved.originalAudioSha256,
-            ),
-            audioLibrary: library,
-            audioLibraryState: ref.read(audioLibraryProvider),
-            collectionList: collectionList,
-            collectionState: ref.read(collectionListProvider),
-            collectionId: collectionId,
-            cancelToken: cancelToken,
+          // 落沙盒 + 算内容指纹（重活）在此进行，受下方进度条覆盖。
+          // 视频落 videos/、音频落 audios/，按扩展名区分，目录职责清晰。
+          final ext = path
+              .extension(file.displayName)
+              .replaceFirst('.', '')
+              .toLowerCase();
+          final subdir = isVideoImportExtension(ext) ? 'videos' : 'audios';
+          final saved = await _savePickedFileToSandbox(
+            file.file,
+            subdir,
+            cancelToken,
           );
-        } on DioException catch (error) {
-          if (!CancelToken.isCancel(error)) rethrow;
-          if (saved.created) {
-            await _deleteIfExists(File(path.join(dataDir.path, saved.path)));
-          }
-          setState(() {
-            _importStatuses[itemId] = AudioImportSelectionStatus.pending;
-          });
-          canceled = true;
-          break;
-        }
-
-        switch (result) {
-          case AudioRegistrationAdded(:final item):
-            if (saved.created && item.audioPath != saved.path) {
-              await _deleteIfExists(File(path.join(dataDir.path, saved.path)));
-            }
-            final importedItem = await _attachPairedSubtitle(item, file);
-            results.add(importedItem);
-            if (!mounted) return;
-            setState(() {
-              _importStatuses[itemId] = AudioImportSelectionStatus.added;
-              _addedSubtitleStates[itemId] =
-                  importedItem.transcriptSource == TranscriptSource.local;
-            });
-          case AudioRegistrationDuplicate(
-            :final attemptedName,
-            :final existingName,
-          ):
+          _activeImportStage = 'registration';
+          AppLogger.log(
+            'AudioImportLocal',
+            'registration_begin trace=$traceId index=${i + 1}',
+          );
+          final AudioRegistrationResult result;
+          try {
+            result = await registrationService.registerSandboxedAudio(
+              input: SandboxedAudioRegistrationInput(
+                name: file.name,
+                relativePath: saved.path,
+                importSourceType: widget.importSourceType,
+                audioSha256: saved.audioSha256,
+                originalAudioSha256: saved.originalAudioSha256,
+              ),
+              audioLibrary: library,
+              audioLibraryState: ref.read(audioLibraryProvider),
+              collectionList: collectionList,
+              collectionState: ref.read(collectionListProvider),
+              collectionId: collectionId,
+              cancelToken: cancelToken,
+            );
+          } on DioException catch (error) {
+            if (!CancelToken.isCancel(error)) rethrow;
             if (saved.created) {
               await _deleteIfExists(File(path.join(dataDir.path, saved.path)));
             }
-            skippedDuplicates.add((
-              attempted: attemptedName,
-              existing: existingName,
-            ));
-            if (!mounted) return;
             setState(() {
-              _importStatuses[itemId] = AudioImportSelectionStatus.skipped;
-              _duplicateExistingNames[itemId] = existingName;
+              _importStatuses[itemId] = AudioImportSelectionStatus.pending;
             });
+            canceled = true;
+            break;
+          }
+
+          switch (result) {
+            case AudioRegistrationAdded(:final item):
+              if (saved.created && item.audioPath != saved.path) {
+                await _deleteIfExists(
+                  File(path.join(dataDir.path, saved.path)),
+                );
+              }
+              final importedItem = await _attachPairedSubtitle(item, file);
+              _directoryAudioIds[itemId] = item.id;
+              results.add(importedItem);
+              if (!mounted) return;
+              setState(() {
+                _importStatuses[itemId] = AudioImportSelectionStatus.added;
+                _addedSubtitleStates[itemId] =
+                    importedItem.transcriptSource == TranscriptSource.local;
+              });
+            case AudioRegistrationDuplicate(
+              :final attemptedName,
+              :final existingName,
+            ):
+              if (saved.created) {
+                await _deleteIfExists(
+                  File(path.join(dataDir.path, saved.path)),
+                );
+              }
+              final existing = ref
+                  .read(audioLibraryProvider)
+                  .audioItems
+                  .where(
+                    (item) =>
+                        item.originalAudioSha256 == saved.originalAudioSha256,
+                  )
+                  .firstOrNull;
+              if (existing != null) _directoryAudioIds[itemId] = existing.id;
+              skippedDuplicates.add((
+                attempted: attemptedName,
+                existing: existingName,
+              ));
+              if (!mounted) return;
+              setState(() {
+                _importStatuses[itemId] = AudioImportSelectionStatus.skipped;
+                _duplicateExistingNames[itemId] = existingName;
+              });
+          }
+        } catch (error) {
+          if (widget.initialDirectory == null ||
+              (error is DioException && CancelToken.isCancel(error))) {
+            rethrow;
+          }
+          if (!mounted) return;
+          // 一个文件损坏不阻断整个目录；保留成功项并继续下一个。
+          setState(
+            () => _importStatuses[itemId] = AudioImportSelectionStatus.failed,
+          );
+          _showInlineError(
+            _InlineError(
+              _AudioErrorKind.generic,
+              '${file.displayName}: ${l10n.addAudioFailed}',
+            ),
+          );
         }
         AppLogger.log(
           'AudioImportLocal',
           'file_complete trace=$traceId index=${i + 1} '
-              'result=${result.runtimeType}',
+              'status=${_importStatuses[itemId]?.name}',
         );
 
         if (!mounted) return;
@@ -1155,8 +1253,42 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
             .where((hasSubtitle) => hasSubtitle)
             .length,
         skippedCount: skippedDuplicates.length,
+        failedCount: _importStatuses.values
+            .where((s) => s == AudioImportSelectionStatus.failed)
+            .length,
+        ignoredDirectories: _ignoredDirectories,
+        unsupportedCount: _unsupportedCount,
       );
     });
+    await _finishDirectory();
+  }
+
+  /// 合集提交失败只重试事务，保留已复制音频及其导入结果。
+  Future<void> _finishDirectory() async {
+    final onImported = widget.onImported;
+    if (onImported == null || _directoryAudioIds.isEmpty || !mounted) return;
+    setState(() => _isLoading = true);
+    widget.onImportingChanged?.call(true);
+    try {
+      await onImported(_directoryAudioIds.values.toList());
+      _directoryCommitFailed = false;
+      if (mounted) _dismissInlineError();
+    } catch (error) {
+      _directoryCommitFailed = true;
+      if (mounted) {
+        _showInlineError(
+          _InlineError(
+            _AudioErrorKind.generic,
+            '${AppLocalizations.of(context)!.addAudioFailed}: $error',
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        widget.onImportingChanged?.call(false);
+      }
+    }
   }
 
   /// 取消当前本地导入；复制、指纹和未提交落盘会响应同一取消令牌。

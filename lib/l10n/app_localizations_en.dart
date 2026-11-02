@@ -5821,4 +5821,31 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get transcriptionTimingNotice =>
       'Word timing is estimated and may be inaccurate.';
+
+  @override
+  String get importLocalCollection => 'Import Local Collection';
+
+  @override
+  String get importAudioFromFolder => 'Import from Folder';
+
+  @override
+  String get importAudioFromFolderDescription =>
+      'Import a folder as a collection; subfolders are skipped';
+
+  @override
+  String get folderEmptyNoAudio => 'This folder has no importable audio';
+
+  @override
+  String get folderAllDuplicates =>
+      'All files are duplicates; existing audio added to the new collection';
+
+  @override
+  String folderIgnoredSubdirectories(int count) {
+    return 'Subfolders skipped: $count';
+  }
+
+  @override
+  String folderUnsupportedFiles(int count) {
+    return 'Unsupported files ignored: $count';
+  }
 }

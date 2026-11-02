@@ -417,6 +417,26 @@ class _ImportSelectionSummaryView extends StatelessWidget {
             textStyle: summaryStyle,
           ),
         ],
+        if (summary.ignoredDirectories > 0) ...[
+          const SizedBox(height: 4),
+          _ImportSelectionSummaryRow(
+            icon: Icons.folder_off_outlined,
+            iconColor: warningColor,
+            label: l10n.folderIgnoredSubdirectories(
+              summary.ignoredDirectories,
+            ),
+            textStyle: summaryStyle,
+          ),
+        ],
+        if (summary.unsupportedCount > 0) ...[
+          const SizedBox(height: 4),
+          _ImportSelectionSummaryRow(
+            icon: Icons.extension_off_outlined,
+            iconColor: warningColor,
+            label: l10n.folderUnsupportedFiles(summary.unsupportedCount),
+            textStyle: summaryStyle,
+          ),
+        ],
       ],
     );
   }

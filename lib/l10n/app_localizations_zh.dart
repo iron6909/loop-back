@@ -5561,4 +5561,29 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get transcriptionTimingNotice => '词级时间戳为估算值，可能不准确。';
+
+  @override
+  String get importLocalCollection => '导入本地合集';
+
+  @override
+  String get importAudioFromFolder => '从文件夹导入';
+
+  @override
+  String get importAudioFromFolderDescription => '把一个文件夹导入为合集，子文件夹会跳过';
+
+  @override
+  String get folderEmptyNoAudio => '该文件夹里没有可导入的音频';
+
+  @override
+  String get folderAllDuplicates => '全部为重复项，已将已有音频关联到新合集';
+
+  @override
+  String folderIgnoredSubdirectories(int count) {
+    return '已忽略子文件夹 $count 个';
+  }
+
+  @override
+  String folderUnsupportedFiles(int count) {
+    return '已忽略不支持的文件 $count 个';
+  }
 }

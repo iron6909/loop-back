@@ -10273,6 +10273,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Word timing is estimated and may be inaccurate.'**
   String get transcriptionTimingNotice;
+
+  /// No description provided for @importLocalCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Local Collection'**
+  String get importLocalCollection;
+
+  /// No description provided for @importAudioFromFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Folder'**
+  String get importAudioFromFolder;
+
+  /// No description provided for @importAudioFromFolderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a folder as a collection; subfolders are skipped'**
+  String get importAudioFromFolderDescription;
+
+  /// No description provided for @folderEmptyNoAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder has no importable audio'**
+  String get folderEmptyNoAudio;
+
+  /// No description provided for @folderAllDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'All files are duplicates; existing audio added to the new collection'**
+  String get folderAllDuplicates;
+
+  /// No description provided for @folderIgnoredSubdirectories.
+  ///
+  /// In en, this message translates to:
+  /// **'Subfolders skipped: {count}'**
+  String folderIgnoredSubdirectories(int count);
+
+  /// No description provided for @folderUnsupportedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported files ignored: {count}'**
+  String folderUnsupportedFiles(int count);
 }
 
 class _AppLocalizationsDelegate

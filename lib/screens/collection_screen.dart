@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../features/community_collections/models/community_asset_url.dart';
 import '../features/community_collections/providers/community_enrollment_provider.dart';
 import '../features/community_collections/widgets/community_badge.dart';
@@ -131,17 +132,21 @@ class CollectionListView extends StatelessWidget {
   final List<Collection> collections;
   final GuideStep? firstItemStep;
   final GuideStep? firstMenuStep;
+  final String? focusedCollectionId;
 
   const CollectionListView({
     super.key,
     required this.collections,
     this.firstItemStep,
     this.firstMenuStep,
+    this.focusedCollectionId,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+    final target = collections.indexWhere((c) => c.id == focusedCollectionId);
+    return ScrollablePositionedList.builder(
+      initialScrollIndex: target < 0 ? 0 : target,
       // 横向 padding 为 0：卡片自己有 horizontal 12 的 margin，避免 8+12=20
       // 的双重内缩导致和顶部 DiscoverEntryBanner（horizontal 12）错位
       padding: const EdgeInsets.symmetric(vertical: 8),

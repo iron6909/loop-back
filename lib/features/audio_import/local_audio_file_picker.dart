@@ -170,10 +170,12 @@ class PickedAudioDirectory {
     required this.name,
     required this.files,
     this.ignoredDirectories = 0,
+    this.unsupportedCount = 0,
   });
   final String name;
   final List<PlatformFile> files;
   final int ignoredDirectories;
+  final int unsupportedCount;
 }
 
 class LocalAudioFilePickerException implements Exception {

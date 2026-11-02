@@ -3,6 +3,7 @@
 > 当前待办与本次完成记录；此前完成任务已归档，详见 [2026-10-29 归档](./docs/tasks-archive/tasks-2026-10-29-completed.md)、[2026-09-29 归档](./docs/tasks-archive/tasks-2026-09-29-completed.md)。
 
 ## 本次完成
+- [x] 本地目录导入为合集（实施 Task 14–15）：Android SAF 只枚举直接子项，复用已有复制/指纹去重与字幕配对；自然排序、忽略项汇总、全重复引用、失败事务回滚与单独重试，完成后定位新合集。目录/合集/列表相关扩展回归 206 项通过，定向分析通过；Android 调试包已构建，最终真机检查待设备。**完成时间**: 2026-11-01
 - [x] 本机 Flutter Android 构建兼容（实施 Task 19）：Gradle 8.14.3 / AGP 8.11.1 / Kotlin 2.2.20；禁用跨盘符失败的 Kotlin 增量缓存，友盟保留 Java 实现、排除同名 Kotlin 示例模板。`flutter build apk --debug --flavor dev --target-platform android-arm64 --no-pub` 成功产出 app-dev-debug.apk。**完成时间**: 2026-11-01
 - [x] 供应商直连基础与结构化客户端（实施计划 Task 1–7）：本机依赖修复、严格结果校验、配置指纹缓存、单次输出回落、三家用量映射、安全凭据存储与独立 HTTP 客户端；六功能统一请求校验缓存，取消及配置切换作废旧响应。供应商模块 137 项测试通过、定向分析无问题。调用点接线继续 Task 9。**完成时间**: 2026-11-01
 - [x] 修复 Android 逐句播放句尾带出下一句、句首卡顿（用户报告 1.0.43，华为机型）：华为 YAL-AL00 真机 + 用户素材复现，1.0.43 原包第一句（终点 2524ms）停在 2770ms，暂停后位置又漂到 3100ms，覆盖下一句开头 "Would you"（2.74s 起）；末句在 9045ms 提前 EOF（目标 9525ms）。根因：区间终点靠「位置事件/200ms 轮询 → 异步 pause」软停止，Android `ao=opensles` 输出缓冲深，事件与出声偏差数百毫秒。逐句精听在 1.0.42 已走 MediaEngine，回归点不是 1.0.43 的盲听驱动切换。修复：`MediaPlayerBackend.setPlaybackEnd` 用 mpv 原生 `end` 在解码层硬裁切，seek 前、区间结束/取消及 play/seek/playToEnd/pause/stop/detach 一律撤销，换文件时 backend 自行撤销；起播前等位置流确认 seek 落到起点（500ms 兜底，起点允许提前 50ms）。修复后同机三次整句均停在 2523ms / 9524ms，起播闸门 0ms 内确认。新增 4 项引擎测试（终点设置与撤销顺序、取消与自由定位撤销、等起点再起播、提前 1ms 视为到达）；旧测试「陈旧样本」由 3999ms 改为 3900ms（落在新容差外，意图不变）。全量 `flutter test` 通过（+5784 ~11），`flutter analyze` 无新增问题；macOS 集成测试因本机既有环境问题未运行。尚未在 iOS / Samsung 上复验，声学录音因底噪过大未能作为证据。踩坑记录见 CLAUDE.md §7.32。**完成时间**: 2026-10-30
