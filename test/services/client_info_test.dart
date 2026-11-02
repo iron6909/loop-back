@@ -1,16 +1,16 @@
 /// 客户端平台/版本标识测试。
 ///
-/// 覆盖：平台名合法性、headers 组装（版本缺省时省略）、转录客户端构造时已把标识
-/// 写入 Dio 公共 headers；Linux 等未知测试宿主按 fail-open 省略平台标识。
+/// 覆盖：平台名合法性、headers 组装（版本缺省时省略）；Linux 等未知测试宿主按
+/// fail-open 省略平台标识。
 ///
-/// 句子 AI 已改由用户自配供应商直连，不再携带平台/渠道/版本头，故不在此断言。
+/// 自建后端的转录客户端已移除，句子 AI 改由用户自配供应商直连，两者都不再携带
+/// 平台/渠道/版本头，故不在此断言。
 library;
 
 import 'dart:io' show Platform;
 
 import 'package:echo_loop/config/client_distribution.dart';
 import 'package:echo_loop/services/client_info.dart';
-import 'package:echo_loop/services/transcription_api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -113,23 +113,6 @@ void main() {
         paymentChannelForIdentity('ios', ClientDistribution.play),
         ClientPaymentChannel.unavailable,
       );
-    });
-  });
-
-  group('API client 公共 headers', () {
-    test('TranscriptionApiClient 携带平台与版本标识', () {
-      final client = TranscriptionApiClient(
-        baseUrl: 'https://example.com',
-        appVersion: '9.9.9',
-      );
-      final platform = clientPlatformName();
-      if (platform.isEmpty) {
-        expect(client.defaultHeaders.containsKey(kAppPlatformHeader), isFalse);
-      } else {
-        expect(client.defaultHeaders[kAppPlatformHeader], platform);
-      }
-      expect(client.defaultHeaders[kAppVersionHeader], '9.9.9');
-      client.dispose();
     });
   });
 }

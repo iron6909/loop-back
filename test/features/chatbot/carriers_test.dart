@@ -195,10 +195,9 @@ void main() {
     expect(find.byType(ChatView), findsNothing);
   });
 
-  test('发布默认开关（入口可见 + 真实流式 API）', () {
-    // 发布默认值保持入口可见，但不使用 fake 流式实现，避免 CI 依赖本地联调临时开关。
+  test('发布默认开关（入口可见）', () {
+    // 假流式实现已随旧后端聊天客户端移除，入口默认可见。
     expect(kChatbotEnabled, isTrue);
-    expect(kChatbotUseFakeApi, isFalse);
   });
 
   testWidgets('ChatScreen 全屏页壳渲染标题与 ChatView', (tester) async {

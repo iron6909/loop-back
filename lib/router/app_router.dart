@@ -13,13 +13,6 @@ import 'package:go_router/go_router.dart';
 
 import '../analytics/analytics_observer.dart';
 import '../analytics/analytics_providers.dart';
-import '../features/auth/screens/account_screen.dart';
-import '../features/subscription/screens/paywall_screen.dart';
-import '../features/auth/screens/check_email_screen.dart';
-import '../features/auth/screens/email_sign_in_screen.dart';
-import '../features/auth/screens/login_screen.dart';
-import '../features/auth/screens/password_sign_in_screen.dart';
-import '../features/auth/providers/auth_providers.dart';
 import '../features/community_collections/community_collection_routes.dart';
 import '../features/podcast/podcast_models.dart';
 import '../features/podcast/screens/podcast_discovery_screen.dart';
@@ -290,16 +283,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.study,
     observers: [rootRouteObserver, AnalyticsObserver(analyticsService)],
     redirect: (context, state) {
-      final isAuthenticated = ref.read(isAuthenticatedProvider);
-      final isAuthRoute =
-          state.uri.path == AppRoutes.login ||
-          state.uri.path == AppRoutes.emailSignIn ||
-          state.uri.path == AppRoutes.checkEmail ||
-          state.uri.path == AppRoutes.passwordSignIn;
-      if (isAuthenticated && isAuthRoute) {
-        return AppRoutes.settings;
-      }
-      if (!isAuthenticated && state.uri.path == AppRoutes.account) {
+      // 旧登录、账号和会员链接回到设置，不实例化停用的页面。
+      if (state.uri.path == AppRoutes.login ||
+          state.uri.path.startsWith('/login/') ||
+          state.uri.path == AppRoutes.account ||
+          state.uri.path == AppRoutes.paywall) {
         return AppRoutes.settings;
       }
       // /onboarding/survey 自身路径必须早返，否则在拦截路径上产生死循环
@@ -523,45 +511,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const OnboardingSurveyScreen(),
       ),
-      // 账号与登录流程（全屏）
-      GoRoute(
-        path: AppRoutes.login,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.emailSignIn,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final extra = state.extra;
-          final email = extra is String ? extra : '';
-          return EmailSignInScreen(initialEmail: email);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.checkEmail,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final extra = state.extra;
-          final email = extra is String ? extra : '';
-          return CheckEmailScreen(email: email);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.passwordSignIn,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PasswordSignInScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.account,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const AccountScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.paywall,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PaywallScreen(),
-      ),
+      for (final path in [
+        AppRoutes.login,
+        AppRoutes.emailSignIn,
+        AppRoutes.checkEmail,
+        AppRoutes.passwordSignIn,
+        AppRoutes.account,
+        AppRoutes.paywall,
+      ])
+        GoRoute(path: path, redirect: (context, state) => AppRoutes.settings),
       // 收藏句子复习（全屏）
       GoRoute(
         path: '/bookmark-review',

@@ -33,7 +33,6 @@ import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
 import 'package:echo_loop/screens/listen_and_repeat_player_screen.dart';
 import 'package:echo_loop/services/notification_permission_service.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
-import 'package:echo_loop/services/transcription_api_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/common/playback_controls.dart';
 import 'package:echo_loop/widgets/common/recording_button.dart';
@@ -316,9 +315,6 @@ Widget _createTestWidget({
           cacheDao: createStubbedMockCacheDao(),
           apiClient: _MockApiClient(),
         ),
-      ),
-      transcriptionApiClientProvider.overrideWithValue(
-        createTestTranscriptionApiClient(),
       ),
       audioItemDaoProvider.overrideWithValue(audioItemDao),
       ...extraOverrides,

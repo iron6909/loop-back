@@ -19,7 +19,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
 import '../utils/file_size.dart';
-import '../utils/app_data_dir.dart';
 import 'app_logger.dart';
 
 /// 清理结果。
@@ -63,24 +62,6 @@ Future<CleanupResult> cleanupStalePdfExportTemp({
   }
 }
 
-/// 启动时清理：删除 app 数据目录中超过 [minAge] 的百度网盘临时下载。
-///
-/// 百度网盘下载为了支持失败后续传，会在 `tmp/baidu_netdisk` 下保留
-/// `.part` 和 `.part.meta.json`。短期保留有续传价值；超过 1 天后按临时缓存回收。
-Future<CleanupResult> cleanupStaleBaiduNetdiskTemp({
-  Duration minAge = const Duration(days: 1),
-  Future<Directory> Function() resolveDataDir = getAppDataDirectory,
-}) async {
-  try {
-    final dataDir = await resolveDataDir();
-    final dir = Directory('${dataDir.path}/tmp/baidu_netdisk');
-    if (!await dir.exists()) return const CleanupResult(freedBytes: 0);
-    return _cleanupDirectory(dir, minAge: minAge);
-  } catch (_) {
-    return const CleanupResult(freedBytes: 0);
-  }
-}
-
 /// app 自建在 `Library/Caches` 下的导出/导入临时目录前缀白名单。
 ///
 /// 仅这些目录可在清缓存时删除，其余条目（系统 URLCache `Cache.db`、
@@ -118,13 +99,6 @@ Future<CleanupResult> cleanupAllTempFiles() async {
     totalBytes += (await _cleanupDirectory(
       cachesDir,
       nameFilter: _isOwnCacheTemp,
-    )).freedBytes;
-  } catch (_) {}
-
-  // 3. app 数据目录中的百度网盘下载临时文件：用户主动清缓存时全量清理
-  try {
-    totalBytes += (await cleanupStaleBaiduNetdiskTemp(
-      minAge: Duration.zero,
     )).freedBytes;
   } catch (_) {}
 

@@ -3,7 +3,6 @@
 /// 测试设置页面的渲染和交互。
 library;
 
-import 'dart:convert';
 import 'dart:io' show File;
 
 import 'package:flutter/material.dart';
@@ -17,7 +16,6 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
-import 'package:echo_loop/providers/app_update_provider.dart';
 import 'package:echo_loop/providers/developer_options_provider.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
@@ -26,17 +24,14 @@ import 'package:echo_loop/providers/settings_provider.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/collection_provider.dart';
 import 'package:echo_loop/features/auth/providers/auth_providers.dart';
-import 'package:echo_loop/features/subscription/models/entitlement.dart';
 import 'package:echo_loop/features/subscription/providers/subscription_availability.dart';
 import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
-import 'package:echo_loop/features/subscription/state/entitlement_state.dart';
 import 'package:echo_loop/features/user_region/user_region_providers.dart';
 import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
 import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
 import 'package:echo_loop/providers/package_info_provider.dart';
 import 'package:echo_loop/services/tts/tts_engine.dart';
 import 'package:echo_loop/theme/app_theme.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
@@ -126,7 +121,6 @@ void main() {
       listeningPracticeProvider.overrideWith(() => TestListeningPractice()),
       audioEngineProvider.overrideWith(() => TestAudioEngine()),
       packageInfoProvider.overrideWithValue(packageInfo ?? testPackageInfo),
-      appUpdateProvider.overrideWith(() => TestAppUpdate()),
       subscriptionAvailabilityProvider.overrideWithValue(subscriptionAvailable),
       isChinaUserProvider.overrideWith((ref) {
         final simulatedProvider = simulatedChinaUserProvider;
@@ -140,8 +134,6 @@ void main() {
 
   group('SettingsScreen', () {
     const settingsSvgAssets = [
-      'assets/icon/account-1.svg',
-      'assets/icon/diamond.svg',
       'assets/icon/artist-palette.svg',
       'assets/icon/locale.svg',
       'assets/icon/speak.svg',
@@ -171,48 +163,29 @@ void main() {
     }
 
     group('渲染', () {
-      testWidgets('仅中国区路由显示账号行国旗角标', (tester) async {
+      testWidgets('设置页不启动认证、权益或自更新服务', (tester) async {
+        final reads = <String>[];
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
-            overrides: buildOverrides(isChinaUser: true),
+            overrides: [
+              ...buildOverrides(),
+              supabaseSessionProvider.overrideWith((ref) {
+                reads.add('auth');
+                throw StateError('已停用');
+              }),
+              subscriptionControllerProvider.overrideWith(() {
+                reads.add('subscription');
+                throw StateError('已停用');
+              }),
+            ],
           ),
         );
         await tester.pumpAndSettle();
-
-        expect(findSvgAsset('assets/icon/china_flag.svg'), findsOneWidget);
-        expect(
-          find.byTooltip('Using China region service routing'),
-          findsOneWidget,
-        );
-      });
-
-      testWidgets('地区状态改变时更新账号行国旗角标', (tester) async {
-        final simulatedChinaUserProvider = StateProvider<bool>((ref) => false);
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: buildOverrides(
-              simulatedChinaUserProvider: simulatedChinaUserProvider,
-            ),
-          ),
-        );
+        await tester.scrollUntilVisible(find.text('Open Source Project'), 200);
         await tester.pumpAndSettle();
-
-        expect(findSvgAsset('assets/icon/china_flag.svg'), findsNothing);
-
-        final container = ProviderScope.containerOf(
-          tester.element(find.byType(SettingsScreen)),
-        );
-        container.read(simulatedChinaUserProvider.notifier).state = true;
-        await tester.pumpAndSettle();
-
-        expect(findSvgAsset('assets/icon/china_flag.svg'), findsOneWidget);
-
-        container.read(simulatedChinaUserProvider.notifier).state = false;
-        await tester.pumpAndSettle();
-
-        expect(findSvgAsset('assets/icon/china_flag.svg'), findsNothing);
+        expect(reads, isEmpty);
+        expect(find.text('Check for Updates'), findsNothing);
       });
 
       test('设置页 SVG 图标统一使用 24x24 viewBox', () {
@@ -301,8 +274,6 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(findSvgAsset('assets/icon/account-1.svg'), findsOneWidget);
-        expect(findSvgAsset('assets/icon/diamond.svg'), findsOneWidget);
         expect(findSvgAsset('assets/icon/artist-palette.svg'), findsOneWidget);
         expect(findSvgAsset('assets/icon/locale.svg'), findsOneWidget);
         expect(findSvgAsset('assets/icon/speak.svg'), findsOneWidget);
@@ -315,7 +286,6 @@ void main() {
 
         await tester.scrollUntilVisible(find.text('About'), 200);
         await tester.pumpAndSettle();
-        expect(findSvgAsset('assets/icon/refresh.svg'), findsOneWidget);
         expect(findSvgAsset('assets/icon/documents.svg'), findsOneWidget);
         expect(findSvgAsset('assets/icon/lock.svg'), findsOneWidget);
         expect(findSvgAsset('assets/icon/feedback.svg'), findsOneWidget);
@@ -360,16 +330,16 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final accountIcon = tester.widget<SvgPicture>(
-          findSvgAsset('assets/icon/account-1.svg'),
+        final paletteIcon = tester.widget<SvgPicture>(
+          findSvgAsset('assets/icon/artist-palette.svg'),
         );
-        expect(accountIcon.width, 26);
-        expect(accountIcon.height, 26);
+        expect(paletteIcon.width, 26);
+        expect(paletteIcon.height, 26);
         expect(
           tester.getSize(
             find
                 .ancestor(
-                  of: findSvgAsset('assets/icon/account-1.svg'),
+                  of: findSvgAsset('assets/icon/artist-palette.svg'),
                   matching: find.byType(SizedBox),
                 )
                 .first,
@@ -380,11 +350,11 @@ void main() {
         await tester.scrollUntilVisible(find.text('Open Source Project'), 200);
         await tester.pumpAndSettle();
 
-        final refreshIcon = tester.widget<SvgPicture>(
-          findSvgAsset('assets/icon/refresh.svg'),
+        final groupIcon = tester.widget<SvgPicture>(
+          findSvgAsset('assets/icon/group.svg'),
         );
-        expect(refreshIcon.width, 26);
-        expect(refreshIcon.height, 26);
+        expect(groupIcon.width, 26);
+        expect(groupIcon.height, 26);
 
         final githubIcons = tester.widgetList<FaIcon>(find.byType(FaIcon));
         expect(githubIcons, hasLength(1));
@@ -410,11 +380,9 @@ void main() {
         expect(paletteIcon.colorFilter, isNull);
 
         const visibleAssets = [
-          'assets/icon/account-1.svg',
           'assets/icon/speak.svg',
           'assets/icon/microphone.svg',
           'assets/icon/play-pause.svg',
-          'assets/icon/refresh.svg',
           'assets/icon/lock.svg',
           'assets/icon/feedback.svg',
           'assets/icon/group.svg',
@@ -489,274 +457,6 @@ void main() {
         } finally {
           debugDefaultTargetPlatformOverride = null;
         }
-      });
-
-      testWidgets('已登录时账号区显示登录邮箱', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {},
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'user@example.com',
-          createdAt: '2026-06-03T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('user@example.com'), findsOneWidget);
-      });
-
-      testWidgets('Apple 登录在账号入口显示 Apple 登录方式', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'apple',
-            'providers': ['apple'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'mbfpw8sdy7@privaterelay.appleid.com',
-          createdAt: '2026-06-04T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('mbfpw8sdy7@privaterelay.appleid.com'), findsNothing);
-        expect(find.text('Signed in with Apple'), findsOneWidget);
-      });
-
-      testWidgets('Google 登录在账号入口显示 Google 登录方式', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'google',
-            'providers': ['google'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'long.google.account@example.com',
-          createdAt: '2026-06-04T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('long.google.account@example.com'), findsNothing);
-        expect(find.text('Signed in with Google'), findsOneWidget);
-      });
-
-      testWidgets('关联 Google 后使用邮箱 OTP 登录在账号入口显示邮箱', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'google',
-            'providers': ['email', 'google'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'user@example.com',
-          createdAt: '2026-06-07T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: _jwtWithAuthenticationMethod('otp'),
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('user@example.com'), findsOneWidget);
-        expect(find.text('Signed in with Google'), findsNothing);
-      });
-
-      testWidgets('邮箱登录不通过 Apple relay 域名误判登录方式', (tester) async {
-        final user = User(
-          id: 'user-1',
-          appMetadata: const {
-            'provider': 'email',
-            'providers': ['email'],
-          },
-          userMetadata: const {},
-          aud: 'authenticated',
-          email: 'mbfpw8sdy7@privaterelay.appleid.com',
-          createdAt: '2026-06-04T00:00:00.000Z',
-        );
-        final session = Session(
-          accessToken: 'token',
-          tokenType: 'bearer',
-          user: user,
-          refreshToken: 'refresh',
-        );
-
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith(
-                (ref) => Stream<Session?>.value(session),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('Signed in with Apple'), findsNothing);
-        expect(find.text('mbfpw8sd...@ay.appleid.com'), findsOneWidget);
-      });
-
-      testWidgets('未订阅：账户分组内显示订阅入口与「升级」徽章，无顶部金卡', (tester) async {
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              subscriptionControllerProvider.overrideWith(
-                () =>
-                    _TestSubscriptionController(const EntitlementState.free()),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        // 订阅行标题（沿用 premiumEntryTitle）+ 未订阅高亮「升级」徽章
-        expect(find.text('Subscription'), findsOneWidget);
-        expect(find.text('Upgrade'), findsOneWidget);
-        final upgradeBadge = tester.widget<Text>(find.text('Upgrade'));
-        expect(upgradeBadge.style?.color, const Color(0xFF111111));
-        // 顶部不再有大金卡的「会员」状态徽章
-        expect(find.text('Premium'), findsNothing);
-      });
-
-      testWidgets('已订阅：显示「会员」徽章与套餐摘要', (tester) async {
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              subscriptionControllerProvider.overrideWith(
-                () => _TestSubscriptionController(
-                  const EntitlementState(
-                    status: EntitlementStatus.premium,
-                    entitlement: Entitlement(
-                      isPremium: true,
-                      productId: 'pro_yearly',
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        // 保持简洁：只有标题 + 「会员」徽章，无副标题详情
-        expect(find.text('Subscription'), findsOneWidget);
-        expect(find.text('Premium'), findsOneWidget);
-        expect(find.text('Upgrade'), findsNothing);
-      });
-
-      testWidgets('点击订阅入口跳转 Paywall', (tester) async {
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              subscriptionControllerProvider.overrideWith(
-                () =>
-                    _TestSubscriptionController(const EntitlementState.free()),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Subscription'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Paywall'), findsOneWidget);
-      });
-
-      testWidgets('平台未启用订阅：不显示订阅入口', (tester) async {
-        await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(subscriptionAvailable: false),
-              subscriptionControllerProvider.overrideWith(
-                () =>
-                    _TestSubscriptionController(const EntitlementState.free()),
-              ),
-            ],
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(find.text('Subscription'), findsNothing);
-        expect(find.text('Upgrade'), findsNothing);
       });
 
       testWidgets('显示外观标题', (tester) async {
@@ -1026,24 +726,6 @@ void main() {
       });
     });
   });
-}
-
-String _jwtWithAuthenticationMethod(String method) {
-  final header = base64Url.encode(utf8.encode('{"alg":"none"}'));
-  final payload = base64Url.encode(
-    utf8.encode('{"amr":[{"method":"$method","timestamp":0}]}'),
-  );
-  return '$header.$payload.';
-}
-
-/// 测试用 SubscriptionController，固定返回指定权益状态，
-/// 跳过真实对账（避免依赖 RevenueCat / 缓存 / 后端）。
-class _TestSubscriptionController extends SubscriptionController {
-  _TestSubscriptionController(this._state);
-  final EntitlementState _state;
-
-  @override
-  EntitlementState build() => _state;
 }
 
 /// 测试用 DeveloperOptions Notifier，固定返回指定值。

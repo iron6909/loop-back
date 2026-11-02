@@ -11,10 +11,8 @@ import 'package:echo_loop/analytics/analytics_service.dart';
 import 'package:echo_loop/analytics/consent_manager.dart';
 import 'package:echo_loop/analytics/models/event_names.dart';
 import 'package:echo_loop/features/onboarding_survey/data/onboarding_survey_storage.dart';
-import 'package:echo_loop/features/onboarding_survey/data/user_onboarding_sync_service.dart';
 import 'package:echo_loop/features/onboarding_survey/models/onboarding_question.dart';
 import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/user_onboarding_sync_provider.dart';
 import 'package:echo_loop/features/onboarding_survey/screens/onboarding_survey_screen.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/router/app_router.dart';
@@ -51,38 +49,11 @@ class _RecordingAnalyticsChannel implements AnalyticsChannel {
   Future<void> unregisterSuperProperty(String name) async {}
 }
 
-class _RecordingOnboardingSync implements OnboardingSync {
-  int localAnswersChanged = 0;
-
-  @override
-  Future<void> onAppResumed() async {}
-
-  @override
-  Future<void> onLocalAnswersChanged() async {
-    localAnswersChanged++;
-  }
-
-  @override
-  Future<void> onSessionChanged({required bool isSignedIn}) async {}
-}
-
-class _NoopOnboardingSync implements OnboardingSync {
-  @override
-  Future<void> onAppResumed() async {}
-
-  @override
-  Future<void> onLocalAnswersChanged() async {}
-
-  @override
-  Future<void> onSessionChanged({required bool isSignedIn}) async {}
-}
-
 /// 创建一个最小化的可路由测试 App，承载 onboarding 页 + study 占位页。
 Widget _wrap({
   required SharedPreferences prefs,
   bool initialOnboardingCompleted = false,
   _RecordingAnalyticsChannel? analyticsChannel,
-  OnboardingSync? onboardingSync,
   ThemeMode themeMode = ThemeMode.light,
 }) {
   final router = GoRouter(
@@ -104,9 +75,6 @@ Widget _wrap({
       sharedPreferencesProvider.overrideWithValue(prefs),
       initialOnboardingCompletedProvider.overrideWithValue(
         initialOnboardingCompleted,
-      ),
-      onboardingSyncProvider.overrideWithValue(
-        onboardingSync ?? _NoopOnboardingSync(),
       ),
       if (analyticsChannel == null)
         analyticsOverride()
@@ -142,9 +110,8 @@ void main() {
 
   testWidgets('普通分支：选目标 → 时长 → 渠道 → 方法论页 → 点开始学习', (tester) async {
     final prefs = await SharedPreferences.getInstance();
-    final onboardingSync = _RecordingOnboardingSync();
     await tester.pumpWidget(
-      _wrap(prefs: prefs, onboardingSync: onboardingSync),
+      _wrap(prefs: prefs),
     );
     await tester.pumpAndSettle();
 
@@ -193,7 +160,6 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 400));
 
     expect(find.text('STUDY_PLACEHOLDER'), findsOneWidget);
-    expect(onboardingSync.localAnswersChanged, 1);
 
     final storage = OnboardingSurveyStorage(prefs);
     expect(storage.isCompleted, isTrue);

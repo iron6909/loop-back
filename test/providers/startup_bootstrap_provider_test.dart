@@ -69,7 +69,7 @@ void main() {
     expect(find.text('third-ready'), findsOneWidget);
   });
 
-  testWidgets('第三方与 Supabase 初始化等待地区决策完成', (tester) async {
+  testWidgets('第三方分析等待本地地区完成且不接入 Supabase', (tester) async {
     final regionGate = Completer<UserRegionBootstrapResult>();
     final bootstrapper = _FakeBootstrapper();
 
@@ -89,7 +89,7 @@ void main() {
     await tester.pump();
 
     expect(bootstrapper.thirdPartyCalls, 1);
-    expect(bootstrapper.supabaseUrls, ['https://china.supabase.test']);
+    expect(bootstrapper.supabaseUrls, [null]);
     expect(find.text('third-ready'), findsOneWidget);
   });
 

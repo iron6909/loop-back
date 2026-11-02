@@ -202,20 +202,6 @@ void main() {
       expect(otherCache.existsSync(), true);
     });
 
-    test('清除缓存全量删除百度网盘临时下载目录', () async {
-      final baiduDir = Directory('${fakeAppDataDir.path}/tmp/baidu_netdisk')
-        ..createSync(recursive: true);
-      final partFile = File('${baiduDir.path}/123.mp4.part');
-      final metaFile = File('${baiduDir.path}/123.mp4.part.meta.json');
-      partFile.writeAsBytesSync(List.filled(700, 0));
-      metaFile.writeAsBytesSync(List.filled(100, 0));
-
-      final result = await cleanupAllTempFiles();
-
-      expect(result.freedBytes, greaterThanOrEqualTo(800));
-      expect(partFile.existsSync(), false);
-      expect(metaFile.existsSync(), false);
-    });
   });
 
   group('cleanupStalePdfExportTemp', () {
@@ -265,35 +251,4 @@ void main() {
     });
   });
 
-  group('cleanupStaleBaiduNetdiskTemp', () {
-    test('删除超过 minAge 的百度网盘半下载文件', () async {
-      final baiduDir = Directory('${fakeAppDataDir.path}/tmp/baidu_netdisk')
-        ..createSync(recursive: true);
-      final oldPart = File('${baiduDir.path}/old.mp4.part');
-      final oldMeta = File('${baiduDir.path}/old.mp4.part.meta.json');
-      oldPart.writeAsBytesSync(List.filled(1000, 0));
-      oldMeta.writeAsBytesSync(List.filled(100, 0));
-      final oldTime = DateTime.now().subtract(const Duration(days: 2));
-      oldPart.setLastModifiedSync(oldTime);
-      oldMeta.setLastModifiedSync(oldTime);
-
-      final result = await cleanupStaleBaiduNetdiskTemp();
-
-      expect(result.freedBytes, 1100);
-      expect(oldPart.existsSync(), false);
-      expect(oldMeta.existsSync(), false);
-    });
-
-    test('保留不足 minAge 的百度网盘半下载文件', () async {
-      final baiduDir = Directory('${fakeAppDataDir.path}/tmp/baidu_netdisk')
-        ..createSync(recursive: true);
-      final freshPart = File('${baiduDir.path}/fresh.mp4.part');
-      freshPart.writeAsBytesSync(List.filled(500, 0));
-
-      final result = await cleanupStaleBaiduNetdiskTemp();
-
-      expect(result.freedBytes, 0);
-      expect(freshPart.existsSync(), true);
-    });
-  });
 }

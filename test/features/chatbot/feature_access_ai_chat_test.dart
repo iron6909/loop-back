@@ -1,63 +1,35 @@
-/// PremiumFeature.aiChat 接入 featureAccessProvider 的三态回归。
+/// PremiumFeature.aiChat 接入 featureAccessProvider 的回归。
+///
+/// 登录与会员门控已移除：聊天入口只受本机策略与供应商错误影响。
 library;
 
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
-import 'package:echo_loop/features/subscription/models/entitlement.dart';
 import 'package:echo_loop/features/subscription/models/premium_feature.dart';
 import 'package:echo_loop/features/subscription/providers/feature_access_provider.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
 import 'package:echo_loop/features/subscription/services/free_allowance_policy.dart';
-import 'package:echo_loop/features/subscription/state/entitlement_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _FixedController extends SubscriptionController {
-  _FixedController(this._state);
-  final EntitlementState _state;
-  @override
-  EntitlementState build() => _state;
-}
-
 void main() {
-  ProviderContainer makeContainer({
-    required EntitlementState state,
-    FreeAllowancePolicy policy = const AlwaysAllowPolicy(),
-    bool authenticated = true,
-  }) {
+  ProviderContainer makeContainer(FreeAllowancePolicy policy) {
     final container = ProviderContainer(
-      overrides: [
-        subscriptionControllerProvider.overrideWith(
-          () => _FixedController(state),
-        ),
-        freeAllowancePolicyProvider.overrideWithValue(policy),
-        isAuthenticatedProvider.overrideWithValue(authenticated),
-      ],
+      overrides: [freeAllowancePolicyProvider.overrideWithValue(policy)],
     );
     addTearDown(container.dispose);
     return container;
   }
 
-  const feature = PremiumFeature.aiChat;
-  const pro = EntitlementState(
-    status: EntitlementStatus.premium,
-    entitlement: Entitlement(isPremium: true),
-  );
-
-  test('未登录 → false', () {
-    final c = makeContainer(
-      state: const EntitlementState.free(),
-      authenticated: false,
-    );
-    expect(c.read(featureAccessProvider(feature)), isFalse);
+  test('现网策略下聊天入口放行', () {
+    final c = makeContainer(const AlwaysAllowPolicy());
+    expect(c.read(featureAccessProvider(PremiumFeature.aiChat)), isTrue);
   });
 
-  test('会员 → true', () {
-    final c = makeContainer(state: pro);
-    expect(c.read(featureAccessProvider(feature)), isTrue);
+  test('策略拒绝时隐藏聊天入口', () {
+    final c = makeContainer(_DenyPolicy());
+    expect(c.read(featureAccessProvider(PremiumFeature.aiChat)), isFalse);
   });
+}
 
-  test('免费登录 + AlwaysAllow（现网策略）→ 放行', () {
-    final c = makeContainer(state: const EntitlementState.free());
-    expect(c.read(featureAccessProvider(feature)), isTrue);
-  });
+class _DenyPolicy implements FreeAllowancePolicy {
+  @override
+  bool allows(PremiumFeature feature) => false;
 }

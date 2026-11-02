@@ -156,8 +156,8 @@ void main() {
     });
   });
 
-  testWidgets('平台未启用订阅：openPaywall 不导航，弹平台不支持提示', (tester) async {
-    await tester.pumpWidget(_harness(available: false));
+  testWidgets('订阅已停用：openPaywall 不导航，只弹平台不支持提示', (tester) async {
+    await tester.pumpWidget(_harness(available: true));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('go'));
@@ -168,15 +168,5 @@ void main() {
       find.text('Subscriptions are not yet available on this platform'),
       findsOneWidget,
     );
-  });
-
-  testWidgets('平台已启用订阅：openPaywall 正常跳转 Paywall', (tester) async {
-    await tester.pumpWidget(_harness(available: true));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('go'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Paywall Route'), findsOneWidget);
   });
 }

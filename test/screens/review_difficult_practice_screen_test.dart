@@ -39,7 +39,6 @@ import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
 import 'package:echo_loop/services/notification_permission_service.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
 import 'package:echo_loop/services/speech_permission_service.dart';
-import 'package:echo_loop/services/transcription_api_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/common/bookmark_toggle_row.dart';
 import 'package:echo_loop/widgets/common/playback_controls.dart';
@@ -358,9 +357,6 @@ void main() {
           const _ReadySpeechPermissionService(),
         ),
         audioItemDaoProvider.overrideWithValue(audioItemDao),
-        transcriptionApiClientProvider.overrideWithValue(
-          createTestTranscriptionApiClient(),
-        ),
         sentenceAiNotifierProvider.overrideWithValue(
           SentenceAiNotifier(
             cacheDao: createStubbedMockCacheDao(),

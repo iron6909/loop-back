@@ -61,7 +61,7 @@ class ChatSessionController extends _$ChatSessionController {
     return ChatSessionState.initial(config);
   }
 
-  /// 发送一条用户消息。前置：调用方（ChatView）已做登录拦截。
+  /// 发送一条用户消息。前置：调用方（ChatView）已确认供应商已配置。
   ///
   /// [quote] 为追问引用原文（可选）：气泡上方单独显示，发后端时并入 blockquote。
   Future<void> send(String text, {String? quote}) async {
@@ -221,8 +221,7 @@ class ChatSessionController extends _$ChatSessionController {
   /// 异常 → 该条 assistant 消息的终态（气泡 inline 表达，不设会话级错误）。
   /// - DioException(cancel)（用户停止）→ done，保留已生成部分；
   /// - DioException(402)（额度权威判定）→ quotaBlocked（气泡 inline 升级入口）；
-  /// - ChatAuthRequiredException(401，token 过期/服务端判未登录)→ authRequired
-  ///   （气泡 inline 登录引导）；
+  /// - 供应商 401（Key 无效）→ error，由气泡提示检查供应商设置；
   /// - ChatStreamException / 其余 → error。
   ChatMessageStatus _mapRunError(Object e) {
     if (e is DioException && e.type == DioExceptionType.cancel) {
@@ -234,7 +233,7 @@ class ChatSessionController extends _$ChatSessionController {
     return ChatMessageStatus.error;
   }
 
-  /// 只有后端明确返回 `quota.limit == 0` 时，才改用免费版不支持文案。
+  /// 供应商明确返回 402 且给出额度原因时才使用对应文案。
   AiQuotaRejectionReason _quotaReasonFor(Object error) {
     if (error is! DioException || error.response?.statusCode != 402) {
       return AiQuotaRejectionReason.exhausted;

@@ -25,16 +25,38 @@ import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
 import '../services/asr/sherpa_onnx_engine.dart';
+import '../utils/app_data_dir.dart';
+import '../utils/audio_fingerprint.dart';
 import '../utils/srt_generator.dart';
 import '../utils/synthetic_word_timestamps.dart';
 import '../utils/transcript_stats.dart';
 import 'asr_engine_provider.dart';
 import 'audio_library_provider.dart';
-import 'transcription_task_provider.dart' show transcriptionFileOpsProvider;
 
 part 'local_transcription_task_provider.g.dart';
 
 // ─── 可注入 seam（便于测试） ──────────────────────────────────
+
+/// 封装转录流程中的文件系统操作，便于测试时 mock。
+class TranscriptionFileOps {
+  const TranscriptionFileOps();
+
+  /// 计算文件 SHA256。
+  Future<String> computeSha256(String filePath) => computeAudioSha256(filePath);
+
+  /// 获取文件大小。
+  Future<int> getFileSize(String filePath) => File(filePath).length();
+
+  /// 获取应用数据目录。
+  Future<Directory> getDataDir() => getAppDataDirectory();
+}
+
+/// 文件操作 Provider（测试时可覆盖）。
+///
+/// 手写 `Provider` 而非代码生成：该 seam 无需参数化缓存，也不需要重生成。
+final transcriptionFileOpsProvider = Provider<TranscriptionFileOps>(
+  (ref) => const TranscriptionFileOps(),
+);
 
 /// 专用转录引擎工厂（测试时覆盖为 mock 引擎）。
 ///

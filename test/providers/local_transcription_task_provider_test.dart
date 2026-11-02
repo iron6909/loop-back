@@ -17,7 +17,6 @@ import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
 import 'package:echo_loop/models/audio_item.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/local_transcription_task_provider.dart';
-import 'package:echo_loop/providers/transcription_task_provider.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
 import 'package:echo_loop/providers/asr_engine_provider.dart';
 import 'package:echo_loop/services/asr/offline_asr_engine.dart';
