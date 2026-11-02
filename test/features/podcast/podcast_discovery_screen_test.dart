@@ -1,11 +1,8 @@
-import 'dart:async';
-
 import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/podcast/data/featured_podcast_service.dart';
 import 'package:echo_loop/features/podcast/models/featured_podcast.dart';
 import 'package:echo_loop/features/podcast/podcast_preview_provider.dart';
 import 'package:echo_loop/features/podcast/podcast_models.dart';
-import 'package:echo_loop/features/podcast/providers/featured_podcasts_provider.dart';
 import 'package:echo_loop/features/podcast/podcast_repository.dart';
 import 'package:echo_loop/features/podcast/podcast_search_provider.dart';
 import 'package:echo_loop/features/podcast/podcast_search_service.dart';
@@ -14,7 +11,6 @@ import 'package:echo_loop/features/podcast/widgets/podcast_subscribe_tile.dart';
 import 'package:echo_loop/models/collection.dart';
 import 'package:echo_loop/providers/collection_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/mock_providers.dart';
@@ -60,68 +56,18 @@ class _FakePodcastRepository extends Fake implements PodcastRepository {
 
 class _FakeFeaturedPodcastService extends Fake
     implements FeaturedPodcastService {
-  _FakeFeaturedPodcastService({
-    FeaturedPodcastSnapshot? snapshot,
-    List<FeaturedPodcastRefreshOutcome>? firstPageOutcomes,
-  }) : _snapshot = snapshot,
-       _firstPageOutcomes = firstPageOutcomes ?? [];
-
-  FeaturedPodcastSnapshot? _snapshot;
-  final List<FeaturedPodcastRefreshOutcome> _firstPageOutcomes;
-  int firstPageRefreshCalls = 0;
-  final List<String?> requestedCursors = [];
-  final List<String> refreshOrder = [];
-  Completer<void>? nextPageRefreshStarted;
-  Completer<FeaturedPodcastRefreshOutcome>? nextPageOutcome;
-
+  _FakeFeaturedPodcastService(this.podcasts, {this.failOnce = false});
+  final List<FeaturedPodcast> podcasts;
+  bool failOnce;
+  int calls = 0;
   @override
-  FeaturedPodcastSnapshot? get cachedSnapshot => _snapshot;
-
-  @override
-  Future<FeaturedPodcastSnapshot?> loadCachedFirstPage() async => _snapshot;
-
-  @override
-  Future<FeaturedPodcastPage?> loadCachedPage({String? cursor}) async => null;
-
-  @override
-  Future<FeaturedPodcastRefreshOutcome> refreshFirstPage({
-    bool force = false,
-  }) async {
-    firstPageRefreshCalls++;
-    refreshOrder.add('first');
-    final outcome = _firstPageOutcomes.isEmpty
-        ? const FeaturedPodcastUnchanged()
-        : _firstPageOutcomes.removeAt(0);
-    if (outcome case FeaturedPodcastUpdated(:final snapshot)) {
-      _snapshot = snapshot;
+  Future<List<FeaturedPodcast>> load() async {
+    calls++;
+    if (failOnce) {
+      failOnce = false;
+      throw const FormatException('Invalid asset');
     }
-    return outcome;
-  }
-
-  @override
-  Future<FeaturedPodcastRefreshOutcome> refreshPage({
-    String? cursor,
-    bool force = false,
-  }) async {
-    requestedCursors.add(cursor);
-    refreshOrder.add('page:$cursor');
-    nextPageRefreshStarted?.complete();
-    final pendingOutcome = nextPageOutcome;
-    if (pendingOutcome != null) {
-      final outcome = await pendingOutcome.future;
-      if (outcome case FeaturedPodcastUpdated(:final snapshot)) {
-        _snapshot = snapshot;
-      }
-      return outcome;
-    }
-    final currentPodcasts = _snapshot?.podcasts ?? const <FeaturedPodcast>[];
-    final snapshot = FeaturedPodcastSnapshot(
-      podcasts: currentPodcasts,
-      contentHash: 'updated',
-      fetchedAt: DateTime(2026, 1, 2),
-    );
-    _snapshot = snapshot;
-    return FeaturedPodcastUpdated(snapshot);
+    return podcasts;
   }
 }
 
@@ -140,19 +86,11 @@ FeaturedPodcast _featuredPodcast({
 );
 
 _FakeFeaturedPodcastService _serviceWithPodcasts(
-  List<FeaturedPodcast> podcasts, {
-  String? nextCursor,
-}) => _FakeFeaturedPodcastService(
-  snapshot: FeaturedPodcastSnapshot(
-    podcasts: podcasts,
-    contentHash: 'test-snapshot',
-    fetchedAt: DateTime(2026, 1, 1),
-    nextCursor: nextCursor,
-  ),
-);
+  List<FeaturedPodcast> podcasts,
+) => _FakeFeaturedPodcastService(podcasts);
 
 void main() {
-  testWidgets('精选目录为空时仍可下拉刷新且不加载 Apple 搜索', (tester) async {
+  testWidgets('随包精选为空时显示空态，搜索入口保留', (tester) async {
     final service = _serviceWithPodcasts(const []);
     await tester.pumpWidget(
       createTestApp(
@@ -161,18 +99,13 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-
     expect(find.text('No curated podcasts yet'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-    expect(service.firstPageRefreshCalls, 1);
-
-    await tester.drag(find.byType(ListView).first, const Offset(0, 400));
-    await tester.pumpAndSettle();
-
-    expect(service.firstPageRefreshCalls, 2);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.byType(RefreshIndicator), findsNothing);
+    expect(service.calls, 1);
   });
 
-  testWidgets('空搜索词恢复展示精选 Podcast', (tester) async {
+  testWidgets('显示随包精选，清空搜索后仍使用本地清单', (tester) async {
     final service = _serviceWithPodcasts([_featuredPodcast()]);
     await tester.pumpWidget(
       createTestApp(
@@ -181,24 +114,15 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-
     expect(find.text('Featured English'), findsOneWidget);
     expect(find.text('Short English lessons'), findsOneWidget);
-    expect(find.text('Search podcasts or paste a link'), findsOneWidget);
-    expect(service.firstPageRefreshCalls, 1);
+    expect(service.calls, 1);
   });
 
-  testWidgets('下拉精选列表时刷新第一页', (tester) async {
-    final podcasts = List.generate(
-      20,
-      (index) => _featuredPodcast(
-        id: 'featured-$index',
-        title: 'Featured Podcast $index',
-        rssUrl: 'https://example.com/$index.xml',
-      ),
-    );
-    final service = _serviceWithPodcasts(podcasts, nextCursor: 'cursor-1');
-
+  testWidgets('资源加载失败后重试读取清单', (tester) async {
+    final service = _FakeFeaturedPodcastService([
+      _featuredPodcast(),
+    ], failOnce: true);
     await tester.pumpWidget(
       createTestApp(
         const PodcastDiscoveryScreen(),
@@ -206,64 +130,18 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(service.firstPageRefreshCalls, 1);
-
-    await tester.drag(find.byType(ListView).first, const Offset(0, 400));
-    await tester.pumpAndSettle();
-
-    expect(service.firstPageRefreshCalls, 2);
-  });
-
-  testWidgets('精选列表无缓存时刷新失败可重试', (tester) async {
-    final service = _FakeFeaturedPodcastService(
-      firstPageOutcomes: [
-        FeaturedPodcastFailed(StateError('offline')),
-        FeaturedPodcastUpdated(
-          FeaturedPodcastSnapshot(
-            podcasts: [_featuredPodcast()],
-            contentHash: 'retried-snapshot',
-            fetchedAt: DateTime(2026, 1, 2),
-          ),
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(
-      createTestApp(
-        const PodcastDiscoveryScreen(),
-        overrides: [featuredPodcastServiceProvider.overrideWithValue(service)],
-      ),
-    );
-    await tester.pumpAndSettle();
-
     expect(find.text('Retry'), findsOneWidget);
-    expect(find.text('Featured English'), findsNothing);
-
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
-
     expect(find.text('Featured English'), findsOneWidget);
-    expect(service.firstPageRefreshCalls, 2);
+    expect(service.calls, 2);
   });
 
-  testWidgets('滚动到精选列表底部时按 nextCursor 加载下一页', (tester) async {
-    final podcasts = List.generate(
-      20,
-      (index) => _featuredPodcast(
-        id: 'featured-$index',
-        title: 'Featured Podcast $index',
-        rssUrl: 'https://example.com/$index.xml',
-      ),
-    );
-    final service = _FakeFeaturedPodcastService(
-      snapshot: FeaturedPodcastSnapshot(
-        podcasts: podcasts,
-        contentHash: 'first-page',
-        fetchedAt: DateTime(2026, 1, 1),
-        nextCursor: 'cursor-1',
-      ),
-    );
-
+  testWidgets('滚动到随包清单底部不再发起分页读取', (tester) async {
+    final service = _serviceWithPodcasts([
+      for (var i = 0; i < 25; i++)
+        _featuredPodcast(id: 'podcast-$i', title: 'Podcast $i'),
+    ]);
     await tester.pumpWidget(
       createTestApp(
         const PodcastDiscoveryScreen(),
@@ -271,67 +149,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(ListView).first, const Offset(0, -3000));
+    await tester.drag(find.byType(ListView), const Offset(0, -4000));
     await tester.pumpAndSettle();
-
-    expect(service.requestedCursors, ['cursor-1']);
-  });
-
-  test('第一页刷新等待正在进行的分页，避免混入旧游标链', () async {
-    final initialSnapshot = FeaturedPodcastSnapshot(
-      podcasts: [_featuredPodcast(id: 'old-first')],
-      contentHash: 'old-first-page',
-      fetchedAt: DateTime(2026, 1, 1),
-      nextCursor: 'old-cursor',
-    );
-    final paginatedSnapshot = FeaturedPodcastSnapshot(
-      podcasts: [
-        _featuredPodcast(id: 'old-first'),
-        _featuredPodcast(id: 'old-second'),
-      ],
-      contentHash: 'old-pages',
-      fetchedAt: DateTime(2026, 1, 1),
-      nextCursor: 'old-next-cursor',
-    );
-    final refreshedSnapshot = FeaturedPodcastSnapshot(
-      podcasts: [_featuredPodcast(id: 'new-first')],
-      contentHash: 'new-first-page',
-      fetchedAt: DateTime(2026, 1, 2),
-      nextCursor: 'new-cursor',
-    );
-    final paginationStarted = Completer<void>();
-    final paginationOutcome = Completer<FeaturedPodcastRefreshOutcome>();
-    final service =
-        _FakeFeaturedPodcastService(
-            snapshot: initialSnapshot,
-            firstPageOutcomes: [FeaturedPodcastUpdated(refreshedSnapshot)],
-          )
-          ..nextPageRefreshStarted = paginationStarted
-          ..nextPageOutcome = paginationOutcome;
-    final container = ProviderContainer(
-      overrides: [featuredPodcastServiceProvider.overrideWithValue(service)],
-    );
-    addTearDown(container.dispose);
-
-    await container.read(featuredPodcastsProvider.future);
-    final notifier = container.read(featuredPodcastsProvider.notifier);
-    final loadMore = notifier.loadMore();
-    final refreshFirstPage = notifier.refreshFirstPage();
-    await paginationStarted.future;
-
-    expect(service.firstPageRefreshCalls, 0);
-    expect(service.refreshOrder, ['page:old-cursor']);
-
-    paginationOutcome.complete(FeaturedPodcastUpdated(paginatedSnapshot));
-    await Future.wait([loadMore, refreshFirstPage]);
-
-    final snapshot = container
-        .read(featuredPodcastsProvider)
-        .valueOrNull
-        ?.snapshot;
-    expect(service.refreshOrder, ['page:old-cursor', 'first']);
-    expect(snapshot?.podcasts.map((podcast) => podcast.id), ['new-first']);
-    expect(snapshot?.nextCursor, 'new-cursor');
+    expect(service.calls, 1);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
   testWidgets('精选 Podcast 订阅优先使用 Apple URL 且停留在本页', (tester) async {

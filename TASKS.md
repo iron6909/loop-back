@@ -3,6 +3,7 @@
 > 当前待办与本次完成记录；此前完成任务已归档，详见 [2026-10-29 归档](./docs/tasks-archive/tasks-2026-10-29-completed.md)、[2026-09-29 归档](./docs/tasks-archive/tasks-2026-09-29-completed.md)。
 
 ## 本次完成
+- [x] 精选播客改随包清单（实施 Task 17）：`assets/podcast/catalog.json` 随包读取，移除远端分页与缓存 meta；保留 Apple 搜索、粘贴 RSS/Apple 链接和 Apple URL 优先订阅。播客全模块 94 项通过，定向分析无问题。**完成时间**: 2026-11-01
 - [x] 历史社区合集只读（实施 Task 16）：移除发现页与启动/回前台/下拉同步，隐藏远端字幕更新、发布者与难度；卡片标记停止同步，真实文件缺失时置灰并说明，已有媒体与学习记录保留。目录/合集/列表/路由受影响回归 206 项通过，定向分析通过。**完成时间**: 2026-11-01
 - [x] 本地目录导入为合集（实施 Task 14–15）：Android SAF 只枚举直接子项，复用已有复制/指纹去重与字幕配对；自然排序、忽略项汇总、全重复引用、失败事务回滚与单独重试，完成后定位新合集。目录/合集/列表相关扩展回归 206 项通过，定向分析通过；Android 调试包已构建，最终真机检查待设备。**完成时间**: 2026-11-01
 - [x] 本机 Flutter Android 构建兼容（实施 Task 19）：Gradle 8.14.3 / AGP 8.11.1 / Kotlin 2.2.20；禁用跨盘符失败的 Kotlin 增量缓存，友盟保留 Java 实现、排除同名 Kotlin 示例模板。`flutter build apk --debug --flavor dev --target-platform android-arm64 --no-pub` 成功产出 app-dev-debug.apk。**完成时间**: 2026-11-01

@@ -173,6 +173,7 @@ flutter:
 
   assets:
     - assets/demo/
+    - assets/podcast/
     # 只打包运行时真正用到的图标（封面图/登录页经 rootBundle 读取）。
     # 目录内其余文件（app-icon-1024-rounded 仅构建期生成 launcher icon、
     # ic_stat_logo 仅作 Android 通知图标源文件）不进包；订阅页透明底品牌图单独显式打包。
