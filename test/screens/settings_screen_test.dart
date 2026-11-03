@@ -163,6 +163,19 @@ void main() {
     }
 
     group('渲染', () {
+      testWidgets('AI 服务标题与相邻设置项对齐', (tester) async {
+        await tester.pumpWidget(
+          createTestScreen(const SettingsScreen(), overrides: buildOverrides()),
+        );
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('Review Reminder'));
+        await tester.pumpAndSettle();
+        expect(
+          tester.getTopLeft(find.text('AI service')).dx,
+          tester.getTopLeft(find.text('Review Reminder')).dx,
+        );
+      });
+
       testWidgets('设置页不启动认证、权益或自更新服务', (tester) async {
         final reads = <String>[];
         await tester.pumpWidget(

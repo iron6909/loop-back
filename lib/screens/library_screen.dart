@@ -139,8 +139,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 
   /// 导入完成后留在我的合集，并把新建合集滚动到可见位置。
-  Future<void> _importCollection() async {
-    final id = await showImportAudioSheet(context, allowDirectoryImport: true);
+  Future<void> _createCollection() async {
+    final id = await showCreateCollectionDialog(context);
     if (mounted && id != null) setState(() => _focusedCollectionId = id);
   }
 
@@ -150,17 +150,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       return [
         // 合集排序
         const CollectionSortButton(),
-        TextButton.icon(
-          onPressed: _importCollection,
-          icon: const Icon(Icons.create_new_folder_outlined),
-          label: Text(l10n.importLocalCollection),
-        ),
         // 创建合集
         GuideTarget(
           step: createStep,
           child: IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => showCreateCollectionDialog(context),
+            onPressed: _createCollection,
+            tooltip: l10n.createCollection,
           ),
         ),
         const SizedBox(width: 8),

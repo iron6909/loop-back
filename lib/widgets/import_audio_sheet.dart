@@ -20,7 +20,7 @@ import 'media_type_icon.dart';
 Future<String?> showImportAudioSheet(
   BuildContext context, {
   String? collectionId,
-  bool allowDirectoryImport = false,
+  bool directoryOnly = false,
 }) async {
   final result = await showModalBottomSheet<Object?>(
     context: context,
@@ -28,7 +28,7 @@ Future<String?> showImportAudioSheet(
     showDragHandle: true,
     builder: (_) => ImportAudioFlowSheet(
       collectionId: collectionId,
-      allowDirectoryImport: allowDirectoryImport,
+      directoryOnly: directoryOnly,
     ),
   );
   return result is String ? result : null;
@@ -46,13 +46,13 @@ class ImportAudioFlowSheet extends ConsumerStatefulWidget {
   const ImportAudioFlowSheet({
     super.key,
     this.collectionId,
-    this.allowDirectoryImport = false,
+    this.directoryOnly = false,
   });
 
   final String? collectionId;
 
-  /// 从「我的合集」进入时提供目录导入；普通添加音频不展示该来源。
-  final bool allowDirectoryImport;
+  /// 创建合集时直接选目录；普通添加音频仍只提供文件和链接来源。
+  final bool directoryOnly;
 
   @override
   ConsumerState<ImportAudioFlowSheet> createState() =>
@@ -71,6 +71,14 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
 
   /// 每次重新选目录都换 key，强制重建面板丢弃上一次的已选列表与状态。
   int _directorySelectionId = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.directoryOnly) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _pickDirectory());
+    }
+  }
 
   @override
   void dispose() {
@@ -102,7 +110,10 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
               children: [
                 _ImportHeader(
                   title: _titleFor(l10n),
-                  showBack: _step != _ImportStep.chooseSource && !busy,
+                  showBack:
+                      (widget.directoryOnly ||
+                          _step != _ImportStep.chooseSource) &&
+                      !busy,
                   showClose: !importing,
                   onBack: _goBack,
                   onClose: () => Navigator.pop(context),
@@ -135,7 +146,8 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
 
   String _titleFor(AppLocalizations l10n) {
     return switch (_step) {
-      _ImportStep.chooseSource => l10n.importAudio,
+      _ImportStep.chooseSource =>
+        widget.directoryOnly ? l10n.importAudioFromFolder : l10n.importAudio,
       _ImportStep.localFile => l10n.importAudioFromFile,
       _ImportStep.localDirectory =>
         _directory?.name ?? l10n.importAudioFromFolder,
@@ -150,13 +162,22 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       child: switch (_step) {
-        _ImportStep.chooseSource => _ChooseSourcePanel(
-          key: const ValueKey('choose-source'),
-          showDirectory: widget.allowDirectoryImport,
-          onLocalFile: () => setState(() => _step = _ImportStep.localFile),
-          onDirectory: _pickDirectory,
-          onDirectUrl: () => setState(() => _step = _ImportStep.directUrl),
-        ),
+        _ImportStep.chooseSource =>
+          widget.directoryOnly
+              ? _ImportOptionTile(
+                  key: const ValueKey('import-option-directory'),
+                  icon: Icons.folder_open_outlined,
+                  title: l10n.importAudioFromFolder,
+                  description: l10n.importAudioFromFolderDescription,
+                  onTap: _pickDirectory,
+                )
+              : _ChooseSourcePanel(
+                  key: const ValueKey('choose-source'),
+                  onLocalFile: () =>
+                      setState(() => _step = _ImportStep.localFile),
+                  onDirectUrl: () =>
+                      setState(() => _step = _ImportStep.directUrl),
+                ),
         _ImportStep.localFile => AddAudioDialog(
           key: const ValueKey('local-file'),
           collectionId: widget.collectionId,
@@ -200,7 +221,11 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
   Future<void> _pickDirectory() async {
     try {
       final directory = await AndroidLocalAudioFilePicker().pickDirectory();
-      if (!mounted || directory == null) return;
+      if (!mounted) return;
+      if (directory == null) {
+        if (widget.directoryOnly) Navigator.pop(context);
+        return;
+      }
       final plan = CommunityDirectoryImport(directory);
       setState(() {
         _directoryError = plan.isEmpty
@@ -242,7 +267,13 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
     setState(() => _step = _ImportStep.chooseSource);
   }
 
-  void _goBack() => _goBackToSource();
+  void _goBack() {
+    if (widget.directoryOnly) {
+      Navigator.pop(context);
+    } else {
+      _goBackToSource();
+    }
+  }
 
   /// 切到独立完成页。
   ///
@@ -392,13 +423,9 @@ class _ChooseSourcePanel extends StatelessWidget {
   const _ChooseSourcePanel({
     super.key,
     required this.onLocalFile,
-    required this.showDirectory,
-    required this.onDirectory,
     required this.onDirectUrl,
   });
 
-  final bool showDirectory;
-  final VoidCallback onDirectory;
   final VoidCallback onLocalFile;
   final VoidCallback onDirectUrl;
 
@@ -415,16 +442,6 @@ class _ChooseSourcePanel extends StatelessWidget {
           title: l10n.importAudioFromFile,
           onTap: onLocalFile,
         ),
-        if (showDirectory) ...[
-          const SizedBox(height: 8),
-          _ImportOptionTile(
-            key: const ValueKey('import-option-directory'),
-            icon: Icons.folder_open_outlined,
-            title: l10n.importAudioFromFolder,
-            description: l10n.importAudioFromFolderDescription,
-            onTap: onDirectory,
-          ),
-        ],
         const SizedBox(height: 8),
         _ImportOptionTile(
           key: const ValueKey('import-option-direct-url'),

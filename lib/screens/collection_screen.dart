@@ -27,6 +27,7 @@ import '../widgets/common/secondary_action_button.dart';
 import '../widgets/dialogs/confirm_dialog.dart';
 import '../widgets/dialogs/text_input_dialog.dart';
 import '../widgets/guide_flow.dart';
+import '../widgets/import_audio_sheet.dart';
 
 /// 合集排序按钮（公开供 LibraryScreen 使用）
 class CollectionSortButton extends ConsumerWidget {
@@ -165,9 +166,9 @@ class CollectionListView extends StatelessWidget {
 
 /// 显示创建合集对话框（公开供 LibraryScreen 使用）
 ///
-/// 使用统一底部 sheet：选择创建本地合集或订阅 Podcast 后，在 sheet 内完成输入。
-void showCreateCollectionDialog(BuildContext context) {
-  showModalBottomSheet<void>(
+/// 使用统一底部 sheet：新建本地合集、订阅播客或从文件夹导入。
+Future<String?> showCreateCollectionDialog(BuildContext context) {
+  return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -242,6 +243,7 @@ class _CreateCollectionFlowSheetState
         key: const ValueKey('choose-collection-type'),
         onLocal: () => _setStep(_CreateCollectionStep.local),
         onPodcast: _openPodcastSubscribe,
+        onDirectory: _openDirectoryImport,
       ),
       _CreateCollectionStep.local => _LocalCollectionPanel(
         key: const ValueKey('local-collection-form'),
@@ -268,6 +270,12 @@ class _CreateCollectionFlowSheetState
   void _openPodcastSubscribe() {
     Navigator.pop(context);
     context.push(AppRoutes.podcastSubscribe);
+  }
+
+  /// 目录选择取消或返回时保留创建菜单，完成后回传新建合集以便定位。
+  Future<void> _openDirectoryImport() async {
+    final id = await showImportAudioSheet(context, directoryOnly: true);
+    if (mounted && id != null) Navigator.pop(context, id);
   }
 
   void _submitLocalCollection() {
@@ -352,10 +360,12 @@ class _CollectionTypePanel extends StatelessWidget {
     super.key,
     required this.onLocal,
     required this.onPodcast,
+    required this.onDirectory,
   });
 
   final VoidCallback onLocal;
   final VoidCallback onPodcast;
+  final VoidCallback onDirectory;
 
   @override
   Widget build(BuildContext context) {
@@ -378,6 +388,14 @@ class _CollectionTypePanel extends StatelessWidget {
           title: l10n.subscribePodcast,
           description: l10n.subscribePodcastOptionDescription,
           onTap: onPodcast,
+        ),
+        const SizedBox(height: 12),
+        _CollectionOptionTile(
+          key: const ValueKey('collection-option-directory'),
+          icon: Icons.folder_open_outlined,
+          title: l10n.importAudioFromFolder,
+          description: l10n.importAudioFromFolderDescription,
+          onTap: onDirectory,
         ),
       ],
     );

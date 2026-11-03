@@ -171,7 +171,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       title: l10n.learningSection,
       children: [
         ListTile(
-          leading: const Icon(Icons.auto_awesome_outlined),
+          leading: _settingsMaterialIcon(Icons.auto_awesome_outlined),
           title: Text(l10n.aiServiceTitle),
           trailing: const Icon(Icons.chevron_right),
           onTap: () => context.push('/settings/ai-service'),

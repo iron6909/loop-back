@@ -1,4 +1,4 @@
-/// 目录来源：从合集入口可见，空目录保留来源页，直接子项自然排序并配对字幕。
+/// 目录来源：创建合集时直接选择，空目录可重选，直接子项自然排序并配对字幕。
 library;
 
 import 'dart:async';
@@ -49,8 +49,14 @@ void main() {
   });
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
-  Widget app({bool allowDirectory = true}) => createTestApp(
-    ImportAudioFlowSheet(allowDirectoryImport: allowDirectory),
+  Widget app({bool directoryOnly = true}) => createTestApp(
+    Builder(
+      builder: (context) => FilledButton(
+        onPressed: () =>
+            showImportAudioSheet(context, directoryOnly: directoryOnly),
+        child: const Text('Open Import'),
+      ),
+    ),
     overrides: [
       audioImportControllerProvider.overrideWith(_IdleImport.new),
       initialRemoteConfigProvider.overrideWithValue(
@@ -81,27 +87,37 @@ void main() {
     expect(find.text('Lesson 0').hitTestable(), findsNothing);
   });
 
-  testWidgets('文件夹来源仅在合集入口显示；取消后仍可重新选择', (tester) async {
+  testWidgets('普通音频导入只含文件和链接；目录选择取消后关闭且可重开', (tester) async {
     directory = null;
-    await tester.pumpWidget(app(allowDirectory: false));
+    await tester.pumpWidget(app(directoryOnly: false));
+    await tester.tap(find.text('Open Import'));
     await tester.pumpAndSettle();
     expect(find.text('Import from Folder'), findsNothing);
+    expect(find.text('Import from File'), findsOneWidget);
+    expect(find.text('Import from Link'), findsOneWidget);
     await tester.pumpWidget(app());
+    await tester.tap(find.text('Open Import'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Import from Folder'));
+    expect(calls, ['pickDirectory']);
+    expect(find.byType(ImportAudioFlowSheet), findsNothing);
+    await tester.tap(find.text('Open Import'));
     await tester.pumpAndSettle();
-    expect(find.text('Import from Folder'), findsOneWidget);
+    expect(calls, ['pickDirectory', 'pickDirectory']);
     expect(find.byType(ImportAudioSelectionList), findsNothing);
   });
 
   testWidgets('空目录不进入导入面板，错误与重选入口同时保留', (tester) async {
     directory = {'name': 'Empty', 'children': <Object?>[]};
     await tester.pumpWidget(app());
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Import from Folder'));
+    await tester.tap(find.text('Open Import'));
     await tester.pumpAndSettle();
     expect(find.text('This folder has no importable audio'), findsOneWidget);
-    expect(find.text('Import from Folder'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('import-option-directory')),
+      findsOneWidget,
+    );
+    expect(find.text('Import from File'), findsNothing);
+    expect(find.text('Import from Link'), findsNothing);
     expect(find.byType(ImportAudioSelectionList), findsNothing);
   });
 
@@ -142,8 +158,7 @@ void main() {
       ],
     };
     await tester.pumpWidget(app());
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Import from Folder'));
+    await tester.tap(find.text('Open Import'));
     await tester.pumpAndSettle();
     final list = tester.widget<ImportAudioSelectionList>(
       find.byType(ImportAudioSelectionList),

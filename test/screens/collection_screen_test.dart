@@ -3,6 +3,7 @@
 // 测试资源库页面的合集视图渲染和交互。
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/models/collection.dart';
 import 'package:echo_loop/screens/library_screen.dart';
@@ -370,6 +371,68 @@ void main() {
     });
 
     group('交互', () {
+      testWidgets('从创建菜单导入文件夹，可取消、重选和返回', (tester) async {
+        const channel = MethodChannel('top.echo-loop/local_audio_picker');
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        Object? directory;
+        var picks = 0;
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'pickDirectory') {
+            picks++;
+            return directory;
+          }
+          return null;
+        });
+        addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+        await tester.pumpWidget(createTestScreen(const LibraryScreen()));
+        await tester.pumpAndSettle();
+        expect(find.text('Import Local Collection'), findsNothing);
+        await tester.tap(find.byIcon(Icons.add).first);
+        await tester.pumpAndSettle();
+        expect(find.text('New Collection'), findsOneWidget);
+        expect(find.text('Subscribe Podcast'), findsOneWidget);
+        expect(find.text('Import from Folder'), findsOneWidget);
+        expect(find.text('Import from File'), findsNothing);
+        expect(find.text('Import from Link'), findsNothing);
+
+        await tester.tap(find.text('Import from Folder'));
+        await tester.pumpAndSettle();
+        expect(picks, 1);
+        expect(find.text('New Collection'), findsOneWidget);
+
+        directory = {'name': 'Empty', 'children': <Object?>[]};
+        await tester.tap(find.text('Import from Folder'));
+        await tester.pumpAndSettle();
+        expect(picks, 2);
+        expect(
+          find.text('This folder has no importable audio'),
+          findsOneWidget,
+        );
+        expect(find.text('Import from File'), findsNothing);
+        expect(find.text('Import from Link'), findsNothing);
+
+        directory = {
+          'name': 'Lessons',
+          'children': [
+            {
+              'uri': 'content://tree/2',
+              'name': '2.mp3',
+              'size': 2,
+              'isDirectory': false,
+            },
+          ],
+        };
+        await tester.tap(find.text('Import from Folder').last);
+        await tester.pumpAndSettle();
+        expect(picks, 3);
+        expect(find.text('2.mp3'), findsOneWidget);
+        await tester.tap(find.byTooltip('Back').last);
+        await tester.pumpAndSettle();
+        expect(find.text('New Collection'), findsOneWidget);
+      });
+
       testWidgets('点击 + 创建新合集', (tester) async {
         await tester.pumpWidget(createTestScreen(const LibraryScreen()));
         await tester.pumpAndSettle();
