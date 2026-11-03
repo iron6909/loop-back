@@ -3,6 +3,7 @@
 > 当前待办与本次完成记录；此前完成任务已归档，详见 [2026-10-29 归档](./docs/tasks-archive/tasks-2026-10-29-completed.md)、[2026-09-29 归档](./docs/tasks-archive/tasks-2026-09-29-completed.md)。
 
 ## 本次完成
+- [x] Android 真机验收（vivo V2055A / Android 14，安装 `app-dev-debug.apk` 205 MB）：SAF 目录入库 2 项+1 字幕配对+子目录/非音频跳过；缺字幕本机模型门控（~90.6 MB）→ 真实 whisper 转录写库（`transcript_source=2`）；AI 服务页未配置/DeepSeek 预设无 `/v1`/非法 URL 拒绝/自定义端点原样保存/Test 鉴权失败文案均符合预期。历史社区缺媒体项无法构造（无历史社区数据且无 root），由自动化覆盖；无崩溃与 Flutter 异常。Maestro 不可用，改用 adb + uiautomator 等价操作。**完成时间**: 2026-11-03
 - [x] 收集本地化最终代码验证（代码 `5e0dbb6e`）：Android dev arm64 debug APK 构建成功；全量测试 `+5596 ~9 -26`，26 项均核实为已排除的 Windows/其他平台基线（路径分隔符、文件占用 errno 32、touch/bash/macOS runner），不称全量全绿。共享 lib/test 分析 0 error，38 条既有 warning/info；全项目另有未改动 macOS Kokoro 集成测试 3 error。真机验收因无设备、无 Maestro 仍未完成；未运行含 macOS 步骤的 `scripts/check.sh`，已分别执行相关检查。**记录时间**: 2026-11-03
 - [x] 修复聊天真实传输异常映射：建立连接与字节流内的 Dio 超时、网络和取消统一转为供应商错误，保留此前正文。4 条传输回归修复前失败、修复后通过；新增真实 Dio → controller → 气泡超时回归，相关 52 项通过，定向分析无问题。**完成时间**: 2026-11-02
 - [x] 同步本地化分支说明：中英文 README 增加供应商配置、Key 备份边界与本机英语转录说明，替换旧会员额度、网盘来源和云端字幕描述；PLAN.md 标记支付已停用与 Android 真机验收待完成。**完成时间**: 2026-11-02
