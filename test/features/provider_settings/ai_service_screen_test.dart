@@ -1,6 +1,10 @@
 /// AI 服务页的完整配置流程：先选供应商，再填 Key；自定义配置不丢失。
 library;
 
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
 import 'package:echo_loop/features/provider_settings/screens/ai_service_screen.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/providers/provider_configuration_provider.dart';
@@ -59,11 +63,53 @@ void main() {
     await tester.pump();
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text('synthetic-ui-key'), findsNothing);
-    fixture.adapter.completion({'translation': 'ok'});
+    final reply = Completer<ResponseBody>();
+    fixture.adapter.replies.add((_) => reply.future);
     await tester.ensureVisible(find.text('Test'));
     await tester.tap(find.text('Test'));
+    await tester.pump();
+    expect(find.text('Not tested'), findsNothing);
+    final testingRow = tester.widget<ListTile>(
+      find.widgetWithText(ListTile, 'Connection test'),
+    );
+    expect(testingRow.trailing, isA<FilledButton>());
+    final testButton = testingRow.trailing;
+    if (testButton is FilledButton) expect(testButton.onPressed, isNull);
+    expect(
+      find.descendant(
+        of: find.widgetWithText(ListTile, 'Connection test'),
+        matching: find.text('Testing…'),
+      ),
+      findsNWidgets(2),
+    );
+    reply.complete(
+      ResponseBody.fromString(
+        jsonEncode({
+          'choices': [
+            {'finish_reason': 'stop', 'message': {'content': 'OK'}},
+          ],
+        }),
+        200,
+        headers: {Headers.contentTypeHeader: [Headers.jsonContentType]},
+      ),
+    );
     await tester.pumpAndSettle();
-    expect(find.text('Connection OK'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.widgetWithText(ListTile, 'Connection test'),
+        matching: find.text('Connection OK'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Not tested'), findsNothing);
+    fixture.adapter.json({
+      'balance_infos': [
+        {'currency': 'CNY', 'total_balance': '3'},
+      ],
+    });
+    await edit(tester, 'Model', 'another-model');
+    expect(find.text('Connection OK'), findsNothing);
+    expect(find.text('Not tested'), findsOneWidget);
     await edit(tester, 'API key', '');
     expect(
       await fixture.container.read(providerConfigurationProvider.future),
@@ -99,6 +145,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SnackBar), findsNothing);
     expect(find.text('API key is invalid or unauthorized'), findsOneWidget);
+    expect(find.text('Not tested'), findsNothing);
   });
 
   testWidgets('自定义地址和模型分步保存；无 Key 时不发请求', (tester) async {

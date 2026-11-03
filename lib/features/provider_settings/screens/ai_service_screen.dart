@@ -75,20 +75,6 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
             ),
           const SizedBox(height: AppSpacing.m),
           _fields(l10n, config, runtime != null),
-          if (_result case final result?)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.s),
-              child: Semantics(
-                liveRegion: true,
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline),
-                    const SizedBox(width: AppSpacing.s),
-                    Expanded(child: Text(result)),
-                  ],
-                ),
-              ),
-            ),
           const SizedBox(height: AppSpacing.m),
           Card(
             child: ListTile(
@@ -129,8 +115,26 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
           ),
           ListTile(
             title: Text(l10n.aiServiceConnectionTest),
-            subtitle: Text(
-              !hasKey ? l10n.aiServiceKeyNotSet : l10n.aiServiceUntested,
+            subtitle: Semantics(
+              liveRegion: true,
+              child: Row(
+                children: [
+                  if (_result != null) ...[
+                    const Icon(Icons.info_outline, size: 18),
+                    const SizedBox(width: AppSpacing.s),
+                  ],
+                  Flexible(
+                    child: Text(
+                      _testing
+                          ? l10n.aiServiceTesting
+                          : _result ??
+                                (!hasKey
+                                    ? l10n.aiServiceKeyNotSet
+                                    : l10n.aiServiceUntested),
+                    ),
+                  ),
+                ],
+              ),
             ),
             trailing: FilledButton.tonal(
               onPressed: !hasKey || _testing || _saving ? null : _test,

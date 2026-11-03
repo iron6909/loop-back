@@ -14,6 +14,9 @@ import 'provider_config.dart';
 
 /// 供应商失败的领域分类，UI 据此给出可操作提示。
 enum ProviderErrorKind {
+  /// 400/422：供应商拒绝请求参数或输出格式。
+  invalidRequest,
+
   /// 401：Key 无效或未授权。
   unauthorized,
 
@@ -162,6 +165,7 @@ class ProviderHttpClient {
   }
 
   ProviderErrorKind _mapStatus(int status) => switch (status) {
+    400 || 422 => ProviderErrorKind.invalidRequest,
     401 => ProviderErrorKind.unauthorized,
     402 => ProviderErrorKind.insufficientBalance,
     404 => ProviderErrorKind.notFound,

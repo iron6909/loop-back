@@ -140,7 +140,10 @@ class StructuredAiClient {
     CancelToken token,
     int generation,
   ) async* {
-    var mode = OutputMode.jsonSchema;
+    // DeepSeek 的 response_format 仅支持 JSON 对象，不能发送严格 Schema。
+    var mode = _config.kind == ProviderKind.deepseek
+        ? OutputMode.jsonObject
+        : OutputMode.jsonSchema;
     while (true) {
       final Map<String, dynamic> envelope;
       try {
@@ -289,7 +292,13 @@ class StructuredAiClient {
     return {
       'model': _config.model,
       'messages': [
-        {'role': 'system', 'content': prompt.system},
+        {
+          'role': 'system',
+          // JSON 对象模式没有独立 Schema 参数，字段约束必须随指令发送。
+          'content': mode == OutputMode.jsonObject
+              ? '${prompt.system}\n输出结构定义：${jsonEncode(prompt.jsonSchema['json_schema'])}'
+              : prompt.system,
+        },
         {
           'role': 'user',
           'content': buildUserContent(

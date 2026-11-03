@@ -217,6 +217,11 @@ void main() {
       fail('应当抛出 ProviderHttpException');
     }
 
+    test('400 与 422 为请求被拒绝，不误报网络错误', () async {
+      expect((await kindFor(400)).name, 'invalidRequest');
+      expect((await kindFor(422)).name, 'invalidRequest');
+    });
+
     test('401 归为鉴权失败', () async {
       expect(await kindFor(401), ProviderErrorKind.unauthorized);
     });

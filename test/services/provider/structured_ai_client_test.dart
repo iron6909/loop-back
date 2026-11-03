@@ -139,7 +139,7 @@ void main() {
       expect(cacheWrites.first['type'], isNot(cacheWrites.last['type']));
     });
 
-    test('DeepSeek 请求关闭思考并带严格 Schema', () async {
+    test('DeepSeek 使用受支持的 JSON 输出且关闭思考', () async {
       adapter.enqueueChat({'translation': 'a'});
       await buildClient()
           .stream<SentenceTranslation>(
@@ -151,9 +151,50 @@ void main() {
       final body = adapter.requests.single.data as Map<String, Object?>;
       expect(body['thinking'], {'type': 'disabled'});
       final format = body['response_format'] as Map<String, Object?>;
-      expect(format['type'], 'json_schema');
-      final schema = format['json_schema'] as Map<String, Object?>;
-      expect(schema['strict'], isTrue);
+      expect(format, {'type': 'json_object'});
+      expect(body['messages'], isA<List<Object?>>());
+      final messages = body['messages'];
+      if (messages case [
+        {'role': 'system', 'content': final String system},
+        ...,
+      ]) {
+        expect(system, contains('"translation"'));
+        expect(system, contains('"required"'));
+      } else {
+        fail('缺少系统消息中的结构定义');
+      }
+    });
+
+    test('DeepSeek 解析明确区分词汇 term 与听力 phrase', () async {
+      adapter.enqueueChat({
+        'grammar': [
+          {'point': '现在时', 'note': '描述事实'},
+        ],
+        'vocabulary': [
+          {'term': 'test', 'note': '测试'},
+        ],
+        'listening': [
+          {'phrase': 'This is', 'note': '连读'},
+        ],
+      });
+      await buildClient().stream(
+        request: const StructuredAiRequest(
+          feature: StructuredFeature.analysis,
+          text: 'This is a test.',
+        ),
+        validate: validateAnalysis,
+      ).toList();
+      if (adapter.requests.single.data case {
+        'messages': [
+          {'role': 'system', 'content': final String system},
+          ...,
+        ],
+      }) {
+        expect(system, contains('"vocabulary":[{"term":'));
+        expect(system, contains('"listening":[{"phrase":'));
+      } else {
+        fail('解析请求缺少完整输出示例');
+      }
     });
 
     test('OpenRouter 请求要求模型真正支持参数', () async {
@@ -170,11 +211,54 @@ void main() {
 
       final body = adapter.requests.single.data as Map<String, Object?>;
       expect(body['provider'], {'require_parameters': true});
+      expect(body['response_format'], {
+        'type': 'json_schema',
+        'json_schema': {
+          'name': 'sentence_translation',
+          'strict': true,
+          'schema': {
+            'type': 'object',
+            'additionalProperties': false,
+            'required': ['translation'],
+            'properties': {
+              'translation': {'type': 'string', 'description': '目标语言译文，单句'},
+            },
+          },
+        },
+      });
       expect(body.containsKey('thinking'), isFalse);
     });
   });
 
   group('失败不写缓存', () {
+    test('听力项返回 term 而非 phrase 时拒绝且不缓存', () async {
+      adapter.enqueueChat({
+        'grammar': [
+          {'point': '现在时', 'note': '描述事实'},
+        ],
+        'vocabulary': <Object?>[],
+        'listening': [
+          {'term': 'This is', 'note': '连读'},
+        ],
+      });
+      await expectLater(
+        buildClient().stream(
+          request: const StructuredAiRequest(
+            feature: StructuredFeature.analysis,
+            text: 'This is a test.',
+          ),
+          validate: validateAnalysis,
+        ).toList(),
+        throwsA(isA<StructuredValidationException>().having(
+          (error) => error.reason,
+          'reason',
+          ValidationFailureReason.missingField,
+        )),
+      );
+      expect(adapter.requests, hasLength(1));
+      expect(cacheWrites, isEmpty);
+    });
+
     Future<ValidationFailureReason> reasonFor(
       Object content, {
       StructuredAiRequest? request,
@@ -231,7 +315,7 @@ void main() {
       }, status: 400);
       adapter.enqueueChat({'translation': 'ok'});
 
-      final frames = await buildClient()
+      final frames = await buildClient(kind: ProviderKind.custom)
           .stream<SentenceTranslation>(
             request: translationRequest(),
             validate: validateTranslation,
@@ -241,6 +325,14 @@ void main() {
       expect(adapter.requests.length, 2);
       final fallback = adapter.requests.last.data as Map<String, Object?>;
       expect(fallback['response_format'], {'type': 'json_object'});
+      if (fallback['messages'] case [
+        {'role': 'system', 'content': final String system},
+        ...,
+      ]) {
+        expect(system, contains('"translation"'));
+      } else {
+        fail('兼容模式缺少输出字段定义');
+      }
       expect(frames.single.value.translation, 'ok');
     });
 
@@ -253,7 +345,7 @@ void main() {
       }, status: 400);
 
       await expectLater(
-        buildClient()
+        buildClient(kind: ProviderKind.custom)
             .stream<SentenceTranslation>(
               request: translationRequest(),
               validate: validateTranslation,

@@ -17,6 +17,7 @@ String providerErrorText(BuildContext context, Object error) {
 
 String providerErrorCodeText(String? code, bool zh) => switch (code) {
   'not_configured' => zh ? '请先在设置 → AI 服务配置供应商' : 'Configure AI service in Settings first',
+  'invalidRequest' => zh ? '供应商不接受当前请求，请检查模型或接口兼容性' : 'Provider rejected the request. Check model or API compatibility',
   'unauthorized' => zh ? 'API Key 无效或未授权，请检查供应商设置' : 'API key is invalid or unauthorized',
   'insufficientBalance' => zh ? '供应商余额或套餐不足' : 'Provider balance or plan is insufficient',
   'notFound' => zh ? '供应商地址或模型不存在' : 'Provider address or model was not found',
