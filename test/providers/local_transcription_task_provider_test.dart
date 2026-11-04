@@ -217,12 +217,12 @@ void main() {
       await _seedRow(database, item);
       final engine = _FakeEngine([
         const AsrSegment(
-          text: 'Hello world',
+          text: 'Hello world.',
           start: Duration(milliseconds: 200),
           end: Duration(milliseconds: 900),
         ),
         const AsrSegment(
-          text: 'Second line',
+          text: 'Second line.',
           start: Duration(milliseconds: 1000),
           end: Duration(milliseconds: 1800),
         ),
@@ -246,7 +246,7 @@ void main() {
       final notifier = container.read(
         localTranscriptionTaskManagerProvider.notifier,
       );
-      // 关闭合并以验证原始分段流水线（两段各自成句）。
+      // 关闭短句合并，验证两个完整句子分别入库。
       await notifier.startLocalTranscription(
         item,
         model: model,
@@ -503,6 +503,57 @@ void main() {
       expect(container.read(localTranscriptionTaskManagerProvider), isEmpty);
     });
 
+    for (final autoMerge in [false, true]) {
+      test('模型将长句切成多段时，入库保持完整句子（合并短句=$autoMerge）', () async {
+        final item = _testAudioItem();
+        await _seedRow(database, item);
+        final engine = _FakeEngine(const [
+          AsrSegment(
+            text:
+                'Americans angry over high prices are deciding whether to shift power',
+            start: Duration(milliseconds: 200),
+            end: Duration(milliseconds: 6500),
+          ),
+          AsrSegment(
+            text: 'in Washington.',
+            start: Duration(milliseconds: 6500),
+            end: Duration(milliseconds: 7800),
+          ),
+          AsrSegment(
+            text: 'The next sentence stays separate.',
+            start: Duration(seconds: 8),
+            end: Duration(seconds: 10),
+          ),
+        ]);
+        final container = buildContainer(
+          engine: engine,
+          transcode: _FakeTranscode(),
+          items: [item],
+        );
+        addTearDown(container.dispose);
+        await container
+            .read(localTranscriptionTaskManagerProvider.notifier)
+            .startLocalTranscription(
+              item,
+              model: model,
+              autoMergeShortSentences: autoMerge,
+            );
+
+        final srt = await database.audioItemDao.getTranscriptSrt(item.id);
+        expect(
+          srt,
+          contains(
+            '00:00:00,200 --> 00:00:07,800\n'
+            'Americans angry over high prices are deciding whether to shift power in Washington.',
+          ),
+        );
+        expect(srt, contains('The next sentence stays separate.'));
+        final updated = container.read(audioLibraryProvider).audioItems.single;
+        expect(updated.sentenceCount, 2);
+        expect(updated.wordCount, 18);
+      });
+    }
+
     test('autoMerge 开启：相邻短段合并为一句写库', () async {
       final item = _testAudioItem();
       await _seedRow(database, item);
@@ -547,6 +598,62 @@ void main() {
           .audioItems
           .singleWhere((i) => i.id == item.id);
       expect(updated.sentenceCount, 1);
+    });
+  });
+
+  group('restoreAsrSentences', () {
+    AsrSegment segment(String text, int start, int end) => AsrSegment(
+      text: text,
+      start: Duration(milliseconds: start),
+      end: Duration(milliseconds: end),
+    );
+
+    test('跨片段长句接回句末，同片段的下一句不随之合入，末尾残句不丢', () {
+      final result = restoreAsrSentences([
+        segment('The story continues across', 0, 5000),
+        segment(
+          'two windows. Next question? Tail without punctuation',
+          5000,
+          10000,
+        ),
+      ]);
+      expect(result.map((sentence) => sentence.text), [
+        'The story continues across two windows.',
+        'Next question?',
+        'Tail without punctuation',
+      ]);
+      expect(result.first.start, Duration.zero);
+      expect(result.last.end, const Duration(seconds: 10));
+      for (var index = 1; index < result.length; index++) {
+        expect(
+          result[index].start,
+          greaterThanOrEqualTo(result[index - 1].end),
+        );
+      }
+    });
+
+    test('小数、网址和称谓不拆句，引号后的句末能识别且全部文字守恒', () {
+      const text = 'Dr. Brown paid 3.14 at example.com. “Really?!” Yes.';
+      final result = restoreAsrSentences([segment(text, 1000, 9000)]);
+      expect(result.map((sentence) => sentence.text), [
+        'Dr. Brown paid 3.14 at example.com.',
+        '“Really?!”',
+        'Yes.',
+      ]);
+      expect(result.map((sentence) => sentence.text).join(' '), text);
+      expect(result.first.start, const Duration(seconds: 1));
+      expect(result.last.end, const Duration(seconds: 9));
+    });
+
+    test('空片段跳过，整段没有标点的长文本保留全部词语', () {
+      final words = List.generate(120, (index) => 'word$index').join(' ');
+      final result = restoreAsrSentences([
+        segment('', 0, 0),
+        segment(words, 0, 60000),
+        segment('  ', 60000, 61000),
+      ]);
+      expect(result.single.text, words);
+      expect(result.single.end, const Duration(minutes: 1));
     });
   });
 
