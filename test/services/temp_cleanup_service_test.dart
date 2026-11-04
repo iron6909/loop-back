@@ -62,6 +62,25 @@ void main() {
     }
   });
 
+  test('清理旧社区下载半成品时保留已下载媒体和其它临时文件', () async {
+    final unfinished = File(
+      '${fakeAppDataDir.path}/tmp/community_media/download.part',
+    );
+    await unfinished.parent.create(recursive: true);
+    await unfinished.writeAsString('partial');
+    final media = File('${fakeAppDataDir.path}/audio.m4a');
+    await media.writeAsString('downloaded');
+    final other = File('${fakeAppDataDir.path}/tmp/keep.tmp');
+    await other.writeAsString('keep');
+
+    await cleanupCommunityDownloadTmp();
+    await cleanupCommunityDownloadTmp();
+
+    expect(await unfinished.parent.exists(), isFalse);
+    expect(await media.readAsString(), 'downloaded');
+    expect(await other.readAsString(), 'keep');
+  });
+
   group('cleanupRecordingTempFiles', () {
     test('删除 tmp/ 中的旧文件', () async {
       final oldFile = File('${fakeTmpDir.path}/old.caf');
@@ -201,7 +220,6 @@ void main() {
       expect(imageCacheDir.existsSync(), true);
       expect(otherCache.existsSync(), true);
     });
-
   });
 
   group('cleanupStalePdfExportTemp', () {
@@ -250,5 +268,4 @@ void main() {
       expect(cacheDbFile.existsSync(), true);
     });
   });
-
 }

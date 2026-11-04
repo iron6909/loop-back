@@ -2,14 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>com.apple.developer.applesignin</key>
-	<array>
-		<string>Default</string>
-	</array>
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:echo-loop.top</string>
-		<string>applinks:www.echo-loop.top</string>
-	</array>
+	<!-- 登录与关联域名已停用；保留空文件以维持工程中的签名配置引用。 -->
 </dict>
 </plist>

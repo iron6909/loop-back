@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/podcast/podcast_repository.dart';
 import 'package:echo_loop/features/podcast/podcast_feed_parser.dart';
 import 'package:echo_loop/features/podcast/podcast_models.dart';
@@ -202,7 +201,7 @@ void main() {
   });
 
   group('PodcastPreviewScreen', () {
-    testWidgets('未登录可从预览页订阅，不读取认证状态', (tester) async {
+    testWidgets('无需登录即可从预览页订阅', (tester) async {
       final repository = _SubscribeRepository();
       await tester.pumpWidget(
         createTestApp(
@@ -213,9 +212,6 @@ void main() {
             ),
           ),
           overrides: [
-            isAuthenticatedProvider.overrideWith((ref) {
-              fail('预览订阅不应读取认证状态');
-            }),
             podcastRepositoryProvider.overrideWithValue(repository),
             podcastPreviewProvider(
               _feedUrl,

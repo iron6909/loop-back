@@ -23,7 +23,6 @@ import '../database/providers.dart';
 import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
     show sharedPreferencesProvider;
 import '../features/user_region/user_region_providers.dart';
-import '../features/community_collections/download/community_download_notifier.dart';
 import '../firebase_options.dart';
 import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
@@ -59,20 +58,6 @@ class StartupReport {
   bool get isDegraded => issues.isNotEmpty;
 }
 
-/// 第三方 SDK 初始化完成后的可用性快照。
-class ThirdPartyStartupReport extends StartupReport {
-  const ThirdPartyStartupReport({
-    required List<StartupIssue> issues,
-    required this.isSupabaseReady,
-    required this.isRevenueCatReady,
-  }) : super(issues);
-
-  final bool isSupabaseReady;
-
-  /// 仅在本进程的 Purchases.configure 真正成功后为 true。
-  final bool isRevenueCatReady;
-}
-
 /// 演示库模式由 main 在真实进程中覆盖；测试默认生产库语义。
 final startupDemoModeProvider = Provider<bool>((ref) => false);
 
@@ -86,11 +71,6 @@ final startupBootstrapperProvider = Provider<StartupBootstrapper>((ref) {
   );
 });
 
-/// 登录服务已停用，历史入口只能得到未配置状态。
-final supabaseUrlForThisRunProvider = FutureProvider<String?>(
-  (ref) async => null,
-);
-
 /// 本地数据初始化状态。首次构建先等待首帧，再运行关键本地初始化。
 final localStartupProvider =
     AsyncNotifierProvider<LocalStartupController, StartupReport>(
@@ -98,15 +78,11 @@ final localStartupProvider =
     );
 
 /// 非核心 SDK 初始化依赖本地数据成功，但其自身失败不会令 Future 悬挂。
-final thirdPartyStartupProvider = FutureProvider<ThirdPartyStartupReport>((
-  ref,
-) async {
+final thirdPartyStartupProvider = FutureProvider<StartupReport>((ref) async {
   final localStartup = ref.watch(localStartupProvider.future);
   final userRegionBootstrap = ref.watch(userRegionBootstrapProvider.future);
   await Future.wait([localStartup, userRegionBootstrap]);
-  return ref
-      .read(startupBootstrapperProvider)
-      .initializeThirdParty(supabaseUrl: null);
+  return ref.read(startupBootstrapperProvider).initializeThirdParty();
 });
 
 class LocalStartupController extends AsyncNotifier<StartupReport> {
@@ -153,9 +129,7 @@ class LocalStartupController extends AsyncNotifier<StartupReport> {
 abstract class StartupBootstrapper {
   Future<StartupReport> initializeLocal();
 
-  Future<ThirdPartyStartupReport> initializeThirdParty({
-    required String? supabaseUrl,
-  });
+  Future<StartupReport> initializeThirdParty();
 }
 
 /// 生产启动副作用编排器。关键本地步骤抛错，可降级步骤收集为报告。
@@ -203,9 +177,7 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
 
   /// 执行不会阻断本地学习的 SDK 与维护任务，并保证正常结束。
   @override
-  Future<ThirdPartyStartupReport> initializeThirdParty({
-    required String? supabaseUrl,
-  }) async {
+  Future<StartupReport> initializeThirdParty() async {
     final issues = <StartupIssue>[];
     await _runBestEffort(
       issues,
@@ -251,17 +223,9 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
     _scheduleMaintenance();
     activeStartupTrace?.mark(
       'third_party_services_ready',
-      fields: {
-        'issueCount': issues.length,
-        'supabaseReady': false,
-        'revenueCatReady': false,
-      },
+      fields: {'issueCount': issues.length},
     );
-    return ThirdPartyStartupReport(
-      issues: List<StartupIssue>.unmodifiable(issues),
-      isSupabaseReady: false,
-      isRevenueCatReady: false,
-    );
+    return StartupReport(List<StartupIssue>.unmodifiable(issues));
   }
 
   Future<void> _configurePersistentLogs(List<StartupIssue> issues) async {

@@ -16,15 +16,12 @@ enum ClientDistribution {
   final String headerValue;
 }
 
-/// 客户端本地选择的支付实现类型。
-enum ClientPaymentChannel { appleStore, googlePlay, web, unavailable }
-
 /// 编译期注入的原始分发渠道。
 const rawDistributionChannel = String.fromEnvironment('DISTRIBUTION_CHANNEL');
 
 /// 解析分发渠道，并兼容旧构建值 `apk` / `desktop`。
 ///
-/// 未注入或非法值返回 null，使本地支付入口保守隐藏、后端请求省略渠道 header。
+/// 未注入或非法值返回 null，由评分入口与设备诊断使用各自的默认行为。
 @visibleForTesting
 ClientDistribution? parseClientDistribution(String rawValue) {
   switch (rawValue.trim().toLowerCase()) {
@@ -54,35 +51,3 @@ String clientPlatformName() {
   if (Platform.isWindows) return 'windows';
   return '';
 }
-
-/// 判断平台与渠道是否属于正式支持的组合。
-@visibleForTesting
-bool isValidClientIdentity(String platform, ClientDistribution distribution) {
-  return switch ((platform, distribution)) {
-    ('android', ClientDistribution.play || ClientDistribution.direct) => true,
-    ('ios', ClientDistribution.appStore) => true,
-    ('macos', ClientDistribution.appStore || ClientDistribution.direct) => true,
-    ('windows', ClientDistribution.direct) => true,
-    _ => false,
-  };
-}
-
-/// 根据平台与渠道选择支付实现；非法组合一律不可用。
-@visibleForTesting
-ClientPaymentChannel paymentChannelForIdentity(
-  String platform,
-  ClientDistribution? distribution,
-) {
-  if (distribution == null || !isValidClientIdentity(platform, distribution)) {
-    return ClientPaymentChannel.unavailable;
-  }
-  return switch (distribution) {
-    ClientDistribution.appStore => ClientPaymentChannel.appleStore,
-    ClientDistribution.play => ClientPaymentChannel.googlePlay,
-    ClientDistribution.direct => ClientPaymentChannel.web,
-  };
-}
-
-/// 当前构建应使用的支付实现。
-ClientPaymentChannel get clientPaymentChannel =>
-    paymentChannelForIdentity(clientPlatformName(), clientDistribution);

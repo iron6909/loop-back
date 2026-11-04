@@ -1,7 +1,4 @@
 import 'package:echo_loop/config/regional_service_endpoints.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_plans_provider.dart';
 import 'package:echo_loop/features/remote_config/remote_config.dart';
 import 'package:echo_loop/features/remote_config/remote_config_providers.dart';
 import 'package:echo_loop/features/user_region/user_region_providers.dart';
@@ -43,7 +40,6 @@ void main() {
   ) async {
     var systemCountryCode = 'CN';
     final router = RuntimeEndpointRouter(endpoints: _endpoints);
-    final stoppedReads = <String>[];
 
     await pumpFullApp(
       tester,
@@ -51,18 +47,6 @@ void main() {
         remoteConfigProvider.overrideWith(
           (ref) => _NoRefreshRemoteConfigController(),
         ),
-        supabaseSessionProvider.overrideWith((ref) {
-          stoppedReads.add('auth');
-          throw StateError('已停用');
-        }),
-        subscriptionControllerProvider.overrideWith(() {
-          stoppedReads.add('entitlements');
-          throw StateError('已停用');
-        }),
-        subscriptionPlansProvider.overrideWith(() {
-          stoppedReads.add('plans');
-          throw StateError('已停用');
-        }),
         userRegionDeviceCountryCodeProvider.overrideWithValue(
           () => systemCountryCode,
         ),
@@ -79,7 +63,6 @@ void main() {
     expect(router.apiRegion, ServiceEndpointRegion.china);
     expect(router.apiBaseUrl, _endpoints.chinaApiBaseUrl);
     expect(tester.takeException(), isNull);
-    expect(stoppedReads, isEmpty);
 
     // 清理测试应用首帧后安排的延迟任务。
     await tester.pump(const Duration(seconds: 6));

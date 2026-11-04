@@ -77,6 +77,8 @@ void main() {
     var databaseClosed = false;
 
     setUp(() async {
+      // 每个用例都新建数据库，关闭标记必须同时重置，避免后续用例泄漏句柄。
+      databaseClosed = false;
       AppLogger.instance.clear();
       root = await Directory.systemTemp.createTemp('backup_service_test_');
       dataDir = Directory(p.join(root.path, 'data'))

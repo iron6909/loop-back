@@ -8,11 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import '../features/community_collections/models/community_asset_url.dart';
 import '../features/community_collections/providers/community_enrollment_provider.dart';
 import '../features/community_collections/widgets/community_badge.dart';
 import '../features/podcast/podcast_info_sheet.dart';
-import '../features/user_region/user_region_providers.dart';
 import '../models/collection.dart';
 import '../providers/collection_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -570,7 +568,6 @@ class _CollectionListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final collectionState = ref.watch(collectionListProvider);
-    final isChinaUser = ref.watch(isChinaUserProvider);
     final theme = Theme.of(context);
     final pinnedHighlightColor = theme.colorScheme.primary.withValues(
       alpha: 0.06,
@@ -592,7 +589,7 @@ class _CollectionListTile extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      _buildLeadingIcon(theme, isChinaUser),
+                      _buildLeadingIcon(theme),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -717,19 +714,10 @@ class _CollectionListTile extends ConsumerWidget {
     context.push(AppRoutes.collectionDetail(collection.id));
   }
 
-  /// 左侧 leading（尺寸 / 样式与 Discover 卡片完全一致）：
-  /// - 社区合集且有 coverUrl：网络封面图（BoxFit.contain）
-  /// - Podcast 合集且有 coverUrl：网络封面图（BoxFit.cover）
-  /// - 其它情况：渐变背景 + 合集名首字母或 Podcast 图标
-  Widget _buildLeadingIcon(ThemeData theme, bool isChinaUser) {
+  /// 历史社区合集使用本地占位，避免浏览资源库时请求已停用的远端封面。
+  Widget _buildLeadingIcon(ThemeData theme) {
     const size = 56.0;
-    final coverUrl = collection.isCommunity
-        ? communityAssetUrlForRegion(
-            globalUrl: collection.coverUrl,
-            chinaUrl: collection.coverUrlChina,
-            isChinaUser: isChinaUser,
-          )
-        : collection.coverUrl;
+    final coverUrl = collection.coverUrl;
 
     // podcast 合集：有封面显示封面图，否则用 podcast 图标。
     final Widget icon;
@@ -754,23 +742,7 @@ class _CollectionListTile extends ConsumerWidget {
         icon = _podcastIconPlaceholder(theme, size);
       }
     } else {
-      icon = (collection.isCommunity && coverUrl != null && coverUrl.isNotEmpty)
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: coverUrl,
-                cacheManager: AppNetworkImageCache.instance,
-                width: size,
-                height: size,
-                fit: BoxFit.contain,
-                // 缓存命中时立即显示，去掉默认 500ms 淡入造成的延迟感
-                fadeInDuration: Duration.zero,
-                placeholderFadeInDuration: Duration.zero,
-                placeholder: (_, __) => _letterPlaceholder(theme, size),
-                errorWidget: (_, __, ___) => _letterPlaceholder(theme, size),
-              ),
-            )
-          : _letterPlaceholder(theme, size);
+      icon = _letterPlaceholder(theme, size);
     }
 
     return icon;

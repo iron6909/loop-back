@@ -33,15 +33,12 @@ import 'providers/retell_prefs_provider.dart';
 import 'providers/difficult_practice_prefs_provider.dart';
 import 'providers/new_user_guide_provider.dart';
 import 'services/app_logger.dart';
-import 'services/app_deep_link_router.dart';
-import 'services/app_window_service.dart';
 import 'services/startup_trace.dart';
 import 'services/app_update_migration.dart';
 import 'services/media_kit_debug_initializer.dart';
 import 'services/user_id_service.dart';
 import 'widgets/app_notice_presenter.dart';
 import 'widgets/app_startup_gate.dart';
-import 'features/community_collections/download/community_download_notifier.dart';
 import 'features/onboarding_survey/data/onboarding_survey_storage.dart';
 import 'features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'features/user_region/user_region_providers.dart';
@@ -53,8 +50,6 @@ void main() async {
   startupTrace.mark('dart_main_enter');
   WidgetsFlutterBinding.ensureInitialized();
   startupTrace.mark('flutter_binding_ready');
-  final appWindowActivator = WindowManagerAppWindowActivator();
-  await appWindowActivator.initialize();
   startupTrace.runSync('timeago_initialize', initTimeago);
 
   final packageInfo = await startupTrace.run(
@@ -178,7 +173,7 @@ void main() async {
           ),
           startupDemoModeProvider.overrideWithValue(isDemoMode),
         ],
-        child: EchoLoopApp(windowActivator: appWindowActivator),
+        child: const EchoLoopApp(),
       ),
     ),
   );
@@ -202,9 +197,7 @@ Future<void> _registerAnonymousIdWhenReady(
 }
 
 class EchoLoopApp extends ConsumerStatefulWidget {
-  const EchoLoopApp({super.key, this.windowActivator});
-
-  final AppWindowActivator? windowActivator;
+  const EchoLoopApp({super.key});
 
   @override
   ConsumerState<EchoLoopApp> createState() => _EchoLoopAppState();
@@ -216,7 +209,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
   ProviderSubscription<AsyncValue<StartupReport>>? _localStartupSubscription;
   ProviderSubscription<AsyncValue<UserRegionBootstrapResult>>?
   _userRegionStartupSubscription;
-  AppDeepLinkRouter? _appDeepLinkRouter;
   late final ShowcaseView _showcase;
   bool _hasLoggedRouterCreated = false;
   bool _didStartLocalEffects = false;
@@ -246,16 +238,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     ref.read(thirdPartyStartupProvider);
 
     WidgetsBinding.instance.addObserver(this);
-    final windowActivator =
-        widget.windowActivator ?? WindowManagerAppWindowActivator();
-
-    final appDeepLinkRouter = AppDeepLinkRouter.forCurrentPlatform(
-      routes: const [],
-      beforeDispatch: windowActivator.activate,
-    );
-    _appDeepLinkRouter = appDeepLinkRouter;
-    unawaited(appDeepLinkRouter.start());
-
     // 新手引导 showcase 控制器全局注册（替代旧的 ShowCaseWidget InheritedWidget）。
     // 整段 tour 走完或被 dismiss 时，通过 GuideShowcaseBus 触发 controller 的
     // completeActiveFlow 标记已看并清空 active。
@@ -307,11 +289,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _intentSubscription?.cancel();
-    final appDeepLinkRouter = _appDeepLinkRouter;
-    _appDeepLinkRouter = null;
-    if (appDeepLinkRouter != null) {
-      unawaited(appDeepLinkRouter.dispose());
-    }
     _localStartupSubscription?.close();
     _userRegionStartupSubscription?.close();
     _showcase.unregister();
@@ -384,7 +361,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
       builder: (context, child) => AppStartupGate(
         child: AppNoticePresenter(child: child ?? const SizedBox.shrink()),
       ),
-      scaffoldMessengerKey: communityDownloadScaffoldMessengerKey,
     );
   }
 }

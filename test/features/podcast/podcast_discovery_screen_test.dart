@@ -1,4 +1,3 @@
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/podcast/data/featured_podcast_service.dart';
 import 'package:echo_loop/features/podcast/models/featured_podcast.dart';
 import 'package:echo_loop/features/podcast/podcast_preview_provider.dart';
@@ -165,7 +164,6 @@ void main() {
         const PodcastDiscoveryScreen(),
         overrides: [
           featuredPodcastServiceProvider.overrideWithValue(service),
-          isAuthenticatedProvider.overrideWithValue(true),
           podcastRepositoryProvider.overrideWithValue(fakeRepo),
         ],
       ),
@@ -222,7 +220,7 @@ void main() {
     expect(badgeRect.bottom, lessThan(checkRect.top));
   });
 
-  testWidgets('未登录可订阅精选 Podcast，不读取认证状态', (tester) async {
+  testWidgets('无需登录即可订阅精选 Podcast', (tester) async {
     final fakeRepo = _FakePodcastRepository();
     final service = _serviceWithPodcasts([_featuredPodcast()]);
     await tester.pumpWidget(
@@ -230,9 +228,6 @@ void main() {
         const PodcastDiscoveryScreen(),
         overrides: [
           featuredPodcastServiceProvider.overrideWithValue(service),
-          isAuthenticatedProvider.overrideWith((ref) {
-            fail('播客订阅不应读取认证状态');
-          }),
           podcastRepositoryProvider.overrideWithValue(fakeRepo),
         ],
       ),
@@ -320,7 +315,7 @@ void main() {
     expect(find.text('Subscribe to this link'), findsNothing);
   });
 
-  testWidgets('未登录可订阅粘贴的 RSS 和 Apple 链接', (tester) async {
+  testWidgets('无需登录即可订阅粘贴的 RSS 和 Apple 链接', (tester) async {
     for (final url in [
       'https://example.com/feed.xml',
       'https://podcasts.apple.com/us/podcast/example/id123456',
@@ -333,9 +328,6 @@ void main() {
             featuredPodcastServiceProvider.overrideWithValue(
               _serviceWithPodcasts(const []),
             ),
-            isAuthenticatedProvider.overrideWith((ref) {
-              fail('粘贴链接订阅不应读取认证状态');
-            }),
             podcastRepositoryProvider.overrideWithValue(fakeRepo),
             podcastPreviewProvider(url).overrideWith(
               (ref) async => const PodcastPreviewData(

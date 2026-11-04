@@ -2,7 +2,6 @@
 library;
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/chatbot/chatbot_flags.dart';
 import 'package:echo_loop/features/chatbot/chatbot_sheet.dart';
 import 'package:echo_loop/features/chatbot/models/chat_message.dart';
@@ -14,14 +13,11 @@ import 'package:echo_loop/features/chatbot/services/chat_api_client.dart';
 import 'package:echo_loop/features/chatbot/services/ndjson_text_stream.dart';
 import 'package:echo_loop/features/chatbot/widgets/chat_composer.dart';
 import 'package:echo_loop/features/chatbot/widgets/chat_view.dart';
-import 'package:echo_loop/features/subscription/models/premium_feature.dart';
-import 'package:echo_loop/features/subscription/providers/ai_trial_usage_provider.dart';
 import 'package:echo_loop/features/subscription/services/free_allowance_policy.dart';
 import 'package:echo_loop/providers/settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../helpers/mock_providers.dart';
 import 'widgets/chatbot_widget_harness.dart';
@@ -42,25 +38,6 @@ class _EmptyApi implements ChatApi {
   void dispose() => disposed = true;
 }
 
-class _Trial extends AiTrialUsageNotifier {
-  @override
-  Map<PremiumFeature, int> build() => const {};
-  @override
-  void consume(PremiumFeature feature) {}
-}
-
-Session _session() => Session(
-  accessToken: 't',
-  tokenType: 'bearer',
-  user: const User(
-    id: 'u',
-    appMetadata: {},
-    userMetadata: {},
-    aud: 'authenticated',
-    createdAt: '2026-07-13T00:00:00.000Z',
-  ),
-);
-
 const _config = ChatbotConfig(
   sessionId: 's1',
   endpoint: '/chat',
@@ -71,12 +48,7 @@ const _config = ChatbotConfig(
 void main() {
   List<Override> overrides() => [
     chatApiClientProvider.overrideWithValue(_EmptyApi()),
-    isAuthenticatedProvider.overrideWithValue(true),
-    supabaseSessionProvider.overrideWith(
-      (ref) => Stream<Session?>.value(_session()),
-    ),
     freeAllowancePolicyProvider.overrideWithValue(const AlwaysAllowPolicy()),
-    aiTrialUsageProvider.overrideWith(() => _Trial()),
     appSettingsProvider.overrideWith(() => TestAppSettings()),
   ];
 

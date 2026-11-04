@@ -170,8 +170,8 @@ void main() {
 
       _CountingEngine? counting;
       final coordinator = TtsCoordinator(
-        factory: (kind) {
-          // 本测试只用 echoLoop。
+        factory: (kind, config) {
+          // 本测试只使用本地 Kokoro 引擎。
           final inner = KokoroTtsEngine(
             resolvePaths: manager.kokoroConfigPaths,
           );
@@ -187,7 +187,7 @@ void main() {
         languageTag: 'en-US',
         voiceName: 'af_sarah',
       );
-      await coordinator.configure(TtsEngineKind.echoLoop, config);
+      await coordinator.configure(TtsEngineKind.kokoro, config);
 
       const text = 'Learning English with Echo Loop is really fun.';
 
@@ -199,7 +199,7 @@ void main() {
       // 缓存确实落库且文件存在。
       final cacheKey = cacheStore.deriveKey(
         text: text,
-        engine: TtsEngineKind.echoLoop,
+        engine: TtsEngineKind.kokoro,
         voiceId: config.voiceId,
         speed: config.rate,
       );

@@ -13,9 +13,6 @@ import 'package:echo_loop/analytics/analytics_channel.dart';
 import 'package:echo_loop/analytics/analytics_providers.dart';
 import 'package:echo_loop/analytics/analytics_service.dart';
 import 'package:echo_loop/analytics/consent_manager.dart';
-import 'package:echo_loop/features/subscription/models/entitlement.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
-import 'package:echo_loop/features/subscription/state/entitlement_state.dart';
 import 'package:echo_loop/features/usage/usage_counters.dart';
 import 'package:echo_loop/features/usage/usage_event.dart';
 import 'package:echo_loop/features/usage/usage_providers.dart';
@@ -206,31 +203,6 @@ class _DummySharedPreferences implements SharedPreferences {
 Override analyticsOverride() {
   return analyticsServiceProvider.overrideWithValue(
     createTestAnalyticsServiceSync(),
-  );
-}
-
-/// 固定权益态（默认 Pro）的 SubscriptionController 替身。
-///
-/// 让已登录用户在 widget 测试中视为「已解锁」，从而绕过 AI 功能的额度闸 /
-/// Paywall（额度闸本身由订阅模块单测覆盖）。不传 [state] 即为 Pro。
-class _FixedSubscriptionController extends SubscriptionController {
-  _FixedSubscriptionController(this._state);
-  final EntitlementState _state;
-  @override
-  EntitlementState build() => _state;
-}
-
-/// 返回把订阅权益固定为 [pro] 的 override（默认 Pro，已解锁全部付费能力）。
-Override subscriptionEntitlementOverride({bool pro = true}) {
-  return subscriptionControllerProvider.overrideWith(
-    () => _FixedSubscriptionController(
-      pro
-          ? const EntitlementState(
-              status: EntitlementStatus.premium,
-              entitlement: Entitlement(isPremium: true),
-            )
-          : const EntitlementState.free(),
-    ),
   );
 }
 

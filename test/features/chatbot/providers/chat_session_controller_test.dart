@@ -61,11 +61,7 @@ const _config = ChatbotConfig(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  /// 构造容器：默认已登录 + 免费 + 放行。
-  ///
-  /// supabaseSessionProvider 是 StreamProvider（`Stream.value` 异步 emit）；
-  /// controller 同步读 `valueOrNull`，故先 await session future 让其落定，
-  /// 避免误判 AsyncLoading → authRequired。
+  /// 构造容器：本机策略一律放行，不依赖登录或会员状态。
   Future<ProviderContainer> make(
     _ScriptApi api, {
     bool holdListener = true,

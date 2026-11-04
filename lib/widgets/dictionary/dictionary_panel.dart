@@ -14,8 +14,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../features/auth/sign_in_required_dialog.dart';
 import '../../features/subscription/widgets/feature_gate.dart';
 import '../../models/dictionary/dict_speakable_texts.dart';
 import '../../models/pronunciation/pronunciation_clip.dart';
@@ -351,9 +351,9 @@ class _DictionaryPanelState extends ConsumerState<DictionaryPanel> {
     );
   }
 
-  /// 显式登录按钮直接打开登录页；认证完成后当前查词会自动续跑。
-  void _openAiSignInPage() {
-    openSignInPage(context);
+  /// AI 查词缺少有效 Key 时，引导用户到 AI 服务设置检查供应商配置。
+  void _openAiServiceSettings() {
+    context.push('/settings/ai-service');
   }
 
   /// 本月免费额度用尽 → 打开订阅页；返回后重试（已订阅则放行，否则仍显示额度用尽）。
@@ -532,7 +532,7 @@ class _DictionaryPanelState extends ConsumerState<DictionaryPanel> {
         state: state.current,
         word: word,
         onRetry: notifier.retry,
-        onSignIn: _openAiSignInPage,
+        onSignIn: _openAiServiceSettings,
         onUpgrade: () => _handleUpgrade(lookupQuery),
       ),
     );

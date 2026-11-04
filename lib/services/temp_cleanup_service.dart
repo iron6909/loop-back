@@ -16,8 +16,10 @@ library;
 
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../utils/app_data_dir.dart';
 import '../utils/file_size.dart';
 import 'app_logger.dart';
 
@@ -115,6 +117,20 @@ bool _isOwnCacheTemp(String path) {
 bool _isShareExportTemp(String path) {
   final name = path.split(Platform.pathSeparator).last;
   return _shareExportTempPrefixes.any(name.startsWith);
+}
+
+/// 清理已停用的社区媒体下载残留（app data 目录下的 tmp/community_media）。
+///
+/// 历史版本可能留下半成品文件，启动时删除一次即可，文件语义可随时丢弃。
+Future<void> cleanupCommunityDownloadTmp() async {
+  try {
+    final dir = Directory(
+      p.join((await getAppDataDirectory()).path, 'tmp', 'community_media'),
+    );
+    if (await dir.exists()) await dir.delete(recursive: true);
+  } catch (error) {
+    AppLogger.log('TempCleanup', 'community tmp cleanup failed: $error');
+  }
 }
 
 /// 获取沙盒根/tmp/ 目录（iOS/macOS），不存在时返回 null。

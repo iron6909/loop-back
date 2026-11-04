@@ -17,8 +17,6 @@ import 'package:echo_loop/providers/settings_provider.dart';
 import 'package:echo_loop/providers/tag_provider.dart';
 import 'package:echo_loop/features/audio_import/audio_import_models.dart';
 import 'package:echo_loop/features/audio_import/audio_import_provider.dart';
-import 'package:echo_loop/features/community_collections/download/download_progress.dart';
-import 'package:echo_loop/features/community_collections/download/community_download_notifier.dart';
 import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:echo_loop/theme/app_theme.dart';
@@ -45,21 +43,6 @@ class _DownloadingAudioImportController extends PodcastDownloadController {
   @override
   AudioImportState build() => const AudioImportDownloading(
     displayName: 'https://example.com/episode.mp3',
-    progress: 0.42,
-    receivedBytes: 42,
-    totalBytes: 100,
-  );
-}
-
-class _DownloadingCommunity extends CommunityDownload {
-  _DownloadingCommunity(this.audioItemId);
-
-  final String audioItemId;
-
-  @override
-  DownloadProgress build() => DownloadInProgress(
-    audioItemId: audioItemId,
-    displayName: 'Community Audio',
     progress: 0.42,
     receivedBytes: 42,
     totalBytes: 100,
@@ -418,9 +401,6 @@ void main() {
           overrides: [
             audioLibraryProvider.overrideWith(
               () => TestAudioLibrary(AudioLibraryState(audioItems: [item])),
-            ),
-            communityDownloadProvider.overrideWith(
-              () => _DownloadingCommunity(item.id),
             ),
           ],
         ),
@@ -992,9 +972,6 @@ void main() {
           overrides: [
             audioLibraryProvider.overrideWith(
               () => TestAudioLibrary(AudioLibraryState(audioItems: [item])),
-            ),
-            communityDownloadProvider.overrideWith(
-              () => _DownloadingCommunity(item.id),
             ),
           ],
         ),

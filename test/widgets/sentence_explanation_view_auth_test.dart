@@ -8,7 +8,6 @@ import 'package:drift/native.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:echo_loop/database/daos/audio_item_dao.dart';
 import 'package:echo_loop/database/daos/sentence_ai_cache_dao.dart';
@@ -18,7 +17,6 @@ import 'package:echo_loop/database/app_database.dart';
 import 'package:echo_loop/database/providers.dart';
 import 'package:echo_loop/features/remote_config/remote_config.dart';
 import 'package:echo_loop/features/remote_config/remote_config_providers.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_availability.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/sense_group_result.dart';
 import 'package:echo_loop/models/sense_group_range_playback.dart';
@@ -202,27 +200,12 @@ class _SentenceExplanationScrollHostState
   }
 }
 
-Session testSession() {
-  return Session(
-    accessToken: 'test-access-token',
-    tokenType: 'bearer',
-    user: const User(
-      id: 'test-user',
-      appMetadata: {},
-      userMetadata: {},
-      aud: 'authenticated',
-      createdAt: '2026-07-13T00:00:00.000Z',
-    ),
-  );
-}
-
 void main() {
   Future<void> pumpAuthTestApp(
     WidgetTester tester, {
     required SentenceAiCacheDao cacheDao,
     required SavedSenseGroupDao savedSenseGroupDao,
     SentenceAiNotifier? aiNotifier,
-    bool signedIn = false,
     bool autoShowAiExplanation = true,
     bool autoShowAiAnalysis = true,
     bool autoShowAiTranslation = true,
@@ -322,7 +305,6 @@ void main() {
           savedSenseGroupDaoProvider.overrideWithValue(savedSenseGroupDao),
           savedWordDaoProvider.overrideWithValue(savedWordDao),
           audioEngineProvider.overrideWith(() => _NoopAudioEngine()),
-          subscriptionAvailabilityProvider.overrideWithValue(true),
           aiServiceAvailableProvider.overrideWithValue(true),
           ...extraOverrides,
         ],
@@ -463,7 +445,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       useProviderAiNotifier: true,
       autoShowAiAnalysis: false,
       extraOverrides: [
@@ -489,7 +470,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       autoShowAiExplanation: false,
       aiNotifier: _RecordingSentenceAiNotifier(
         cacheDao: cacheDao,
@@ -571,7 +551,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       autoShowAiExplanation: false,
       aiNotifier: _RecordingSentenceAiNotifier(
         cacheDao: cacheDao,
@@ -644,7 +623,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       autoShowAiExplanation: false,
       aiNotifier: _TwoGroupSentenceAiNotifier(
         cacheDao: cacheDao,
@@ -680,9 +658,9 @@ void main() {
     final cacheDao = _MockCacheDao();
     final savedSenseGroupDao = _MockSavedSenseGroupDao();
     when(() => cacheDao.getByHash(any(), any())).thenAnswer((_) async => null);
-    when(savedSenseGroupDao.watchAll).thenAnswer(
-      (_) => const Stream<List<SavedSenseGroup>>.empty(),
-    );
+    when(
+      savedSenseGroupDao.watchAll,
+    ).thenAnswer((_) => const Stream<List<SavedSenseGroup>>.empty());
     final aiNotifier = _RecordingSentenceAiNotifier(
       cacheDao: cacheDao,
       apiClient: _NoopSentenceAiApiClient(),
@@ -692,7 +670,6 @@ void main() {
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
       aiNotifier: aiNotifier,
-      signedIn: false,
     );
     await tester.pumpAndSettle();
     expect(aiNotifier.translationRequests, isNotEmpty);
@@ -715,7 +692,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       aiNotifier: aiNotifier,
     );
     await tester.pumpAndSettle();
@@ -741,7 +717,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       autoShowAiExplanation: false,
       aiNotifier: aiNotifier,
     );
@@ -769,7 +744,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       sentenceAutoShowAiExplanation: false,
       sentenceAutoShowAiAnalysis: true,
       sentenceAutoShowAiTranslation: true,
@@ -801,7 +775,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       autoShowAiAnalysis: false,
       autoShowAiTranslation: false,
       autoShowAiSenseGroups: true,
@@ -830,7 +803,6 @@ void main() {
       tester,
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
-      signedIn: true,
       autoShowAiExplanation: false,
       aiNotifier: aiNotifier,
     );
@@ -863,7 +835,6 @@ void main() {
       cacheDao: cacheDao,
       savedSenseGroupDao: savedSenseGroupDao,
       aiNotifier: aiNotifier,
-      signedIn: true,
       audioItemId: 'audio-1',
       sentenceIndex: 1,
       extraOverrides: [

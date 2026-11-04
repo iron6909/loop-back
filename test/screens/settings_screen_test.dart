@@ -23,9 +23,6 @@ import 'package:echo_loop/screens/settings_screen.dart';
 import 'package:echo_loop/providers/settings_provider.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_availability.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
 import 'package:echo_loop/features/user_region/user_region_providers.dart';
 import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
 import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
@@ -95,8 +92,6 @@ void main() {
     PackageInfo? packageInfo,
     bool isChinaUser = false,
     StateProvider<bool>? simulatedChinaUserProvider,
-    // 测试宿主（macOS/无 key）默认不支持订阅，这里默认置 true 以覆盖订阅入口 UI。
-    bool subscriptionAvailable = true,
   }) {
     const recommendedModel = AsrModelInfo(
       id: 'whisper-base-en-int8',
@@ -121,7 +116,6 @@ void main() {
       listeningPracticeProvider.overrideWith(() => TestListeningPractice()),
       audioEngineProvider.overrideWith(() => TestAudioEngine()),
       packageInfoProvider.overrideWithValue(packageInfo ?? testPackageInfo),
-      subscriptionAvailabilityProvider.overrideWithValue(subscriptionAvailable),
       isChinaUserProvider.overrideWith((ref) {
         final simulatedProvider = simulatedChinaUserProvider;
         return simulatedProvider == null
@@ -176,29 +170,16 @@ void main() {
         );
       });
 
-      testWidgets('设置页不启动认证、权益或自更新服务', (tester) async {
-        final reads = <String>[];
+      testWidgets('设置页不提供账号、会员或检查更新入口', (tester) async {
         await tester.pumpWidget(
-          createTestScreen(
-            const SettingsScreen(),
-            overrides: [
-              ...buildOverrides(),
-              supabaseSessionProvider.overrideWith((ref) {
-                reads.add('auth');
-                throw StateError('已停用');
-              }),
-              subscriptionControllerProvider.overrideWith(() {
-                reads.add('subscription');
-                throw StateError('已停用');
-              }),
-            ],
-          ),
+          createTestScreen(const SettingsScreen(), overrides: buildOverrides()),
         );
         await tester.pumpAndSettle();
         await tester.scrollUntilVisible(find.text('Open Source Project'), 200);
         await tester.pumpAndSettle();
-        expect(reads, isEmpty);
+
         expect(find.text('Check for Updates'), findsNothing);
+        expect(find.text('Account'), findsNothing);
       });
 
       test('设置页 SVG 图标统一使用 24x24 viewBox', () {

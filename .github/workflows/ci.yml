@@ -84,7 +84,9 @@ jobs:
                           test = event.get('test') or {}
                           test_id = test.get('id')
                           if test_id is not None:
-                              names[test_id] = test.get('name') or f'test #{test_id}'
+                              names[test_id] = (
+                                  test.get('name') or f'test #{test_id}'
+                              )
                       elif event_type == 'error':
                           test_id = event.get('testID')
                           if test_id is not None:
@@ -109,15 +111,20 @@ jobs:
               if not errors.get(event.get('testID'))
           ]
           if orphan_failures:
-              print(f'::warning::忽略 {len(orphan_failures)} 个无错误载荷的 testDone failure/error')
+              print(
+                  f'::warning::忽略 {len(orphan_failures)} '
+                  '个无错误载荷的 testDone failure/error'
+              )
               for event in orphan_failures:
                   test_id = event.get('testID')
-                  print(f'无错误载荷用例: {names.get(test_id, f"test #{test_id}")} ({event.get("result")})')
+                  name = names.get(test_id, f'test #{test_id}')
+                  print(f'无错误载荷用例: {name} ({event.get("result")})')
           if real_failures:
               print(f'::error::flutter test 报告 {len(real_failures)} 个失败/错误用例')
               for event in real_failures:
                   test_id = event.get('testID')
-                  print(f'失败用例: {names.get(test_id, f"test #{test_id}")} ({event.get("result")})')
+                  name = names.get(test_id, f'test #{test_id}')
+                  print(f'失败用例: {name} ({event.get("result")})')
                   for error in errors.get(test_id, []):
                       print(error.get('error') or '')
                       print(error.get('stackTrace') or '')
@@ -173,7 +180,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ios/Pods
-          key: pods-${{ runner.os }}-${{ hashFiles('ios/Podfile.lock', 'pubspec.lock') }}
+          key: >-
+            pods-${{ runner.os }}-${{
+              hashFiles('ios/Podfile.lock', 'pubspec.lock') }}
 
       - name: Install CocoaPods
         if: matrix.platform == 'ios'
@@ -185,11 +194,7 @@ jobs:
           flutter build ios --release --no-codesign --flavor=prod \
             --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }} \
             --dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }} \
-            --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }} \
-            --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} \
-            --dart-define=CHINA_SUPABASE_URL=${{ vars.CHINA_SUPABASE_URL }} \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ vars.SUPABASE_PUBLISHABLE_KEY }} \
-            --dart-define=GOOGLE_WEB_CLIENT_ID=${{ vars.GOOGLE_WEB_CLIENT_ID }}
+            --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
 
       - name: Setup Java
         if: matrix.platform == 'android'
@@ -206,7 +211,8 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d \
+            > android/app/upload-keystore.jks
           cat > android/key.properties <<EOF
           storePassword=$ANDROID_KEYSTORE_PASSWORD
           keyPassword=$ANDROID_KEY_PASSWORD
@@ -222,8 +228,4 @@ jobs:
             --target-platform android-arm64 \
             --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }} \
             --dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }} \
-            --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }} \
-            --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }} \
-            --dart-define=CHINA_SUPABASE_URL=${{ vars.CHINA_SUPABASE_URL }} \
-            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ vars.SUPABASE_PUBLISHABLE_KEY }} \
-            --dart-define=GOOGLE_WEB_CLIENT_ID=${{ vars.GOOGLE_WEB_CLIENT_ID }}
+            --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }}

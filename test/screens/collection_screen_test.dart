@@ -168,35 +168,67 @@ void main() {
         expect(find.textContaining('Added'), findsNothing);
       });
 
-      testWidgets('中国地区本地合集列表使用已保存的中国封面 URL', (tester) async {
-        final community =
-            createTestCollection(
-              id: 'community-cn',
-              name: 'Community Lessons',
-            ).copyWith(
-              source: CollectionSource.community,
-              coverUrl: 'https://global.example/cover.jpg',
-              coverUrlChina: 'https://china.example/cover.jpg',
-            );
+      for (final isChinaUser in [false, true]) {
+        testWidgets('历史社区封面只显示本地占位，不创建网络图片：china=$isChinaUser', (tester) async {
+          final community =
+              createTestCollection(
+                id: 'community-cover',
+                name: 'Community Lessons',
+              ).copyWith(
+                source: CollectionSource.community,
+                coverUrl: 'https://cdn.echo-loop.top/media/images/cover.jpg',
+                coverUrlChina:
+                    'https://cdn.echo-loop.cn/media/images/cover.jpg',
+              );
 
+          await tester.pumpWidget(
+            createTestScreen(
+              const LibraryScreen(),
+              overrides: [
+                isChinaUserProvider.overrideWithValue(isChinaUser),
+                collectionListProvider.overrideWith(
+                  () => TestCollectionList(
+                    CollectionState(rawCollections: [community]),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          expect(find.byType(CachedNetworkImage), findsNothing);
+          expect(find.text('C'), findsOneWidget);
+          expect(find.text('Community Lessons'), findsOneWidget);
+        });
+      }
+
+      testWidgets('播客仍使用订阅源的封面', (tester) async {
+        final podcast =
+            createTestCollection(
+              id: 'podcast-cover',
+              name: 'Podcast Lessons',
+            ).copyWith(
+              source: CollectionSource.podcast,
+              coverUrl: 'https://podcast.example/cover.jpg',
+            );
         await tester.pumpWidget(
           createTestScreen(
             const LibraryScreen(),
             overrides: [
-              isChinaUserProvider.overrideWithValue(true),
               collectionListProvider.overrideWith(
                 () => TestCollectionList(
-                  CollectionState(rawCollections: [community]),
+                  CollectionState(rawCollections: [podcast]),
                 ),
               ),
             ],
           ),
         );
 
-        final cover = tester.widget<CachedNetworkImage>(
-          find.byType(CachedNetworkImage),
+        expect(
+          tester
+              .widget<CachedNetworkImage>(find.byType(CachedNetworkImage))
+              .imageUrl,
+          'https://podcast.example/cover.jpg',
         );
-        expect(cover.imageUrl, 'https://china.example/cover.jpg');
       });
 
       testWidgets('每个来源的用户合集都显示对应角标', (tester) async {

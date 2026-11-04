@@ -4,7 +4,6 @@ import Flutter
 import NaturalLanguage
 import PostHog
 import Speech
-import StoreKit
 import UIKit
 import UserNotifications
 
@@ -1176,18 +1175,6 @@ private final class IOSAudioDecodeHandler: NSObject {
       }
     }
 
-    let subscriptionManagementChannel = FlutterMethodChannel(
-      name: "top.echo-loop/subscription_management",
-      binaryMessenger: controller.binaryMessenger
-    )
-    subscriptionManagementChannel.setMethodCallHandler { [weak self] (call, result) in
-      if call.method == "openManageSubscriptions" {
-        self?.openManageSubscriptions(result: result)
-      } else {
-        result(FlutterMethodNotImplemented)
-      }
-    }
-
     let deviceInfoChannel = FlutterMethodChannel(
       name: "top.echo-loop/device_info",
       binaryMessenger: controller.binaryMessenger
@@ -1237,47 +1224,6 @@ private final class IOSAudioDecodeHandler: NSObject {
     #else
     return false
     #endif
-  }
-
-  /// 打开 iOS 系统订阅管理页。
-  ///
-  /// 使用 StoreKit 原生入口而不是浏览器 URL；Dart 侧会在本方法不可用或失败时回退
-  /// App Store 订阅管理链接，兼容旧系统与异常场景。
-  private func openManageSubscriptions(result: @escaping FlutterResult) {
-    guard #available(iOS 15.0, *) else {
-      result(FlutterError(
-        code: "unsupported",
-        message: "StoreKit subscription management requires iOS 15 or later",
-        details: nil
-      ))
-      return
-    }
-
-    let foregroundScene = UIApplication.shared.connectedScenes
-      .compactMap { $0 as? UIWindowScene }
-      .first { $0.activationState == .foregroundActive }
-
-    guard let scene = foregroundScene else {
-      result(FlutterError(
-        code: "no_scene",
-        message: "No foreground UIWindowScene for subscription management",
-        details: nil
-      ))
-      return
-    }
-
-    Task { @MainActor in
-      do {
-        try await AppStore.showManageSubscriptions(in: scene)
-        result(true)
-      } catch {
-        result(FlutterError(
-          code: "open_failed",
-          message: error.localizedDescription,
-          details: nil
-        ))
-      }
-    }
   }
 
   /// 从 Info.plist 读取 API Key/Host，构造完整 PostHog 配置（含 Session Replay）并启动 SDK。
