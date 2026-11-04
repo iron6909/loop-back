@@ -30,7 +30,16 @@ void main() {
   });
   test('正式随包清单非空且每项有独立 ID 和可订阅地址', () async {
     final podcasts = await FeaturedPodcastService().load();
-    expect(podcasts, isNotEmpty);
+    expect(podcasts, hasLength(66));
+    expect(
+      podcasts.map((podcast) => podcast.title),
+      containsAll([
+        '6 Minute English',
+        'Learning Easy English',
+        'TED Talks Daily',
+        'The Tim Ferriss Show',
+      ]),
+    );
     expect(podcasts.map((p) => p.id).toSet().length, podcasts.length);
     for (final podcast in podcasts) {
       expect(Uri.parse(podcast.subscriptionInputUrl).host, isNotEmpty);

@@ -814,7 +814,9 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.textContaining('Network error. Check your connection and retry.'),
+        find.textContaining(
+          'Cannot reach example.com. Try a network that can access this podcast source.',
+        ),
         findsOneWidget,
       );
     });

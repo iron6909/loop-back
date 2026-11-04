@@ -3692,6 +3692,12 @@ abstract class AppLocalizations {
   /// **'Network error. Check your connection and retry.'**
   String get downloadErrorNetwork;
 
+  /// No description provided for @downloadErrorPodcastHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach {host}. Try a network that can access this podcast source.'**
+  String downloadErrorPodcastHost(String host);
+
   /// No description provided for @downloadErrorCorrupted.
   ///
   /// In en, this message translates to:

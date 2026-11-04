@@ -21,6 +21,7 @@ class _FakeFileDownloader extends Mock implements FileDownloader {
   TaskNotification? taskErrorNotification;
   bool notificationProgressBar = false;
   dynamic configuredGlobalConfig;
+  Object? configuredAndroidConfig;
   final enqueuedFileNames = <String>[];
   final enqueuedDisplayNames = <String?>[];
 
@@ -32,6 +33,7 @@ class _FakeFileDownloader extends Mock implements FileDownloader {
     dynamic desktopConfig,
   }) async {
     configuredGlobalConfig = globalConfig;
+    configuredAndroidConfig = androidConfig;
     return const <(String, String)>[];
   }
 
@@ -401,6 +403,10 @@ void main() {
       expect(downloader.configuredGlobalConfig, (
         Config.holdingQueue,
         (null, null, 1),
+      ));
+      expect(downloader.configuredAndroidConfig, (
+        Config.requestTimeout,
+        const Duration(seconds: 30),
       ));
       expect(outcomes.map((outcome) => outcome.request.id), [
         'first',

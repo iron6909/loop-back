@@ -1162,7 +1162,11 @@ class AudioListTile extends ConsumerWidget {
     // 不误报"下载失败"。
     final state = ref.read(podcastDownloadControllerProvider);
     if (state is! AudioImportFailed) return;
-    final detail = _downloadFailureDetail(l10n, state.error);
+    final detail = _downloadFailureDetail(
+      l10n,
+      state.error,
+      audioItem.podcastEnclosureUrl,
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${l10n.downloadFailed(audioItem.name)}\n$detail'),
@@ -1171,16 +1175,22 @@ class AudioListTile extends ConsumerWidget {
     );
   }
 
+  /// 下载失败详情；播客网络失败额外指出受阻域名，便于换可用网络重试。
   String _downloadFailureDetail(
     AppLocalizations l10n,
     AudioImportException error,
+    String? enclosureUrl,
   ) {
+    final host = Uri.tryParse(enclosureUrl ?? '')?.host ?? '';
     return switch (error.code) {
       AudioImportFailureCode.invalidUrl => l10n.audioUrlUnsupported,
       AudioImportFailureCode.unsupportedScheme => l10n.audioUrlUnsupported,
       AudioImportFailureCode.unsupportedFormat => l10n.audioUrlUnsupported,
       AudioImportFailureCode.notAudio => l10n.audioUrlUnsupported,
-      AudioImportFailureCode.network => l10n.downloadErrorNetwork,
+      AudioImportFailureCode.network =>
+        host.isEmpty
+            ? l10n.downloadErrorNetwork
+            : l10n.downloadErrorPodcastHost(host),
       AudioImportFailureCode.storage => l10n.downloadErrorStorage,
       AudioImportFailureCode.duplicate => error.message,
       AudioImportFailureCode.canceled => l10n.cancel,

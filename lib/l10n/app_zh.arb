@@ -936,6 +936,12 @@
   "speechModelDownloadFailed": "下载失败，点击重试。",
   "downloadErrorStorage": "存储空间不足，请清理后重试。",
   "downloadErrorNetwork": "网络异常，请检查网络后重试。",
+  "downloadErrorPodcastHost": "无法连接 {host}，请换用可访问该播客源的网络后重试。",
+  "@downloadErrorPodcastHost": {
+    "placeholders": {
+      "host": { "type": "String" }
+    }
+  },
   "downloadErrorCorrupted": "下载文件校验失败，请重试。",
   "deleteModel": "删除模型（{size}）",
   "deleteModelAction": "删除模型",

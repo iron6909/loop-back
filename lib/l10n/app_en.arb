@@ -1171,6 +1171,12 @@
   "speechModelDownloadFailed": "Download failed. Tap to retry.",
   "downloadErrorStorage": "Not enough storage. Free up space and retry.",
   "downloadErrorNetwork": "Network error. Check your connection and retry.",
+  "downloadErrorPodcastHost": "Cannot reach {host}. Try a network that can access this podcast source.",
+  "@downloadErrorPodcastHost": {
+    "placeholders": {
+      "host": { "type": "String" }
+    }
+  },
   "downloadErrorCorrupted": "Downloaded file verification failed. Please retry.",
   "deleteModel": "Delete Model ({size})",
   "@deleteModel": {

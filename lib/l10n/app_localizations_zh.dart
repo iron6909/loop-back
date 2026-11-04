@@ -2011,6 +2011,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadErrorNetwork => '网络异常，请检查网络后重试。';
 
   @override
+  String downloadErrorPodcastHost(String host) {
+    return '无法连接 $host，请换用可访问该播客源的网络后重试。';
+  }
+
+  @override
   String get downloadErrorCorrupted => '下载文件校验失败，请重试。';
 
   @override

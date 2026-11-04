@@ -1,10 +1,530 @@
 [
   {
-    "id": "bbc-6-minute-english",
-    "applePodcastUrl": "https://podcasts.apple.com/podcast/id262026947",
+    "id": "8a46d808-1c7a-43a9-bef7-46cc0418b128",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/6-minute-english/id262026947",
     "rssUrl": "https://podcasts.files.bbci.co.uk/p02pc9tn.rss",
-    "imageUrl": null,
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hxqkd0.jpg",
     "title": "6 Minute English",
-    "description": "BBC Learning English: short conversations and everyday vocabulary."
+    "description": "Short BBC lessons that introduce everyday English vocabulary and phrases through a single weekly topic."
+  },
+  {
+    "id": "10b6f2c7-6525-4622-b15f-ed5eaf3fb6c9",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/learning-easy-english/id1742967932",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p0hsrwv5.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hsrvhm.jpg",
+    "title": "Learning Easy English",
+    "description": "Improve your English with these short easy podcasts. Every week, we have a real conversation in Easy English to help you learn. What’s your favourite meal? Do you like birthdays? Do you play any sports? Learn to answer these questions and hear what our presenters say - in English you can understand. Practise your listening and hear natural spoken English. You can watch this podcast with subtitles to help you at https://www.bbc.co.uk/learningenglish Follow us https://www.bbc.co.uk/learningenglish/followus"
+  },
+  {
+    "id": "f1e42f9e-0a7e-4802-9b23-8770392ea8a6",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/learning-english-conversations/id262026989",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p02pc9zn.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hxql2c.jpg",
+    "title": "Learning English Conversations",
+    "description": "BBC lessons on everyday English expressions, conversation phrases, and spoken English practice."
+  },
+  {
+    "id": "1272e9ff-46eb-4e19-ab98-cdd7d1adf5bb",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1036379102",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p02pc9xz.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hxqknd.jpg",
+    "title": "Learning English Vocabulary",
+    "description": "Build your English vocabulary with these short programmes. Each week we explore a new topic to improve your English vocabulary. Learn words for the weather, how to talk about people’s jobs, adjective order, and so much more. Plus, in our English in a Minute episodes, give your vocabulary a boost in under a minute. Find more at bbclearningenglish.com Follow us at bbc.co.uk/learningenglish/followus"
+  },
+  {
+    "id": "4ff66913-0d1b-4700-99d4-799025fab240",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1080974028",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p02pc9wq.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hxqkgj.jpg",
+    "title": "Learning English Grammar",
+    "description": "Practise your English grammar with these short programmes. Each week we explore a new piece of grammar you need to improve your English. Hear how grammar is used in everyday situations, and test what you’ve learnt with games and quizzes. Find more at bbclearningenglish.com Follow us at bbc.co.uk/learningenglish/followus"
+  },
+  {
+    "id": "73681095-7754-4924-b729-aaed25573379",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1291980917",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p05hw4bq.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hvw5fz.jpg",
+    "title": "Learning English from the News",
+    "description": "Learn the language you need to understand news stories in English. Every week we talk about one big news story and the vocabulary in the headlines that will help you understand it. And in our special Our World in English episodes, we share documentaries from around the world and across the BBC in simple English. Find more at bbclearningenglish.com Follow us at bbc.co.uk/learningenglish/followus"
+  },
+  {
+    "id": "3b6a9469-cbf8-4b64-92a2-682d70174fa8",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1726947236",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p0h6ffwg.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hxqkxd.jpg",
+    "title": "Learning English For Work",
+    "description": "Short podcasts to improve your English at work. Want to write better emails? Confused by the jargon at your office? Need to apply for a job in English? We talk about the language used in international workplaces and help you improve your business English. Find more at bbclearningenglish.com Follow us at bbc.co.uk/learningenglish/followus"
+  },
+  {
+    "id": "572f8179-a1b9-4e80-81c4-05ba616683d6",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id925326414",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p02pc9s1.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0hxqksj.jpg",
+    "title": "Learning English Stories",
+    "description": "Improve your English with these short dramas and stories. Each week we bring you a new story in English you can understand. Find more at bbclearningenglish.com Follow us at bbc.co.uk/learningenglish/followus"
+  },
+  {
+    "id": "9e327fee-adfc-4a57-b357-2105055fc4ec",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1159455275",
+    "rssUrl": "https://feeds.blubrry.com/feeds/englishin10minutes.xml",
+    "imageUrl": "https://assets.blubrry.com/coverart/orig/384147.jpg",
+    "title": "English in 10 Minutes",
+    "description": "English in 10 Minutes is a weekly podcast for intermediate and advanced English learners. Each episode is about 10 minutes long and features real, unscripted English conversations about people, places and their stories. Worksheets for each episode, including full transcripts of every conversation and an analysis of the best language used, are available at http://englishin10minutes.com."
+  },
+  {
+    "id": "296d4836-8d82-4ea6-966e-3f3c1ea79530",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/simple-english-news-daily/id1505603790",
+    "rssUrl": "https://www.spreaker.com/show/4907677/episodes/feed",
+    "imageUrl": "https://d3wo5wojvuv7l.cloudfront.net/t_rss_itunes_square_1400/images.spreaker.com/original/ba176831c794a92828aa9d379652df2b.jpg",
+    "title": "Simple English News Daily",
+    "description": "Simple English News Daily is a 7-minute podcast which tells today’s news in clear, simple, British English. Start your day by listening to 7 minutes of the most important stories from everywhere in the world. With SEND7, you can stay up-to-date with world news, and improve your English at the same time. SEND7 is aimed at intermediate and advanced English learners and teachers, and people with English as a second language, as well as native English speakers who want a fast, daily summary of world events! The podcast is released Monday to Friday. SEND7 in an acronym for S imple E nglish N ews D aily, in 7 minutes. Stephen Devincenzi, from the UK, started SEND7 in 2020, and hosts most episodes. Ben Mallett and Juliet Martin are also British, and host some episodes. For more information, or to contact us, go to www.send7.org The Simple English News Daily podcast is free, and is supported by generous listeners, who receive access to the transcripts and a vocabulary list of every episode, and our weekly worksheets and world news quiz. To become a supporter and have access to the transcripts, worksheets and quiz, go to www.send7.org/support We do not use AI for anything. Get your daily news and improve your English listening, in the time it takes to make a cup of coffee, with SEND7."
+  },
+  {
+    "id": "e073a76c-8799-4421-86b1-49e7330b9688",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/learn-english-with-coffee-break-english/id1500388439",
+    "rssUrl": "https://feeds.acast.com/public/shows/183d2cc4-50d2-420f-a306-40dae4a0bfa7",
+    "imageUrl": "https://assets.pippa.io/shows/611ed01b06c05e6cb7f40e59/show-cover.jpg",
+    "title": "Learn English with Coffee Break English",
+    "description": "Short slow-English lessons for learners, with language explanations and cultural listening practice."
+  },
+  {
+    "id": "ca53ee90-f7c5-46e3-8a92-196b32453a11",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/spotlight-english/id1461661420",
+    "rssUrl": "https://www.spreaker.com/show/4065149/episodes/feed",
+    "imageUrl": "https://d3wo5wojvuv7l.cloudfront.net/t_rss_itunes_square_1400/images.spreaker.com/original/ab79d671442724fe801d228ee44f77e5.jpg",
+    "title": "Spotlight English",
+    "description": "Spotlight is an audio program for learning English. It uses a special method of broadcasting that makes it easier to understand for listeners worldwide. If you want to try faster programs, please subscribe to our Spotlight Advanced podcast (https://www.spreaker.com/show/spotlight-english-advanced)"
+  },
+  {
+    "id": "4a29c1e1-828a-435b-9dc0-73e6e87bc76f",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1820739470",
+    "rssUrl": "https://feeds.simplecast.com/jBqAy7Bl",
+    "imageUrl": "https://image.simplecastcdn.com/images/fb05b0bb-811b-45a7-8630-10ecdcf01073/8cbc81b6-017f-4c22-9f73-28941a308c2d/3000x3000/500x500bb.jpg?aid=rss_feed",
+    "title": "5 Minute English Talk",
+    "description": "Welcome to 5-Minute English Talk - your daily dose of real-world English made simple. In just 5 minutes (or even less!), you'll learn something useful every day, from everyday phrases and clear pronunciation, to casual small talk, grammar basics, and real-life speaking tips. No pressure, no textbooks, just easy, practical English you can use right away. Whether you're just starting out or want to sound more natural, this podcast is here to help, like a friend by your side. Short. Simple. Real. And always a little fun. New episodes drop daily! Hit play and let’s speak English together!"
+  },
+  {
+    "id": "fe420b27-50f2-4f7e-bf21-330c3aac602b",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/culips-everyday-english-podcast/id279999557",
+    "rssUrl": "https://esl.culips.com/feed/podcast/",
+    "imageUrl": "https://i.postimg.cc/y8GZFDSN/culipsart2-1-1-1.jpg",
+    "title": "Culips Everyday English Podcast",
+    "description": "Culips English Podcast: Practical English Learning Made Fun Learn and Explore: Join Culips for an exciting English learning journey. Our podcast focuses on teaching English idioms, slang, and phrasal verbs through fun and engaging conversations. Each episode helps you master English for real-life situations. Unique Learning Experience: Culips stands out by blending language skills with cultural insights. Our diverse hosts make learning relatable, covering a variety of everyday topics. You&#8217;ll pick up practical language skills and gain cultural understanding, enhancing your English fluency in an enjoyable way. Your Path to Fluency: As your ideal learning partner, Culips provides easy-to-understand lessons on daily English usage. Learn from native speakers and immerse in different cultures, making your English learning journey rewarding and effective."
+  },
+  {
+    "id": "a5224e38-696e-4c60-a10b-f5ea72d73da5",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/reallife-english-learn-and-speak-confident-natural/id600128442",
+    "rssUrl": "https://rss.libsyn.com/shows/41632/destinations/126390.xml",
+    "imageUrl": "https://static.libsyn.com/p/assets/3/e/7/f/3e7f2968e152743327a2322813b393ee/317e4efe2d4db6e2.png",
+    "title": "RealLife English",
+    "description": "Natural English conversations with fluency coaches, focused on vocabulary, idioms, pronunciation, and confidence."
+  },
+  {
+    "id": "450225a0-f8fe-42fd-86b2-59593f900707",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id878268013",
+    "rssUrl": "https://rss.libsyn.com/shows/54133/destinations/197908.xml",
+    "imageUrl": "https://static.libsyn.com/p/assets/a/b/d/d/abdd123b8ad18413/FLAG_ECUBED_DONE.jpg",
+    "title": "Daily Easy English Expression Podcast",
+    "description": "Every day I will introduce a common expression or word that YOU NEED TO KNOW!! This podcast is for English learners around the world."
+  },
+  {
+    "id": "7a2af1a1-ed58-4193-9e80-96d1c66f16a0",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1529371051",
+    "rssUrl": "https://anchor.fm/s/1079b9418/podcast/rss",
+    "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/44126038/fc20f41265d7570d.jpg",
+    "title": "Bob's Short English Lessons",
+    "description": "If you want to learn English with short easy-to-understand lessons then you've come to the right place. I'm Bob the Canadian and I make videos on Youtube (Just search for \"Bob's Short English Lessons\" on Youtube!) as well as podcasts right here to help you learn English. Four times each week I upload a short English lesson with a complete transcript in the description. During these lessons I teach one or two curious phrases from the English language and answer a listener question. Thanks for joining me and I hope your English learning is going well!"
+  },
+  {
+    "id": "46f4190d-4f1e-4dfd-8f0e-f478699b351e",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id527237888",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?count=50&zoneId=987",
+    "imageUrl": "https://gdb.voanews.com/d85d014e-757a-4731-800b-b9b29c7bcd4d.jpg",
+    "title": "Words and Their Stories - VOA Learning English",
+    "description": "Words and Their Stories programs explain idioms and expressions that many learners of American English find difficult to understand."
+  },
+  {
+    "id": "4381ca43-85ad-4cfc-879d-c6213c316473",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1508191110",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?zoneId=5535",
+    "imageUrl": "https://gdb.voanews.com/97c6c25d-f59d-4ad0-9308-6d35a7d95949.jpg",
+    "title": "Ask a Teacher - VOA Learning English",
+    "description": "Do you have a question about English? Go ahead and Ask a Teacher."
+  },
+  {
+    "id": "4339fae7-6eb9-4431-8a54-61f19b0675b1",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1508053574",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?zoneId=4456",
+    "imageUrl": "https://gdb.voanews.com/9e06dea4-7525-477e-8310-248e28a18a75.jpg",
+    "title": "Everyday Grammar - VOA Learning English",
+    "description": "How Americans use English grammar in everyday conversation."
+  },
+  {
+    "id": "b51a02ed-5373-4a44-a7b1-92f6d7771db7",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id527234700",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?count=50&zoneId=1579",
+    "imageUrl": "https://gdb.voanews.com/4016bb96-ef6e-4484-a5ab-54a9c37ae81f.jpg",
+    "title": "Science & Technology - VOA Learning English",
+    "description": "New developments in science, space exploration, environment and technology"
+  },
+  {
+    "id": "7dcc5c61-591d-49e7-9b8c-77f6a7249155",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1508192296",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?zoneId=959",
+    "imageUrl": "https://gdb.voanews.com/505b86fa-f177-44bc-9b86-df3e7928f956.jpg",
+    "title": "Education - VOA Learning English",
+    "description": "Innovations and trends in education in the United States and around the world."
+  },
+  {
+    "id": "2d7edf74-4304-4e14-a4bb-20f7317f612d",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id527231444",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?count=50&zoneId=986",
+    "imageUrl": "https://gdb.voanews.com/13ab9be5-4529-4ce3-9561-7c74b74c6497.jpg",
+    "title": "Arts & Culture - VOA Learning English",
+    "description": "Arts & Culture is our weekly program about music, pop culture, society and life."
+  },
+  {
+    "id": "0e9ff792-860a-4909-954f-3bd11582d048",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1524317352",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?zoneId=4791",
+    "imageUrl": "https://gdb.voanews.com/71b66f45-ce49-48ce-9826-6ca49d2b897e.jpg",
+    "title": "America's National Parks - VOA Learning English",
+    "description": "This year, the U.S. National Park Service turns 100. America’s 28th President, Woodrow Wilson, formed the National Park Service in 1916 to “protect the wild and wonderful landscapes” in the United States."
+  },
+  {
+    "id": "ff4da70f-4a76-4dc9-9aa6-fc84be3b760d",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1524321489",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?zoneId=5091",
+    "imageUrl": "https://gdb.voanews.com/f2e9588d-f439-47a6-b80e-57b5b9ac0194.jpg",
+    "title": "America's Presidents - VOA Learning English",
+    "description": "George Washington. Abraham Lincoln. John F. Kennedy. Millard Fillmore? Some U.S. presidents are better known than others. “America’s Presidents” tells each of their stories: when they lived, what they were like, how they governed, and why Americans remember them."
+  },
+  {
+    "id": "a31e523f-6d61-40bd-9f5d-a2041e003309",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/voa-learning-english-podcast-voa-learning-english/id109522474",
+    "rssUrl": "https://learningenglish.voanews.com/podcast/?count=20&zoneId=1689",
+    "imageUrl": "https://gdb.voanews.com/0684e143-ca54-4c31-bbc7-c26e19b2fb70.jpg",
+    "title": "VOA Learning English Podcast",
+    "description": "Slow-paced English learning programs using limited vocabulary and short sentences for learners."
+  },
+  {
+    "id": "55bcaacc-f631-42e9-a5ca-527b2746f11a",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/npr-news-now/id121493675",
+    "rssUrl": "https://feeds.npr.org/500005/podcast.xml",
+    "imageUrl": "https://media.npr.org/assets/img/2023/01/24/npr-news-now_tile_sq-2334a5fd44563fa94cdcdb27384b0f05987c2d15.jpg?s=1400&c=66&f=jpg",
+    "title": "NPR News Now",
+    "description": "Hourly five-minute news updates from NPR covering major U.S. and international headlines."
+  },
+  {
+    "id": "db9aa5fe-cca4-4981-a967-2359661e4f43",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/headline-news-from-the-associated-press/id1728454337",
+    "rssUrl": "https://audioboom.com/channels/3270305.rss",
+    "imageUrl": "https://audioboom.com/i/28013281.jpg",
+    "title": "Headline News from The Associated Press",
+    "description": "Hourly AP news updates with concise coverage of U.S. and world headlines."
+  },
+  {
+    "id": "901e5d69-ac4e-47e6-ac64-60f8fd19dd4e",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1665219519",
+    "rssUrl": "https://feeds.megaphone.fm/reutersworldnews",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/e3c7d1b2-8c45-11ed-80a2-172771c99810/image/83ac533ea52b6279d96d26ecc1b9cea4.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "Reuters World News",
+    "description": "Everything you need to know about your world in 10 minutes. Go straight to the source with a ten-minute news briefing by Reuters frontline journalists. Join host Kim Vinnell as she takes you around the world every day."
+  },
+  {
+    "id": "c79be5a5-0df7-47a4-9d14-530e637763d4",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/up-first-from-npr/id1222114325",
+    "rssUrl": "https://feeds.npr.org/510318/podcast.xml",
+    "imageUrl": "https://npr.brightspotcdn.com/dims3/default/strip/false/crop/3000x3000+0+0/resize/1400/quality/66/format/jpg/?url=http%3A%2F%2Fnpr-brightspot.s3.amazonaws.com%2Fe0%2F7a%2Ffe9d16a44fbf9dd2d9932ffe799b%2F510318.png",
+    "title": "Up First from NPR",
+    "description": "A short morning news podcast from NPR with reporting and analysis on the day's main stories."
+  },
+  {
+    "id": "024ebbe2-c05a-4a62-9367-6dd6d1e2fe2a",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1320118593",
+    "rssUrl": "https://feeds.npr.org/510325/podcast.xml",
+    "imageUrl": "https://media.npr.org/assets/img/2024/03/25/the-indicator_2024_sq-121249a297878ab2327b321c997ab870300ec659.jpg?s=1400&c=66&f=jpg",
+    "title": "The Indicator from Planet Money",
+    "description": "A bite-sized show about big ideas. From the people who make Planet Money , The Indicator helps you make sense of what's happening in today's economy. It's a quick hit of insight into money, work, and business. Monday through Friday, in 10 minutes or less. Sign up for our newsletter ."
+  },
+  {
+    "id": "0c94a0d4-eace-4f7a-94ad-02b901a892d1",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/short-wave/id1482575855",
+    "rssUrl": "https://feeds.npr.org/510351/podcast.xml",
+    "imageUrl": "https://media.npr.org/assets/img/2022/09/23/short-wave_tile_npr-network-01_sq-c268cdb6be92867b01c6ef7e65aed8d605525779.jpg?s=1400&c=66&f=jpg",
+    "title": "Short Wave",
+    "description": "New discoveries, everyday mysteries, and the science behind the headlines — in just under 15 minutes. It's science for everyone, using a lot of creativity and a little humor. Join hosts Emily Kwong and Regina Barber for science on a different wavelength. If you're hooked, try Short Wave Plus. Your subscription supports the show and unlocks a sponsor-free feed. Learn more at plus.npr.org/ shortwave"
+  },
+  {
+    "id": "8a039b89-a48a-4618-8e1c-60e8b514b66d",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/cbs-news-roundup/id172902754",
+    "rssUrl": "https://rss.amperwave.net/v2/feed/audacynetwork/977da5502b24c5f761a1ddb15b902cbf",
+    "imageUrl": "https://images.castfire.com/image/661/0/0/0/0-8382751.jpg",
+    "title": "CBS News Roundup",
+    "description": "CBS News morning and evening headline summaries with brief daily updates."
+  },
+  {
+    "id": "f821be93-fe19-4e07-b6d0-3e45954bcaf6",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/ted-talks-daily/id160904630",
+    "rssUrl": "https://feeds.acast.com/public/shows/67587e77c705e441797aff96",
+    "imageUrl": "https://assets.pippa.io/shows/67587e77c705e441797aff96/show-cover.png",
+    "title": "TED Talks Daily",
+    "description": "Daily audio talks from TED and TEDx covering science, culture, technology, psychology, and society."
+  },
+  {
+    "id": "ca769128-17e7-427c-ade7-0262001b9544",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/espresso-english-podcast/id957223102",
+    "rssUrl": "https://rss.libsyn.com/shows/56803/destinations/212704.xml",
+    "imageUrl": "https://static.libsyn.com/p/assets/7/b/3/c/7b3c885f8577bc6a/podcastespressoenglish051.jpg",
+    "title": "Espresso English Podcast",
+    "description": "Short practical lessons covering English grammar, vocabulary, phrases, idioms, and usage."
+  },
+  {
+    "id": "cd394db7-909c-48fc-b9b6-546085047c85",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/speak-english-now-podcast-learn-english-speak-english/id1216879060",
+    "rssUrl": "https://rss.libsyn.com/shows/95915/destinations/491662.xml",
+    "imageUrl": "https://static.libsyn.com/p/assets/a/5/f/d/a5fd64b28945d2ce16c3140a3186d450/Speak-English-Now-Artwork_2026-17001.jpg",
+    "title": "Speak English Now Podcast",
+    "description": "English speaking and listening practice using question-and-answer stories and point-of-view lessons."
+  },
+  {
+    "id": "b60af466-1f8b-4401-8b40-e641655b8874",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1474389130",
+    "rssUrl": "https://rss.buzzsprout.com/442543.rss",
+    "imageUrl": "https://storage.buzzsprout.com/l8vhxrocrbub2hivaydixob4yiwv?.jpg",
+    "title": "Speak Better English with Harry",
+    "description": "Clear, practical English for intermediate and advanced learners. Speak Better English with Harry helps you use natural English with confidence in real situations — at work and in everyday conversations. Each episode focuses on vocabulary, collocations, phrasal verbs, and expressions that native speakers actually use, explained clearly and simply by an experienced native English teacher. This podcast is ideal if you already know the basics and want to sound more natural, fluent, and confident when you speak English."
+  },
+  {
+    "id": "fc36f0bb-56f5-44ff-8a0c-ac6ba107f56d",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1134891957",
+    "rssUrl": "https://anchor.fm/s/58e3cbfc/podcast/rss",
+    "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/14813239/929e6ea4fb3623c2.jpeg",
+    "title": "Learn English Through Listening",
+    "description": "Discover Adept English, the modern way to learn to speak English. Our goal is to help you speak English fluently. The Adept English language teaching approach is to learn through listening. We publish two new English audio lessons, with full transcripts, weekly. Every one of our English lessons will help you learn to speak English in ways that are interesting and lead to success. We have lots of podcasts, at all difficulty levels, on many topics, suitable for all listeners, ready for you to listen too right now."
+  },
+  {
+    "id": "974ed2c8-871d-4bdb-b4bb-f15ed12e20d2",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/id1498325643",
+    "rssUrl": "https://anchor.fm/s/1079b7dd4/podcast/rss",
+    "imageUrl": "https://d3t3ozftmdmh3i.cloudfront.net/staging/podcast_uploaded_nologo/44125981/553e59e0d6e1da99.jpg",
+    "title": "Learn English with Bob the Canadian",
+    "description": "If you want to learn English you've come to the right place. I'm Bob the Canadian and I make videos on Youtube (Just search for \"Bob the Canadian\" on Youtube!) as well as podcasts right here to help you learn English. Each week I teach a lesson and I host a question and answer session about the English language. During these sessions I will my best to answer as many questions as I can that you have about the English language!"
+  },
+  {
+    "id": "35ecd08f-1c59-44d3-9ec8-b00eea74e8e4",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/all-ears-english-podcast/id751574016",
+    "rssUrl": "https://feeds.megaphone.fm/allearsenglish",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/88b85f10-a0c0-11ec-9e52-bfcf9441f742/image/All_Ears_English_New_Cover_with_Michelle_Under_500_KB.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "All Ears English Podcast",
+    "description": "Conversational American English lessons for intermediate and advanced learners, with vocabulary, idioms, and culture."
+  },
+  {
+    "id": "f75adc75-9fe9-4444-96e7-6cc1f5014d77",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/ielts-energy-english-7/id969076668",
+    "rssUrl": "https://feeds.megaphone.fm/ALLE4310393056",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/77212776-6b51-11ed-8cf0-f39af0880b1c/image/AEE_IELTS_Show_Cover_Art-Less-than-500-KB.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "IELTS Energy English 7+",
+    "description": "IELTS exam prep with strategies, practice tips, and speaking, writing, reading, and listening guidance."
+  },
+  {
+    "id": "2e374c20-97a1-4adf-a279-5bc4d0076b70",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/easy-stories-in-english/id1448201565",
+    "rssUrl": "https://feeds.megaphone.fm/GLSS2276105381",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/e643bd18-8077-11ed-9633-432271ddcdcd/image/Easy_Stories_in_English_Show_Art.png?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "Easy Stories in English",
+    "description": "Graded stories in British English designed for listening practice across beginner to advanced levels."
+  },
+  {
+    "id": "453c4299-7036-4f93-b54c-4fe5fa8fe4ea",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/english-learning-for-curious-minds-a-more/id1489301603",
+    "rssUrl": "https://feeds.transistor.fm/leonardo-english-english-language-learning-for-curious-minds",
+    "imageUrl": "https://img.transistorcdn.com/_wePmE7908quUA6SDv1_eFt6BjxBmM7_Hm4wCitRLHU/rs:fill:0:0:1/w:1400/h:1400/q:60/mb:500000/aHR0cHM6Ly9pbWct/dXBsb2FkLXByb2R1/Y3Rpb24udHJhbnNp/c3Rvci5mbS9zaG93/LzU3MDEvMTYyMDk3/Mzg5MS1hcnR3b3Jr/LmpwZw.jpg",
+    "title": "English Learning for Curious Minds",
+    "description": "Intermediate and advanced English lessons built around stories about history, science, culture, and unusual topics."
+  },
+  {
+    "id": "01a593d8-50bb-4344-9395-1c58037cdc4f",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/thinking-in-english/id1535401964",
+    "rssUrl": "https://rss.pdrl.fm/699122/feeds.megaphone.fm/ARML8307714981",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/e8c425f4-b659-11ef-8e34-7f282fa6f516/image/fa1f88c31437a42bdef4694379039536.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "Thinking in English",
+    "description": "Intermediate and advanced English episodes about current affairs, history, culture, philosophy, and science."
+  },
+  {
+    "id": "46b5ec90-bfd7-47dc-80fb-333c7196389e",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/the-british-english-podcast/id1533216336",
+    "rssUrl": "https://feeds.megaphone.fm/BEP8760235789",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/8e35189a-b56b-11ee-a1dc-17b99ce34541/image/60854458c4d1acdf4e1c2f79c4137142d85d78e379bdafbd69bd34c85f5819ad.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "The British English Podcast",
+    "description": "British English lessons with episodes on language, culture, history, news, and current affairs."
+  },
+  {
+    "id": "14613299-eeb1-42df-b35e-c61a3bdf91e9",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/lukes-english-podcast-learn-british-english-with-luke/id312059190",
+    "rssUrl": "https://feeds.acast.com/public/shows/62b0ada25c7ea10012f541cb",
+    "imageUrl": "https://assets.pippa.io/shows/62b0ada25c7ea10012f541cb/1656325825132-9ac545276b5b3d1930cc21e5a7e1391b.jpeg",
+    "title": "Luke's English Podcast",
+    "description": "Long-form British English episodes for learners, combining natural speech, language teaching, and culture."
+  },
+  {
+    "id": "4db94940-b70a-4b71-8333-21ed10cac46f",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/planet-money/id290783428",
+    "rssUrl": "https://feeds.npr.org/510289/podcast.xml",
+    "imageUrl": "https://media.npr.org/assets/img/2022/10/24/pm_new_tile_2022_sq-e543deddd0a46a98be481b46e6a72efa6b52236f.jpg?s=1400&c=66&f=jpg",
+    "title": "Planet Money",
+    "description": "Story-driven explanations of economic ideas, markets, policy, and money in everyday life."
+  },
+  {
+    "id": "99014587-1e4e-41d8-9b19-99c5d4970221",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/hidden-brain/id1028908750",
+    "rssUrl": "https://feeds.simplecast.com/kwWc0lhf",
+    "imageUrl": "https://image.simplecastcdn.com/images/5b7d8c77-15ba-4eff-a999-2e725db21db5/5da6be39-fd7a-4d15-80cb-9b518d140957/3000x3000/hidden-brain-cover.jpg?aid=rss_feed",
+    "title": "Hidden Brain",
+    "description": "Psychology and social science stories about behavior, relationships, creativity, and decision-making."
+  },
+  {
+    "id": "ffccf87c-f9ac-4944-8e86-c8bc6e99e36e",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/freakonomics-radio/id354668519",
+    "rssUrl": "https://feeds.simplecast.com/Y8lFbOT4",
+    "imageUrl": "https://image.simplecastcdn.com/images/2be48404-a43c-4fa8-a32c-760a3216272e/fab1584e-8ea9-4efa-9650-5e595861b2cd/3000x3000/image.jpg?aid=rss_feed",
+    "title": "Freakonomics Radio",
+    "description": "Economic and social-science perspectives on everyday questions, incentives, and human behavior."
+  },
+  {
+    "id": "f092534b-ce3b-4fe3-a30e-f37993866d41",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/99-invisible/id394775318",
+    "rssUrl": "https://feeds.simplecast.com/BqbsxVfO",
+    "imageUrl": "https://image.simplecastcdn.com/images/8436e3c1-2479-4466-ac48-fa58259960bb/a6d5b177-ab5d-430d-b3f2-b393a09d8101/3000x3000/sxm-cover-99percentinvisible-r2025-3000x3000-final.jpg?aid=rss_feed",
+    "title": "99% Invisible",
+    "description": "Stories about design, architecture, and the unnoticed systems that shape daily life."
+  },
+  {
+    "id": "f41632ad-89dc-4680-8841-eb949795c946",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/hbr-ideacast/id152022135",
+    "rssUrl": "http://feeds.harvardbusiness.org/harvardbusiness/ideacast",
+    "imageUrl": "https://hbr.org/resources/images/podcasts/1400-hbr-ideacast-lg-3.jpg",
+    "title": "HBR IdeaCast",
+    "description": "Weekly interviews and discussions on business, leadership, and management topics."
+  },
+  {
+    "id": "f8ac1133-a063-4f40-9607-1bedd98eabf7",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/ted-radio-hour/id523121474",
+    "rssUrl": "https://feeds.npr.org/510298/podcast.xml",
+    "imageUrl": "https://media.npr.org/assets/img/2022/09/23/ted-radio-hour_tile_npr-network-01_sq-3ca507bd2dfa5c26d7db5b41c2b981b24a8789fa.jpg?s=1400&c=66&f=jpg",
+    "title": "TED Radio Hour",
+    "description": "NPR episodes that explore broad ideas through TED talks, interviews, and hosted discussion."
+  },
+  {
+    "id": "53b4a287-a363-4018-9e78-ccb9014263f5",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/radiolab/id152249110",
+    "rssUrl": "https://feeds.simplecast.com/EmVW7VGp",
+    "imageUrl": "https://image.simplecastcdn.com/images/2c9187d6-9dff-4257-bc55-469cf13afd48/60a2cfed-b8ca-460b-abb8-8ab0afb3fa8c/3000x3000/radiolab-showsquare-3000x3000.jpg?aid=rss_feed",
+    "title": "Radiolab",
+    "description": "Science, philosophy, and human-interest stories told with investigative reporting and sound design."
+  },
+  {
+    "id": "1018ff61-3a3a-4225-9163-0e67a2d4f3e3",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/the-daily/id1200361736",
+    "rssUrl": "https://feeds.simplecast.com/Sl5CSM3S",
+    "imageUrl": "https://image.simplecastcdn.com/images/7f2f4c05-9c2f-4deb-82b7-b538062bc22d/73549bf1-94b3-40ff-8aeb-b4054848ec1b/3000x3000/the-daily-album-art-original.jpg?aid=rss_feed",
+    "title": "The Daily",
+    "description": "A weekday news podcast from The New York Times with reported stories and analysis."
+  },
+  {
+    "id": "e59dd214-7203-4d31-8dcd-46fb22cb83c3",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/global-news-podcast/id135067274",
+    "rssUrl": "https://podcasts.files.bbci.co.uk/p02nq0gn.rss",
+    "imageUrl": "http://ichef.bbci.co.uk/images/ic/3000x3000/p0lqf7hf.jpg",
+    "title": "Global News Podcast",
+    "description": "BBC World Service coverage of global headlines, current affairs, and breaking news."
+  },
+  {
+    "id": "7f99671b-e635-4df5-a6d0-4644a2f6d88f",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/the-intelligence-from-the-economist/id1449631195",
+    "rssUrl": "https://access.acast.com/rss/d556eb54-6160-4c85-95f4-47d9f5216c49",
+    "imageUrl": "https://assets.pippa.io/shows/62e286a934d4d93d6587424a/1768220619434-1d405a6f-62ad-44a6-a532-bdffea8fcf5f.jpeg",
+    "title": "The Intelligence from The Economist",
+    "description": "Weekday analysis from The Economist on politics, business, culture, and global events."
+  },
+  {
+    "id": "305846d3-349a-43e7-950d-6da23a13cab3",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/today-in-focus/id1440133626",
+    "rssUrl": "https://www.theguardian.com/news/series/todayinfocus/podcast.xml",
+    "imageUrl": "https://uploads.guim.co.uk/2022/02/10/TiF_FINAL_3000x3000.jpg",
+    "title": "Today in Focus",
+    "description": "Guardian reporting and analysis on major news stories, hosted in a daily interview format."
+  },
+  {
+    "id": "497c2ad9-03ac-43f7-8068-0ffcb0efc0b4",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/this-american-life/id201671138",
+    "rssUrl": "https://www.thisamericanlife.org/podcast/rss.xml",
+    "imageUrl": "https://i.postimg.cc/BnfbWhbH/this-american-life.png",
+    "title": "This American Life",
+    "description": "Theme-based nonfiction stories and radio essays hosted by Ira Glass."
+  },
+  {
+    "id": "1a7c7977-5606-4de8-9bfd-d201fa40ac6d",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/stuff-you-should-know/id278981407",
+    "rssUrl": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/a91018a4-ea4f-4130-bf55-ae270180c327/44710ecc-10bb-48d1-93c7-ae270180c33e/podcast.rss",
+    "imageUrl": "https://www.omnycontent.com/d/programs/e73c998e-6e60-432f-8610-ae210140c5b1/a91018a4-ea4f-4130-bf55-ae270180c327/image.jpg?t=1749759419&size=Large",
+    "title": "Stuff You Should Know",
+    "description": "Conversational explainers on everyday topics, history, science, culture, and unusual questions."
+  },
+  {
+    "id": "4bb421a2-cc24-42f8-acbe-95c14e9d7df3",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/stuff-you-missed-in-history-class/id283605519",
+    "rssUrl": "https://www.omnycontent.com/d/playlist/e73c998e-6e60-432f-8610-ae210140c5b1/cfb428ef-eafc-44d0-9d09-ae2701747e6f/fb626e1f-112c-4246-a40d-ae2701747e7d/podcast.rss",
+    "imageUrl": "https://www.omnycontent.com/d/programs/e73c998e-6e60-432f-8610-ae210140c5b1/cfb428ef-eafc-44d0-9d09-ae2701747e6f/image.jpg?t=1749829805&size=Large",
+    "title": "Stuff You Missed in History Class",
+    "description": "A history podcast about unusual people, events, and stories that are often left out of textbooks."
+  },
+  {
+    "id": "3309d363-0f2e-4ee6-bd5c-1d82cd731ccc",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/philosophize-this/id659155419",
+    "rssUrl": "https://feeds.megaphone.fm/QCD6036500916",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/24779146-88be-11ee-95a6-7b19628c6840/image/logo1.jpg?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "Philosophize This!",
+    "description": "An introductory philosophy podcast that explains major thinkers and ideas in chronological order."
+  },
+  {
+    "id": "9179e432-cf31-4f44-b2de-37482b075ee8",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/science-friday/id73329284",
+    "rssUrl": "https://feeds.simplecast.com/h18ZIZD_",
+    "imageUrl": "https://image.simplecastcdn.com/images/b99b6401-4efd-485f-b744-84da8d6c14f6/88d16dd9-fbeb-4b94-acd3-e9871b5060cc/3000x3000/sciencefriday-showsquare-2025-3000x3000.jpg?aid=rss_feed",
+    "title": "Science Friday",
+    "description": "Science and technology conversations that explain current research in accessible language."
+  },
+  {
+    "id": "9cc102de-8afd-45dc-86ad-8c543d2f1801",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/pbs-news-hour-full-show/id394432287",
+    "rssUrl": "https://www.pbs.org/newshour/feeds/rss/podcasts/show",
+    "imageUrl": "https://d3i6fh83elv35t.cloudfront.net/static/assets/images/podcast-news-hour.png",
+    "title": "PBS News Hour - Full Show",
+    "description": "The full PBS News Hour broadcast in podcast form, with nightly reporting and interviews."
+  },
+  {
+    "id": "5f3fa351-a4cc-419c-81e5-116b23080aa7",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/lex-fridman-podcast/id1434243584",
+    "rssUrl": "https://lexfridman.com/feed/podcast/",
+    "imageUrl": "https://lexfridman.com/wordpress/wp-content/uploads/powerpress/artwork_3000-230.png",
+    "title": "Lex Fridman Podcast",
+    "description": "Long-form conversations with researchers, founders, and other public figures across science and technology."
+  },
+  {
+    "id": "9732a55f-be9e-46cd-8430-3a90081089e3",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/the-knowledge-project/id990149481",
+    "rssUrl": "https://feeds.megaphone.fm/FSMI7575968096",
+    "imageUrl": "https://megaphone.imgix.net/podcasts/9c0d00ea-df1d-11ef-9477-2b8336fcd8e9/image/83eb1e48bd3b369da55265bc8488349b.png?ixlib=rails-4.3.1&max-w=3000&max-h=3000&fit=crop&auto=format,compress",
+    "title": "The Knowledge Project",
+    "description": "Interviews on decision-making, mental models, and practical thinking for long-term growth."
+  },
+  {
+    "id": "1ac91c2a-2f3d-4073-9c20-433e23acc793",
+    "applePodcastUrl": "https://podcasts.apple.com/us/podcast/the-tim-ferriss-show/id863897795",
+    "rssUrl": "https://rss.art19.com/tim-ferriss-show",
+    "imageUrl": "https://content.production.cdn.art19.com/images/69/10/10/fb/691010fb-625e-4abe-993c-a57228b28dbe/91cb53ae0d5dbb379b9dffecf0a772593891d0d09bbe6d90ee746edbdb79e3ec75584f2ceb8260e9f675a90c05419b9b99842a76905b686f0f51c1a9d3e227ab.jpeg",
+    "title": "The Tim Ferriss Show",
+    "description": "Long-form interviews with high performers about methods, tools, and habits."
   }
 ]

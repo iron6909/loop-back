@@ -2093,6 +2093,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Network error. Check your connection and retry.';
 
   @override
+  String downloadErrorPodcastHost(String host) {
+    return 'Cannot reach $host. Try a network that can access this podcast source.';
+  }
+
+  @override
   String get downloadErrorCorrupted =>
       'Downloaded file verification failed. Please retry.';
 
