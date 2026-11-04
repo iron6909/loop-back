@@ -279,7 +279,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // 翻译失败时显示 SnackBar
-      expect(find.text('AI returned an invalid result. Try again'), findsOneWidget);
+      expect(
+        find.text('AI returned an invalid result. Try again'),
+        findsOneWidget,
+      );
       expect(callCount, 1);
     });
 

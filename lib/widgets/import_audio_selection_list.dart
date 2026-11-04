@@ -422,9 +422,7 @@ class _ImportSelectionSummaryView extends StatelessWidget {
           _ImportSelectionSummaryRow(
             icon: Icons.folder_off_outlined,
             iconColor: warningColor,
-            label: l10n.folderIgnoredSubdirectories(
-              summary.ignoredDirectories,
-            ),
+            label: l10n.folderIgnoredSubdirectories(summary.ignoredDirectories),
             textStyle: summaryStyle,
           ),
         ],

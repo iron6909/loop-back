@@ -86,11 +86,16 @@ void main() {
       ResponseBody.fromString(
         jsonEncode({
           'choices': [
-            {'finish_reason': 'stop', 'message': {'content': 'OK'}},
+            {
+              'finish_reason': 'stop',
+              'message': {'content': 'OK'},
+            },
           ],
         }),
         200,
-        headers: {Headers.contentTypeHeader: [Headers.jsonContentType]},
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
       ),
     );
     await tester.pumpAndSettle();

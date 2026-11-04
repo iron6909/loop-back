@@ -177,18 +177,17 @@ void main() {
           {'phrase': 'This is', 'note': '连读'},
         ],
       });
-      await buildClient().stream(
-        request: const StructuredAiRequest(
-          feature: StructuredFeature.analysis,
-          text: 'This is a test.',
-        ),
-        validate: validateAnalysis,
-      ).toList();
+      await buildClient()
+          .stream(
+            request: const StructuredAiRequest(
+              feature: StructuredFeature.analysis,
+              text: 'This is a test.',
+            ),
+            validate: validateAnalysis,
+          )
+          .toList();
       if (adapter.requests.single.data case {
-        'messages': [
-          {'role': 'system', 'content': final String system},
-          ...,
-        ],
+        'messages': [{'role': 'system', 'content': final String system}, ...],
       }) {
         expect(system, contains('"vocabulary":[{"term":'));
         expect(system, contains('"listening":[{"phrase":'));
@@ -242,18 +241,22 @@ void main() {
         ],
       });
       await expectLater(
-        buildClient().stream(
-          request: const StructuredAiRequest(
-            feature: StructuredFeature.analysis,
-            text: 'This is a test.',
+        buildClient()
+            .stream(
+              request: const StructuredAiRequest(
+                feature: StructuredFeature.analysis,
+                text: 'This is a test.',
+              ),
+              validate: validateAnalysis,
+            )
+            .toList(),
+        throwsA(
+          isA<StructuredValidationException>().having(
+            (error) => error.reason,
+            'reason',
+            ValidationFailureReason.missingField,
           ),
-          validate: validateAnalysis,
-        ).toList(),
-        throwsA(isA<StructuredValidationException>().having(
-          (error) => error.reason,
-          'reason',
-          ValidationFailureReason.missingField,
-        )),
+        ),
       );
       expect(adapter.requests, hasLength(1));
       expect(cacheWrites, isEmpty);

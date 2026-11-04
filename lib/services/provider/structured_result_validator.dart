@@ -79,34 +79,32 @@ ValidationOutcome<SentenceTranslation> validateTranslation(Object? decoded) =>
 ///
 /// `grammar` 与 `listening` 必须非空且每项文本齐备；`vocabulary` 可为空列表，但已有
 /// 项必须字段齐备（避免出现只有词没有释义的半成品）。
-ValidationOutcome<SentenceAnalysis> validateAnalysis(Object? decoded) =>
-    _withObject(decoded, (json) {
-      final grammar = _objectList(json, 'grammar', requireNonEmpty: true);
-      if (grammar.reason case final reason?) return ValidationFailure(reason);
-      for (final item in grammar.items) {
-        final reason =
-            _requiredText(item, 'point') ?? _requiredText(item, 'note');
-        if (reason != null) return ValidationFailure(reason);
-      }
+ValidationOutcome<SentenceAnalysis> validateAnalysis(
+  Object? decoded,
+) => _withObject(decoded, (json) {
+  final grammar = _objectList(json, 'grammar', requireNonEmpty: true);
+  if (grammar.reason case final reason?) return ValidationFailure(reason);
+  for (final item in grammar.items) {
+    final reason = _requiredText(item, 'point') ?? _requiredText(item, 'note');
+    if (reason != null) return ValidationFailure(reason);
+  }
 
-      final listening = _objectList(json, 'listening', requireNonEmpty: true);
-      if (listening.reason case final reason?) return ValidationFailure(reason);
-      for (final item in listening.items) {
-        final reason =
-            _requiredText(item, 'phrase') ?? _requiredText(item, 'note');
-        if (reason != null) return ValidationFailure(reason);
-      }
+  final listening = _objectList(json, 'listening', requireNonEmpty: true);
+  if (listening.reason case final reason?) return ValidationFailure(reason);
+  for (final item in listening.items) {
+    final reason = _requiredText(item, 'phrase') ?? _requiredText(item, 'note');
+    if (reason != null) return ValidationFailure(reason);
+  }
 
-      final vocabulary = _objectList(json, 'vocabulary');
-      if (vocabulary.reason case final reason?) return ValidationFailure(reason);
-      for (final item in vocabulary.items) {
-        final reason =
-            _requiredText(item, 'term') ?? _requiredText(item, 'note');
-        if (reason != null) return ValidationFailure(reason);
-      }
+  final vocabulary = _objectList(json, 'vocabulary');
+  if (vocabulary.reason case final reason?) return ValidationFailure(reason);
+  for (final item in vocabulary.items) {
+    final reason = _requiredText(item, 'term') ?? _requiredText(item, 'note');
+    if (reason != null) return ValidationFailure(reason);
+  }
 
-      return ValidationSuccess(SentenceAnalysis.fromJson(json));
-    });
+  return ValidationSuccess(SentenceAnalysis.fromJson(json));
+});
 
 /// 校验单词深度解析结果。
 ValidationOutcome<DictionaryEntry> validateWordEntry(Object? decoded) =>
@@ -196,7 +194,9 @@ ValidationOutcome<RetellReviewEvaluation> validateRetell(Object? decoded) =>
       }
 
       final corrections = _objectList(json, 'corrections');
-      if (corrections.reason case final reason?) return ValidationFailure(reason);
+      if (corrections.reason case final reason?) {
+        return ValidationFailure(reason);
+      }
       for (final correction in corrections.items) {
         final reason =
             _requiredText(correction, 'transcript') ??
@@ -234,10 +234,7 @@ ValidationOutcome<T> _withObject<T>(
 }
 
 /// 读取必填非空文本字段；返回 null 表示通过。
-ValidationFailureReason? _requiredText(
-  Map<String, dynamic> json,
-  String key,
-) {
+ValidationFailureReason? _requiredText(Map<String, dynamic> json, String key) {
   if (!json.containsKey(key)) return ValidationFailureReason.missingField;
   final value = json[key];
   if (value is! String) return ValidationFailureReason.fieldType;

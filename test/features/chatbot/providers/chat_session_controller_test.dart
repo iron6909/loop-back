@@ -132,8 +132,10 @@ void main() {
   test('供应商 402 → 该条 error 可重试，不跳会员', () async {
     final api = _ScriptApi(
       (_) => Stream<ChatTextFrame>.error(
-        const ProviderHttpException(ProviderErrorKind.insufficientBalance,
-          statusCode: 402),
+        const ProviderHttpException(
+          ProviderErrorKind.insufficientBalance,
+          statusCode: 402,
+        ),
       ),
     );
     final c = await make(api);

@@ -65,7 +65,8 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
             )
           else
             UsageCard(
-              view: usage.isReloading ? const UsageView()
+              view: usage.isReloading
+                  ? const UsageView()
                   : usage.valueOrNull ?? const UsageView(),
               providerName: _kind(l10n, runtime.config.kind),
               isRefreshing: usage.isLoading,
