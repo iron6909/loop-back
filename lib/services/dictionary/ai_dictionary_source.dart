@@ -1,166 +1,48 @@
-/// AI 词典数据源（流式）
-///
-/// 对接后端流式端点（需登录态），三级缓存查找：
-/// L1 内存 → L2 SQLite（`sentence_ai_cache` type `ai_dictionary_v2`）→ L3 流式 API。
-/// 按查询是否含空白路由到 `lookup-word`（单词）或 `lookup-phrase`（词组）端点，
-/// 规则与后端原 `resolveQueryType` 一致。
-///
-/// **流式路径尊重取消**（区别于旧「后台单请求语义」）：调用方取消（如关闭
-/// 弹窗）会中断在途 HTTP → 后端 `request.signal` abort → 中断 LLM，止损 token；
-/// 未完整完成不落缓存（部分结果丢弃）。只有收到后端显式 final 帧才写 L1+L2。
+/// AI 词典源：由当前供应商完成请求、校验和缓存，不读取登录或会员状态。
 library;
-
-import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
-import '../../database/daos/sentence_ai_cache_dao.dart';
-import '../../models/dictionary/dictionary_entry.dart';
 import '../../models/dictionary/dictionary_lookup_result.dart';
 import '../../utils/text_normalize.dart';
 import '../sentence_ai_api_client.dart';
 import 'dictionary_source.dart';
 
-/// AI 词典源
 class AiDictionarySource implements DictionarySource {
-  /// 延迟解析依赖：仅在真正查词时才触碰（避免枚举注册表即初始化数据库）
-  final ValueGetter<SentenceAiCacheDao> _cacheDao;
-  final ValueGetter<SentenceAiApiClient> _apiClient;
-
-  /// L1 内存缓存（key 含 targetLanguage）
-  final Map<String, AiDictionaryEntry> _memCache = {};
-
-  /// SQLite 缓存 type 列，与句子翻译/解析（`translation`/`analysis`）隔离。
-  ///
-  /// v2 避开旧多词 prompt 的缓存结构，防止旧 JSON 被新模型解析为空结果。
-  static const _cacheType = 'ai_dictionary_v2';
-
-  /// 缺省目标语言
-  static const _defaultLanguage = 'zh-CN';
-
-  AiDictionarySource({
-    required ValueGetter<SentenceAiCacheDao> cacheDao,
-    required ValueGetter<SentenceAiApiClient> apiClient,
-  }) : _cacheDao = cacheDao,
-       _apiClient = apiClient;
-
-  /// 稳定源 id（供控制器等处引用，避免散落魔法字符串）
+  AiDictionarySource({required ValueGetter<SentenceAiApiClient> apiClient})
+    : _api = apiClient;
+  final ValueGetter<SentenceAiApiClient> _api;
   static const sourceId = 'ai';
-
   @override
   String get id => sourceId;
-
   @override
   IconData get icon => Icons.auto_awesome;
-
   @override
   bool get canBeDisabled => false;
-
   @override
   bool get requiresNetwork => true;
+  void clearMemoryCache() => _api().clearMemoryCache();
 
-  /// 清空 L1 内存缓存。
-  ///
-  /// 用户「清除缓存」或切换数据库时调用——SQLite（L2）由 DAO 单独清，
-  /// 内存这层必须显式清，否则清缓存后重查仍命中 L1 返回旧结果。
-  void clearMemoryCache() => _memCache.clear();
-
-  /// 流式查词：按 L1 内存 → L2 SQLite → L3 登录/API 的顺序查找。
-  /// L1/L2 命中即时单帧返回；未命中且已登录时走 L3 流式，逐帧 yield，
-  /// 收到 final 帧（完整完成）才写 L1+L2。取消/异常在写入前抛出 → 不落缓存。
-  /// 登录只保护 L3 网络请求，不阻止已缓存结果离线展示。
-  Stream<DictionaryLookupResult?> lookupStream(
-    DictionaryLookupRequest request, {
-    CancelToken? cancelToken,
-  }) async* {
-    final token = request.accessToken;
-    final language = request.targetLanguage ?? _defaultLanguage;
-    // request.word 保留大小写进入后端 prompt；缓存键用小写词形，
-    // 确保 NASA/nasa 复用同一 L1/L2/L3 缓存。
-    final word = request.word;
-    final cacheWord = normalizeWord(word);
-    final key = hashText('$cacheWord|$language');
-    // 单词 / 词组是两条独立功能，类型仅由查询是否含空白决定（同后端 resolveQueryType）；
-    // 缓存读取与端点路由都据此选择具体模型，不靠 originalExpression 结构嗅探。
-    final isPhrase = cacheWord.contains(' ');
-
-    // L1 内存（即时整块返回，不模拟流式）
-    final mem = _memCache[key];
-    if (mem != null) {
-      yield AiDictResult(mem);
-      return;
-    }
-
-    // L2 SQLite（JSON 损坏则跳过，fallthrough 到 L3）
-    final cacheDao = _cacheDao();
-    final cached = await cacheDao.getByHash(key, _cacheType);
-    if (cached != null) {
-      try {
-        final decoded = jsonDecode(cached);
-        if (decoded is Map<String, dynamic>) {
-          final entry = isPhrase
-              ? MultiWordDictionaryEntry.fromJson(decoded)
-              : DictionaryEntry.fromJson(decoded);
-          _memCache[key] = entry;
-          yield AiDictResult(entry);
-          return;
-        }
-      } catch (_) {
-        // 损坏数据，继续 L3
-      }
-    }
-
-    // L3 网络请求需要登录；缓存读取不受登录状态限制。
-    if (token == null || token.isEmpty) {
-      throw const DictionaryAuthRequiredException();
-    }
-
-    // L3 流式 API：按 isPhrase 分流到单词/词组端点
-    final apiClient = _apiClient();
-    final stream = isPhrase
-        ? apiClient.lookupPhraseStreamFrames(
-            word,
-            accessToken: token,
-            targetLanguage: language,
-            cancelToken: cancelToken,
-          )
-        : apiClient.lookupWordStreamFrames(
-            word,
-            accessToken: token,
-            targetLanguage: language,
-            cancelToken: cancelToken,
-          );
-
-    AiDictionaryEntry? last;
-    var sawFinal = false;
+  Stream<DictionaryLookupResult?> lookupStream(DictionaryLookupRequest request,
+    {CancelToken? cancelToken}) async* {
+    final client = _api();
+    final stream = normalizeWord(request.word).contains(' ')
+      ? client.lookupPhraseStreamFrames(request.word,
+          targetLanguage: request.targetLanguage, cancelToken: cancelToken)
+      : client.lookupWordStreamFrames(request.word,
+          targetLanguage: request.targetLanguage, cancelToken: cancelToken);
     await for (final frame in stream) {
-      last = frame.entry;
-      sawFinal = sawFinal || frame.isFinal;
+      if (cancelToken?.isCancelled ?? false) return;
       yield AiDictResult(frame.entry);
-    }
-
-    // 只有显式 final 帧才落缓存；正常 EOF 但无 final 视为协议中断/损坏。
-    if (last != null && !sawFinal) {
-      throw const DictionaryStreamException();
-    }
-    if (last != null && sawFinal) {
-      _memCache[key] = last;
-      await cacheDao.upsert(key, _cacheType, jsonEncode(last.toJson()));
     }
   }
 
-  /// 接口要求的 [lookup]：消费 [lookupStream] 取最后一帧（完整结果）。
-  ///
-  /// controller 对 AI 源走 [lookupStream] 逐帧渲染；此方法供其它非流式消费方兜底。
   @override
-  Future<DictionaryLookupResult?> lookup(
-    DictionaryLookupRequest request, {
-    CancelToken? cancelToken,
-  }) async {
+  Future<DictionaryLookupResult?> lookup(DictionaryLookupRequest request,
+    {CancelToken? cancelToken}) async {
     DictionaryLookupResult? last;
-    await for (final r in lookupStream(request, cancelToken: cancelToken)) {
-      last = r;
+    await for (final value in lookupStream(request, cancelToken: cancelToken)) {
+      last = value;
     }
     return last;
   }

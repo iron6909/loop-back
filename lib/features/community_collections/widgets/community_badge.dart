@@ -4,6 +4,36 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/collection.dart';
 import '../../../theme/app_theme.dart';
 
+/// 历史社区合集已停止同步的灰色角标。
+class CommunitySyncStoppedBadge extends StatelessWidget {
+  const CommunitySyncStoppedBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final label = AppLocalizations.of(context)!.communitySyncStoppedBadge;
+    return Semantics(
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.outline,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            height: 1.2,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 合集来源角标：贴在合集封面角上的文字小标签。
 ///
 /// 设计目标：用最小占位直接传达语义，无需用户解读图标。

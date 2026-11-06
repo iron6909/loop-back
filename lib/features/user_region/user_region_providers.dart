@@ -7,7 +7,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../remote_config/remote_config.dart';
-import '../remote_config/remote_config_dependencies.dart';
+import '../../config/regional_service_endpoints.dart';
 import '../../services/app_logger.dart';
 import '../../services/runtime_endpoint_router.dart';
 import 'user_region.dart';
@@ -25,63 +25,29 @@ final userRegionEndpointRouterProvider = Provider<RuntimeEndpointRouter>(
   (ref) => runtimeEndpointRouter,
 );
 
-/// 构造可测试的启动地区解析器，并复用同一个远程配置服务与缓存。
-final userRegionBootstrapperProvider = Provider<UserRegionBootstrapper>((ref) {
-  final router = ref.watch(userRegionEndpointRouterProvider);
-  final remoteConfigService = ref.watch(remoteConfigServiceProvider);
-  return UserRegionBootstrapper(
-    endpoints: router.endpoints,
-    fetchRemoteConfig: (baseUrl, timeout) {
-      return remoteConfigService.fetchRemoteFromBaseUrl(
-        baseUrl,
-        timeout: timeout,
-      );
-    },
-  );
-});
-
-/// 冷启动先展示 Flutter 首帧，再串行探测地区地址并固定本进程路由。
+/// 首帧后按系统地区和本机覆盖值固定模型 CDN，不访问地区 API。
 final userRegionBootstrapProvider = FutureProvider<UserRegionBootstrapResult>((
   ref,
 ) async {
   final readCountryCode = ref.watch(userRegionDeviceCountryCodeProvider);
   final router = ref.watch(userRegionEndpointRouterProvider);
   await WidgetsBinding.instance.endOfFrame;
-
-  final systemIsChinaUser = _readSystemRegionIsChina(readCountryCode);
-  router.updateFromUserRegion(isChinaUser: systemIsChinaUser);
-
-  var cachedConfig = RemoteConfig.defaults;
-  UserRegionBootstrapResult result;
-  try {
-    final remoteConfigService = ref.read(remoteConfigServiceProvider);
-    cachedConfig = remoteConfigService.loadInitialFromCache();
-    final override = await _readOverride(ref);
-    final bootstrapper = ref.read(userRegionBootstrapperProvider);
-    result = await bootstrapper.resolve(
-      systemIsChinaUser: systemIsChinaUser,
-      cachedConfig: cachedConfig,
-      forcedRegion: override.forcedRegion,
-    );
-  } catch (error, stackTrace) {
-    AppLogger.log('UserRegion', 'bootstrap failed: $error');
-    AppLogger.log('UserRegion', stackTrace.toString());
-    result = UserRegionBootstrapResult(
-      isChinaUser: systemIsChinaUser,
-      source: UserRegionDecisionSource.systemFallback,
-      remoteConfig: cachedConfig,
-    );
-  }
-  router.updateFromUserRegion(isChinaUser: result.isChinaUser);
-  AppLogger.log(
-    'UserRegion',
-    'startup route ready china=${result.isChinaUser} '
-        'source=${result.source.name}',
+  final override = await _readOverride(ref);
+  final forcedRegion = override.forcedRegion;
+  final isChinaUser = forcedRegion == null
+      ? _readSystemRegionIsChina(readCountryCode)
+      : forcedRegion == ServiceEndpointRegion.china;
+  router.updateFromUserRegion(isChinaUser: isChinaUser);
+  return UserRegionBootstrapResult(
+    isChinaUser: isChinaUser,
+    source: forcedRegion == null
+        ? UserRegionDecisionSource.systemFallback
+        : UserRegionDecisionSource.developerOverride,
+    remoteConfig: RemoteConfig.defaults,
   );
-  return result;
 });
 
-/// 已解析时使用 Config API 结论；解析期间或异常时暂用系统 Region 回退值。
+/// 地区在本进程内固定；解析期间暂用系统 Region。
 final isChinaUserProvider = Provider<bool>((ref) {
   final result = ref.watch(userRegionBootstrapProvider).valueOrNull;
   return result?.isChinaUser ??

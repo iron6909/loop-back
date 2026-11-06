@@ -13,15 +13,6 @@ import 'package:go_router/go_router.dart';
 
 import '../analytics/analytics_observer.dart';
 import '../analytics/analytics_providers.dart';
-import '../features/auth/screens/account_screen.dart';
-import '../features/subscription/screens/paywall_screen.dart';
-import '../features/auth/screens/check_email_screen.dart';
-import '../features/auth/screens/email_sign_in_screen.dart';
-import '../features/auth/screens/login_screen.dart';
-import '../features/auth/screens/password_sign_in_screen.dart';
-import '../features/auth/providers/auth_providers.dart';
-import '../features/community_collections/screens/discover_collections_screen.dart';
-import '../features/community_collections/screens/community_collection_detail_screen.dart';
 import '../features/community_collections/community_collection_routes.dart';
 import '../features/podcast/podcast_models.dart';
 import '../features/podcast/screens/podcast_discovery_screen.dart';
@@ -37,6 +28,7 @@ import '../screens/collection_detail_screen.dart';
 import '../screens/study_screen.dart';
 import '../screens/favorites_screen.dart';
 import '../screens/settings_screen.dart';
+import '../features/provider_settings/screens/ai_service_screen.dart';
 import '../screens/learning_plan_screen.dart';
 import '../screens/media_playback_screen.dart';
 import '../screens/blind_listen_player_screen.dart';
@@ -65,8 +57,6 @@ final rootRouteObserver = RouteTransitionObserver();
 abstract class AppRoutes {
   static const collections = '/collections';
 
-  /// 发现资源列表和合集详情留在资源库主导航壳中的路径。
-  static const discoverResources = CommunityCollectionRoutes.discoverResources;
   static const study = '/study';
   static const favorites = '/favorites';
   static const settings = '/settings';
@@ -91,10 +81,6 @@ abstract class AppRoutes {
   /// 合集详情页路径
   static String collectionDetail(String collectionId) =>
       '/collections/$collectionId';
-
-  /// 发现资源中的公开合集详情页路径。
-  static String discoverCollection(String remoteId) =>
-      CommunityCollectionRoutes.discoverCollection(remoteId);
 
   /// 学习计划页路径
   /// [autoStart] 为 true 时进入后自动弹出学习任务
@@ -297,16 +283,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.study,
     observers: [rootRouteObserver, AnalyticsObserver(analyticsService)],
     redirect: (context, state) {
-      final isAuthenticated = ref.read(isAuthenticatedProvider);
-      final isAuthRoute =
-          state.uri.path == AppRoutes.login ||
-          state.uri.path == AppRoutes.emailSignIn ||
-          state.uri.path == AppRoutes.checkEmail ||
-          state.uri.path == AppRoutes.passwordSignIn;
-      if (isAuthenticated && isAuthRoute) {
-        return AppRoutes.settings;
-      }
-      if (!isAuthenticated && state.uri.path == AppRoutes.account) {
+      // 旧登录、账号和会员链接回到设置，不实例化停用的页面。
+      if (state.uri.path == AppRoutes.login ||
+          state.uri.path.startsWith('/login/') ||
+          state.uri.path == AppRoutes.account ||
+          state.uri.path == AppRoutes.paywall) {
         return AppRoutes.settings;
       }
       // /onboarding/survey 自身路径必须早返，否则在拦截路径上产生死循环
@@ -314,6 +295,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // 首启新用户、未完成且未学习过 → 强制进入问卷
       if (ref.read(shouldShowSurveyProvider)) {
         return AppRoutes.onboardingSurvey;
+      }
+      // 兼容旧发现页链接，停用远端内容后统一回到我的合集。
+      if (state.uri.path == '/collections/discover' ||
+          state.uri.path.startsWith('/collections/discover/')) {
+        return AppRoutes.collections;
       }
       if (state.uri.path == '/') return AppRoutes.study;
       return null;
@@ -330,26 +316,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const LibraryScreen(),
                 routes: [
                   _pdfPreviewRoute(),
-                  // 发现页属于资源库入口流程，留在 branch-0 内以持续显示主导航。
-                  GoRoute(
-                    path: CommunityCollectionRoutes.discoverSegment,
-                    builder: (context, state) =>
-                        const DiscoverCommunityCollectionsScreen(),
-                    routes: [
-                      GoRoute(
-                        path: ':remoteId',
-                        builder: (context, state) {
-                          final remoteId = state.pathParameters['remoteId'];
-                          if (remoteId == null) {
-                            return const _RestoredRoutePopper();
-                          }
-                          return CommunityCollectionDetailScreen(
-                            remoteId: remoteId,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
                   // Podcast 搜索和单集预览共用资源库 branch，保持主导航可见。
                   GoRoute(
                     path: AppRoutes.podcastSubscribeSegment,
@@ -523,6 +489,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/settings',
                 builder: (context, state) => const SettingsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'ai-service',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (_, _) => const AiServiceScreen(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -538,45 +511,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const OnboardingSurveyScreen(),
       ),
-      // 账号与登录流程（全屏）
-      GoRoute(
-        path: AppRoutes.login,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.emailSignIn,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final extra = state.extra;
-          final email = extra is String ? extra : '';
-          return EmailSignInScreen(initialEmail: email);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.checkEmail,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) {
-          final extra = state.extra;
-          final email = extra is String ? extra : '';
-          return CheckEmailScreen(email: email);
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.passwordSignIn,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PasswordSignInScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.account,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const AccountScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.paywall,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const PaywallScreen(),
-      ),
+      for (final path in [
+        AppRoutes.login,
+        AppRoutes.emailSignIn,
+        AppRoutes.checkEmail,
+        AppRoutes.passwordSignIn,
+        AppRoutes.account,
+        AppRoutes.paywall,
+      ])
+        GoRoute(path: path, redirect: (context, state) => AppRoutes.settings),
       // 收藏句子复习（全屏）
       GoRoute(
         path: '/bookmark-review',
@@ -602,21 +545,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const ReviewStatisticsScreen(),
       ),
-      // 兼容已发出的旧发现页链接，统一导向资源库主导航壳内的新路径。
+      // 发现页已移除；旧链接统一回到我的合集，避免死链。
       GoRoute(
         path: CommunityCollectionRoutes.legacyDiscover,
-        redirect: (context, state) =>
-            state.uri.path == CommunityCollectionRoutes.legacyDiscover
-            ? AppRoutes.discoverResources
-            : null,
+        redirect: (context, state) => AppRoutes.collections,
         routes: [
           GoRoute(
             path: ':remoteId',
-            redirect: (context, state) {
-              final remoteId = state.pathParameters['remoteId'];
-              if (remoteId == null) return AppRoutes.discoverResources;
-              return AppRoutes.discoverCollection(remoteId);
-            },
+            redirect: (context, state) => AppRoutes.collections,
           ),
         ],
       ),

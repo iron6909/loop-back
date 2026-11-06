@@ -1,9 +1,5 @@
-import 'package:dio/dio.dart';
 import 'package:echo_loop/config/regional_service_endpoints.dart';
-import 'package:echo_loop/features/remote_config/remote_config.dart';
 import 'package:echo_loop/features/remote_config/remote_config_dependencies.dart';
-import 'package:echo_loop/features/remote_config/remote_config_service.dart';
-import 'package:echo_loop/features/remote_config/remote_config_store.dart';
 import 'package:echo_loop/features/user_region/user_region_bootstrapper.dart';
 import 'package:echo_loop/features/user_region/user_region_override.dart';
 import 'package:echo_loop/features/user_region/user_region_providers.dart';
@@ -41,28 +37,17 @@ void main() {
     );
   });
 
-  testWidgets('已保存的强制中国区让启动路由固定到中国区', (tester) async {
+  testWidgets('已保存的强制中国区让启动路由固定到中国区（不访问后端）', (tester) async {
     SharedPreferences.setMockInitialValues({
       'developer_user_region_override': 'china',
     });
-    final prefs = await SharedPreferences.getInstance();
     final router = RuntimeEndpointRouter(endpoints: endpoints);
-    final calls = <String>[];
     final container = ProviderContainer(
       overrides: [
         userRegionDeviceCountryCodeProvider.overrideWithValue(() => 'US'),
         userRegionEndpointRouterProvider.overrideWithValue(router),
-        remoteConfigServiceProvider.overrideWithValue(
-          RemoteConfigService(dio: Dio(), store: RemoteConfigStore(prefs)),
-        ),
-        userRegionBootstrapperProvider.overrideWithValue(
-          UserRegionBootstrapper(
-            endpoints: endpoints,
-            fetchRemoteConfig: (baseUrl, _) async {
-              calls.add(baseUrl);
-              return RemoteConfig.defaults;
-            },
-          ),
+        remoteConfigServiceProvider.overrideWith(
+          (ref) => throw StateError('地区判定不应请求配置接口'),
         ),
       ],
     );
@@ -73,8 +58,29 @@ void main() {
     final result = await tester.runAsync(() => future);
 
     expect(result?.source, UserRegionDecisionSource.developerOverride);
-    expect(calls, ['https://china.example']);
     expect(router.apiRegion, ServiceEndpointRegion.china);
     expect(container.read(isChinaUserProvider), isTrue);
+  });
+
+  testWidgets('无覆盖时按系统 Region 固定，不请求配置接口', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final router = RuntimeEndpointRouter(endpoints: endpoints);
+    final container = ProviderContainer(
+      overrides: [
+        userRegionDeviceCountryCodeProvider.overrideWithValue(() => 'CN'),
+        userRegionEndpointRouterProvider.overrideWithValue(router),
+        remoteConfigServiceProvider.overrideWith(
+          (ref) => throw StateError('地区判定不应请求配置接口'),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final future = container.read(userRegionBootstrapProvider.future);
+    await tester.pump();
+    final result = await tester.runAsync(() => future);
+
+    expect(result?.source, UserRegionDecisionSource.systemFallback);
+    expect(router.apiRegion, ServiceEndpointRegion.china);
   });
 }

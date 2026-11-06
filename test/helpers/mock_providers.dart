@@ -13,9 +13,6 @@ import 'package:echo_loop/analytics/analytics_channel.dart';
 import 'package:echo_loop/analytics/analytics_providers.dart';
 import 'package:echo_loop/analytics/analytics_service.dart';
 import 'package:echo_loop/analytics/consent_manager.dart';
-import 'package:echo_loop/features/subscription/models/entitlement.dart';
-import 'package:echo_loop/features/subscription/providers/subscription_controller.dart';
-import 'package:echo_loop/features/subscription/state/entitlement_state.dart';
 import 'package:echo_loop/features/usage/usage_counters.dart';
 import 'package:echo_loop/features/usage/usage_event.dart';
 import 'package:echo_loop/features/usage/usage_providers.dart';
@@ -23,20 +20,16 @@ import 'package:echo_loop/features/usage/usage_tracker.dart';
 import 'package:echo_loop/models/audio_engine_state.dart';
 import 'package:echo_loop/models/audio_item.dart';
 import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/providers/app_update_provider.dart';
 import 'package:echo_loop/providers/dictionary_provider.dart';
 import 'package:echo_loop/providers/notification_permission_provider.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/providers/retell_recording_controller_provider.dart';
 import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
 import 'package:echo_loop/providers/local_transcription_task_provider.dart';
-import 'package:echo_loop/providers/transcription_task_provider.dart';
 import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/app_update_info.dart';
 import 'package:echo_loop/providers/learning_settings_provider.dart';
 import 'package:echo_loop/services/notification_permission_service.dart';
 import 'package:echo_loop/services/study_time_service.dart';
-import 'package:echo_loop/services/transcription_api_client.dart';
 import 'package:echo_loop/database/daos/sentence_ai_cache_dao.dart';
 
 // 共享替身
@@ -213,31 +206,6 @@ Override analyticsOverride() {
   );
 }
 
-/// 固定权益态（默认 Pro）的 SubscriptionController 替身。
-///
-/// 让已登录用户在 widget 测试中视为「已解锁」，从而绕过 AI 功能的额度闸 /
-/// Paywall（额度闸本身由订阅模块单测覆盖）。不传 [state] 即为 Pro。
-class _FixedSubscriptionController extends SubscriptionController {
-  _FixedSubscriptionController(this._state);
-  final EntitlementState _state;
-  @override
-  EntitlementState build() => _state;
-}
-
-/// 返回把订阅权益固定为 [pro] 的 override（默认 Pro，已解锁全部付费能力）。
-Override subscriptionEntitlementOverride({bool pro = true}) {
-  return subscriptionControllerProvider.overrideWith(
-    () => _FixedSubscriptionController(
-      pro
-          ? const EntitlementState(
-              status: EntitlementStatus.premium,
-              entitlement: Entitlement(isPremium: true),
-            )
-          : const EntitlementState.free(),
-    ),
-  );
-}
-
 /// 返回 usageTrackerProvider 的 override。
 ///
 /// 大多数 widget 测试只关心业务流程，不需要真实写入 SharedPreferences。
@@ -334,54 +302,6 @@ List<Override> learningSettingsOverrides({
     ),
     if (prefs != null) sharedPreferencesProvider.overrideWithValue(prefs),
   ];
-}
-
-// ========== AppUpdate ==========
-
-/// 测试用 AppUpdate — 不访问网络和 SharedPreferences
-class TestAppUpdate extends AppUpdate {
-  @override
-  AppUpdateState build() => const AppUpdateInitial();
-
-  @override
-  Future<AppUpdateResult> manualCheck() async {
-    return const AppUpdateResult(type: AppUpdateType.none);
-  }
-
-  @override
-  Future<void> dismiss() async {
-    state = const AppUpdateDismissed();
-  }
-}
-
-// ========== TranscriptionTaskManager ==========
-
-/// 测试用 TranscriptionTaskManager — 不执行真实转录
-class TestTranscriptionTaskManager extends TranscriptionTaskManager {
-  final Map<String, TranscriptionTaskState> _initialState;
-
-  TestTranscriptionTaskManager([this._initialState = const {}]);
-
-  @override
-  Map<String, TranscriptionTaskState> build() => Map.of(_initialState);
-
-  @override
-  Future<void> startTranscription(
-    AudioItem audioItem,
-    String language, {
-    required String accessToken,
-    bool autoMergeShortSentences = true,
-  }) async {}
-
-  @override
-  void cancelTranscription(String audioId) {
-    state = Map.of(state)..remove(audioId);
-  }
-
-  @override
-  void clearState(String audioId) {
-    state = Map.of(state)..remove(audioId);
-  }
 }
 
 /// 测试用 LocalTranscriptionTaskManager — build 返回注入的固定状态，
@@ -547,13 +467,6 @@ class TestRetellRecordingController extends RetellRecordingController {
   void emitRecordingCompleted(Duration duration) {
     recordingCompletionHandler?.call(duration);
   }
-}
-
-// ========== TranscriptionApiClient ==========
-
-/// 测试用 TranscriptionApiClient Provider 值
-TranscriptionApiClient createTestTranscriptionApiClient() {
-  return TranscriptionApiClient(baseUrl: 'https://test.local');
 }
 
 // ========== studyTimeOverrides ==========

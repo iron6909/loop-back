@@ -35,7 +35,6 @@ import '../providers/learning_session/intensive_listen_player_provider.dart';
 import '../providers/learning_session/retell_player_provider.dart';
 import '../providers/listen_and_repeat/listen_and_repeat_controller.dart';
 import '../providers/learning_session/review_difficult_practice_provider.dart';
-import '../providers/transcription_task_provider.dart';
 import '../providers/study_stats_provider.dart';
 import '../providers/study_duration_provider.dart';
 import '../providers/study_task_provider.dart';
@@ -102,7 +101,6 @@ void switchAppDatabase(AppDatabase newDb, WidgetRef ref) {
   ref.invalidate(listenAndRepeatControllerProvider);
   ref.invalidate(retellPlayerProvider);
   ref.invalidate(reviewDifficultPracticeProvider);
-  ref.invalidate(transcriptionTaskManagerProvider);
 
   ref.invalidate(bookmarkListProvider);
 

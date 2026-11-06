@@ -709,6 +709,8 @@ class PluginBackgroundDownloadRunner
     try {
       await _downloader.configure(
         globalConfig: (Config.holdingQueue, (null, null, 1)),
+        // 只限制 Android 建连等待，不限制音频文件的总下载时长。
+        androidConfig: (Config.requestTimeout, const Duration(seconds: 30)),
       );
       final labels = await _resolveNotificationLabels();
       _downloader.configureNotificationForGroup(

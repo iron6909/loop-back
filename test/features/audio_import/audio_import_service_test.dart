@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -8,6 +9,7 @@ import 'package:echo_loop/services/background_file_download_service.dart';
 import 'package:echo_loop/models/audio_item.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/collection_provider.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -916,8 +918,32 @@ void main() {
       expect(await _tmpAudioImportFiles(tmpDir), isEmpty);
     });
 
-    test('BBC 旧 HTTP enclosure 下载前自动升级为 HTTPS secure URL', () async {
+    test('BBC 旧 HTTP enclosure 下载前解析有界 HTTPS 跳转，下载官方媒体', () async {
       final runner = _FakeDownloadRunner(bytes: const <int>[5, 6, 7, 8]);
+      when(
+        () => dio.head<Object>(
+          any(),
+          options: any(named: 'options'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).thenAnswer((invocation) async {
+        final options = invocation.namedArguments[#options];
+        expect(
+          options,
+          isA<Options>().having(
+            (value) => value.receiveTimeout,
+            'receive timeout',
+            const Duration(seconds: 15),
+          ),
+        );
+        return Response<Object>(
+          requestOptions: RequestOptions(path: 'bbc'),
+          statusCode: 302,
+          headers: Headers.fromMap({
+            'location': ['https://bbc.pdn.tritondigital.com/episode.mp3'],
+          }),
+        );
+      });
       final service = AudioImportService(
         dio: dio,
         resolveDataDir: () async => tmpDir,
@@ -934,11 +960,107 @@ void main() {
       );
 
       expect(
-        runner.lastUri.toString(),
-        startsWith('https://open.live.bbc.co.uk/'),
+        runner.lastUri,
+        Uri.parse('https://bbc.pdn.tritondigital.com/episode.mp3'),
       );
-      expect(runner.lastUri.toString(), contains('/proto/https/'));
-      expect(runner.lastUri.toString(), endsWith('/vpid/p0n4bjcm.mp3'));
+      verify(
+        () => dio.head<Object>(
+          'https://open.live.bbc.co.uk/mediaselector/6/redir/version/2.0/mediaset/audio-nondrm-download-rss-low/proto/https/vpid/p0n4bjcm.mp3',
+          options: any(named: 'options'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+    });
+
+    test('BBC 跳转请求超时明确失败，不提交后台下载', () async {
+      final runner = _FakeDownloadRunner();
+      when(
+        () => dio.head<Object>(
+          any(),
+          options: any(named: 'options'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).thenThrow(
+        DioException(
+          requestOptions: RequestOptions(path: 'bbc'),
+          type: DioExceptionType.connectionTimeout,
+        ),
+      );
+      final service = AudioImportService(
+        dio: dio,
+        resolveDataDir: () async => tmpDir,
+        backgroundDownloader: _backgroundDownloader(runner),
+      );
+      await expectLater(
+        service.downloadEpisodeToSandbox(
+          url:
+              'https://open.live.bbc.co.uk/mediaselector/6/redir/vpid/test.mp3',
+          displayName: 'BBC',
+        ),
+        throwsA(
+          isA<AudioImportException>().having(
+            (error) => error.code,
+            'failure',
+            AudioImportFailureCode.network,
+          ),
+        ),
+      );
+      expect(runner.lastUri, isNull);
+    });
+
+    test('BBC 连接完全挂起时 15 秒取消底层请求且不进入后台队列', () {
+      fakeAsync((async) {
+        final runner = _FakeDownloadRunner();
+        final response = Completer<Response<Object>>();
+        CancelToken? requestToken;
+        when(
+          () => dio.head<Object>(
+            any(),
+            options: any(named: 'options'),
+            cancelToken: any(named: 'cancelToken'),
+          ),
+        ).thenAnswer((invocation) {
+          if (invocation.namedArguments[#cancelToken]
+              case final CancelToken token) {
+            requestToken = token;
+          }
+          return response.future;
+        });
+        final service = AudioImportService(
+          dio: dio,
+          backgroundDownloader: _backgroundDownloader(runner),
+        );
+        Object? failure;
+        unawaited(
+          service
+              .downloadEpisodeToSandbox(
+                url:
+                    'https://open.live.bbc.co.uk/mediaselector/6/redir/vpid/test.mp3',
+                displayName: 'BBC',
+              )
+              .then<void>(
+                (_) => fail('挂起来源不能成功'),
+                onError: (Object error) {
+                  failure = error;
+                },
+              ),
+        );
+        async.flushMicrotasks();
+        async.elapse(const Duration(seconds: 14));
+        expect(failure, isNull);
+        async.elapse(const Duration(seconds: 1));
+        async.flushMicrotasks();
+        expect(requestToken?.isCancelled, isTrue);
+        expect(
+          failure,
+          isA<AudioImportException>().having(
+            (error) => error.code,
+            'failure',
+            AudioImportFailureCode.network,
+          ),
+        );
+        expect(runner.lastUri, isNull);
+      });
     });
 
     test('Anchor 播客重定向 URL 直接下载其内嵌的媒体 URL', () async {

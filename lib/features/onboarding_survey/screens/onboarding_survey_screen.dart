@@ -22,7 +22,6 @@ import '../../../services/app_logger.dart';
 import '../models/onboarding_answers.dart';
 import '../models/onboarding_question.dart';
 import '../providers/onboarding_survey_provider.dart';
-import '../providers/user_onboarding_sync_provider.dart';
 import '../widgets/survey_choice_tile.dart';
 
 /// 当前所在步骤。
@@ -285,8 +284,6 @@ class _OnboardingSurveyScreenState
       if (mounted) setState(() => _submitting = false);
       return;
     }
-
-    unawaited(ref.read(onboardingSyncProvider).onLocalAnswersChanged());
 
     final analytics = ref.read(analyticsServiceProvider);
     final elapsed = DateTime.now().difference(_startedAt).inSeconds;

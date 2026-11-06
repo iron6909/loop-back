@@ -13,22 +13,16 @@ import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../analytics/analytics_providers.dart';
 import '../analytics/analytics_service.dart';
 import '../analytics/permission_snapshot.dart';
-import '../config/auth_config.dart' as auth_config;
-import '../config/paddle_config.dart' as paddle_config;
-import '../config/revenuecat_config.dart' as revenuecat_config;
 import '../database/app_database.dart';
 import '../database/providers.dart';
 import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
     show sharedPreferencesProvider;
 import '../features/user_region/user_region_providers.dart';
-import '../features/community_collections/download/community_download_notifier.dart';
 import '../firebase_options.dart';
 import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
@@ -64,20 +58,6 @@ class StartupReport {
   bool get isDegraded => issues.isNotEmpty;
 }
 
-/// 第三方 SDK 初始化完成后的可用性快照。
-class ThirdPartyStartupReport extends StartupReport {
-  const ThirdPartyStartupReport({
-    required List<StartupIssue> issues,
-    required this.isSupabaseReady,
-    required this.isRevenueCatReady,
-  }) : super(issues);
-
-  final bool isSupabaseReady;
-
-  /// 仅在本进程的 Purchases.configure 真正成功后为 true。
-  final bool isRevenueCatReady;
-}
-
 /// 演示库模式由 main 在真实进程中覆盖；测试默认生产库语义。
 final startupDemoModeProvider = Provider<bool>((ref) => false);
 
@@ -91,33 +71,6 @@ final startupBootstrapperProvider = Provider<StartupBootstrapper>((ref) {
   );
 });
 
-/// 等待本次启动的地区结论后，按该结果选择 Supabase URL。
-final supabaseUrlForThisRunProvider = FutureProvider<String?>((ref) async {
-  final userRegion = await ref.watch(userRegionBootstrapProvider.future);
-  final isChinaUser = userRegion.isChinaUser;
-  final selectedUrl = auth_config.supabaseUrlForRegion(
-    isChinaUser: isChinaUser,
-  );
-  final selectionReady = auth_config.isAuthConfiguredForUrl(selectedUrl);
-  final skipReason = selectedUrl == null
-      ? 'selected_url_missing'
-      : auth_config.supabasePublishableKey.trim().isEmpty
-      ? 'publishable_key_missing'
-      : null;
-  AppLogger.log(
-    'Supabase',
-    'url selection region=${isChinaUser ? "china" : "global"} '
-        'endpoint=${auth_config.supabaseEndpointLabelForLog(selectedUrl)} '
-        'globalUrlConfigured=${auth_config.supabaseUrl.trim().isNotEmpty} '
-        'chinaUrlConfigured=${auth_config.chinaSupabaseUrl.trim().isNotEmpty} '
-        'publishableKeyConfigured='
-        '${auth_config.supabasePublishableKey.trim().isNotEmpty} '
-        'action=${selectionReady ? "initialize" : "skip"}'
-        '${skipReason == null ? "" : " reason=$skipReason"}',
-  );
-  return selectedUrl;
-});
-
 /// 本地数据初始化状态。首次构建先等待首帧，再运行关键本地初始化。
 final localStartupProvider =
     AsyncNotifierProvider<LocalStartupController, StartupReport>(
@@ -125,17 +78,11 @@ final localStartupProvider =
     );
 
 /// 非核心 SDK 初始化依赖本地数据成功，但其自身失败不会令 Future 悬挂。
-final thirdPartyStartupProvider = FutureProvider<ThirdPartyStartupReport>((
-  ref,
-) async {
+final thirdPartyStartupProvider = FutureProvider<StartupReport>((ref) async {
   final localStartup = ref.watch(localStartupProvider.future);
   final userRegionBootstrap = ref.watch(userRegionBootstrapProvider.future);
-  final supabaseUrlFuture = ref.watch(supabaseUrlForThisRunProvider.future);
   await Future.wait([localStartup, userRegionBootstrap]);
-  final supabaseUrl = await supabaseUrlFuture;
-  return ref
-      .read(startupBootstrapperProvider)
-      .initializeThirdParty(supabaseUrl: supabaseUrl);
+  return ref.read(startupBootstrapperProvider).initializeThirdParty();
 });
 
 class LocalStartupController extends AsyncNotifier<StartupReport> {
@@ -182,9 +129,7 @@ class LocalStartupController extends AsyncNotifier<StartupReport> {
 abstract class StartupBootstrapper {
   Future<StartupReport> initializeLocal();
 
-  Future<ThirdPartyStartupReport> initializeThirdParty({
-    required String? supabaseUrl,
-  });
+  Future<StartupReport> initializeThirdParty();
 }
 
 /// 生产启动副作用编排器。关键本地步骤抛错，可降级步骤收集为报告。
@@ -232,9 +177,7 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
 
   /// 执行不会阻断本地学习的 SDK 与维护任务，并保证正常结束。
   @override
-  Future<ThirdPartyStartupReport> initializeThirdParty({
-    required String? supabaseUrl,
-  }) async {
+  Future<StartupReport> initializeThirdParty() async {
     final issues = <StartupIssue>[];
     await _runBestEffort(
       issues,
@@ -250,7 +193,7 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
       unawaited(
         NetworkPermissionTrigger.trigger(
           _prefs,
-          runtimeEndpointRouter.apiBaseUrl,
+          runtimeEndpointRouter.modelCdnBaseUrl,
         ),
       );
     }
@@ -272,61 +215,6 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
       });
     }
 
-    var supabaseReady = false;
-    String? restoredUserId;
-    final selectedSupabaseUrl = supabaseUrl;
-    final supabaseEndpointLabel = auth_config.supabaseEndpointLabelForLog(
-      selectedSupabaseUrl,
-    );
-    if (selectedSupabaseUrl != null &&
-        auth_config.isAuthConfiguredForUrl(selectedSupabaseUrl)) {
-      AppLogger.log(
-        'Supabase',
-        'initialize start endpoint=$supabaseEndpointLabel',
-      );
-      try {
-        await _trace('supabase_initialize', () {
-          return Supabase.initialize(
-            url: selectedSupabaseUrl,
-            anonKey: auth_config.supabasePublishableKey,
-          );
-        });
-        supabaseReady = true;
-        restoredUserId = Supabase.instance.client.auth.currentSession?.user.id;
-        AppLogger.log(
-          'Supabase',
-          'initialize success endpoint=$supabaseEndpointLabel '
-              'sessionRestored=${restoredUserId != null}',
-        );
-      } catch (error, stackTrace) {
-        AppLogger.log(
-          'Supabase',
-          'initialize failed endpoint=$supabaseEndpointLabel '
-              'errorType=${error.runtimeType}',
-        );
-        _recordIssue(issues, 'supabase_initialize', error, stackTrace);
-      }
-    } else {
-      final skipReason = selectedSupabaseUrl == null
-          ? 'selected_url_missing'
-          : 'publishable_key_missing';
-      AppLogger.log(
-        'Supabase',
-        'initialize skipped endpoint=$supabaseEndpointLabel '
-            'reason=$skipReason',
-      );
-      activeStartupTrace?.mark(
-        'step_skipped',
-        fields: {
-          'step': 'supabase_initialize',
-          'reason': skipReason,
-          'endpoint': supabaseEndpointLabel,
-        },
-      );
-    }
-
-    final revenueCatReady = await _initializeRevenueCat(issues, restoredUserId);
-
     await _runBestEffort(issues, 'permission_snapshot_report', () async {
       final snapshot = await PermissionSnapshot.capture(_prefs);
       await _analyticsService.reportPermissionSnapshot(snapshot, _prefs);
@@ -335,17 +223,9 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
     _scheduleMaintenance();
     activeStartupTrace?.mark(
       'third_party_services_ready',
-      fields: {
-        'issueCount': issues.length,
-        'supabaseReady': supabaseReady,
-        'revenueCatReady': revenueCatReady,
-      },
+      fields: {'issueCount': issues.length},
     );
-    return ThirdPartyStartupReport(
-      issues: List<StartupIssue>.unmodifiable(issues),
-      isSupabaseReady: supabaseReady,
-      isRevenueCatReady: revenueCatReady,
-    );
+    return StartupReport(List<StartupIssue>.unmodifiable(issues));
   }
 
   Future<void> _configurePersistentLogs(List<StartupIssue> issues) async {
@@ -360,61 +240,9 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
     }
   }
 
-  Future<bool> _initializeRevenueCat(
-    List<StartupIssue> issues,
-    String? restoredUserId,
-  ) async {
-    if (revenuecat_config.useLocalStoreKit) {
-      activeStartupTrace?.mark(
-        'step_skipped',
-        fields: {'step': 'revenuecat_initialize', 'reason': 'local_storekit'},
-      );
-      return false;
-    }
-    if (paddle_config.isPaddleCheckoutChannel) {
-      activeStartupTrace?.mark(
-        'step_skipped',
-        fields: {'step': 'revenuecat_initialize', 'reason': 'paddle_direct'},
-      );
-      return false;
-    }
-    if (!revenuecat_config.isRevenueCatConfigured) {
-      activeStartupTrace?.mark(
-        'step_skipped',
-        fields: {'step': 'revenuecat_initialize', 'reason': 'not_configured'},
-      );
-      return false;
-    }
-
-    try {
-      final configuration = PurchasesConfiguration(
-        revenuecat_config.revenueCatApiKey,
-      );
-      if (restoredUserId != null) configuration.appUserID = restoredUserId;
-      await _trace(
-        'revenuecat_initialize',
-        () => Purchases.configure(configuration),
-      );
-      // RevenueCat 必须先完成 configure；否则 Debug 模式下 setLogLevel 会触发
-      // PurchasesHybridCommon 的 native fatalError，直接终止启动进程。
-      if (kDebugMode) {
-        await _runBestEffort(
-          issues,
-          'revenuecat_log_level',
-          () => Purchases.setLogLevel(LogLevel.debug),
-        );
-      }
-      return true;
-    } catch (error, stackTrace) {
-      _recordIssue(issues, 'revenuecat_initialize', error, stackTrace);
-      return false;
-    }
-  }
-
   void _scheduleMaintenance() {
     unawaited(cleanupRecordingTempFiles());
     unawaited(cleanupStalePdfExportTemp());
-    unawaited(cleanupStaleBaiduNetdiskTemp());
     unawaited(cleanupCommunityDownloadTmp());
     Future<void>.delayed(const Duration(seconds: 8), () async {
       final cache = TtsCacheStore(

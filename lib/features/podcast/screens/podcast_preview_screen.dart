@@ -19,7 +19,6 @@ import '../../../router/app_router.dart';
 import '../../../services/app_logger.dart';
 import '../../../widgets/common/transcript_cc_badge.dart';
 import '../../../theme/app_theme.dart';
-import '../../auth/sign_in_required_dialog.dart';
 import '../podcast_info_sheet.dart';
 import '../podcast_models.dart';
 import '../podcast_preview_provider.dart';
@@ -215,14 +214,6 @@ class _PodcastPreviewScreenState extends ConsumerState<PodcastPreviewScreen> {
 
   Future<void> _subscribe() async {
     final l10n = AppLocalizations.of(context)!;
-    final canEnroll = await ensureSignedInForAction(
-      context: context,
-      ref: ref,
-      title: l10n.communityCollectionSignInRequiredTitle,
-      message: l10n.podcastSignInRequiredMessage,
-    );
-    if (!mounted || !canEnroll) return;
-
     setState(() => _subscribing = true);
     try {
       final appleUrl = _arg.applePodcastUrl?.trim() ?? '';

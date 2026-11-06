@@ -3692,6 +3692,12 @@ abstract class AppLocalizations {
   /// **'Network error. Check your connection and retry.'**
   String get downloadErrorNetwork;
 
+  /// No description provided for @downloadErrorPodcastHost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot reach {host}. Try a network that can access this podcast source.'**
+  String downloadErrorPodcastHost(String host);
+
   /// No description provided for @downloadErrorCorrupted.
   ///
   /// In en, this message translates to:
@@ -7202,6 +7208,30 @@ abstract class AppLocalizations {
   /// **'This file was removed from the shared collection'**
   String get communityFileUnavailable;
 
+  /// No description provided for @communitySyncStoppedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync stopped'**
+  String get communitySyncStoppedBadge;
+
+  /// No description provided for @communityReadOnlyNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This collection came from the old community. Content is no longer updated.'**
+  String get communityReadOnlyNotice;
+
+  /// No description provided for @communityMediaNotDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Media not downloaded'**
+  String get communityMediaNotDownloaded;
+
+  /// No description provided for @communityMediaNotDownloadedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This media was never downloaded, and shared collections no longer provide downloads.'**
+  String get communityMediaNotDownloadedMessage;
+
   /// No description provided for @communityFilesRemoved.
   ///
   /// In en, this message translates to:
@@ -9991,6 +10021,330 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expand sidebar'**
   String get expandSidebar;
+
+  /// No description provided for @usageScopeAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account balance'**
+  String get usageScopeAccount;
+
+  /// No description provided for @usageScopeKeyBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Key budget'**
+  String get usageScopeKeyBudget;
+
+  /// No description provided for @usageScopePlanWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan windows'**
+  String get usageScopePlanWindow;
+
+  /// No description provided for @usageRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get usageRefresh;
+
+  /// No description provided for @usageRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get usageRetry;
+
+  /// No description provided for @usageUpdatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String usageUpdatedAt(String time);
+
+  /// No description provided for @usageUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed · last {time}'**
+  String usageUpdateFailed(String time);
+
+  /// No description provided for @usageUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently unavailable'**
+  String get usageUnavailable;
+
+  /// No description provided for @usageUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'This address does not support usage queries'**
+  String get usageUnsupported;
+
+  /// No description provided for @usageRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate limited'**
+  String get usageRateLimited;
+
+  /// No description provided for @usageBudgetNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'No budget set for this key'**
+  String get usageBudgetNotSet;
+
+  /// No description provided for @usageAccountUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Account balance not authorized'**
+  String get usageAccountUnauthorized;
+
+  /// No description provided for @usageOpenConsole.
+  ///
+  /// In en, this message translates to:
+  /// **'Open provider console'**
+  String get usageOpenConsole;
+
+  /// No description provided for @usageWindowRolling.
+  ///
+  /// In en, this message translates to:
+  /// **'5 hours'**
+  String get usageWindowRolling;
+
+  /// No description provided for @usageWindowWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get usageWindowWeekly;
+
+  /// No description provided for @usageWindowMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get usageWindowMonthly;
+
+  /// No description provided for @usageGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Granted {amount}'**
+  String usageGranted(String amount);
+
+  /// No description provided for @usageToppedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Topped up {amount}'**
+  String usageToppedUp(String amount);
+
+  /// No description provided for @usageEffectiveBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective budget applied'**
+  String get usageEffectiveBudget;
+
+  /// No description provided for @usageResetsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Resets {time}'**
+  String usageResetsAt(String time);
+
+  /// No description provided for @aiServiceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI service'**
+  String get aiServiceTitle;
+
+  /// No description provided for @aiServiceProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get aiServiceProvider;
+
+  /// No description provided for @aiServiceBaseUrl.
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL'**
+  String get aiServiceBaseUrl;
+
+  /// No description provided for @aiServiceModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model'**
+  String get aiServiceModel;
+
+  /// No description provided for @aiServiceApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key'**
+  String get aiServiceApiKey;
+
+  /// No description provided for @aiServiceKeySaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get aiServiceKeySaved;
+
+  /// No description provided for @aiServiceKeyNotSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get aiServiceKeyNotSet;
+
+  /// No description provided for @aiServiceConnectionTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection test'**
+  String get aiServiceConnectionTest;
+
+  /// No description provided for @aiServiceTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Test'**
+  String get aiServiceTest;
+
+  /// No description provided for @aiServiceTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Testing…'**
+  String get aiServiceTesting;
+
+  /// No description provided for @aiServiceTestSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection OK'**
+  String get aiServiceTestSuccess;
+
+  /// No description provided for @aiServiceTestUnauthorized.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed: check the API key'**
+  String get aiServiceTestUnauthorized;
+
+  /// No description provided for @aiServiceTestNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Address or model not found'**
+  String get aiServiceTestNotFound;
+
+  /// No description provided for @aiServiceTestTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Network timeout'**
+  String get aiServiceTestTimeout;
+
+  /// No description provided for @aiServiceUntested.
+  ///
+  /// In en, this message translates to:
+  /// **'Not tested'**
+  String get aiServiceUntested;
+
+  /// No description provided for @aiServiceNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'AI service is not configured'**
+  String get aiServiceNotConfigured;
+
+  /// No description provided for @aiServiceConfigureProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure provider'**
+  String get aiServiceConfigureProvider;
+
+  /// No description provided for @aiServicePromptVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt version'**
+  String get aiServicePromptVersion;
+
+  /// No description provided for @aiServiceAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aiServiceAbout;
+
+  /// No description provided for @aiServiceBaseUrlInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a complete HTTP or HTTPS address'**
+  String get aiServiceBaseUrlInvalid;
+
+  /// No description provided for @aiServiceKeyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to remove the saved key'**
+  String get aiServiceKeyHint;
+
+  /// No description provided for @providerKindDeepSeek.
+  ///
+  /// In en, this message translates to:
+  /// **'DeepSeek'**
+  String get providerKindDeepSeek;
+
+  /// No description provided for @providerKindOpenRouter.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter'**
+  String get providerKindOpenRouter;
+
+  /// No description provided for @providerKindCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get providerKindCustom;
+
+  /// No description provided for @usageViewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get usageViewAll;
+
+  /// No description provided for @legacyAutoTranscript.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing auto-detected subtitles are kept for viewing; regeneration is unavailable.'**
+  String get legacyAutoTranscript;
+
+  /// No description provided for @transcriptionTimingNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Word timing is estimated and may be inaccurate.'**
+  String get transcriptionTimingNotice;
+
+  /// No description provided for @importLocalCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Local Collection'**
+  String get importLocalCollection;
+
+  /// No description provided for @importAudioFromFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from Folder'**
+  String get importAudioFromFolder;
+
+  /// No description provided for @importAudioFromFolderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a folder as a collection; subfolders are skipped'**
+  String get importAudioFromFolderDescription;
+
+  /// No description provided for @folderEmptyNoAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'This folder has no importable audio'**
+  String get folderEmptyNoAudio;
+
+  /// No description provided for @folderAllDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'All files are duplicates; existing audio added to the new collection'**
+  String get folderAllDuplicates;
+
+  /// No description provided for @folderIgnoredSubdirectories.
+  ///
+  /// In en, this message translates to:
+  /// **'Subfolders skipped: {count}'**
+  String folderIgnoredSubdirectories(int count);
+
+  /// No description provided for @folderUnsupportedFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsupported files ignored: {count}'**
+  String folderUnsupportedFiles(int count);
 }
 
 class _AppLocalizationsDelegate

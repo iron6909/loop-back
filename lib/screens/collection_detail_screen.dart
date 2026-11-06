@@ -21,10 +21,7 @@ import '../features/podcast/podcast_repository.dart';
 import '../features/podcast/podcast_models.dart';
 import '../features/podcast/podcast_info_sheet.dart';
 import '../features/podcast/widgets/podcast_feed_summary_header.dart';
-import '../features/community_collections/data/community_sync_service.dart';
-import '../features/community_collections/data/trigger_community_sync.dart';
 import '../features/community_collections/widgets/community_collection_header.dart';
-import '../services/app_logger.dart';
 
 /// 合集详情页面 - 展示合集中的音频，支持上传音频
 class CollectionDetailScreen extends ConsumerStatefulWidget {
@@ -169,13 +166,20 @@ class _CollectionDetailScreenState
                   menuGuideStep: stepAudioMenu,
                   l10n: l10n,
                   header: collection.isCommunity
-                      ? CommunityCollectionHeader(
-                          description: collection.description,
-                          authorNickname: collection.authorNickname,
-                          updatedAt: collection.updatedAt,
-                          fileCount: collectionState.getAudioCount(
-                            collection.id,
-                          ),
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _buildReadOnlyNotice(context, l10n),
+                            CommunityCollectionHeader(
+                              description: collection.description,
+                              authorNickname: null,
+                              showAuthor: false,
+                              updatedAt: collection.updatedAt,
+                              fileCount: collectionState.getAudioCount(
+                                collection.id,
+                              ),
+                            ),
+                          ],
                         )
                       : null,
                 ),
@@ -207,10 +211,38 @@ class _CollectionDetailScreenState
           ? const AlwaysScrollableScrollPhysics()
           : null,
     );
-    if (!collection.isCommunity) return audioList;
-    return RefreshIndicator(
-      onRefresh: _refreshCommunityCollection,
-      child: audioList,
+    return audioList;
+  }
+
+  /// 历史社区合集不再同步，顶部常驻只读说明。
+  Widget _buildReadOnlyNotice(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    return Container(
+      key: const Key('community-read-only-notice'),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.lock_clock_outlined,
+            size: 18,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              l10n.communityReadOnlyNotice,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -256,41 +288,6 @@ class _CollectionDetailScreenState
                   showImportAudioSheet(context, collectionId: collection.id),
             ),
     );
-  }
-
-  /// 强制同步当前订阅的社区合集，并在同步部分或全部失败时提示用户。
-  Future<void> _refreshCommunityCollection() async {
-    try {
-      final outcome = await triggerCommunitySync(
-        ref,
-        localCollectionId: widget.collectionId,
-      );
-      if (!mounted || !_communitySyncHasFailures(outcome)) return;
-      _showCommunityCollectionRefreshFailed();
-    } catch (error, stackTrace) {
-      AppLogger.log('CommunitySync', 'detail refresh failed: $error');
-      AppLogger.log('CommunitySync', stackTrace.toString());
-      if (!mounted) return;
-      _showCommunityCollectionRefreshFailed();
-    }
-  }
-
-  void _showCommunityCollectionRefreshFailed() {
-    final l10n = AppLocalizations.of(context);
-    if (l10n == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.communityCollectionRefreshFailed)),
-    );
-  }
-
-  /// 判断单合集同步结果是否包含合集级或文件级失败。
-  bool _communitySyncHasFailures(CommunitySyncOutcome outcome) {
-    return switch (outcome) {
-      CommunitySyncFailed() => true,
-      CommunitySyncCompleted(:final failedCollections, :final failedFiles) =>
-        failedCollections > 0 || failedFiles > 0,
-      _ => false,
-    };
   }
 
   /// 多选工具栏 AppBar：关闭按钮 + 已选数量 + 全选/取消全选 + 删除。

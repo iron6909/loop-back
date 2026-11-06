@@ -1,184 +1,24 @@
-/// 远程配置拉取服务。
+/// 本地功能配置。
 ///
-/// 先读未过期缓存，过期后请求后端；请求失败时使用过期缓存，最后才回退本地默认。
+/// 后端 Config API 已停用：此处只返回编译期默认值，不读旧缓存、不发请求。
 library;
 
-import 'dart:async';
-
-import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../../config/api_config.dart';
-import '../../services/app_logger.dart';
-import '../../services/backend_dio.dart';
-import '../../services/client_info.dart';
-import '../../services/runtime_endpoint_router.dart';
 import 'remote_config.dart';
-import 'remote_config_store.dart';
-
-const _logTag = 'RemoteConfig';
 
 class RemoteConfigService {
-  RemoteConfigService({
-    required Dio dio,
-    required RemoteConfigStore store,
-    DateTime Function()? now,
-  }) : _dio = dio,
-       _store = store,
-       _now = now ?? DateTime.now;
+  const RemoteConfigService();
 
-  RemoteConfigService.create({
-    required SharedPreferences prefs,
-    String baseUrl = apiBaseUrl,
-    String? appVersion,
-    RuntimeEndpointRouter? endpointRouter,
-  }) : this(
-         dio: createBackendDio(
-           baseUrl: baseUrl,
-           endpointRouter: endpointRouter,
-           appVersion: appVersion,
-           apiLogTag: 'REMOTE-CONFIG',
-         ),
-         store: RemoteConfigStore(prefs),
-       );
+  /// 兼容字段：不再有远端拉取时间。
+  DateTime? get lastFetchedAt => null;
 
-  final Dio _dio;
-  final RemoteConfigStore _store;
-  final DateTime Function() _now;
+  RemoteConfig loadInitialFromCache() => RemoteConfig.defaults;
 
-  /// 最近一次成功获取远程配置的时间，用于统一刷新节流。
-  DateTime? get lastFetchedAt => _store.readFetchedAt();
+  Future<RemoteConfig> load() async => RemoteConfig.defaults;
 
-  /// 启动期同步读取本地初始配置，不触发网络请求。
-  ///
-  /// 远程配置失败时允许沿用过期缓存，避免配置服务短暂不可用导致入口抖动；
-  /// 真正的远端刷新由 App 首帧后的 [fetchRemote] 后台任务完成。
-  RemoteConfig loadInitialFromCache() {
-    try {
-      final cached = _store.readCached(now: _now(), allowExpired: true);
-      if (cached != null) {
-        AppLogger.log(
-          _logTag,
-          'initial cache country=${cached.context.countryCode}',
-        );
-        return cached;
-      }
-    } catch (e) {
-      AppLogger.log(_logTag, 'initial cache parse failed: $e');
-    }
+  Future<RemoteConfig> fetchRemote() async => RemoteConfig.defaults;
 
-    AppLogger.log(_logTag, 'initial fallback to local defaults');
-    return RemoteConfig.defaults;
-  }
-
-  /// 加载启动配置；任何异常都降级为缓存或本地默认，不能中断 App 启动。
-  Future<RemoteConfig> load() async {
-    try {
-      final cached = _store.readCached(now: _now());
-      if (cached != null) {
-        AppLogger.log(
-          _logTag,
-          'cache hit country=${cached.context.countryCode}',
-        );
-        return cached;
-      }
-    } catch (e) {
-      AppLogger.log(_logTag, 'cache parse failed: $e');
-    }
-
-    try {
-      return await fetchRemote();
-    } catch (e) {
-      AppLogger.log(_logTag, 'fetch failed: $e');
-    }
-
-    try {
-      final expired = _store.readCached(now: _now(), allowExpired: true);
-      if (expired != null) {
-        AppLogger.log(
-          _logTag,
-          'use expired cache country=${expired.context.countryCode}',
-        );
-        return expired;
-      }
-    } catch (e) {
-      AppLogger.log(_logTag, 'expired cache parse failed: $e');
-    }
-
-    AppLogger.log(_logTag, 'fallback to local defaults');
-    return RemoteConfig.defaults;
-  }
-
-  /// 直接请求后端并写入缓存。
-  ///
-  /// 运行期刷新使用本方法，避免 [load] 的缓存优先逻辑让过期检查后的刷新
-  /// 再次命中本地缓存。调用方负责决定失败时是否保留旧内存配置。
-  Future<RemoteConfig> fetchRemote() async {
-    final response = await _dio.get<Object?>(
-      '/api/v1/client/config',
-      queryParameters: {'platform': clientPlatformName()},
-    );
-    return _storeFetchedConfig(response.data);
-  }
-
-  /// 从启动期指定的地址拉取配置，并对整次请求施加可取消的时间上限。
-  ///
-  /// 显式使用完整 URL，避免地区尚未确定时被运行时端点拦截器改写。
   Future<RemoteConfig> fetchRemoteFromBaseUrl(
     String baseUrl, {
     required Duration timeout,
-  }) async {
-    final normalizedBaseUrl = _normalizeBaseUrl(baseUrl);
-    final requestUri = Uri.parse(
-      normalizedBaseUrl,
-    ).resolve('/api/v1/client/config');
-    final cancelToken = CancelToken();
-    final response = await _dio
-        .get<Object?>(
-          requestUri.toString(),
-          queryParameters: {'platform': clientPlatformName()},
-          cancelToken: cancelToken,
-        )
-        .timeout(
-          timeout,
-          onTimeout: () {
-            cancelToken.cancel('remote config request timed out');
-            throw TimeoutException(
-              'Remote config request timed out after $timeout',
-              timeout,
-            );
-          },
-        );
-    return _storeFetchedConfig(response.data);
-  }
-
-  Future<RemoteConfig> _storeFetchedConfig(Object? payload) async {
-    final config = RemoteConfig.fromRemoteJson(payload);
-    try {
-      await _store.write(config, now: _now());
-    } catch (error) {
-      AppLogger.log(_logTag, 'cache write failed: $error');
-    }
-    AppLogger.log(
-      _logTag,
-      'fetch ok country=${config.context.countryCode} '
-      'cloudDriveImport=${config.features.cloudDriveImport.enabled} '
-      'aiChatAssistant=${config.features.aiChatAssistant.enabled}',
-    );
-    return config;
-  }
-
-  String _normalizeBaseUrl(String baseUrl) {
-    final normalized = baseUrl.trim();
-    final uri = Uri.tryParse(normalized);
-    if (uri == null ||
-        !uri.hasAuthority ||
-        uri.host.isEmpty ||
-        (uri.scheme != 'http' && uri.scheme != 'https')) {
-      throw ArgumentError.value(baseUrl, 'baseUrl', 'must be an HTTP URL');
-    }
-    return normalized.endsWith('/')
-        ? normalized.substring(0, normalized.length - 1)
-        : normalized;
-  }
+  }) async => RemoteConfig.defaults;
 }

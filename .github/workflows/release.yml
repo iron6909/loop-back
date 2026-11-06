@@ -99,15 +99,19 @@ jobs:
             if [[ "$CODE" -gt "$MAX_CODE" ]]; then MAX_CODE="$CODE"; fi
           done
           if [[ "$NUMBER" -le "$MAX_CODE" ]]; then
-            echo "ERROR: versionCode $NUMBER must be strictly greater than max existing $MAX_CODE" >&2
+            printf "ERROR: versionCode %s must exceed max existing %s\n" \
+              "$NUMBER" "$MAX_CODE" >&2
             echo "如需重新构建已发布的 tag，请在最新 commit 上加空 commit 后再打新 tag" >&2
             exit 1
           fi
 
           # 校验 pubspec.yaml 版本号一致
-          PUBSPEC_VERSION="$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)"
+          PUBSPEC_VERSION="$(
+            grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1
+          )"
           if [[ "$NAME" != "$PUBSPEC_VERSION" ]]; then
-            echo "ERROR: tag version ($NAME) does not match pubspec.yaml ($PUBSPEC_VERSION)" >&2
+            printf "ERROR: tag (%s) does not match pubspec.yaml (%s)\n" \
+              "$NAME" "$PUBSPEC_VERSION" >&2
             echo "请先升级 pubspec.yaml 的 version 字段，再打 tag。" >&2
             exit 1
           fi
@@ -115,7 +119,8 @@ jobs:
           echo "name=$NAME" >> "$GITHUB_OUTPUT"
           echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
           echo "version=${NAME}+${NUMBER}" >> "$GITHUB_OUTPUT"
-          echo "Parsed: name=$NAME number=$NUMBER (pubspec OK, max existing code=$MAX_CODE)"
+          printf "Parsed: name=%s number=%s (pubspec OK, max code=%s)\n" \
+            "$NAME" "$NUMBER" "$MAX_CODE"
 
       # ---------- Android ----------
 
@@ -134,7 +139,8 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
         run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/upload-keystore.jks
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d \
+            > android/app/upload-keystore.jks
           cat > android/key.properties <<EOF
           storePassword=$ANDROID_KEYSTORE_PASSWORD
           keyPassword=$ANDROID_KEY_PASSWORD
@@ -149,25 +155,17 @@ jobs:
           BUILD_NUMBER: ${{ steps.ver.outputs.number }}
           POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           POSTHOG_API_KEY: ${{ vars.POSTHOG_API_KEY }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          CHINA_SUPABASE_URL: ${{ vars.CHINA_SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
         run: |
           flutter clean
           DART_DEFINES=(
             "--dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}"
             "--dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }}"
             "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
-            "--dart-define=SUPABASE_URL=${SUPABASE_URL}"
-            "--dart-define=CHINA_SUPABASE_URL=${CHINA_SUPABASE_URL}"
-            "--dart-define=SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}"
-            "--dart-define=GOOGLE_WEB_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID}"
           )
           if [[ -n "$POSTHOG_API_KEY" ]]; then
             DART_DEFINES+=("--dart-define=POSTHOG_API_KEY=${POSTHOG_API_KEY}")
           fi
-          # 侧载 APK（GitHub / 官网直装）：声明 direct 渠道 → 走后端 Paddle Checkout。
+          # 侧载包声明 direct 渠道，供评分入口和设备诊断使用。
           DART_DEFINES+=("--dart-define=DISTRIBUTION_CHANNEL=direct")
           flutter build apk --release --flavor=prod \
             --target-platform android-arm64 \
@@ -215,30 +213,16 @@ jobs:
           BUILD_NUMBER: ${{ steps.ver.outputs.number }}
           POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           POSTHOG_API_KEY: ${{ vars.POSTHOG_API_KEY }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          CHINA_SUPABASE_URL: ${{ vars.CHINA_SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
-          REVENUECAT_API_KEY_GOOGLE: ${{ vars.REVENUECAT_API_KEY_GOOGLE }}
         run: |
           DART_DEFINES=(
             "--dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}"
             "--dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }}"
             "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
-            "--dart-define=SUPABASE_URL=${SUPABASE_URL}"
-            "--dart-define=CHINA_SUPABASE_URL=${CHINA_SUPABASE_URL}"
-            "--dart-define=SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}"
-            "--dart-define=GOOGLE_WEB_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID}"
           )
           if [[ -n "$POSTHOG_API_KEY" ]]; then
             DART_DEFINES+=("--dart-define=POSTHOG_API_KEY=${POSTHOG_API_KEY}")
           fi
-          if [[ -z "$REVENUECAT_API_KEY_GOOGLE" ]]; then
-            echo "ERROR: REVENUECAT_API_KEY_GOOGLE repository variable is required for Android release builds." >&2
-            exit 1
-          fi
-          DART_DEFINES+=("--dart-define=REVENUECAT_API_KEY_GOOGLE=${REVENUECAT_API_KEY_GOOGLE}")
-          # Google Play 版：显式声明 play 渠道 → 不启用网页支付（构建里无外部支付入口，政策洁净）
+          # Google Play 包声明 play 渠道，供评分入口和设备诊断使用。
           DART_DEFINES+=("--dart-define=DISTRIBUTION_CHANNEL=play")
           # abiFilters 已在 gradle 限定 arm64，AAB 同样只含 arm64
           flutter build appbundle --release --flavor=prod \
@@ -250,9 +234,11 @@ jobs:
         if: matrix.platform == 'android'
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          serviceAccountJsonPlainText: >-
+            ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: app.echoloop
-          releaseFiles: build/app/outputs/bundle/prodRelease/app-prod-release.aab
+          releaseFiles: >-
+            build/app/outputs/bundle/prodRelease/app-prod-release.aab
           track: internal
           status: completed
 
@@ -285,7 +271,8 @@ jobs:
       - name: Install provisioning profile
         if: matrix.platform == 'ios'
         env:
-          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          IOS_PROVISIONING_PROFILE_BASE64: >-
+            ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
         run: |
           PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
           mkdir -p "$PROFILES_DIR"
@@ -312,11 +299,13 @@ jobs:
         if: matrix.platform == 'ios'
         env:
           IOS_TEAM_ID: ${{ vars.IOS_TEAM_ID }}
-          IOS_PROVISIONING_PROFILE_NAME: ${{ vars.IOS_PROVISIONING_PROFILE_NAME }}
+          IOS_PROVISIONING_PROFILE_NAME: >-
+            ${{ vars.IOS_PROVISIONING_PROFILE_NAME }}
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>destination</key>
@@ -350,11 +339,6 @@ jobs:
           BUILD_NUMBER: ${{ steps.ver.outputs.number }}
           POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           POSTHOG_API_KEY: ${{ vars.POSTHOG_API_KEY }}
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          CHINA_SUPABASE_URL: ${{ vars.CHINA_SUPABASE_URL }}
-          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-          GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
-          REVENUECAT_API_KEY_APPLE: ${{ vars.REVENUECAT_API_KEY_APPLE }}
         run: |
           # 避免 Homebrew rsync 抢占（Apple toolchain 需要系统 rsync）
           export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
@@ -362,19 +346,10 @@ jobs:
             "--dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}"
             "--dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }}"
             "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
-            "--dart-define=SUPABASE_URL=${SUPABASE_URL}"
-            "--dart-define=CHINA_SUPABASE_URL=${CHINA_SUPABASE_URL}"
-            "--dart-define=SUPABASE_PUBLISHABLE_KEY=${SUPABASE_PUBLISHABLE_KEY}"
-            "--dart-define=GOOGLE_WEB_CLIENT_ID=${GOOGLE_WEB_CLIENT_ID}"
           )
           if [[ -n "$POSTHOG_API_KEY" ]]; then
             DART_DEFINES+=("--dart-define=POSTHOG_API_KEY=${POSTHOG_API_KEY}")
           fi
-          if [[ -z "$REVENUECAT_API_KEY_APPLE" ]]; then
-            echo "ERROR: REVENUECAT_API_KEY_APPLE repository variable is required for iOS release builds." >&2
-            exit 1
-          fi
-          DART_DEFINES+=("--dart-define=REVENUECAT_API_KEY_APPLE=${REVENUECAT_API_KEY_APPLE}")
           DART_DEFINES+=("--dart-define=DISTRIBUTION_CHANNEL=app_store")
           # 先用 flutter 编译 dart 代码，--no-codesign 跳过签名
           flutter build ios --release --no-codesign --flavor=prod \
@@ -386,7 +361,8 @@ jobs:
         if: matrix.platform == 'ios'
         env:
           IOS_TEAM_ID: ${{ vars.IOS_TEAM_ID }}
-          IOS_PROVISIONING_PROFILE_NAME: ${{ vars.IOS_PROVISIONING_PROFILE_NAME }}
+          IOS_PROVISIONING_PROFILE_NAME: >-
+            ${{ vars.IOS_PROVISIONING_PROFILE_NAME }}
         run: |
           # 用 xcodeproj gem 精确修改 Runner target 的 Release-prod 配置。
           # 不动 Pods.xcodeproj 和其他 target/config，避免污染。
@@ -405,7 +381,9 @@ jobs:
               config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
               config.build_settings['DEVELOPMENT_TEAM'] = team
               config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
-              config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = 'Apple Distribution'
+              config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = (
+                'Apple Distribution'
+              )
               config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = profile
               puts "Patched #{target.name}/#{config.name}"
               patched += 1
@@ -452,11 +430,13 @@ jobs:
           # altool 在某些失败场景（如 bundle version 重复）会打印 ERROR 但仍以 0 退出。
           # 这里把 stdout/stderr 都收下并 tee 到日志，结束后扫描 ERROR 关键字强制失败。
           LOG="$RUNNER_TEMP/altool-upload.log"
+          KEY_PATH="$HOME/.appstoreconnect/private_keys"
+          KEY_PATH="$KEY_PATH/AuthKey_${APP_STORE_API_KEY_ID}.p8"
           set +e
           xcrun altool --upload-app --type ios --file "$IPA" \
             --apiKey "$APP_STORE_API_KEY_ID" \
             --apiIssuer "$APP_STORE_API_ISSUER_ID" \
-            --p8-file-path "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_API_KEY_ID}.p8" \
+            --p8-file-path "$KEY_PATH" \
             --show-progress 2>&1 | tee "$LOG"
           STATUS=${PIPESTATUS[0]}
           set -e
@@ -466,7 +446,7 @@ jobs:
             exit "$STATUS"
           fi
           if grep -E '^[0-9-]+ [0-9:.]+ ERROR' "$LOG" >/dev/null; then
-            echo "::error::altool reported ERROR despite exit 0 — failing step" >&2
+            echo "::error::altool reported ERROR despite exit 0" >&2
             grep -E '^[0-9-]+ [0-9:.]+ ERROR' "$LOG" >&2 || true
             exit 1
           fi
@@ -509,7 +489,10 @@ jobs:
             gh api --paginate \
               -H "Accept: application/vnd.github+json" \
               "/repos/${GH_REPO}/releases" \
-              --jq '[.[] | select(.draft==true)] | sort_by(.created_at) | reverse | .['"$KEEP"':][] | .id'
+              --jq '
+                [.[] | select(.draft==true)]
+                | sort_by(.created_at) | reverse | .['"$KEEP"':][] | .id
+              '
           )
           if [[ ${#OLD[@]} -eq 0 ]]; then
             echo "No stale draft releases to prune."

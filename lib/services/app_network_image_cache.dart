@@ -8,7 +8,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 /// - 独立 cacheKey，与可能的第三方库默认 cache 池隔离
 ///
 /// 缓存策略：30 天过期、最多 500 个文件。当前用于：
-/// - 社区合集封面（Discover 页 / 详情页）
+/// - 播客合集封面（历史社区合集已改用本地占位）
 ///
 /// 如要新场景接入，统一传 `cacheManager: AppNetworkImageCache.instance`
 /// 给 `CachedNetworkImage` 即可，无需新建 manager。

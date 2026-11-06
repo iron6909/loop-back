@@ -170,12 +170,16 @@ Each piece of material is split into 1 first-pass session + 7 spaced reviews. In
 
 ## ❓ FAQ
 
+This branch connects directly to an AI provider configured by the user and currently targets Android acceptance. In **Settings → AI service**, choose DeepSeek, OpenRouter or a custom OpenAI-compatible endpoint, enter a model and API key, then test the connection. The base URL receives `/chat/completions` directly; `/v1` is never added automatically. Keys stay in device secure storage and must be entered again after restoring a backup.
+
+English subtitle transcription and retelling transcription run on the device. Account login, membership checkout, cloud transcription, community sync, Baidu Netdisk import and self-update checks are disabled. Existing learning data stays available; Android folders can become collections, and curated podcasts come from a bundled catalog.
+
 <details>
 <summary><strong>Is Echo Loop free?</strong></summary>
 
 All core features are free, with no usage caps and no item limits:
 
-- **Unlimited imports**: local files, links, Baidu Netdisk and podcast subscriptions
+- **Unlimited imports**: local files, Android folders, links and podcast subscriptions
 - **Unlimited favorites**: save as many hard sentences, words and sense groups as you like
 - **The full learning loop**: intensive listening, shadowing, blind listening and retelling, plus 7 rounds of spaced review with reminders
 - **Focused review of hard sentences + in-context flashcards**
@@ -183,28 +187,28 @@ All core features are free, with no usage caps and no item limits:
 - **Offline transcription**: download a model and generate subtitles on your device, no sign-in needed
 - **Offline dictionary, learning statistics, PDF note export, backup & restore**
 
-AI explanation features come with a free monthly quota, which covers everyday study for most people. Only heavy AI users need to upgrade to a membership in the app.
+AI explanations and the study assistant use your configured provider, which charges according to its own plan or usage. This branch has no Echo Loop AI allowance or membership checkout.
 
 </details>
 
 <details>
-<summary><strong>Which features use the AI quota?</strong></summary>
+<summary><strong>Which features call the AI provider?</strong></summary>
 
-Only the AI explanation features: AI translation, sentence analysis, sense-group splitting, word analysis, the AI study assistant, retelling evaluation and cloud transcription. None of the free features listed above use the quota.
-
-</details>
-
-<details>
-<summary><strong>What happens when the free quota runs out?</strong></summary>
-
-You can keep studying as usual. AI features come back when the quota resets next month, or you can upgrade to a membership in the app if you don't want to wait.
+Translation, sentence analysis, sense groups, word and phrase explanations, the study assistant and retelling evaluation call the current provider. Subtitle generation and retelling transcription use an English speech model on the device; recordings are not uploaded.
 
 </details>
 
 <details>
-<summary><strong>Why does an open-source project charge anything?</strong></summary>
+<summary><strong>What happens when my provider balance or plan runs out?</strong></summary>
 
-The code is fully open source (AGPL-3.0). Every AI request costs us money paid to the model provider, and memberships cover that cost so the project can keep going.
+Local study keeps working. Check your balance or plan in the provider's console, or change the configuration in **Settings → AI service**. Payments and renewals are handled by the provider.
+
+</details>
+
+<details>
+<summary><strong>Is my API key included in backups?</strong></summary>
+
+No. Keys stay in device secure storage and are excluded from logs, ordinary preferences, learning-data backups and analytics. Enter the key again after restoring. Non-secret settings such as the provider address and model are included in backups.
 
 </details>
 
@@ -233,7 +237,7 @@ Other apps mostly give you materials and tools and leave it to you to work out h
 - **Audio**: mp3, m4a, wav, aac, flac
 - **Video**: mp4, mov, m4v, mkv (you can hide the picture and practice with audio only)
 - **Subtitles**: srt, vtt, lrc; subtitle files with the same name as the audio are paired automatically. No subtitles? Generate them with AI transcription
-- **Sources**: local files, direct audio links, Baidu Netdisk, podcast subscriptions
+- **Sources**: local files, Android folders, direct audio links, podcast subscriptions
 
 Podcasts, TED talks, TV clips and textbook audio all work. For best results, pick content **you're interested in and that's slightly above your current level**.
 
@@ -256,7 +260,7 @@ After the first study session on a material, you'll understand it and be able to
 <details>
 <summary><strong>Can I use it offline?</strong></summary>
 
-Yes. The learning flow, reviews, favorites, shadowing evaluation and local transcription all work offline. Only cloud AI features need a connection.
+Yes. The learning flow, reviews, favorites, shadowing evaluation and local transcription work offline. Provider AI, podcast content and initial model downloads need a connection.
 
 </details>
 

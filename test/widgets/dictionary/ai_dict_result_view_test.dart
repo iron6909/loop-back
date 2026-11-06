@@ -3,6 +3,8 @@ import 'package:echo_loop/features/subscription/models/ai_quota_rejection.dart';
 import 'package:echo_loop/models/dictionary/dictionary_entry.dart';
 import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
 import 'package:echo_loop/providers/dictionary/lookup_controller.dart';
+import 'package:echo_loop/services/provider/provider_config.dart';
+import 'package:echo_loop/services/provider/provider_http_client.dart';
 import 'package:echo_loop/widgets/common/shimmer_placeholder.dart';
 import 'package:echo_loop/widgets/dictionary/ai_dict_result_view.dart';
 import 'package:flutter/material.dart';
@@ -99,6 +101,44 @@ void main() {
         onSignIn: () {},
         onUpgrade: onUpgrade ?? () {},
       );
+
+  for (final failure in <(Object, String)>[
+    (
+      const ProviderNotConfiguredException(),
+      'Configure a provider and API key in Settings → AI service',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.unauthorized),
+      'API key is invalid or unauthorized',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.insufficientBalance),
+      'Provider balance or plan is insufficient',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.notFound),
+      'Provider address or model was not found',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.rateLimited),
+      'Provider rate limit reached. Try again later',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.serverError),
+      'Provider is temporarily unavailable',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.timeout),
+      'Provider request timed out. Try again',
+    ),
+  ]) {
+    testWidgets('AI词典显示供应商错误：${failure.$2}', (tester) async {
+      await tester.pumpWidget(_wrap(view(LookupError(failure.$1))));
+      expect(find.text(failure.$2), findsOneWidget);
+      expect(find.byType(TextButton), findsOneWidget);
+      expect(find.text('Upgrade Now'), findsNothing);
+    });
+  }
 
   testWidgets('额度用尽态渲染升级引导卡并回调 onUpgrade', (tester) async {
     var upgraded = false;

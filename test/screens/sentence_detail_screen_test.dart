@@ -11,16 +11,27 @@ import 'package:echo_loop/screens/sentence_detail_screen.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/common/bookmark_toggle_row.dart';
+import 'package:echo_loop/services/provider/structured_ai_client.dart';
+import 'package:echo_loop/services/provider/structured_result_validator.dart';
 import 'package:echo_loop/widgets/practice/sentence_explanation_view.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
 
-class _MockSentenceAiApiClient extends Mock implements SentenceAiApiClient {}
+/// 只读缓存恒为空的替身：讲解页预加载不应触网，也不需要真实 Dio。
+class _NoopSentenceAiApiClient extends SentenceAiApiClient {
+  _NoopSentenceAiApiClient() : super.withDio(Dio());
+
+  @override
+  Future<T?> readCached<T>(
+    StructuredAiRequest request,
+    ValidationOutcome<T> Function(Object?) validate,
+  ) async => null;
+}
 
 class _RecordingRangePlayback
     implements SenseGroupRangePlayback, ResumableSentenceRangePlayback {
@@ -104,7 +115,7 @@ void main() {
     sentenceAiNotifierProvider.overrideWithValue(
       SentenceAiNotifier(
         cacheDao: createStubbedMockCacheDao(),
-        apiClient: _MockSentenceAiApiClient(),
+        apiClient: _NoopSentenceAiApiClient(),
       ),
     ),
   ];

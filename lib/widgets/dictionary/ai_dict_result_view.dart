@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/dictionary/dictionary_entry.dart';
 import '../../models/dictionary/dictionary_lookup_result.dart';
 import '../../providers/dictionary/lookup_controller.dart';
+import '../../services/provider/provider_error_text.dart';
 import '../../features/subscription/models/premium_feature.dart';
 import '../../features/subscription/models/ai_quota_rejection.dart';
 import '../../features/subscription/utils/ai_quota_copy.dart';
@@ -78,7 +79,7 @@ class AiDictResultView extends StatelessWidget {
     if (s is LookupQuotaExceeded) {
       return _quotaExceeded(context, s.reason);
     }
-    if (s is LookupError) return _error(context);
+    if (s is LookupError) return _error(context, s.error);
     if (s is LookupNotFound) return _empty(context);
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: AppSpacing.m),
@@ -99,7 +100,7 @@ class AiDictResultView extends StatelessWidget {
     );
   }
 
-  Widget _error(BuildContext context) {
+  Widget _error(BuildContext context, Object error) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Padding(
@@ -110,7 +111,7 @@ class AiDictResultView extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Expanded(
             child: Text(
-              l10n.aiLoadFailed,
+              providerErrorText(context, error),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
               ),

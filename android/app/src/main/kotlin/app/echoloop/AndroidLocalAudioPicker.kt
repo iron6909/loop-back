@@ -60,6 +60,7 @@ class AndroidLocalAudioPicker(
 
         /** `startActivityForResult` 请求码，由 `MainActivity` 转发时比对。 */
         private const val REQUEST_CODE = 0x51A7
+        private const val DIRECTORY_REQUEST_CODE = 0x51A8
     }
 
     private val methodChannel = MethodChannel(binaryMessenger, CHANNEL_NAME)
@@ -77,6 +78,7 @@ class AndroidLocalAudioPicker(
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
         when (call.method) {
             "pickAudioFiles" -> pickAudioFiles(result)
+            "pickDirectory" -> pickDirectory(result)
             "readBytes" -> readBytes(call, result)
             "copyToFile" -> copyToFile(call, result)
             "cancelCopyToFile" -> cancelCopyToFile(call, result)
@@ -105,15 +107,81 @@ class AndroidLocalAudioPicker(
         }
     }
 
+    /** 目录授权只读且持久化；读取子项前不复制任何内容。 */
+    private fun pickDirectory(result: MethodChannel.Result) {
+        if (pendingResult != null) {
+            result.error("picker_in_progress", "A file picker is already open.", null)
+            return
+        }
+        pendingResult = result
+        try {
+            activity.startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            }, DIRECTORY_REQUEST_CODE)
+        } catch (error: Exception) {
+            pendingResult = null
+            result.error("directory_picker_launch_failed", "Unable to open directory picker.", null)
+        }
+    }
+
+    /** 只枚举直接子项；目录保留标记交给 Dart 计数，绝不递归。 */
+    private fun describeDirectory(tree: Uri, flags: Int): Map<String, Any> {
+        require(tree.scheme == "content" && DocumentsContract.isTreeUri(tree))
+        activity.contentResolver.takePersistableUriPermission(tree,
+            flags and Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val rootId = DocumentsContract.getTreeDocumentId(tree)
+        val root = DocumentsContract.buildDocumentUriUsingTree(tree, rootId)
+        val name = queryMetadata(root)?.nameCandidates?.firstOrNull { !it.isNullOrBlank() }
+            ?: throw IOException("Directory name is unavailable")
+        val children = mutableListOf<Map<String, Any>>()
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(tree, rootId)
+        val projection = arrayOf(DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE, DocumentsContract.Document.COLUMN_SIZE)
+        val cursor = activity.contentResolver.query(childrenUri, projection, null, null, null)
+            ?: throw IOException("Directory listing is unavailable")
+        cursor.use {
+            while (it.moveToNext()) {
+                val id = readString(it, DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                    ?: throw IOException("Missing document identifier")
+                val uri = DocumentsContract.buildDocumentUriUsingTree(tree, id)
+                children.add(mapOf("uri" to uri.toString(),
+                    "name" to (readString(it, DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                        ?: resolveFileName(uri, null)),
+                    "size" to (readLong(it, DocumentsContract.Document.COLUMN_SIZE) ?: 0L).coerceAtLeast(0L),
+                    "isDirectory" to (readString(it, DocumentsContract.Document.COLUMN_MIME_TYPE) ==
+                        DocumentsContract.Document.MIME_TYPE_DIR)))
+            }
+        }
+        return mapOf("name" to name, "children" to children)
+    }
+
     /**
      * 由 `MainActivity.onActivityResult` 转发。
      *
      * @return true 表示本次结果已被消费，调用方不应再继续分发。
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
-        if (requestCode != REQUEST_CODE) return false
+        if (requestCode != REQUEST_CODE && requestCode != DIRECTORY_REQUEST_CODE) return false
         val result = pendingResult ?: return true
         pendingResult = null
+        if (requestCode == DIRECTORY_REQUEST_CODE) {
+            val tree = data?.data
+            if (resultCode != Activity.RESULT_OK || tree == null) {
+                result.success(null)
+            } else {
+                worker.execute {
+                    val described = runCatching { describeDirectory(tree, data?.flags ?: 0) }
+                    activity.runOnUiThread {
+                        described.onSuccess(result::success).onFailure {
+                            result.error("directory_picker_failed", "Unable to read directory.", null)
+                        }
+                    }
+                }
+            }
+            return true
+        }
 
         val uris = if (resultCode == Activity.RESULT_OK) extractUris(data) else emptyList()
         if (uris.isEmpty()) {

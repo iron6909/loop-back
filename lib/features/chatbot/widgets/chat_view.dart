@@ -7,13 +7,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../widgets/selection/selection_toolbar_host.dart';
-import '../../auth/sign_in_required_dialog.dart';
-import '../../subscription/widgets/feature_gate.dart';
 import '../models/chatbot_config.dart';
 import '../providers/chat_session_controller.dart';
 import '../screens/chat_edit_screen.dart';
 import 'chat_composer.dart';
-import 'chat_gate_banner.dart';
 import 'chat_quote_bar.dart';
 import 'context_chip.dart';
 import 'message_list.dart';
@@ -86,7 +83,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
     final l10n = AppLocalizations.of(context)!;
 
     final isStreaming = ref.watch(provider.select((s) => s.isStreaming));
-    final gate = ref.watch(provider.select((s) => s.gate));
 
     final summary = config.contextSummary;
 
@@ -106,18 +102,11 @@ class _ChatViewState extends ConsumerState<ChatView> {
               child: ChatMessageList(
                 config: config,
                 onRetry: (_) => notifier.retry(),
-                onUpgrade: () => openPaywall(context, ref),
-                onSignIn: () => _signIn(context, ref, l10n, notifier),
                 onCopy: (content) => _copy(context, l10n, content),
                 onEdit: (messageId) => _handleEdit(notifier, messageId),
                 onRegenerate: (messageId) => notifier.regenerate(messageId),
                 onFollowUp: _startFollowUp,
               ),
-            ),
-            ChatGateBanner(
-              gate: gate,
-              onUpgrade: () => openPaywall(context, ref),
-              onSignIn: () => _signIn(context, ref, l10n, notifier),
             ),
             if (_pendingQuote != null)
               ChatQuoteBar(
@@ -146,7 +135,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
     ChatSessionController notifier,
     String messageId,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
     final original = notifier.messageContent(messageId);
     if (original == null) return;
     final edited = await Navigator.of(context).push<String>(
@@ -156,13 +144,6 @@ class _ChatViewState extends ConsumerState<ChatView> {
       ),
     );
     if (edited == null || !mounted) return; // 关闭编辑页 = 取消，不改会话
-    final ok = await ensureSignedInForAction(
-      context: context,
-      ref: ref,
-      title: l10n.chatSignInTitle,
-      message: l10n.chatSignInMessage,
-    );
-    if (!ok || !mounted) return;
     await notifier.editAndResend(messageId, edited);
   }
 
@@ -174,31 +155,9 @@ class _ChatViewState extends ConsumerState<ChatView> {
     ChatSessionController notifier,
     String text,
   ) async {
-    final ok = await ensureSignedInForAction(
-      context: context,
-      ref: ref,
-      title: l10n.chatSignInTitle,
-      message: l10n.chatSignInMessage,
-    );
-    if (!ok) return;
     final quote = _pendingQuote;
     if (quote != null && mounted) setState(() => _pendingQuote = null);
     await notifier.send(text, quote: quote);
-  }
-
-  /// 闸门 banner 的登录入口。
-  Future<void> _signIn(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l10n,
-    ChatSessionController notifier,
-  ) async {
-    await ensureSignedInForAction(
-      context: context,
-      ref: ref,
-      title: l10n.chatSignInTitle,
-      message: l10n.chatSignInMessage,
-    );
   }
 
   /// 复制消息内容到剪贴板并提示。

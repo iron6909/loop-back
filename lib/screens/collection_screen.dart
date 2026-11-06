@@ -7,11 +7,10 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../features/community_collections/models/community_asset_url.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../features/community_collections/providers/community_enrollment_provider.dart';
 import '../features/community_collections/widgets/community_badge.dart';
 import '../features/podcast/podcast_info_sheet.dart';
-import '../features/user_region/user_region_providers.dart';
 import '../models/collection.dart';
 import '../providers/collection_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -26,6 +25,7 @@ import '../widgets/common/secondary_action_button.dart';
 import '../widgets/dialogs/confirm_dialog.dart';
 import '../widgets/dialogs/text_input_dialog.dart';
 import '../widgets/guide_flow.dart';
+import '../widgets/import_audio_sheet.dart';
 
 /// 合集排序按钮（公开供 LibraryScreen 使用）
 class CollectionSortButton extends ConsumerWidget {
@@ -131,17 +131,21 @@ class CollectionListView extends StatelessWidget {
   final List<Collection> collections;
   final GuideStep? firstItemStep;
   final GuideStep? firstMenuStep;
+  final String? focusedCollectionId;
 
   const CollectionListView({
     super.key,
     required this.collections,
     this.firstItemStep,
     this.firstMenuStep,
+    this.focusedCollectionId,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+    final target = collections.indexWhere((c) => c.id == focusedCollectionId);
+    return ScrollablePositionedList.builder(
+      initialScrollIndex: target < 0 ? 0 : target,
       // 横向 padding 为 0：卡片自己有 horizontal 12 的 margin，避免 8+12=20
       // 的双重内缩导致和顶部 DiscoverEntryBanner（horizontal 12）错位
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -160,9 +164,9 @@ class CollectionListView extends StatelessWidget {
 
 /// 显示创建合集对话框（公开供 LibraryScreen 使用）
 ///
-/// 使用统一底部 sheet：选择创建本地合集或订阅 Podcast 后，在 sheet 内完成输入。
-void showCreateCollectionDialog(BuildContext context) {
-  showModalBottomSheet<void>(
+/// 使用统一底部 sheet：新建本地合集、订阅播客或从文件夹导入。
+Future<String?> showCreateCollectionDialog(BuildContext context) {
+  return showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -237,6 +241,7 @@ class _CreateCollectionFlowSheetState
         key: const ValueKey('choose-collection-type'),
         onLocal: () => _setStep(_CreateCollectionStep.local),
         onPodcast: _openPodcastSubscribe,
+        onDirectory: _openDirectoryImport,
       ),
       _CreateCollectionStep.local => _LocalCollectionPanel(
         key: const ValueKey('local-collection-form'),
@@ -263,6 +268,12 @@ class _CreateCollectionFlowSheetState
   void _openPodcastSubscribe() {
     Navigator.pop(context);
     context.push(AppRoutes.podcastSubscribe);
+  }
+
+  /// 目录选择取消或返回时保留创建菜单，完成后回传新建合集以便定位。
+  Future<void> _openDirectoryImport() async {
+    final id = await showImportAudioSheet(context, directoryOnly: true);
+    if (mounted && id != null) Navigator.pop(context, id);
   }
 
   void _submitLocalCollection() {
@@ -347,10 +358,12 @@ class _CollectionTypePanel extends StatelessWidget {
     super.key,
     required this.onLocal,
     required this.onPodcast,
+    required this.onDirectory,
   });
 
   final VoidCallback onLocal;
   final VoidCallback onPodcast;
+  final VoidCallback onDirectory;
 
   @override
   Widget build(BuildContext context) {
@@ -373,6 +386,14 @@ class _CollectionTypePanel extends StatelessWidget {
           title: l10n.subscribePodcast,
           description: l10n.subscribePodcastOptionDescription,
           onTap: onPodcast,
+        ),
+        const SizedBox(height: 12),
+        _CollectionOptionTile(
+          key: const ValueKey('collection-option-directory'),
+          icon: Icons.folder_open_outlined,
+          title: l10n.importAudioFromFolder,
+          description: l10n.importAudioFromFolderDescription,
+          onTap: onDirectory,
         ),
       ],
     );
@@ -547,7 +568,6 @@ class _CollectionListTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final collectionState = ref.watch(collectionListProvider);
-    final isChinaUser = ref.watch(isChinaUserProvider);
     final theme = Theme.of(context);
     final pinnedHighlightColor = theme.colorScheme.primary.withValues(
       alpha: 0.06,
@@ -569,7 +589,7 @@ class _CollectionListTile extends ConsumerWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      _buildLeadingIcon(theme, isChinaUser),
+                      _buildLeadingIcon(theme),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -600,6 +620,9 @@ class _CollectionListTile extends ConsumerWidget {
                                   source: collection.source,
                                   isDeprecated: collection.isDeprecated,
                                 ),
+                                // 社区合集已停止同步，明确告知内容不再更新。
+                                if (collection.isCommunity)
+                                  const CommunitySyncStoppedBadge(),
                                 if (collection.isPodcast &&
                                     podcastHasRefreshError(collection))
                                   _PodcastRefreshFailedChip(l10n: l10n),
@@ -691,19 +714,10 @@ class _CollectionListTile extends ConsumerWidget {
     context.push(AppRoutes.collectionDetail(collection.id));
   }
 
-  /// 左侧 leading（尺寸 / 样式与 Discover 卡片完全一致）：
-  /// - 社区合集且有 coverUrl：网络封面图（BoxFit.contain）
-  /// - Podcast 合集且有 coverUrl：网络封面图（BoxFit.cover）
-  /// - 其它情况：渐变背景 + 合集名首字母或 Podcast 图标
-  Widget _buildLeadingIcon(ThemeData theme, bool isChinaUser) {
+  /// 历史社区合集使用本地占位，避免浏览资源库时请求已停用的远端封面。
+  Widget _buildLeadingIcon(ThemeData theme) {
     const size = 56.0;
-    final coverUrl = collection.isCommunity
-        ? communityAssetUrlForRegion(
-            globalUrl: collection.coverUrl,
-            chinaUrl: collection.coverUrlChina,
-            isChinaUser: isChinaUser,
-          )
-        : collection.coverUrl;
+    final coverUrl = collection.coverUrl;
 
     // podcast 合集：有封面显示封面图，否则用 podcast 图标。
     final Widget icon;
@@ -728,23 +742,7 @@ class _CollectionListTile extends ConsumerWidget {
         icon = _podcastIconPlaceholder(theme, size);
       }
     } else {
-      icon = (collection.isCommunity && coverUrl != null && coverUrl.isNotEmpty)
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: coverUrl,
-                cacheManager: AppNetworkImageCache.instance,
-                width: size,
-                height: size,
-                fit: BoxFit.contain,
-                // 缓存命中时立即显示，去掉默认 500ms 淡入造成的延迟感
-                fadeInDuration: Duration.zero,
-                placeholderFadeInDuration: Duration.zero,
-                placeholder: (_, __) => _letterPlaceholder(theme, size),
-                errorWidget: (_, __, ___) => _letterPlaceholder(theme, size),
-              ),
-            )
-          : _letterPlaceholder(theme, size);
+      icon = _letterPlaceholder(theme, size);
     }
 
     return icon;

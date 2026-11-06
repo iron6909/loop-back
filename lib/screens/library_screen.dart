@@ -4,7 +4,6 @@
 // 使用 IndexedStack 保持两个视图状态。
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../features/community_collections/widgets/discover_entry_banner.dart';
 import '../providers/new_user_guide_provider.dart';
 import '../providers/collection_provider.dart';
 import '../l10n/app_localizations.dart';
@@ -30,6 +29,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   LibraryViewType _currentView = LibraryViewType.collections;
   int _libraryTitleTapCount = 0;
   bool _showAllAudioShortcut = false;
+  String? _focusedCollectionId;
 
   final _keyCreateCollection = GlobalKey();
 
@@ -107,7 +107,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         body: IndexedStack(
           index: _currentView.index,
           children: [
-            const _CollectionListBody(),
+            _CollectionListBody(focusedCollectionId: _focusedCollectionId),
             AudioListView(
               guideFirstAudioMenu: true,
               guideEnabled: _currentView == LibraryViewType.audio,
@@ -138,20 +138,25 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     });
   }
 
+  /// 导入完成后留在我的合集，并把新建合集滚动到可见位置。
+  Future<void> _createCollection() async {
+    final id = await showCreateCollectionDialog(context);
+    if (mounted && id != null) setState(() => _focusedCollectionId = id);
+  }
+
   /// 根据当前视图构建 AppBar actions
   List<Widget> _buildActions(AppLocalizations l10n, GuideStep createStep) {
     if (_currentView == LibraryViewType.collections) {
       return [
         // 合集排序
         const CollectionSortButton(),
-        // 「发现社区合集」入口已改为列表顶部的 DiscoverEntryBanner，更醒目；
-        // AppBar 这里不再放 compass icon，避免重复。
         // 创建合集
         GuideTarget(
           step: createStep,
           child: IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => showCreateCollectionDialog(context),
+            onPressed: _createCollection,
+            tooltip: l10n.createCollection,
           ),
         ),
         const SizedBox(width: 8),
@@ -173,18 +178,12 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
 /// 合集列表视图体（不含 Scaffold/AppBar）
 class _CollectionListBody extends ConsumerWidget {
-  const _CollectionListBody();
+  const _CollectionListBody({this.focusedCollectionId});
+  final String? focusedCollectionId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final collectionState = ref.watch(collectionListProvider);
-    // Banner 在 loading / empty / data 三态下都显示，让新用户一进来就看到入口。
-    return Column(
-      children: [
-        const DiscoverEntryBanner(),
-        Expanded(child: _buildInner(collectionState)),
-      ],
-    );
+    return _buildInner(ref.watch(collectionListProvider));
   }
 
   Widget _buildInner(CollectionState state) {
@@ -192,6 +191,10 @@ class _CollectionListBody extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.isEmpty) return const CollectionEmptyState();
-    return CollectionListView(collections: state.collections);
+    return CollectionListView(
+      key: ValueKey(focusedCollectionId),
+      collections: state.collections,
+      focusedCollectionId: focusedCollectionId,
+    );
   }
 }

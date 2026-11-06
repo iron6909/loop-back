@@ -52,7 +52,6 @@ import 'package:echo_loop/providers/learning_session/intensive_listen_player_pro
 import 'package:echo_loop/providers/learning_session/retell_player_provider.dart';
 import 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/transcription_task_provider.dart';
 import 'package:echo_loop/router/app_router.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/utils/saved_text_index.dart';
@@ -270,9 +269,6 @@ Future<void> pumpFullApp(
         retellPlayerProvider.overrideWith(() => TestRetellPlayer()),
         reviewDifficultPracticeProvider.overrideWith(
           () => TestReviewDifficultPractice(),
-        ),
-        transcriptionTaskManagerProvider.overrideWith(
-          () => TestTranscriptionTaskManager(),
         ),
         packageInfoProvider.overrideWithValue(packageInfo),
         analyticsOverride(),

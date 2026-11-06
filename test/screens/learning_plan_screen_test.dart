@@ -34,13 +34,11 @@ import 'package:echo_loop/database/app_database.dart' show Bookmark;
 import 'package:echo_loop/database/providers.dart';
 import 'package:echo_loop/providers/time_provider.dart';
 import 'package:echo_loop/services/speech_permission_service.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/listen_and_repeat/listen_and_repeat_briefing_sheet.dart'
     show ListenAndRepeatBriefingSheet;
 import 'package:echo_loop/widgets/intensive_listen/intensive_listen_briefing_sheet.dart'
     show IntensiveListenBriefingSheet;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../helpers/mock_providers.dart';
 
@@ -131,23 +129,6 @@ void main() {
     sentenceCount: 10,
     wordCount: 50,
   );
-
-  Session signedInSession() {
-    final user = User(
-      id: 'user-1',
-      appMetadata: const {'provider': 'email'},
-      userMetadata: const {},
-      aud: 'authenticated',
-      email: 'learner@example.com',
-      createdAt: '2026-06-12T00:00:00.000Z',
-    );
-    return Session(
-      accessToken: 'token',
-      tokenType: 'bearer',
-      user: user,
-      refreshToken: 'refresh',
-    );
-  }
 
   /// 创建测试用句子列表（模拟字幕加载后的 LP 状态）
   List<Sentence> createTestSentences({int count = 5}) {
@@ -1388,7 +1369,7 @@ void main() {
       );
     });
 
-    testWidgets('添加字幕入口 AI 转录音频过长时显示弹窗内错误提示', (tester) async {
+    testWidgets('添加字幕入口走本机转录，不再有云端时长上限', (tester) async {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1419,11 +1400,6 @@ void main() {
               () => TestLearningProgressNotifier(),
             ),
             learningSessionProvider.overrideWith(() => TestLearningSession()),
-            supabaseSessionProvider.overrideWith(
-              (ref) => Stream<Session?>.value(signedInSession()),
-            ),
-            // 已登录用户视为已解锁（Pro），转录机制测试不被额度闸拦截。
-            subscriptionEntitlementOverride(),
           ],
           child: MaterialApp.router(
             locale: const Locale('en'),
@@ -1460,13 +1436,9 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.textContaining('Audio too long'), findsOneWidget);
-      expect(find.byType(SnackBar), findsNothing);
-
-      await tester.pump(const Duration(seconds: 12));
-      await tester.pumpAndSettle();
-
+      // 云端转录的 30 分钟上限已随该路径移除；本机转录只受模型是否就绪限制。
       expect(find.textContaining('Audio too long'), findsNothing);
+      expect(find.byType(SnackBar), findsNothing);
     });
 
     testWidgets('已完成盲听步骤可点击直接进入自由练习', (tester) async {

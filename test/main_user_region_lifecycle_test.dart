@@ -62,6 +62,7 @@ void main() {
 
     expect(router.apiRegion, ServiceEndpointRegion.china);
     expect(router.apiBaseUrl, _endpoints.chinaApiBaseUrl);
+    expect(tester.takeException(), isNull);
 
     // 清理测试应用首帧后安排的延迟任务。
     await tester.pump(const Duration(seconds: 6));

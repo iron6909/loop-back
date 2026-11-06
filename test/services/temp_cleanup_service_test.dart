@@ -62,6 +62,25 @@ void main() {
     }
   });
 
+  test('清理旧社区下载半成品时保留已下载媒体和其它临时文件', () async {
+    final unfinished = File(
+      '${fakeAppDataDir.path}/tmp/community_media/download.part',
+    );
+    await unfinished.parent.create(recursive: true);
+    await unfinished.writeAsString('partial');
+    final media = File('${fakeAppDataDir.path}/audio.m4a');
+    await media.writeAsString('downloaded');
+    final other = File('${fakeAppDataDir.path}/tmp/keep.tmp');
+    await other.writeAsString('keep');
+
+    await cleanupCommunityDownloadTmp();
+    await cleanupCommunityDownloadTmp();
+
+    expect(await unfinished.parent.exists(), isFalse);
+    expect(await media.readAsString(), 'downloaded');
+    expect(await other.readAsString(), 'keep');
+  });
+
   group('cleanupRecordingTempFiles', () {
     test('删除 tmp/ 中的旧文件', () async {
       final oldFile = File('${fakeTmpDir.path}/old.caf');
@@ -201,21 +220,6 @@ void main() {
       expect(imageCacheDir.existsSync(), true);
       expect(otherCache.existsSync(), true);
     });
-
-    test('清除缓存全量删除百度网盘临时下载目录', () async {
-      final baiduDir = Directory('${fakeAppDataDir.path}/tmp/baidu_netdisk')
-        ..createSync(recursive: true);
-      final partFile = File('${baiduDir.path}/123.mp4.part');
-      final metaFile = File('${baiduDir.path}/123.mp4.part.meta.json');
-      partFile.writeAsBytesSync(List.filled(700, 0));
-      metaFile.writeAsBytesSync(List.filled(100, 0));
-
-      final result = await cleanupAllTempFiles();
-
-      expect(result.freedBytes, greaterThanOrEqualTo(800));
-      expect(partFile.existsSync(), false);
-      expect(metaFile.existsSync(), false);
-    });
   });
 
   group('cleanupStalePdfExportTemp', () {
@@ -262,38 +266,6 @@ void main() {
       expect(logDir.existsSync(), false);
       expect(audioDir.existsSync(), true);
       expect(cacheDbFile.existsSync(), true);
-    });
-  });
-
-  group('cleanupStaleBaiduNetdiskTemp', () {
-    test('删除超过 minAge 的百度网盘半下载文件', () async {
-      final baiduDir = Directory('${fakeAppDataDir.path}/tmp/baidu_netdisk')
-        ..createSync(recursive: true);
-      final oldPart = File('${baiduDir.path}/old.mp4.part');
-      final oldMeta = File('${baiduDir.path}/old.mp4.part.meta.json');
-      oldPart.writeAsBytesSync(List.filled(1000, 0));
-      oldMeta.writeAsBytesSync(List.filled(100, 0));
-      final oldTime = DateTime.now().subtract(const Duration(days: 2));
-      oldPart.setLastModifiedSync(oldTime);
-      oldMeta.setLastModifiedSync(oldTime);
-
-      final result = await cleanupStaleBaiduNetdiskTemp();
-
-      expect(result.freedBytes, 1100);
-      expect(oldPart.existsSync(), false);
-      expect(oldMeta.existsSync(), false);
-    });
-
-    test('保留不足 minAge 的百度网盘半下载文件', () async {
-      final baiduDir = Directory('${fakeAppDataDir.path}/tmp/baidu_netdisk')
-        ..createSync(recursive: true);
-      final freshPart = File('${baiduDir.path}/fresh.mp4.part');
-      freshPart.writeAsBytesSync(List.filled(500, 0));
-
-      final result = await cleanupStaleBaiduNetdiskTemp();
-
-      expect(result.freedBytes, 0);
-      expect(freshPart.existsSync(), true);
     });
   });
 }

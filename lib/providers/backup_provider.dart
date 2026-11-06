@@ -16,6 +16,8 @@ import 'dictionary_provider.dart';
 import 'learning_progress_provider.dart';
 import 'package_info_provider.dart';
 import 'settings_provider.dart';
+import 'provider_configuration_provider.dart';
+import '../services/provider/provider_config.dart';
 import 'tag_provider.dart';
 
 /// BackupService Provider
@@ -61,6 +63,10 @@ Future<BackupManifest> performImport(
   AppliedBackupImport? applied;
   AppDatabase? candidateDatabase;
   var databaseWasClosed = false;
+  var providerKeyCleared = false;
+  final providerStore = ref.read(providerConfigStoreProvider);
+  ProviderConfig? previousProviderConfig;
+  String? previousProviderKey;
 
   try {
     // 完整校验和数据库快照提取期间保持当前 Drift 连接可用。
@@ -69,6 +75,12 @@ Future<BackupManifest> performImport(
       onProgress: onProgress,
     );
 
+    // 恢复的地址不可信任本机旧 Key；先停用运行时并清 Key，再替换任何偏好。
+    // 旧凭据只留在本次恢复的内存中，失败回滚后才恢复到原地址。
+    previousProviderConfig = await providerStore.read();
+    previousProviderKey = await providerStore.readApiKey();
+    await ref.read(providerConfigurationProvider.notifier).clearKey();
+    providerKeyCleared = true;
     await closeCurrentDatabase(
       studyTimeService: ref.read(studyTimeServiceProvider),
     );
@@ -90,6 +102,7 @@ Future<BackupManifest> performImport(
     ref.invalidate(dictionaryProvider);
     ref.read(dictionaryProvider);
     AppLogger.log('Backup', 'database_providers_reloaded');
+    await ref.read(providerConfigurationProvider.notifier).reload();
     await applied.commit();
     AppLogger.log('Backup', 'restore_committed');
 
@@ -104,6 +117,12 @@ Future<BackupManifest> performImport(
       switchAppDatabase(fallbackDb, ref);
       await _reloadDatabaseProviders(ref);
       AppLogger.log('Backup', 'fallback_database_reopened');
+    }
+    if (providerKeyCleared) {
+      if (previousProviderConfig case final config?) {
+        await providerStore.save(config, apiKey: previousProviderKey);
+      }
+      await ref.read(providerConfigurationProvider.notifier).reload();
     }
     rethrow;
   } finally {

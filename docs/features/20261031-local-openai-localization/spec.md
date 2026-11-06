@@ -70,15 +70,15 @@ Echo Loop 目前把翻译、句子解析、单词/短语词典、意群、复述
 ### 请求契约
 
 - 公共：`model`、`messages`、`max_tokens`、`response_format`（按能力）、`temperature`（仅对支持该参数的端点发送）。
-- DeepSeek：结构化任务发送 `thinking: {type: "disabled"}`；其 thinking 默认开启且计入输出预算。
+- DeepSeek：结构化任务发送 `thinking: {type: "disabled"}`；其 thinking 默认开启且计入输出预算。`response_format` 使用该接口支持的 `json_object`，字段结构写入系统提示词，返回值仍通过同一严格校验器。
 - OpenRouter：模型声明支持结构化输出时使用 `json_schema`（`strict`、`required`、`additionalProperties: false`）并加 `provider.require_parameters: true`。
 - OpenCode Go 主机：发送 `x-opencode-session`（同一会话内稳定），User-Agent 表明本应用；不得伪造其他客户端标识。
 - 超时：连接 15 秒，接收 120 秒。
 
 ### 输出模式选择（S1b 判定规则）
 
-1. 首选 `json_schema`（仅当供应商/模型声明支持）。
-2. 仅在响应明确表示不支持该输出模式时，回落一次 `json_object`。
+1. 首选 `json_schema`（仅当供应商/模型声明支持）；DeepSeek 官方接口只声明 `text` / `json_object`，直接选 `json_object`，不先发送不受支持的 Schema。
+2. 仅在响应明确表示不支持该输出模式时，回落一次 `json_object`；JSON 模式同时把字段结构写入系统提示词，业务校验保持不变。
 3. 以下情形**一律判失败**，不得回落、不得重试成功化：`finish_reason=length`、空正文、非 JSON、JSON 顶层非对象、字段类型错误、枚举缺值、业务守恒失败。
 
 ### 结果校验
@@ -118,7 +118,7 @@ Echo Loop 目前把翻译、句子解析、单词/短语词典、意群、复述
 
 ### 目录导入契约
 
-- 入口：我的合集内新增「导入本地合集」；移除远端发现页。
+- 入口：我的合集右上角「+」菜单内，作为「新建合集」「订阅播客」之后的第三项「从文件夹导入」；点击直接选择目录，不提供文件或链接导入，这两项保留在合集内添加音频的流程中。移除远端发现页。
 - 目录名即合集名；只读取**直接子项**，子目录忽略并提示。
 - 音频扩展名白名单复用 `audioImportExtensions`；字幕为 `.srt` / `.vtt` / `.lrc`，同名优先 `srt > vtt > lrc`，复用 `matchSubtitlesForAudios`；其他扩展名忽略并在汇总中列出。
 - 音频按文件名自然序写入 `collection_audio_items.sortOrder`。

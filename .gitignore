@@ -58,3 +58,11 @@ METHOD.md
 
 # Test artifacts
 test-results.json
+
+# Local tooling, media archive, and secrets
+.pi/
+.coding/
+.agents/
+resources/
+.env
+skills-lock.json

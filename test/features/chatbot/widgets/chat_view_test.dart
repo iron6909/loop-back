@@ -5,28 +5,28 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:echo_loop/analytics/analytics_providers.dart';
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/chatbot/models/chat_message.dart';
 import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
 import 'package:echo_loop/features/chatbot/providers/chat_api_client_provider.dart';
 import 'package:echo_loop/features/chatbot/providers/chat_session_controller.dart';
 import 'package:echo_loop/features/chatbot/services/chat_api_client.dart';
+import 'package:echo_loop/features/chatbot/services/provider_chat_api_client.dart';
 import 'package:echo_loop/features/chatbot/services/ndjson_text_stream.dart';
 import 'package:echo_loop/features/chatbot/widgets/chat_composer.dart';
 import 'package:echo_loop/features/chatbot/widgets/chat_view.dart';
 import 'package:echo_loop/features/chatbot/widgets/message_list.dart';
-import 'package:echo_loop/features/subscription/models/premium_feature.dart';
-import 'package:echo_loop/features/subscription/providers/ai_trial_usage_provider.dart';
 import 'package:echo_loop/features/subscription/services/free_allowance_policy.dart';
 import 'package:echo_loop/providers/settings_provider.dart';
+import 'package:echo_loop/services/provider/provider_config.dart';
+import 'package:echo_loop/services/provider/provider_http_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gpt_markdown/gpt_markdown.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../helpers/mock_providers.dart';
+import '../../../helpers/provider_fixture.dart' show FixtureAdapter;
 import 'chatbot_widget_harness.dart';
 
 class _ScriptApi implements ChatApi {
@@ -64,25 +64,6 @@ class _CancelAwareApi implements ChatApi {
   void dispose() {}
 }
 
-class _Trial extends AiTrialUsageNotifier {
-  @override
-  Map<PremiumFeature, int> build() => const {};
-  @override
-  void consume(PremiumFeature feature) {}
-}
-
-Session _session() => Session(
-  accessToken: 't',
-  tokenType: 'bearer',
-  user: const User(
-    id: 'u',
-    appMetadata: {},
-    userMetadata: {},
-    aud: 'authenticated',
-    createdAt: '2026-07-13T00:00:00.000Z',
-  ),
-);
-
 void main() {
   List<Override> overrides(
     ChatApi api, {
@@ -93,24 +74,11 @@ void main() {
       createTestAnalyticsServiceSync(),
     ),
     chatApiClientProvider.overrideWithValue(api),
-    isAuthenticatedProvider.overrideWithValue(true),
-    supabaseSessionProvider.overrideWith(
-      (ref) => Stream<Session?>.value(_session()),
-    ),
     freeAllowancePolicyProvider.overrideWithValue(policy),
-    aiTrialUsageProvider.overrideWith(() => _Trial()),
     appSettingsProvider.overrideWith(() => TestAppSettings()),
   ];
 
-  // supabaseSessionProvider 是 StreamProvider（异步 emit）。controller 同步读
-  // valueOrNull，需先 subscribe 并 pump 让其落定，否则误判 authRequired。包一层
-  // Consumer 订阅 session。
-  Widget wrap(ChatView view) => Consumer(
-    builder: (context, ref, _) {
-      ref.watch(supabaseSessionProvider);
-      return view;
-    },
-  );
+  Widget wrap(ChatView view) => view;
 
   ChatbotConfig config({String? greeting, String? summary}) => ChatbotConfig(
     sessionId: 's1',
@@ -121,6 +89,96 @@ void main() {
     greeting: greeting,
     contextSummary: summary,
   );
+
+  testWidgets('真实聊天传输的连接超时在气泡中显示超时提示', (tester) async {
+    final adapter = FixtureAdapter();
+    adapter.replies.add(
+      (options) => throw DioException(
+        requestOptions: options,
+        type: DioExceptionType.connectionTimeout,
+      ),
+    );
+    const provider = ProviderConfig(
+      kind: ProviderKind.custom,
+      baseUrl: 'https://provider.example/v1',
+      model: 'test-model',
+    );
+    final client = ProviderChatApiClient(
+      config: provider,
+      http: ProviderHttpClient(
+        config: provider,
+        apiKey: 'synthetic-chat-timeout',
+        dio: Dio()..httpClientAdapter = adapter,
+      ),
+    );
+    addTearDown(client.dispose);
+    addTearDown(adapter.arrived.close);
+    await pumpChatWidget(
+      tester,
+      ChatView(config: config()),
+      overrides: overrides(client),
+    );
+    await tester.enterText(find.byType(TextField), 'Explain');
+    await tester.pump();
+    await tester.tap(find.byIcon(Icons.arrow_upward));
+    await tester.pumpAndSettle();
+    expect(find.text('Provider request timed out. Try again'), findsOneWidget);
+    expect(find.text('AI returned an invalid result. Try again'), findsNothing);
+    expect(adapter.requests, hasLength(1));
+  });
+
+  for (final failure in <(Object, String)>[
+    (
+      const ProviderNotConfiguredException(),
+      'Configure AI service in Settings first',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.unauthorized),
+      'API key is invalid or unauthorized',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.insufficientBalance),
+      'Provider balance or plan is insufficient',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.notFound),
+      'Provider address or model was not found',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.rateLimited),
+      'Provider rate limit reached. Try again later',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.serverError),
+      'Provider is temporarily unavailable',
+    ),
+    (
+      const ProviderHttpException(ProviderErrorKind.timeout),
+      'Provider request timed out. Try again',
+    ),
+  ]) {
+    testWidgets('助教显示可操作的供应商错误：${failure.$2}', (tester) async {
+      await pumpChatWidget(
+        tester,
+        ChatView(config: config()),
+        overrides: overrides(
+          _ScriptApi(() async* {
+            yield const ChatTextFrame(text: 'partial answer', isFinal: false);
+            throw failure.$1;
+          }),
+        ),
+      );
+      await tester.enterText(find.byType(TextField), 'Explain');
+      await tester.pump();
+      await tester.tap(find.byIcon(Icons.arrow_upward));
+      await tester.pumpAndSettle();
+
+      expect(find.text(failure.$2), findsOneWidget);
+      expect(find.text('partial answer', findRichText: true), findsWidgets);
+      expect(find.text('Upgrade Now'), findsNothing);
+      expect(find.text('Sign In'), findsNothing);
+    });
+  }
 
   testWidgets('空态显示 greeting + context chip', (tester) async {
     await pumpChatWidget(
@@ -243,7 +301,6 @@ void main() {
     Widget capture(ChatView view) => Consumer(
       builder: (context, ref, _) {
         capturedRef = ref;
-        ref.watch(supabaseSessionProvider);
         return view;
       },
     );
@@ -404,14 +461,11 @@ void main() {
     expect(find.byIcon(Icons.arrow_upward), findsOneWidget); // 回到发送态
   });
 
-  testWidgets('已登录未解锁 → 发送触发 quotaExceeded 升级 banner', (tester) async {
+  testWidgets('不再有会员门控：未解锁也直接发送，不出现升级 banner', (tester) async {
     await pumpChatWidget(
       tester,
       wrap(ChatView(config: config())),
-      overrides: overrides(
-        _ScriptApi(() => const Stream.empty()),
-        policy: _DenyPolicy(),
-      ),
+      overrides: overrides(_ScriptApi(() => const Stream.empty())),
     );
     await tester.pump();
 
@@ -421,13 +475,8 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    // gate banner 升级入口出现
-    expect(find.text('Upgrade'), findsOneWidget);
+    // 旧的升级 banner 已随会员门控移除；输入区照常可用。
+    expect(find.text('Upgrade'), findsNothing);
     expect(find.byType(ChatComposer), findsOneWidget);
   });
-}
-
-class _DenyPolicy implements FreeAllowancePolicy {
-  @override
-  bool allows(PremiumFeature feature) => false;
 }

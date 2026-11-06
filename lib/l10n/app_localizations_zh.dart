@@ -2011,6 +2011,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get downloadErrorNetwork => '网络异常，请检查网络后重试。';
 
   @override
+  String downloadErrorPodcastHost(String host) {
+    return '无法连接 $host，请换用可访问该播客源的网络后重试。';
+  }
+
+  @override
   String get downloadErrorCorrupted => '下载文件校验失败，请重试。';
 
   @override
@@ -3944,6 +3949,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get communityFileUnavailable => '该文件已从共享合集中移除';
 
   @override
+  String get communitySyncStoppedBadge => '已停止同步';
+
+  @override
+  String get communityReadOnlyNotice => '该合集来自旧版社区，内容已不再更新。';
+
+  @override
+  String get communityMediaNotDownloaded => '媒体未下载';
+
+  @override
+  String get communityMediaNotDownloadedMessage => '该媒体从未下载过，共享合集已不再提供下载。';
+
+  @override
   String communityFilesRemoved(int count) {
     return '共享合集中有 $count 个文件已移除';
   }
@@ -5410,4 +5427,180 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get expandSidebar => '展开侧边栏';
+
+  @override
+  String get usageScopeAccount => '账户余额';
+
+  @override
+  String get usageScopeKeyBudget => 'Key 预算';
+
+  @override
+  String get usageScopePlanWindow => '套餐窗口';
+
+  @override
+  String get usageRefresh => '刷新';
+
+  @override
+  String get usageRetry => '重试';
+
+  @override
+  String usageUpdatedAt(String time) {
+    return '更新于 $time';
+  }
+
+  @override
+  String usageUpdateFailed(String time) {
+    return '更新失败 · 上次 $time';
+  }
+
+  @override
+  String get usageUnavailable => '暂无法获取';
+
+  @override
+  String get usageUnsupported => '该地址不支持用量查询';
+
+  @override
+  String get usageRateLimited => '已限额';
+
+  @override
+  String get usageBudgetNotSet => 'Key 未设预算';
+
+  @override
+  String get usageAccountUnauthorized => '账户余额未授权查询';
+
+  @override
+  String get usageOpenConsole => '打开供应商控制台';
+
+  @override
+  String get usageWindowRolling => '5 小时';
+
+  @override
+  String get usageWindowWeekly => '每周';
+
+  @override
+  String get usageWindowMonthly => '每月';
+
+  @override
+  String usageGranted(String amount) {
+    return '赠送 $amount';
+  }
+
+  @override
+  String usageToppedUp(String amount) {
+    return '充值 $amount';
+  }
+
+  @override
+  String get usageEffectiveBudget => '已应用有效预算';
+
+  @override
+  String usageResetsAt(String time) {
+    return '$time 重置';
+  }
+
+  @override
+  String get aiServiceTitle => 'AI 服务';
+
+  @override
+  String get aiServiceProvider => '供应商';
+
+  @override
+  String get aiServiceBaseUrl => 'Base URL';
+
+  @override
+  String get aiServiceModel => '模型';
+
+  @override
+  String get aiServiceApiKey => 'API Key';
+
+  @override
+  String get aiServiceKeySaved => '已保存';
+
+  @override
+  String get aiServiceKeyNotSet => '未设置';
+
+  @override
+  String get aiServiceConnectionTest => '连接验证';
+
+  @override
+  String get aiServiceTest => '测试';
+
+  @override
+  String get aiServiceTesting => '测试中…';
+
+  @override
+  String get aiServiceTestSuccess => '连接正常';
+
+  @override
+  String get aiServiceTestUnauthorized => '鉴权失败：请检查 API Key';
+
+  @override
+  String get aiServiceTestNotFound => '地址或模型不存在';
+
+  @override
+  String get aiServiceTestTimeout => '网络超时';
+
+  @override
+  String get aiServiceUntested => '未验证';
+
+  @override
+  String get aiServiceNotConfigured => '尚未配置 AI 服务';
+
+  @override
+  String get aiServiceConfigureProvider => '配置供应商';
+
+  @override
+  String get aiServicePromptVersion => '提示词版本';
+
+  @override
+  String get aiServiceAbout => '关于';
+
+  @override
+  String get aiServiceBaseUrlInvalid => '请填写完整的 HTTP 或 HTTPS 地址';
+
+  @override
+  String get aiServiceKeyHint => '留空并保存即删除已保存的 Key';
+
+  @override
+  String get providerKindDeepSeek => 'DeepSeek';
+
+  @override
+  String get providerKindOpenRouter => 'OpenRouter';
+
+  @override
+  String get providerKindCustom => '自定义';
+
+  @override
+  String get usageViewAll => '查看全部';
+
+  @override
+  String get legacyAutoTranscript => '历史自动检测字幕仅保留展示，无法重新生成。';
+
+  @override
+  String get transcriptionTimingNotice => '词级时间戳为估算值，可能不准确。';
+
+  @override
+  String get importLocalCollection => '导入本地合集';
+
+  @override
+  String get importAudioFromFolder => '从文件夹导入';
+
+  @override
+  String get importAudioFromFolderDescription => '把一个文件夹导入为合集，子文件夹会跳过';
+
+  @override
+  String get folderEmptyNoAudio => '该文件夹里没有可导入的音频';
+
+  @override
+  String get folderAllDuplicates => '全部为重复项，已将已有音频关联到新合集';
+
+  @override
+  String folderIgnoredSubdirectories(int count) {
+    return '已忽略子文件夹 $count 个';
+  }
+
+  @override
+  String folderUnsupportedFiles(int count) {
+    return '已忽略不支持的文件 $count 个';
+  }
 }

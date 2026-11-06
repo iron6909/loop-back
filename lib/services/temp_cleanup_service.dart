@@ -16,10 +16,11 @@ library;
 
 import 'dart:io';
 
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../utils/file_size.dart';
 import '../utils/app_data_dir.dart';
+import '../utils/file_size.dart';
 import 'app_logger.dart';
 
 /// 清理结果。
@@ -58,24 +59,6 @@ Future<CleanupResult> cleanupStalePdfExportTemp({
       minAge: minAge,
       nameFilter: _isShareExportTemp,
     );
-  } catch (_) {
-    return const CleanupResult(freedBytes: 0);
-  }
-}
-
-/// 启动时清理：删除 app 数据目录中超过 [minAge] 的百度网盘临时下载。
-///
-/// 百度网盘下载为了支持失败后续传，会在 `tmp/baidu_netdisk` 下保留
-/// `.part` 和 `.part.meta.json`。短期保留有续传价值；超过 1 天后按临时缓存回收。
-Future<CleanupResult> cleanupStaleBaiduNetdiskTemp({
-  Duration minAge = const Duration(days: 1),
-  Future<Directory> Function() resolveDataDir = getAppDataDirectory,
-}) async {
-  try {
-    final dataDir = await resolveDataDir();
-    final dir = Directory('${dataDir.path}/tmp/baidu_netdisk');
-    if (!await dir.exists()) return const CleanupResult(freedBytes: 0);
-    return _cleanupDirectory(dir, minAge: minAge);
   } catch (_) {
     return const CleanupResult(freedBytes: 0);
   }
@@ -121,13 +104,6 @@ Future<CleanupResult> cleanupAllTempFiles() async {
     )).freedBytes;
   } catch (_) {}
 
-  // 3. app 数据目录中的百度网盘下载临时文件：用户主动清缓存时全量清理
-  try {
-    totalBytes += (await cleanupStaleBaiduNetdiskTemp(
-      minAge: Duration.zero,
-    )).freedBytes;
-  } catch (_) {}
-
   return CleanupResult(freedBytes: totalBytes);
 }
 
@@ -141,6 +117,20 @@ bool _isOwnCacheTemp(String path) {
 bool _isShareExportTemp(String path) {
   final name = path.split(Platform.pathSeparator).last;
   return _shareExportTempPrefixes.any(name.startsWith);
+}
+
+/// 清理已停用的社区媒体下载残留（app data 目录下的 tmp/community_media）。
+///
+/// 历史版本可能留下半成品文件，启动时删除一次即可，文件语义可随时丢弃。
+Future<void> cleanupCommunityDownloadTmp() async {
+  try {
+    final dir = Directory(
+      p.join((await getAppDataDirectory()).path, 'tmp', 'community_media'),
+    );
+    if (await dir.exists()) await dir.delete(recursive: true);
+  } catch (error) {
+    AppLogger.log('TempCleanup', 'community tmp cleanup failed: $error');
+  }
 }
 
 /// 获取沙盒根/tmp/ 目录（iOS/macOS），不存在时返回 null。

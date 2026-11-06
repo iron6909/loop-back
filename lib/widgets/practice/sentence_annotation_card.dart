@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/reading_text_prefs_provider.dart';
-import '../../providers/sentence_ai_provider.dart';
+import '../../services/provider/provider_error_text.dart';
 import '../../services/app_logger.dart';
 import '../../models/sense_group_result.dart';
 import '../../models/word_highlight_binding.dart';
@@ -629,16 +629,6 @@ class SentenceAnnotationCardState
         _resetTranslationAfterEmptyRequest(source);
       }
     } catch (error) {
-      if (error is AiFeatureAuthRequiredException ||
-          error is AiFeatureQuotaExceededException) {
-        _resetTranslationAfterBlockedRequest();
-        AppLogger.log(
-          'SentenceAnnotation',
-          '翻译请求被阻断: source=$source error=$error',
-        );
-        if (!automatic) rethrow;
-        return;
-      }
       if (mounted) {
         setState(() {
           _translationExpanded = false;
@@ -653,7 +643,7 @@ class SentenceAnnotationCardState
         if (!automatic) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.aiTranslationFailed),
+              content: Text(providerErrorText(context, error)),
             ),
           );
         }
@@ -673,17 +663,6 @@ class SentenceAnnotationCardState
     AppLogger.log('SentenceAnnotation', '翻译请求无内容结束: source=$source');
   }
 
-  /// 登录或额度门槛阻断请求时，恢复翻译区域到可重新点击的初始状态。
-  void _resetTranslationAfterBlockedRequest() {
-    if (!mounted) return;
-    setState(() {
-      _translationExpanded = false;
-      _translationState = ContentLoadState.idle;
-      _translationContent = null;
-      _translationActivated = false;
-    });
-    _notifyToolbar();
-  }
 
   /// 解析按钮点击（返回 Future 供 AsyncToggleButton 管理 loading）。
   ///
@@ -783,16 +762,6 @@ class SentenceAnnotationCardState
         _resetAnalysisAfterEmptyRequest(source);
       }
     } catch (error) {
-      if (error is AiFeatureAuthRequiredException ||
-          error is AiFeatureQuotaExceededException) {
-        _resetAnalysisAfterBlockedRequest();
-        AppLogger.log(
-          'SentenceAnnotation',
-          '解析请求被阻断: source=$source error=$error',
-        );
-        if (!automatic) rethrow;
-        return;
-      }
       if (mounted) {
         setState(() {
           _analysisExpanded = false;
@@ -807,7 +776,7 @@ class SentenceAnnotationCardState
         if (!automatic) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(AppLocalizations.of(context)!.aiAnalysisFailed),
+              content: Text(providerErrorText(context, error)),
             ),
           );
         }
@@ -827,17 +796,6 @@ class SentenceAnnotationCardState
     AppLogger.log('SentenceAnnotation', '解析请求无内容结束: source=$source');
   }
 
-  /// 登录或额度门槛阻断请求时，恢复解析区域到可重新点击的初始状态。
-  void _resetAnalysisAfterBlockedRequest() {
-    if (!mounted) return;
-    setState(() {
-      _analysisExpanded = false;
-      _analysisState = ContentLoadState.idle;
-      _analysisContent = null;
-      _analysisActivated = false;
-    });
-    _notifyToolbar();
-  }
 
   @override
   void dispose() {

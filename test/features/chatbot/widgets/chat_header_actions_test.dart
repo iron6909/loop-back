@@ -4,7 +4,6 @@
 /// 本测试只验证 header 菜单的 UI 存在与文案（避免驱动 send 引入实时定时器/动画）。
 library;
 
-import 'package:echo_loop/features/auth/providers/auth_providers.dart';
 import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
 import 'package:echo_loop/features/chatbot/widgets/chat_header_actions.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +28,6 @@ void main() {
           actions: const [ChatHeaderActions(config: _config)],
         ),
       ),
-      overrides: [isAuthenticatedProvider.overrideWithValue(true)],
     );
     await tester.pump();
 

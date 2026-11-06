@@ -8,6 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../l10n/app_localizations.dart';
 import '../../../models/reading_text_prefs.dart';
+import '../../../services/provider/provider_error_text.dart';
 import '../../../theme/app_theme.dart';
 import '../../subscription/models/premium_feature.dart';
 import '../../subscription/utils/ai_quota_copy.dart';
@@ -259,7 +260,12 @@ class ChatMessageBubble extends StatelessWidget {
           _inlineAction(
             context,
             icon: Icons.refresh,
-            label: AppLocalizations.of(context)!.chatErrorGenerate,
+            label: message.errorCode == null
+                ? AppLocalizations.of(context)!.chatErrorGenerate
+                : providerErrorCodeText(
+                    message.errorCode,
+                    Localizations.localeOf(context).languageCode == 'zh',
+                  ),
             onTap: onRetry,
           ),
         if (message.status == ChatMessageStatus.quotaBlocked)
@@ -292,11 +298,13 @@ class ChatMessageBubble extends StatelessWidget {
           children: [
             Icon(icon, size: 16, color: scheme.error),
             const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: TextStyle(
-                color: scheme.error,
-                fontWeight: FontWeight.w500,
+            Flexible(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: scheme.error,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],

@@ -69,7 +69,7 @@ void main() {
     expect(find.text('third-ready'), findsOneWidget);
   });
 
-  testWidgets('第三方与 Supabase 初始化等待地区决策完成', (tester) async {
+  testWidgets('第三方分析等待本地地区完成', (tester) async {
     final regionGate = Completer<UserRegionBootstrapResult>();
     final bootstrapper = _FakeBootstrapper();
 
@@ -89,20 +89,7 @@ void main() {
     await tester.pump();
 
     expect(bootstrapper.thirdPartyCalls, 1);
-    expect(bootstrapper.supabaseUrls, ['https://china.supabase.test']);
     expect(find.text('third-ready'), findsOneWidget);
-  });
-
-  testWidgets('第三方报告只发布 bootstrapper 确认的 RevenueCat ready 状态', (tester) async {
-    final bootstrapper = _FakeBootstrapper(revenueCatReady: true);
-
-    await tester.pumpWidget(
-      _host(bootstrapper: bootstrapper, watchThirdParty: true),
-    );
-    await tester.pump();
-    await tester.pump();
-
-    expect(find.text('revenuecat-ready'), findsOneWidget);
   });
 }
 
@@ -116,12 +103,6 @@ Widget _host({
     overrides: [
       startupBootstrapperProvider.overrideWithValue(bootstrapper),
       userRegionBootstrapProvider.overrideWith((ref) => regionFuture),
-      supabaseUrlForThisRunProvider.overrideWith((ref) async {
-        final userRegion = await ref.watch(userRegionBootstrapProvider.future);
-        return userRegion.isChinaUser
-            ? 'https://china.supabase.test'
-            : 'https://global.supabase.test';
-      }),
     ],
     child: MaterialApp(
       home: Consumer(
@@ -130,10 +111,8 @@ Widget _host({
           final thirdParty = watchThirdParty
               ? ref.watch(thirdPartyStartupProvider)
               : null;
-          if (thirdParty case AsyncData(:final value)) {
-            return Text(
-              value.isRevenueCatReady ? 'revenuecat-ready' : 'third-ready',
-            );
+          if (thirdParty case AsyncData()) {
+            return const Text('third-ready');
           }
           return switch (local) {
             AsyncData() => const Text('ready'),
@@ -163,18 +142,12 @@ const _chinaResolvedRegion = UserRegionBootstrapResult(
 );
 
 class _FakeBootstrapper implements StartupBootstrapper {
-  _FakeBootstrapper({
-    this.failLocalAttempts = 0,
-    this.localGate,
-    this.revenueCatReady = false,
-  });
+  _FakeBootstrapper({this.failLocalAttempts = 0, this.localGate});
 
   final int failLocalAttempts;
   final Completer<StartupReport>? localGate;
-  final bool revenueCatReady;
   int localCalls = 0;
   int thirdPartyCalls = 0;
-  final supabaseUrls = <String?>[];
 
   @override
   Future<StartupReport> initializeLocal() async {
@@ -186,15 +159,8 @@ class _FakeBootstrapper implements StartupBootstrapper {
   }
 
   @override
-  Future<ThirdPartyStartupReport> initializeThirdParty({
-    required String? supabaseUrl,
-  }) async {
+  Future<StartupReport> initializeThirdParty() async {
     thirdPartyCalls += 1;
-    supabaseUrls.add(supabaseUrl);
-    return ThirdPartyStartupReport(
-      issues: [],
-      isSupabaseReady: false,
-      isRevenueCatReady: revenueCatReady,
-    );
+    return const StartupReport([]);
   }
 }

@@ -9,13 +9,14 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # followed by an optional build number separated by a +.
 # Both the version and the builder number may be overridden in flutter
 # build by specifying --build-name and --build-number, respectively.
-# In Android, build-name is used as versionName while build-number used as versionCode.
-# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
-# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Android uses build-name as versionName and build-number as versionCode.
+# Android versioning: https://developer.android.com/studio/publish/versioning
+# iOS uses build-name as CFBundleShortVersionString and build-number as
+# CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
-# of the product and file versions while build-number is used as the build suffix.
+# of the product and file versions; build-number is the build suffix.
 version: 1.0.44
 
 environment:
@@ -73,7 +74,7 @@ dependencies:
   dio: ^5.9.0
   background_downloader: ^9.5.8
   dio_http2_adapter: ^2.7.1
-  # 网络图片磁盘缓存：官方合集封面冷启动后无需重下，离线浏览有图。
+  # 网络图片磁盘缓存：播客封面在冷启动和离线浏览时可复用。
   # 用 JsonCacheInfoRepository 替代默认 sqflite 仓库，避免 sqflite 全局 factory 警告
   cached_network_image: ^3.4.1
   sqlite3: ^2.7.5
@@ -81,7 +82,6 @@ dependencies:
   flutter_tts: ^4.2.0
   wakelock_plus: ^1.4.0
   url_launcher: ^6.3.1
-  app_links: ^7.0.0
   # LLM 流式 markdown 渲染（专为未闭合/流式 markdown 设计；纯 Dart）。
   gpt_markdown: ^1.1.8
   flutter_inappwebview: ^6.1.5
@@ -98,11 +98,6 @@ dependencies:
   timeago: ^3.7.1
   sherpa_onnx: ^1.13.4
   showcaseview: ^5.0.1
-  # 认证：复用 fluency-frontend 的 Supabase 项目（auth.users 共享），
-  # mobile 端走 native ID Token 流（Apple/Google）+ 邮箱密码。详见 docs / plan。
-  supabase_flutter: ^2.12.0
-  sign_in_with_apple: ^7.0.1
-  google_sign_in: ^7.2.0
   just_waveform: ^0.0.7
   # 注意：该插件的 ProGuard keep 规则用的是 proguardFiles 而非 consumerProguardFiles，
   # 不会传播到宿主 app。release（R8）构建必须在 android/app/proguard-rules.pro 保留
@@ -115,16 +110,14 @@ dependencies:
   pdf: ^3.12.0
   # PDF 预览：PdfPreview 组件把 PDF 栅格化在 App 内展示（导出预览页），与 pdf 同作者
   printing: ^5.14.2
-  purchases_flutter: ^10.3.0
-  in_app_purchase: ^3.3.0
   charset_converter: ^2.4.0
   flutter_svg: ^2.3.0
   fl_chart: ^1.2.0
   lottie: ^3.3.3
   # 持久化文件日志：使用成熟的大小轮转输出，避免手写截断逻辑。
   logger: ^2.7.0
-  window_manager: ^0.5.2
-
+  # 设置页清缓存时直接调用其 CacheManager API。
+  flutter_cache_manager: ^3.4.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -155,6 +148,9 @@ dev_dependencies:
 dependency_overrides:
   charset_converter:
     path: third_party/charset_converter
+  # pdf 3.12.0 限制 archive <4.1.0，与 image 4.11.0 的 decodeLazy 调用不兼容。
+  # ponytail: 暂用 4.10.0；pdf/image 的 archive 约束兼容后移除此覆盖。
+  image: 4.10.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -170,6 +166,7 @@ flutter:
 
   assets:
     - assets/demo/
+    - assets/podcast/
     # 只打包运行时真正用到的图标（封面图/登录页经 rootBundle 读取）。
     # 目录内其余文件（app-icon-1024-rounded 仅构建期生成 launcher icon、
     # ic_stat_logo 仅作 Android 通知图标源文件）不进包；订阅页透明底品牌图单独显式打包。
@@ -178,7 +175,6 @@ flutter:
     - assets/icon/app-icon.svg
     - assets/icon/apple-podcasts.svg
     - assets/icon/artist-palette.svg
-    - assets/icon/baidu-netdisk.svg
     - assets/icon/bar-chart.svg
     - assets/icon/bell.svg
     - assets/icon/book.svg

@@ -2,15 +2,12 @@ package app.echoloop
 
 import android.content.Intent
 import android.os.Build
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
 import android.util.Log
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : AudioServiceActivity() {
-    private var googleServicesChannel: MethodChannel? = null
     private var appUpdateChannel: MethodChannel? = null
     private var deviceInfoChannel: MethodChannel? = null
     private var speechPracticeHandler: AndroidSpeechPracticeHandler? = null
@@ -19,18 +16,6 @@ class MainActivity : AudioServiceActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        Log.i("AuthGMS", "register google services availability channel")
-        googleServicesChannel = MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            "top.echo-loop/google_services",
-        ).also { channel ->
-            channel.setMethodCallHandler { call, result ->
-                when (call.method) {
-                    "isGooglePlayServicesAvailable" -> result.success(isGooglePlayServicesAvailable())
-                    else -> result.notImplemented()
-                }
-            }
-        }
         appUpdateChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             "top.echo-loop/app_update",
@@ -66,8 +51,6 @@ class MainActivity : AudioServiceActivity() {
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
-        googleServicesChannel?.setMethodCallHandler(null)
-        googleServicesChannel = null
         appUpdateChannel?.setMethodCallHandler(null)
         appUpdateChannel = null
         deviceInfoChannel?.setMethodCallHandler(null)
@@ -92,24 +75,6 @@ class MainActivity : AudioServiceActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         speechPracticeHandler?.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-
-    private fun isGooglePlayServicesAvailable(): Boolean {
-        val status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this)
-        val available = status == ConnectionResult.SUCCESS
-        Log.i("AuthGMS", "Google Play services status=${statusName(status)}($status) available=$available")
-        return available
-    }
-
-    private fun statusName(status: Int): String {
-        return when (status) {
-            ConnectionResult.SUCCESS -> "SUCCESS"
-            ConnectionResult.SERVICE_MISSING -> "SERVICE_MISSING"
-            ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED -> "SERVICE_VERSION_UPDATE_REQUIRED"
-            ConnectionResult.SERVICE_DISABLED -> "SERVICE_DISABLED"
-            ConnectionResult.SERVICE_INVALID -> "SERVICE_INVALID"
-            else -> "UNKNOWN"
-        }
     }
 
     private fun installerPackageName(): String? {

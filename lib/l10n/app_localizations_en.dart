@@ -2093,6 +2093,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Network error. Check your connection and retry.';
 
   @override
+  String downloadErrorPodcastHost(String host) {
+    return 'Cannot reach $host. Try a network that can access this podcast source.';
+  }
+
+  @override
   String get downloadErrorCorrupted =>
       'Downloaded file verification failed. Please retry.';
 
@@ -4131,6 +4136,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'This file was removed from the shared collection';
 
   @override
+  String get communitySyncStoppedBadge => 'Sync stopped';
+
+  @override
+  String get communityReadOnlyNotice =>
+      'This collection came from the old community. Content is no longer updated.';
+
+  @override
+  String get communityMediaNotDownloaded => 'Media not downloaded';
+
+  @override
+  String get communityMediaNotDownloadedMessage =>
+      'This media was never downloaded, and shared collections no longer provide downloads.';
+
+  @override
   String communityFilesRemoved(int count) {
     return '$count files were removed from shared collections';
   }
@@ -5666,4 +5685,186 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expandSidebar => 'Expand sidebar';
+
+  @override
+  String get usageScopeAccount => 'Account balance';
+
+  @override
+  String get usageScopeKeyBudget => 'Key budget';
+
+  @override
+  String get usageScopePlanWindow => 'Plan windows';
+
+  @override
+  String get usageRefresh => 'Refresh';
+
+  @override
+  String get usageRetry => 'Retry';
+
+  @override
+  String usageUpdatedAt(String time) {
+    return 'Updated $time';
+  }
+
+  @override
+  String usageUpdateFailed(String time) {
+    return 'Update failed · last $time';
+  }
+
+  @override
+  String get usageUnavailable => 'Currently unavailable';
+
+  @override
+  String get usageUnsupported => 'This address does not support usage queries';
+
+  @override
+  String get usageRateLimited => 'Rate limited';
+
+  @override
+  String get usageBudgetNotSet => 'No budget set for this key';
+
+  @override
+  String get usageAccountUnauthorized => 'Account balance not authorized';
+
+  @override
+  String get usageOpenConsole => 'Open provider console';
+
+  @override
+  String get usageWindowRolling => '5 hours';
+
+  @override
+  String get usageWindowWeekly => 'Weekly';
+
+  @override
+  String get usageWindowMonthly => 'Monthly';
+
+  @override
+  String usageGranted(String amount) {
+    return 'Granted $amount';
+  }
+
+  @override
+  String usageToppedUp(String amount) {
+    return 'Topped up $amount';
+  }
+
+  @override
+  String get usageEffectiveBudget => 'Effective budget applied';
+
+  @override
+  String usageResetsAt(String time) {
+    return 'Resets $time';
+  }
+
+  @override
+  String get aiServiceTitle => 'AI service';
+
+  @override
+  String get aiServiceProvider => 'Provider';
+
+  @override
+  String get aiServiceBaseUrl => 'Base URL';
+
+  @override
+  String get aiServiceModel => 'Model';
+
+  @override
+  String get aiServiceApiKey => 'API key';
+
+  @override
+  String get aiServiceKeySaved => 'Saved';
+
+  @override
+  String get aiServiceKeyNotSet => 'Not set';
+
+  @override
+  String get aiServiceConnectionTest => 'Connection test';
+
+  @override
+  String get aiServiceTest => 'Test';
+
+  @override
+  String get aiServiceTesting => 'Testing…';
+
+  @override
+  String get aiServiceTestSuccess => 'Connection OK';
+
+  @override
+  String get aiServiceTestUnauthorized =>
+      'Authentication failed: check the API key';
+
+  @override
+  String get aiServiceTestNotFound => 'Address or model not found';
+
+  @override
+  String get aiServiceTestTimeout => 'Network timeout';
+
+  @override
+  String get aiServiceUntested => 'Not tested';
+
+  @override
+  String get aiServiceNotConfigured => 'AI service is not configured';
+
+  @override
+  String get aiServiceConfigureProvider => 'Configure provider';
+
+  @override
+  String get aiServicePromptVersion => 'Prompt version';
+
+  @override
+  String get aiServiceAbout => 'About';
+
+  @override
+  String get aiServiceBaseUrlInvalid =>
+      'Enter a complete HTTP or HTTPS address';
+
+  @override
+  String get aiServiceKeyHint => 'Leave empty to remove the saved key';
+
+  @override
+  String get providerKindDeepSeek => 'DeepSeek';
+
+  @override
+  String get providerKindOpenRouter => 'OpenRouter';
+
+  @override
+  String get providerKindCustom => 'Custom';
+
+  @override
+  String get usageViewAll => 'View all';
+
+  @override
+  String get legacyAutoTranscript =>
+      'Existing auto-detected subtitles are kept for viewing; regeneration is unavailable.';
+
+  @override
+  String get transcriptionTimingNotice =>
+      'Word timing is estimated and may be inaccurate.';
+
+  @override
+  String get importLocalCollection => 'Import Local Collection';
+
+  @override
+  String get importAudioFromFolder => 'Import from Folder';
+
+  @override
+  String get importAudioFromFolderDescription =>
+      'Import a folder as a collection; subfolders are skipped';
+
+  @override
+  String get folderEmptyNoAudio => 'This folder has no importable audio';
+
+  @override
+  String get folderAllDuplicates =>
+      'All files are duplicates; existing audio added to the new collection';
+
+  @override
+  String folderIgnoredSubdirectories(int count) {
+    return 'Subfolders skipped: $count';
+  }
+
+  @override
+  String folderUnsupportedFiles(int count) {
+    return 'Unsupported files ignored: $count';
+  }
 }

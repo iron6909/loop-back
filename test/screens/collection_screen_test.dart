@@ -3,6 +3,7 @@
 // 测试资源库页面的合集视图渲染和交互。
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/models/collection.dart';
 import 'package:echo_loop/screens/library_screen.dart';
@@ -167,35 +168,67 @@ void main() {
         expect(find.textContaining('Added'), findsNothing);
       });
 
-      testWidgets('中国地区本地合集列表使用已保存的中国封面 URL', (tester) async {
-        final community =
-            createTestCollection(
-              id: 'community-cn',
-              name: 'Community Lessons',
-            ).copyWith(
-              source: CollectionSource.community,
-              coverUrl: 'https://global.example/cover.jpg',
-              coverUrlChina: 'https://china.example/cover.jpg',
-            );
+      for (final isChinaUser in [false, true]) {
+        testWidgets('历史社区封面只显示本地占位，不创建网络图片：china=$isChinaUser', (tester) async {
+          final community =
+              createTestCollection(
+                id: 'community-cover',
+                name: 'Community Lessons',
+              ).copyWith(
+                source: CollectionSource.community,
+                coverUrl: 'https://cdn.echo-loop.top/media/images/cover.jpg',
+                coverUrlChina:
+                    'https://cdn.echo-loop.cn/media/images/cover.jpg',
+              );
 
+          await tester.pumpWidget(
+            createTestScreen(
+              const LibraryScreen(),
+              overrides: [
+                isChinaUserProvider.overrideWithValue(isChinaUser),
+                collectionListProvider.overrideWith(
+                  () => TestCollectionList(
+                    CollectionState(rawCollections: [community]),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          expect(find.byType(CachedNetworkImage), findsNothing);
+          expect(find.text('C'), findsOneWidget);
+          expect(find.text('Community Lessons'), findsOneWidget);
+        });
+      }
+
+      testWidgets('播客仍使用订阅源的封面', (tester) async {
+        final podcast =
+            createTestCollection(
+              id: 'podcast-cover',
+              name: 'Podcast Lessons',
+            ).copyWith(
+              source: CollectionSource.podcast,
+              coverUrl: 'https://podcast.example/cover.jpg',
+            );
         await tester.pumpWidget(
           createTestScreen(
             const LibraryScreen(),
             overrides: [
-              isChinaUserProvider.overrideWithValue(true),
               collectionListProvider.overrideWith(
                 () => TestCollectionList(
-                  CollectionState(rawCollections: [community]),
+                  CollectionState(rawCollections: [podcast]),
                 ),
               ),
             ],
           ),
         );
 
-        final cover = tester.widget<CachedNetworkImage>(
-          find.byType(CachedNetworkImage),
+        expect(
+          tester
+              .widget<CachedNetworkImage>(find.byType(CachedNetworkImage))
+              .imageUrl,
+          'https://podcast.example/cover.jpg',
         );
-        expect(cover.imageUrl, 'https://china.example/cover.jpg');
       });
 
       testWidgets('每个来源的用户合集都显示对应角标', (tester) async {
@@ -225,7 +258,9 @@ void main() {
 
         expect(find.text('Local'), findsOneWidget);
         expect(find.text('Shared'), findsOneWidget);
+        expect(find.text('Sync stopped'), findsOneWidget);
         expect(find.text('Podcast'), findsOneWidget);
+        expect(find.text('Discover Resources'), findsNothing);
       });
 
       testWidgets('来源角标位于合集 meta 信息下方', (tester) async {
@@ -368,6 +403,68 @@ void main() {
     });
 
     group('交互', () {
+      testWidgets('从创建菜单导入文件夹，可取消、重选和返回', (tester) async {
+        const channel = MethodChannel('top.echo-loop/local_audio_picker');
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        Object? directory;
+        var picks = 0;
+        messenger.setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'pickDirectory') {
+            picks++;
+            return directory;
+          }
+          return null;
+        });
+        addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+
+        await tester.pumpWidget(createTestScreen(const LibraryScreen()));
+        await tester.pumpAndSettle();
+        expect(find.text('Import Local Collection'), findsNothing);
+        await tester.tap(find.byIcon(Icons.add).first);
+        await tester.pumpAndSettle();
+        expect(find.text('New Collection'), findsOneWidget);
+        expect(find.text('Subscribe Podcast'), findsOneWidget);
+        expect(find.text('Import from Folder'), findsOneWidget);
+        expect(find.text('Import from File'), findsNothing);
+        expect(find.text('Import from Link'), findsNothing);
+
+        await tester.tap(find.text('Import from Folder'));
+        await tester.pumpAndSettle();
+        expect(picks, 1);
+        expect(find.text('New Collection'), findsOneWidget);
+
+        directory = {'name': 'Empty', 'children': <Object?>[]};
+        await tester.tap(find.text('Import from Folder'));
+        await tester.pumpAndSettle();
+        expect(picks, 2);
+        expect(
+          find.text('This folder has no importable audio'),
+          findsOneWidget,
+        );
+        expect(find.text('Import from File'), findsNothing);
+        expect(find.text('Import from Link'), findsNothing);
+
+        directory = {
+          'name': 'Lessons',
+          'children': [
+            {
+              'uri': 'content://tree/2',
+              'name': '2.mp3',
+              'size': 2,
+              'isDirectory': false,
+            },
+          ],
+        };
+        await tester.tap(find.text('Import from Folder').last);
+        await tester.pumpAndSettle();
+        expect(picks, 3);
+        expect(find.text('2.mp3'), findsOneWidget);
+        await tester.tap(find.byTooltip('Back').last);
+        await tester.pumpAndSettle();
+        expect(find.text('New Collection'), findsOneWidget);
+      });
+
       testWidgets('点击 + 创建新合集', (tester) async {
         await tester.pumpWidget(createTestScreen(const LibraryScreen()));
         await tester.pumpAndSettle();

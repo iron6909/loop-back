@@ -151,6 +151,8 @@ class AudioImportSelectionSummary {
     required this.subtitleCount,
     required this.skippedCount,
     this.failedCount = 0,
+    this.ignoredDirectories = 0,
+    this.unsupportedCount = 0,
   });
 
   final int addedCount;
@@ -159,6 +161,12 @@ class AudioImportSelectionSummary {
 
   /// 下载、解析或入库失败的数量。
   final int failedCount;
+
+  /// 目录导入时被忽略的子目录数量。
+  final int ignoredDirectories;
+
+  /// 目录导入时因扩展名不受支持而被忽略的文件数。
+  final int unsupportedCount;
 }
 
 enum AudioImportFailureCode {

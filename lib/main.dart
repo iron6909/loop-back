@@ -6,7 +6,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:posthog_flutter/posthog_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/time_format.dart';
 import 'utils/echo_loop_scroll_behavior.dart';
@@ -34,28 +33,16 @@ import 'providers/retell_prefs_provider.dart';
 import 'providers/difficult_practice_prefs_provider.dart';
 import 'providers/new_user_guide_provider.dart';
 import 'services/app_logger.dart';
-import 'services/app_deep_link_router.dart';
-import 'services/app_window_service.dart';
 import 'services/startup_trace.dart';
 import 'services/app_update_migration.dart';
 import 'services/media_kit_debug_initializer.dart';
 import 'services/user_id_service.dart';
 import 'widgets/app_notice_presenter.dart';
 import 'widgets/app_startup_gate.dart';
-import 'features/community_collections/data/trigger_community_sync.dart';
-import 'features/community_collections/download/community_download_notifier.dart';
 import 'features/onboarding_survey/data/onboarding_survey_storage.dart';
 import 'features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'features/onboarding_survey/providers/user_onboarding_sync_provider.dart';
-import 'features/auth/providers/auth_providers.dart';
-import 'features/remote_config/remote_config_providers.dart';
-import 'features/remote_config/remote_config_service.dart';
 import 'features/user_region/user_region_providers.dart';
-import 'features/subscription/providers/subscription_controller.dart';
-import 'features/subscription/providers/subscription_plans_provider.dart';
-import 'features/subscription/services/paddle_deep_link_handler.dart';
 import 'features/user_region/user_region_bootstrapper.dart';
-import 'features/user_preferences/providers/user_preferences_sync_providers.dart';
 
 void main() async {
   final startupTrace = StartupTrace();
@@ -63,8 +50,6 @@ void main() async {
   startupTrace.mark('dart_main_enter');
   WidgetsFlutterBinding.ensureInitialized();
   startupTrace.mark('flutter_binding_ready');
-  final appWindowActivator = WindowManagerAppWindowActivator();
-  await appWindowActivator.initialize();
   startupTrace.runSync('timeago_initialize', initTimeago);
 
   final packageInfo = await startupTrace.run(
@@ -102,13 +87,6 @@ void main() async {
   // 避免日志看起来像启动阶段重复执行了一次迁移。
   await runAppUpdateMigrations(prefs);
   final isDemoMode = prefs.getBool('demo_mode') ?? false;
-
-  // 远程配置：启动期只同步读取本地缓存/默认值，不触发网络请求，避免网络慢阻塞首帧。
-  // 下游 UI 只读取 provider 暴露的 resolved config；远端刷新由 MainShell 首帧后后台执行。
-  final initialRemoteConfig = RemoteConfigService.create(
-    prefs: prefs,
-    appVersion: packageInfo.version,
-  ).loadInitialFromCache();
 
   // 首次启动检测：哨兵 key `first_launch_done` 不存在即视为首次启动，
   // 立即写入 true。后续所有启动都会读到该 key = true，即非首启。
@@ -193,10 +171,9 @@ void main() async {
           initialAiTranscriptionAutoMergeEnabledProvider.overrideWithValue(
             initialAiTranscriptionAutoMergeEnabled,
           ),
-          initialRemoteConfigProvider.overrideWithValue(initialRemoteConfig),
           startupDemoModeProvider.overrideWithValue(isDemoMode),
         ],
-        child: EchoLoopApp(windowActivator: appWindowActivator),
+        child: const EchoLoopApp(),
       ),
     ),
   );
@@ -220,9 +197,7 @@ Future<void> _registerAnonymousIdWhenReady(
 }
 
 class EchoLoopApp extends ConsumerStatefulWidget {
-  const EchoLoopApp({super.key, this.windowActivator});
-
-  final AppWindowActivator? windowActivator;
+  const EchoLoopApp({super.key});
 
   @override
   ConsumerState<EchoLoopApp> createState() => _EchoLoopAppState();
@@ -231,17 +206,12 @@ class EchoLoopApp extends ConsumerStatefulWidget {
 class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     with WidgetsBindingObserver {
   StreamSubscription<NotificationIntent>? _intentSubscription;
-  ProviderSubscription<AsyncValue<Session?>>? _authSessionSubscription;
   ProviderSubscription<AsyncValue<StartupReport>>? _localStartupSubscription;
   ProviderSubscription<AsyncValue<UserRegionBootstrapResult>>?
   _userRegionStartupSubscription;
-  ProviderSubscription<AsyncValue<ThirdPartyStartupReport>>?
-  _thirdPartyStartupSubscription;
-  AppDeepLinkRouter? _appDeepLinkRouter;
   late final ShowcaseView _showcase;
   bool _hasLoggedRouterCreated = false;
   bool _didStartLocalEffects = false;
-  Future<void>? _thirdPartyEffectsFuture;
 
   @override
   void initState() {
@@ -260,42 +230,14 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
           (_, next) {
             final result = next.valueOrNull;
             if (result == null) return;
-            ref
-                .read(remoteConfigProvider.notifier)
-                .adoptStartupConfig(result.remoteConfig);
             unawaited(_startAfterLocalDataReady());
           },
           fireImmediately: true,
         );
-    _thirdPartyStartupSubscription = ref
-        .listenManual<AsyncValue<ThirdPartyStartupReport>>(
-          thirdPartyStartupProvider,
-          (_, next) {
-            if (next.hasValue) unawaited(_ensureThirdPartyDependentTasks());
-          },
-          fireImmediately: true,
-        );
+    // 保留第三方分析与本机维护任务，认证和支付 SDK 已停用。
+    ref.read(thirdPartyStartupProvider);
 
     WidgetsBinding.instance.addObserver(this);
-    final windowActivator =
-        widget.windowActivator ?? WindowManagerAppWindowActivator();
-
-    final paddleDeepLinkHandler = PaddleDeepLinkHandler(
-      refreshEntitlements: () async {
-        await _ensureThirdPartyDependentTasks();
-        if (!mounted || !ref.read(thirdPartyStartupProvider).hasValue) return;
-        await ref
-            .read(subscriptionControllerProvider.notifier)
-            .refreshAfterExternalCheckout();
-      },
-    );
-    final appDeepLinkRouter = AppDeepLinkRouter.forCurrentPlatform(
-      routes: [paddleDeepLinkHandler.route],
-      beforeDispatch: windowActivator.activate,
-    );
-    _appDeepLinkRouter = appDeepLinkRouter;
-    unawaited(appDeepLinkRouter.start());
-
     // 新手引导 showcase 控制器全局注册（替代旧的 ShowCaseWidget InheritedWidget）。
     // 整段 tour 走完或被 dismiss 时，通过 GuideShowcaseBus 触发 controller 的
     // completeActiveFlow 标记已看并清空 active。
@@ -326,8 +268,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     _intentSubscription = bridge.intents.listen(_handleNotificationIntent);
     final pendingIntent = bridge.takePendingIntent();
     if (pendingIntent != null) _handleNotificationIntent(pendingIntent);
-
-    Future.delayed(const Duration(seconds: 3), _triggerCommunitySync);
   }
 
   /// 业务内容提交后再预热，不让原生播放器依赖阻塞进入学习页。
@@ -345,92 +285,12 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     });
   }
 
-  /// 等待后台 SDK 初始化完成后再创建其依赖的订阅与认证控制器。
-  Future<void> _ensureThirdPartyDependentTasks() {
-    final existing = _thirdPartyEffectsFuture;
-    if (existing != null) return existing;
-
-    final operation = _startThirdPartyDependentTasks();
-    _thirdPartyEffectsFuture = operation;
-    return operation;
-  }
-
-  Future<void> _startThirdPartyDependentTasks() async {
-    try {
-      await ref.read(thirdPartyStartupProvider.future);
-    } catch (error, stackTrace) {
-      AppLogger.log(
-        'ThirdPartyStartup',
-        '等待第三方启动失败，跳过依赖任务 error=$error stack=$stackTrace',
-      );
-      return;
-    }
-    if (!mounted) return;
-
-    // RevenueCat 与 Supabase 已完成后台串行初始化；先让 session provider
-    // 重新读取 SDK 当前快照，再创建订阅 controller，避免 controller 首次构造时
-    // 先按匿名身份发起一次无效权益对账。
-    ref.invalidate(supabaseSessionProvider);
-    try {
-      // Supabase.initialize() 返回不代表 auth.currentSession 已完成恢复；
-      // 等待 provider 收到 initialSession，避免启动预热仍抢跑到匿名态。
-      await ref.read(supabaseSessionProvider.future);
-    } catch (error, stackTrace) {
-      AppLogger.log(
-        'AuthSession',
-        '等待 initialSession 失败，保留 pending 语义 error=$error stack=$stackTrace',
-      );
-    }
-    if (!mounted) return;
-    ref.read(subscriptionControllerProvider);
-    ref.read(subscriptionPlansProvider);
-    _authSessionSubscription = ref.listenManual<AsyncValue<Session?>>(
-      supabaseSessionProvider,
-      (previous, next) {
-        if (next.hasValue) {
-          unawaited(
-            ref
-                .read(onboardingSyncProvider)
-                .onSessionChanged(isSignedIn: next.valueOrNull != null),
-          );
-          unawaited(
-            ref
-                .read(userPreferencesSyncServiceProvider)
-                .onSessionChanged(next.valueOrNull?.user.id)
-                .catchError((Object error, StackTrace stackTrace) {
-                  AppLogger.log(
-                    'UserPreferencesSync',
-                    '更新登录用户状态失败: $error\n$stackTrace',
-                  );
-                }),
-          );
-        }
-        unawaited(
-          ref
-              .read(authAnalyticsSyncProvider)
-              .syncSessionChange(
-                previous: previous?.valueOrNull,
-                current: next.valueOrNull,
-              ),
-        );
-      },
-      fireImmediately: true,
-    );
-  }
-
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _intentSubscription?.cancel();
-    final appDeepLinkRouter = _appDeepLinkRouter;
-    _appDeepLinkRouter = null;
-    if (appDeepLinkRouter != null) {
-      unawaited(appDeepLinkRouter.dispose());
-    }
-    _authSessionSubscription?.close();
     _localStartupSubscription?.close();
     _userRegionStartupSubscription?.close();
-    _thirdPartyStartupSubscription?.close();
     _showcase.unregister();
     super.dispose();
   }
@@ -445,30 +305,7 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     AppLogger.log('Lifecycle', 'state=${state.name}');
     switch (state) {
       case AppLifecycleState.resumed:
-        if (ref.read(localStartupProvider).hasValue) {
-          _triggerCommunitySync();
-        }
-        final session = ref.read(supabaseSessionProvider).valueOrNull;
-        if (session != null) {
-          unawaited(ref.read(onboardingSyncProvider).onAppResumed());
-          unawaited(
-            ref.read(userPreferencesSyncServiceProvider).onAppResumed(),
-          );
-        }
-        // 回前台时条件重对账订阅权益（E8）。单一来源下每次刷新都是真实后端请求
-        // （不再有 RC SDK 客户端缓存兜着），且退款/退订分歧主要靠 E6/E7 在后端
-        // 交互时被动收敛，故仅在状态陈旧 / 越过到期点 / 超过 24h 新鲜窗（兜住
-        // 长期无后端流量的用户）时才回源，频繁切前台不盲查。
-        if (ref.read(thirdPartyStartupProvider).hasValue) {
-          unawaited(
-            ref.read(subscriptionControllerProvider.notifier).refreshIfStale(),
-          );
-          // 同时检查商店 storefront。跨区时立即撤下旧币种价格并重新读取商品；
-          // 同区则遵循五分钟 TTL，避免每次短暂切后台都重复查询。
-          unawaited(
-            ref.read(subscriptionPlansProvider.notifier).refreshIfStale(),
-          );
-        }
+        break;
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
         // 立即刷新 PostHog 埋点队列，避免 Application Backgrounded 等事件
@@ -480,16 +317,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
       case AppLifecycleState.hidden:
       // no-op
     }
-  }
-
-  /// 全局唯一社区合集同步入口；后台调用由 service 统一执行 2h 节流。
-  void _triggerCommunitySync({bool force = false}) {
-    if (!mounted) return;
-    unawaited(
-      triggerCommunitySync(ref, force: force).then((outcome) {
-        AppLogger.log('main', 'CommunitySync outcome=${outcome.runtimeType}');
-      }),
-    );
   }
 
   void _handleNotificationIntent(NotificationIntent intent) {
@@ -534,7 +361,6 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
       builder: (context, child) => AppStartupGate(
         child: AppNoticePresenter(child: child ?? const SizedBox.shrink()),
       ),
-      scaffoldMessengerKey: communityDownloadScaffoldMessengerKey,
     );
   }
 }

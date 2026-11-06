@@ -169,7 +169,10 @@ class AudioImportService {
       );
     }
 
-    final normalizedUri = _normalizePodcastAudioUri(uri);
+    final normalizedUri = await _resolvePodcastAudioUri(
+      _normalizePodcastAudioUri(uri),
+      cancelToken,
+    );
     final extension =
         _extensionFromUri(normalizedUri) ??
         _extensionFromMimeType(enclosureType) ??
@@ -206,6 +209,63 @@ class AudioImportService {
       audioSha256: finalizedAudio.sha256,
       originalAudioSha256: finalizedAudio.originalSha256,
     );
+  }
+
+  /// BBC 跳转域名在部分网络不可达。先有界解析第一跳，保留官方签发的
+  /// 媒体 URL，再交给后台下载，避免原生多地址建连让界面长时间无进度。
+  Future<Uri> _resolvePodcastAudioUri(Uri uri, CancelToken? cancelToken) async {
+    if (uri.host != 'open.live.bbc.co.uk') return uri;
+    final requestToken = CancelToken();
+    if (cancelToken != null) {
+      unawaited(cancelToken.whenCancel.then((_) => requestToken.cancel()));
+    }
+    try {
+      final response = await _dio
+          .head<Object>(
+            uri.toString(),
+            cancelToken: requestToken,
+            options: Options(
+              followRedirects: false,
+              receiveTimeout: const Duration(seconds: 15),
+              sendTimeout: const Duration(seconds: 15),
+              validateStatus: (_) => true,
+            ),
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () {
+              requestToken.cancel('source-timeout');
+              throw TimeoutException('Podcast source connection timed out');
+            },
+          );
+      final location = response.headers.value('location');
+      final target = location == null ? null : uri.resolve(location);
+      if (response.statusCode case 301 || 302 || 303 || 307 || 308) {
+        if (target != null &&
+            target.scheme == 'https' &&
+            target.host.isNotEmpty) {
+          return target;
+        }
+      }
+      if (response.statusCode == 200 || response.statusCode == 405) return uri;
+      throw const AudioImportException(
+        AudioImportFailureCode.network,
+        'Podcast source did not return a usable media URL',
+      );
+    } catch (error) {
+      AppLogger.log(
+        _logTag,
+        'podcast source failed host=${uri.host} errorType=${error.runtimeType}',
+      );
+      if (error is AudioImportException) rethrow;
+      throw AudioImportException(
+        cancelToken?.isCancelled == true
+            ? AudioImportFailureCode.canceled
+            : AudioImportFailureCode.network,
+        'Cannot connect to podcast source',
+        error,
+      );
+    }
   }
 
   /// 丢弃尚未写入 AudioItem 的下载结果，只删除本次新建的文件。

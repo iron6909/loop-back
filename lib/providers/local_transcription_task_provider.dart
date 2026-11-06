@@ -1,7 +1,6 @@
 /// 本地（离线）转录任务管理 Provider。
 ///
-/// 云端 [TranscriptionTaskManager] 的离线对偶：用设备已下载的 Whisper 模型
-/// 在本机转录音频生成字幕，不上传、不登录。
+/// 用设备已下载的 Whisper 英语模型在本机生成字幕，不上传、不登录。
 /// keepAlive：弹窗关闭后任务继续在后台运行。
 ///
 /// 流水线：ffmpeg 解码为 16kHz WAV → 专用引擎按所选档位分段转录（段级真实时间戳）
@@ -26,16 +25,38 @@ import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
 import '../services/asr/sherpa_onnx_engine.dart';
+import '../utils/app_data_dir.dart';
+import '../utils/audio_fingerprint.dart';
 import '../utils/srt_generator.dart';
 import '../utils/synthetic_word_timestamps.dart';
 import '../utils/transcript_stats.dart';
 import 'asr_engine_provider.dart';
 import 'audio_library_provider.dart';
-import 'transcription_task_provider.dart' show transcriptionFileOpsProvider;
 
 part 'local_transcription_task_provider.g.dart';
 
 // ─── 可注入 seam（便于测试） ──────────────────────────────────
+
+/// 封装转录流程中的文件系统操作，便于测试时 mock。
+class TranscriptionFileOps {
+  const TranscriptionFileOps();
+
+  /// 计算文件 SHA256。
+  Future<String> computeSha256(String filePath) => computeAudioSha256(filePath);
+
+  /// 获取文件大小。
+  Future<int> getFileSize(String filePath) => File(filePath).length();
+
+  /// 获取应用数据目录。
+  Future<Directory> getDataDir() => getAppDataDirectory();
+}
+
+/// 文件操作 Provider（测试时可覆盖）。
+///
+/// 手写 `Provider` 而非代码生成：该 seam 无需参数化缓存，也不需要重生成。
+final transcriptionFileOpsProvider = Provider<TranscriptionFileOps>(
+  (ref) => const TranscriptionFileOps(),
+);
 
 /// 专用转录引擎工厂（测试时覆盖为 mock 引擎）。
 ///
@@ -117,13 +138,15 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
   ///
   /// [audioItem] 要转录的音频项（须已就绪，audioPath 非空）。
   /// [model] 使用的 Whisper 档位（须已下载，由门控保证）。
-  /// [autoMergeShortSentences] 是否把 VAD 切出的相邻短段合并到目标时长
-  /// （对齐 AI 转录的「自动合并短句」；关闭时保留 VAD 原始切分）。
+  /// [autoMergeShortSentences] 是否把相邻完整短句合并到目标时长。
+  /// 模型片段会先按句末标点整理，关闭此选项也不保留半句话。
   Future<void> startLocalTranscription(
     AudioItem audioItem, {
     required AsrModelInfo model,
     bool autoMergeShortSentences = true,
   }) async {
+    // 历史自动检测字幕只读展示，不以英语模型重新生成（REQ-18）。
+    if (audioItem.transcriptLanguage == 'auto') return;
     final audioId = audioItem.id;
 
     // 防重入：进行中忽略。
@@ -205,10 +228,11 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
         return;
       }
 
-      // ── 5. 段列表 →（可选合并短句）→ SRT + 合成词级时间戳 ──
+      // ── 5. 模型片段 → 完整句子 →（可选合并短句）→ SRT + 合成词级时间戳 ──
+      final completeSentences = restoreAsrSentences(resolvedSegments);
       final merged = autoMergeShortSentences
-          ? mergeShortAsrSegments(resolvedSegments)
-          : resolvedSegments;
+          ? mergeShortAsrSegments(completeSentences)
+          : completeSentences;
       final sentences = merged
           .map(
             (s) => TranscriptSentence(
@@ -219,7 +243,7 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
           )
           .toList();
       final srt = generateSrtContent(sentences);
-      // 词级时间戳按字符长度合成（与本地上传一致；VAD 已按静音切句，不接 auto-align）。
+      // 词级时间戳按字符长度合成，与本地上传一致，不接 auto-align。
       final words = await generateSyntheticWordTimestampsFromSrt(srt);
       final wordsJson = words.isEmpty ? null : encodeWordTimestamps(words);
       final stats = await getTranscriptStatsFromSrt(srt);
@@ -321,18 +345,56 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
   void markCancelledForTest(String audioId) => _cancelled.add(audioId);
 }
 
+/// 将模型片段整理为完整句子，不把推理窗口或片段结束当成句末。
+/// 保留全部词语；片段内分句的时间按字符位置估算，跨片段取首尾时间。
+/// 小数、网址和常见英语缩写不触发句界；末尾无标点的内容仍保留。
+List<AsrSegment> restoreAsrSentences(List<AsrSegment> segments) {
+  final result = <AsrSegment>[];
+  final words = <String>[];
+  Duration? start;
+  var end = Duration.zero;
+  final sentenceEnd = RegExp(r'''[.!?]["'’”\)\]]*$''');
+  final abbreviation = RegExp(
+    r'^(?:Mr|Mrs|Ms|Dr|Prof|Sr|Jr|St|vs|e\.g|i\.e)\.$|^(?:[A-Za-z]\.)+$',
+    caseSensitive: false,
+  );
+  for (final segment in segments) {
+    final text = segment.text.trim().replaceAll(RegExp(r'\s+'), ' ');
+    final span = (segment.end - segment.start).inMicroseconds;
+    for (final word in RegExp(r'\S+').allMatches(text)) {
+      final token = word.group(0) ?? '';
+      start ??=
+          segment.start +
+          Duration(microseconds: (span * word.start / text.length).round());
+      end =
+          segment.start +
+          Duration(microseconds: (span * word.end / text.length).round());
+      words.add(token);
+      if (sentenceEnd.hasMatch(token) && !abbreviation.hasMatch(token)) {
+        result.add(AsrSegment(text: words.join(' '), start: start, end: end));
+        words.clear();
+        start = null;
+      }
+    }
+  }
+  if (start != null) {
+    result.add(AsrSegment(text: words.join(' '), start: start, end: end));
+  }
+  return result;
+}
+
 /// 短句合并目标下限（秒）：一组合并后至少达到该时长才收尾。
 ///
 /// 与 AI 转录「目标 4-7 秒」对齐：达到 4s 即收尾，单个长段不再拼接，
 /// 自然落在 4-7s 区间；相邻两个极短段偶尔合并后略超 7s 属可接受。
 const _mergeMinTargetSeconds = 4;
 
-/// 把 VAD 切出的相邻短段贪心合并到目标时长（4~7 秒），对齐 AI 转录的
+/// 把相邻完整短句贪心合并到目标时长（4~7 秒），对齐 AI 转录的
 /// 「自动合并短句」体验。
 ///
 /// 策略：逐段累积到当前组；当前组时长未达下限（4s）时并入下一段，达到下限即收尾。
 /// 单个本就较长（≥下限）的段保持不动、绝不拆分；合并只发生在相邻短段之间。
-/// 文本按空格拼接（VAD 段为独立语音区间，英文以空格连接自然）；区间取并集。
+/// 文本按空格拼接；区间取并集。
 /// 空列表原样返回。
 @visibleForTesting
 List<AsrSegment> mergeShortAsrSegments(List<AsrSegment> segments) {

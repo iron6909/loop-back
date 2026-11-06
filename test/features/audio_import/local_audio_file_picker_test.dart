@@ -36,6 +36,55 @@ void main() {
     messenger.setMockMethodCallHandler(channel, null);
   });
 
+  test('目录协议只接收直接文件，子目录只计数', () async {
+    mockChannel({
+      'pickDirectory': {
+        'name': 'Lessons',
+        'children': [
+          {
+            'uri': 'content://tree/1',
+            'name': '1.mp3',
+            'size': 42,
+            'isDirectory': false,
+          },
+          {
+            'uri': 'content://tree/sub',
+            'name': 'sub',
+            'size': 0,
+            'isDirectory': true,
+          },
+        ],
+      },
+    });
+    final directory = await AndroidLocalAudioFilePicker(
+      channel: channel,
+    ).pickDirectory();
+    expect(directory?.name, 'Lessons');
+    expect(directory?.files.single.name, '1.mp3');
+    expect(directory?.ignoredDirectories, 1);
+    expect(calls.map((c) => c.method), ['pickDirectory']);
+  });
+
+  test('目录取消返回 null，畸形条目拒绝', () async {
+    mockChannel({'pickDirectory': null});
+    expect(
+      await AndroidLocalAudioFilePicker(channel: channel).pickDirectory(),
+      isNull,
+    );
+    mockChannel({
+      'pickDirectory': {
+        'name': 'Lessons',
+        'children': [
+          {'name': 'bad', 'isDirectory': 'false'},
+        ],
+      },
+    });
+    await expectLater(
+      AndroidLocalAudioFilePicker(channel: channel).pickDirectory(),
+      throwsA(isA<LocalAudioFilePickerException>()),
+    );
+  });
+
   test('将原生回传的元数据映射为 PlatformFile', () async {
     mockPickResult(<Object?>[
       <Object?, Object?>{

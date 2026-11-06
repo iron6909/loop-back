@@ -14,10 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../database/enums.dart';
 import '../models/practice_completion_result.dart';
-import '../features/auth/sign_in_required_dialog.dart';
-import '../features/subscription/models/premium_feature.dart';
-import '../features/subscription/widgets/ai_quota_exceeded_dialog.dart';
-import '../features/subscription/widgets/feature_gate.dart' show openPaywall;
 import '../l10n/app_localizations.dart';
 import '../utils/playback_speed.dart';
 import '../models/retell_review_sample.dart';
@@ -138,7 +134,6 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
   PracticeMediaPresentationSession? _mediaPresentationSession;
 
   /// 防止同一轮评估的状态更新叠加多个额度提示。
-  bool _isShowingAiQuotaDialog = false;
 
   ProviderSubscription<RetellPlayerState>? _playerSubscription;
   ProviderSubscription<RetellRecordingState>? _recordingSubscription;
@@ -395,7 +390,8 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
     if (!mounted || _isExiting) return;
     // 流一有返回就开弹窗：`meta` 首帧（转录）已在 client 层独立成帧，
     // 因此这里的「首个带 evaluation 的帧」就是服务端最早的一次推送。
-    if (next.phase == RetellReviewEvaluationPhase.streaming &&
+    if ((next.phase == RetellReviewEvaluationPhase.streaming ||
+            next.phase == RetellReviewEvaluationPhase.completed) &&
         previous?.evaluation == null &&
         next.evaluation != null) {
       unawaited(_openRetellReviewSheet());
@@ -403,15 +399,6 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
     }
     if (next.phase == RetellReviewEvaluationPhase.failed &&
         !_isShowingReviewSheet) {
-      // 未登录与额度用尽有明确出路，走对应引导；其余仍是一次性 SnackBar。
-      switch (next.errorCode) {
-        case 'auth_required':
-          unawaited(_showRetellReviewSignInDialog());
-          return;
-        case 'quota_exceeded':
-          unawaited(_showRetellReviewQuotaDialog());
-          return;
-      }
       final message = retellReviewErrorMessage(
         AppLocalizations.of(context)!,
         next.errorCode,
@@ -421,48 +408,6 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
         ..clearSnackBars()
         ..showSnackBar(SnackBar(content: Text(message)));
     }
-  }
-
-  /// 云端 AI 复述评估的登录引导（与 AI 转录、意群共用同一个通用弹窗）。
-  Future<void> _showRetellReviewSignInDialog() async {
-    if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    await ensureSignedInForAction(
-      context: context,
-      ref: ref,
-      title:
-          l10n?.retellAiReviewSignInRequiredTitle ??
-          'Sign in to use AI retell review',
-      message:
-          l10n?.retellAiReviewSignInRequiredMessage ??
-          'AI retell review uses the cloud AI service. Sign in to get '
-              'feedback on your retelling.',
-    );
-  }
-
-  /// 复述评估额度用尽时先明确告知用户，再由用户选择是否进入订阅页。
-  ///
-  /// 用户主动点击 AI 评估时，和句子翻译/解析一致，不受全局提醒冷却期限制；
-  /// 仍记录已展示时间，使其它自动触发的 AI 提醒遵守统一节流规则。
-  Future<void> _showRetellReviewQuotaDialog() async {
-    if (_isShowingAiQuotaDialog || !mounted) return;
-    _isShowingAiQuotaDialog = true;
-    try {
-      await showAiQuotaExceededDialog(
-        context: context,
-        ref: ref,
-        feature: PremiumFeature.aiRetellReview,
-        reason: ref.read(retellReviewEvaluationProvider).quotaReason,
-      );
-    } finally {
-      _isShowingAiQuotaDialog = false;
-    }
-  }
-
-  /// 额度用尽引导订阅（平台是否支持订阅由 openPaywall 内部兜底）。
-  Future<void> _openRetellReviewPaywall() async {
-    if (!mounted) return;
-    await openPaywall(context, ref);
   }
 
   Future<void> _openRetellReviewSheet() async {
@@ -480,8 +425,6 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
         preview: ref.read(retellRecordingPreviewProvider),
         onBeforePlayback: _takeOverForAiReview,
         onRetry: _retryReviewEvaluation,
-        onUpgrade: _openRetellReviewPaywall,
-        onSignIn: _showRetellReviewSignInDialog,
       );
     } finally {
       _isShowingReviewSheet = false;
@@ -524,6 +467,7 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
         .evaluate(
           attemptKey: '${attempt.promptId}:$path',
           recordingPath: path,
+          localTranscript: attempt.isRecognitionFailure ? null : attempt.finalTranscript,
           originalText: ref
               .read(retellPlayerProvider.notifier)
               .currentParagraphReferenceText,

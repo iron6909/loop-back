@@ -10,7 +10,6 @@ import 'package:go_router/go_router.dart';
 import '../l10n/app_localizations.dart';
 import '../features/chatbot/widgets/sentence_chat_button.dart';
 import '../features/chatbot/sentence_passage.dart';
-import '../features/auth/sign_in_required_dialog.dart';
 import '../features/subscription/widgets/feature_gate.dart';
 import '../features/memory_scheduler/domain/memory_rating.dart';
 import '../features/memory_scheduler/domain/memory_scheduler_results.dart';
@@ -543,9 +542,9 @@ class _VocabularyBackState extends ConsumerState<_VocabularyBack> {
         .toggleSourcePlayback();
   }
 
-  /// 显式登录按钮直接打开登录页；认证完成后当前 AI 查词会自动续跑。
-  void _openAiSignInPage() {
-    openSignInPage(context);
+  /// AI 查词缺少有效 Key 时，引导用户到 AI 服务设置检查供应商配置。
+  void _openAiServiceSettings() {
+    context.push('/settings/ai-service');
   }
 
   /// 将当前 AI 查词结果中的可发音文本提交到统一 TTS 后台缓存。
@@ -720,7 +719,7 @@ class _VocabularyBackState extends ConsumerState<_VocabularyBack> {
                             ).notifier,
                           )
                           .retry(),
-                      onSignIn: _openAiSignInPage,
+                      onSignIn: _openAiServiceSettings,
                       onUpgrade: () => unawaited(openPaywall(context, ref)),
                     ),
                   ),

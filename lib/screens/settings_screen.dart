@@ -14,8 +14,6 @@ import 'package:path_provider/path_provider.dart'
 import '../database/app_database.dart';
 import '../database/providers.dart';
 import '../l10n/app_localizations.dart';
-import '../models/app_update_info.dart';
-import '../providers/app_update_provider.dart';
 import '../providers/developer_options_provider.dart';
 import '../providers/offline_asr_settings_provider.dart';
 import '../providers/tts/tts_settings_provider.dart';
@@ -32,14 +30,8 @@ import '../providers/tag_provider.dart';
 import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
 import '../config/app_store_config.dart';
-import '../features/auth/providers/auth_providers.dart';
-import '../features/auth/screens/account_screen.dart';
 import '../features/user_region/user_region_override.dart';
-import '../features/user_region/user_region_providers.dart';
 import '../features/user_region/widgets/user_region_override_tile.dart';
-import '../features/subscription/providers/subscription_availability.dart';
-import '../features/subscription/providers/subscription_controller.dart';
-import '../services/app_update_launcher.dart';
 import '../router/app_router.dart';
 import '../features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import '../services/app_network_image_cache.dart';
@@ -67,7 +59,6 @@ import 'preferences_viewer_screen.dart';
 import 'storage_browser_screen.dart';
 import 'reminder_settings_screen.dart';
 import '../services/runtime_endpoint_router.dart';
-import '../widgets/app_update_dialog.dart';
 
 const double _settingsLeadingIconExtent = 32;
 const double _settingsSvgIconExtent = 26;
@@ -99,8 +90,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.m),
         children: [
-          _buildAccountSection(context, l10n),
-          const SizedBox(height: AppSpacing.m),
           _buildSection(
             context,
             title: l10n.appearance,
@@ -136,158 +125,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         ],
       ),
-    );
-  }
-
-  /// 构建账号分组：登录入口 + 订阅入口（登录 item 下方）。
-  Widget _buildAccountSection(BuildContext context, AppLocalizations l10n) {
-    final session = ref.watch(supabaseSessionProvider).valueOrNull;
-    final isChinaUser = ref.watch(isChinaUserProvider);
-    final isSignedIn = session != null;
-    final accountSubtitle = session == null
-        ? null
-        : switch (authDisplayProviderForSession(session)) {
-            AuthDisplayProvider.apple => l10n.authSignedInWithApple,
-            AuthDisplayProvider.google => l10n.authSignedInWithGoogle,
-            AuthDisplayProvider.email ||
-            AuthDisplayProvider.unknown => compactAccountListIdentifier(
-              session.user.email ?? session.user.id,
-            ),
-          };
-
-    return _buildSection(
-      context,
-      title: l10n.account,
-      children: [
-        ListTile(
-          leading: _buildAccountLeadingIcon(
-            context,
-            l10n,
-            isChinaUser: isChinaUser,
-          ),
-          title: Text(l10n.account),
-          subtitle: accountSubtitle == null
-              ? null
-              : Text(
-                  accountSubtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                isSignedIn ? l10n.authSignedInStatus : l10n.authSignedOutStatus,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              const Icon(Icons.chevron_right),
-            ],
-          ),
-          onTap: () =>
-              context.push(isSignedIn ? AppRoutes.account : AppRoutes.login),
-        ),
-        // 当前平台未启用订阅（未注入 RC key）时隐藏入口。
-        if (ref.watch(subscriptionAvailabilityProvider))
-          _buildSubscriptionTile(context, l10n),
-      ],
-    );
-  }
-
-  /// 中国区路由启用时，在账号入口图标右上角显示地区标记。
-  Widget _buildAccountLeadingIcon(
-    BuildContext context,
-    AppLocalizations l10n, {
-    required bool isChinaUser,
-  }) {
-    final accountIcon = _settingsThemedSvgIcon(
-      context,
-      'assets/icon/account-1.svg',
-    );
-    if (!isChinaUser) return accountIcon;
-
-    return Tooltip(
-      message: l10n.chinaRoutingIndicatorTooltip,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          accountIcon,
-          Positioned(
-            top: 0,
-            right: 0,
-            child: ExcludeSemantics(
-              child: SvgPicture.asset(
-                'assets/icon/china_flag.svg',
-                width: 12,
-                height: 8,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 构建订阅入口（账户分组内、登录 item 下方）。
-  ///
-  /// 保持简洁：只展示标题 + 状态徽章，详情（套餐、续费、管理）留给点击后的 Paywall。
-  /// 未订阅：右侧高亮金色「升级」徽章，提示开通会员。
-  /// 已订阅：右侧弱化「会员」描边徽章。
-  /// 点击统一进入 Paywall（其内部按 isPremium 区分购买页 / 管理订阅区）。
-  Widget _buildSubscriptionTile(BuildContext context, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final gold = AppTheme.premiumGold(theme.brightness);
-    final isPremium = ref.watch(subscriptionControllerProvider).isActive;
-    final upgradeBadgeBackground = theme.brightness == Brightness.dark
-        ? const Color(0xFFD8B11E)
-        : const Color(0xFFFCE76B);
-    const upgradeBadgeTextColor = Color(0xFF111111);
-
-    return ListTile(
-      leading: _settingsSvgIcon('assets/icon/diamond.svg'),
-      title: Text(l10n.premiumEntryTitle),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isPremium)
-            // 已订阅：弱化徽章（描边，不再金底高亮），不再上销。
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: gold.withValues(alpha: 0.6)),
-              ),
-              child: Text(
-                l10n.premiumEntryBadgeActive,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: gold,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            )
-          else
-            // 未订阅：与订阅页优惠条统一为高对比实底徽章，引导开通。
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: upgradeBadgeBackground,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                l10n.premiumEntryBadgeUpgrade,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: upgradeBadgeTextColor,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          const SizedBox(width: AppSpacing.xs),
-          const Icon(Icons.chevron_right),
-        ],
-      ),
-      onTap: () => context.push(AppRoutes.paywall),
     );
   }
 
@@ -333,6 +170,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context,
       title: l10n.learningSection,
       children: [
+        ListTile(
+          leading: _settingsMaterialIcon(Icons.auto_awesome_outlined),
+          title: Text(l10n.aiServiceTitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/settings/ai-service'),
+        ),
         ListTile(
           leading: _settingsSvgIcon('assets/icon/bell.svg'),
           title: Text(l10n.reminderSettings),
@@ -624,9 +467,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     WidgetRef ref,
     AppLocalizations l10n,
   ) {
-    final updateState = ref.watch(appUpdateProvider);
-    final isChecking = updateState is AppUpdateChecking;
-
     return _buildSection(
       context,
       title: l10n.about,
@@ -666,18 +506,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Uri.parse(_faqUrl),
             mode: LaunchMode.externalApplication,
           ),
-        ),
-        ListTile(
-          leading: _settingsThemedSvgIcon(context, 'assets/icon/refresh.svg'),
-          title: Text(l10n.checkForUpdate),
-          trailing: isChecking
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.chevron_right),
-          onTap: isChecking ? null : () => _checkForUpdate(context, ref, l10n),
         ),
         ListTile(
           leading: _settingsSvgIcon('assets/icon/documents.svg'),
@@ -766,39 +594,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
         ..showSnackBar(SnackBar(content: Text(l10n.developerOptionsEnabled)));
-    }
-  }
-
-  /// 手动检查更新
-  Future<void> _checkForUpdate(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l10n,
-  ) async {
-    final result = await ref.read(appUpdateProvider.notifier).manualCheck();
-    if (!context.mounted) return;
-
-    if (result.type == AppUpdateType.none || result.info == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result.info == null ? l10n.checkUpdateFailed : l10n.alreadyLatest,
-          ),
-        ),
-      );
-    } else {
-      final isForce = result.type == AppUpdateType.forceUpdate;
-      final downloadUrl = AppUpdate.getDownloadUrl(result.info!);
-      final launcher = AppUpdateLauncher();
-      showAppUpdateDialog(
-        context: context,
-        info: result.info!,
-        isForceUpdate: isForce,
-        downloadUrl: downloadUrl,
-        onUpdate: () =>
-            launcher.launch(info: result.info!, primaryUrl: downloadUrl),
-        onDismiss: () => ref.read(appUpdateProvider.notifier).dismiss(),
-      );
     }
   }
 
