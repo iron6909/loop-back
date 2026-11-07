@@ -96,6 +96,9 @@ class RepeatPracticePanel extends StatelessWidget {
   /// 快进回调（非 null 时显示快进按钮）
   final VoidCallback? onFastForward;
 
+  /// 在线分块转写失败后的手动续试；非 null 且仍有未完成块时显示重试入口。
+  final VoidCallback? onRetryOnline;
+
   /// badge 播放录音前的准备回调
   final FutureOr<void> Function()? onBeforePlayback;
 
@@ -138,6 +141,7 @@ class RepeatPracticePanel extends StatelessWidget {
     this.countdownWidget,
     required this.onRecordTap,
     this.onFastForward,
+    this.onRetryOnline,
     this.onBeforePlayback,
     this.ratingBadgeController,
     this.ratingPreviewControllerFactory,
@@ -448,7 +452,7 @@ class RepeatPracticePanel extends StatelessWidget {
     );
   }
 
-  /// 在线转写在完成或失败后的状态行：费用与未知费用必须分开显示。
+  /// 在线转写在完成或失败后的状态行：费用、进度、可能计费与手动续试。
   Widget? _onlineStatusText(BuildContext context) {
     final online = onlineStatus;
     if (online == null) return null;
@@ -456,17 +460,48 @@ class RepeatPracticePanel extends StatelessWidget {
     if (online.isFailed) {
       final error = online.error;
       if (error == null) return null;
+      final details = [
+        speechErrorText(context, error),
+        if (online.isChunked)
+          l10n.shadowingOnlineChunkProgress(
+            online.completedChunks,
+            online.totalChunks,
+          ),
+        // 请求已发出但失败：供应商可能已计费，不能按免费或未发生处理。
+        if (online.mayHaveBeenCharged) l10n.shadowingOnlineChargeWarning,
+      ];
+      final retry = online.retryable ? onRetryOnline : null;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Text(
-          speechErrorText(context, error),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.visible,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.error,
-            fontWeight: FontWeight.w500,
-          ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                details.join(' · '),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.visible,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (retry != null)
+              // 图标按钮宽度固定，长错误文案在窄屏仍能换行显示。
+              IconButton(
+                key: const Key('shadowing_online_retry'),
+                onPressed: retry,
+                tooltip: l10n.shadowingOnlineRetry,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                style: IconButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(32, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
         ),
       );
     }
@@ -474,10 +509,7 @@ class RepeatPracticePanel extends StatelessWidget {
     final cost = online.reportedCost;
     return Text(
       cost == null
-          ? l10n.shadowingOnlineCostUnknown(
-              online.serviceHost,
-              online.modelId,
-            )
+          ? l10n.shadowingOnlineCostUnknown(online.serviceHost, online.modelId)
           : l10n.shadowingOnlineCost(
               online.serviceHost,
               online.modelId,
@@ -493,8 +525,7 @@ class RepeatPracticePanel extends StatelessWidget {
 
   /// 错误文案允许更高的状态槽位（避免英文提示在窄屏截断）。
   bool get _usesExpandedStatusSlot =>
-      currentAttempt?.errorMessage != null ||
-      (onlineStatus?.isFailed ?? false);
+      currentAttempt?.errorMessage != null || (onlineStatus?.isFailed ?? false);
 
   /// 状态文字（在线转写结果 / 录音提示 / 错误信息）
   Widget? _buildStatusText(BuildContext context) {

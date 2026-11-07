@@ -2376,6 +2376,15 @@
       "model": { "type": "String" }
     }
   },
+  "shadowingOnlineChunkProgress": "{completed}/{total} 块已完成",
+  "@shadowingOnlineChunkProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "shadowingOnlineChargeWarning": "失败块可能已计费",
+  "shadowingOnlineRetry": "重试未完成部分",
   "recognitionChangeTitle": "修改识别设置？",
   "recognitionChangeMessage": "有 {count} 个正在进行的识别任务会受影响。继续将取消这些任务，未完成的结果不会写回。",
   "@recognitionChangeMessage": {

@@ -3,7 +3,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/speech_practice_models.dart';
+import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
 import 'package:echo_loop/services/speech/shadowing_online_transcriber.dart';
+import 'package:echo_loop/services/speech/speech_transcription_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/common/recording_button.dart';
 import 'package:echo_loop/widgets/common/repeat_practice_panel.dart';
@@ -261,7 +263,7 @@ void main() {
     );
   });
 
-  testWidgets('在线失败显示具体原因而不是通用错误', (tester) async {
+  testWidgets('在线失败显示具体原因、块进度与可能计费提示', (tester) async {
     await tester.pumpWidget(
       await wrap(
         Builder(
@@ -279,8 +281,15 @@ void main() {
               serviceHost: 'openrouter.ai',
               modelId: 'openai/whisper-1',
               phase: ShadowingOnlinePhase.failed,
-              error: ShadowingRecordingRejected(
-                ShadowingRecordingRejection.tooLong,
+              completedChunks: 1,
+              totalChunks: 2,
+              mayHaveBeenCharged: true,
+              error: PracticeChunkFailure(
+                PracticeChunkFailureReason.requestFailed,
+                cause: SpeechTranscriptionException(
+                  SpeechTranscriptionErrorKind.timeout,
+                ),
+                mayHaveBeenCharged: true,
               ),
             ),
             onRecordTap: () {},
@@ -288,13 +297,60 @@ void main() {
         ),
       ),
     );
+    await tester.pumpAndSettle();
 
     expect(
       find.text(
-        'The recording exceeds the single-request limit; long recordings '
-        'come later',
+        'Provider request timed out. Try again · 1/2 parts done · '
+        'the failed part may already be billed',
       ),
       findsOneWidget,
     );
+    // 没有可续试的块时不给重试入口，避免重发已成功部分。
+    expect(find.byKey(const Key('shadowing_online_retry')), findsNothing);
+  });
+
+  testWidgets('可续试时提供手动续试入口，点按只触发一次续试', (tester) async {
+    var retries = 0;
+    await tester.pumpWidget(
+      await wrap(
+        Builder(
+          builder: (context) => RepeatPracticePanel(
+            l10n: AppLocalizations.of(context)!,
+            theme: Theme.of(context),
+            isInPause: true,
+            showCountdown: false,
+            currentAttempt: const SpeechPracticeAttempt(
+              promptId: 'shadowing:online:1',
+              filePath: '/tmp/take.wav',
+              status: SpeechPracticeAttemptStatus.error,
+            ),
+            onlineStatus: const ShadowingOnlineState(
+              serviceHost: 'openrouter.ai',
+              modelId: 'openai/whisper-1',
+              phase: ShadowingOnlinePhase.failed,
+              completedChunks: 1,
+              totalChunks: 3,
+              retryable: true,
+              error: PracticeChunkFailure(
+                PracticeChunkFailureReason.requestFailed,
+                cause: SpeechTranscriptionException(
+                  SpeechTranscriptionErrorKind.network,
+                ),
+                mayHaveBeenCharged: true,
+              ),
+            ),
+            onRecordTap: () {},
+            onRetryOnline: () => retries++,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('shadowing_online_retry')));
+    await tester.pumpAndSettle();
+
+    expect(retries, 1, reason: '手动续试只重发未完成块');
   });
 }

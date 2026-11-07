@@ -7,11 +7,28 @@ library;
 import 'package:flutter/widgets.dart';
 
 import '../provider/provider_error_text.dart';
+import 'practice_chunk_transcriber.dart';
 import 'shadowing_online_transcriber.dart';
 import 'speech_transcription_client.dart';
 
 String speechErrorText(BuildContext context, Object error) {
   final zh = Localizations.localeOf(context).languageCode == 'zh';
+  if (error is PracticeChunkFailure) {
+    return switch (error.reason) {
+      PracticeChunkFailureReason.noSpeech =>
+        zh ? '录音里没有可识别的语音' : 'The recording contains no recognizable speech',
+      PracticeChunkFailureReason.decodeFailed =>
+        zh ? '无法读取这段录音的音频内容' : 'The recording audio could not be read',
+      PracticeChunkFailureReason.configChanged =>
+        zh ? '语音配置已变化，请重新转写' : 'Speech settings changed; transcribe again',
+      PracticeChunkFailureReason.cancelled => zh ? '已取消' : 'Cancelled',
+      // 供应商失败按既有分类显示具体原因（超时、网络、鉴权……）。
+      PracticeChunkFailureReason.requestFailed =>
+        error.cause == null
+            ? providerErrorCodeText('invalidResponse', zh)
+            : speechErrorText(context, error.cause!),
+    };
+  }
   if (error is ShadowingRecordingRejected) {
     return switch (error.rejection) {
       ShadowingRecordingRejection.fileMissing =>
@@ -22,14 +39,6 @@ String speechErrorText(BuildContext context, Object error) {
             : 'The recording format is not supported for upload',
       ShadowingRecordingRejection.emptyAudio =>
         zh ? '录音没有可用的人声内容' : 'The recording contains no usable speech',
-      ShadowingRecordingRejection.tooLong =>
-        zh
-            ? '录音超过单次在线转写时长上限，长录音将在后续版本支持'
-            : 'The recording exceeds the single-request limit; long recordings come later',
-      ShadowingRecordingRejection.tooLarge =>
-        zh
-            ? '录音超过单次上传大小上限，长录音将在后续版本支持'
-            : 'The recording exceeds the single-upload size limit; long recordings come later',
     };
   }
   if (error is ShadowingOnlineAccessDenied) {
@@ -60,9 +69,7 @@ String speechErrorText(BuildContext context, Object error) {
       zh ? '音频超过服务的大小限制' : 'The audio exceeds the service size limit',
     SpeechTranscriptionErrorKind.cancelled => zh ? '已取消' : 'Cancelled',
     SpeechTranscriptionErrorKind.emptyResult =>
-      zh
-          ? '服务没有返回可识别的语音文本'
-          : 'The service returned no recognizable speech',
+      zh ? '服务没有返回可识别的语音文本' : 'The service returned no recognizable speech',
     _ => providerErrorCodeText(error.kind.name, zh),
   };
 }

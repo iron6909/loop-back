@@ -10466,6 +10466,24 @@ abstract class AppLocalizations {
   /// **'Online · {service} · {model} · cost unknown'**
   String shadowingOnlineCostUnknown(String service, String model);
 
+  /// No description provided for @shadowingOnlineChunkProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} parts done'**
+  String shadowingOnlineChunkProgress(int completed, int total);
+
+  /// No description provided for @shadowingOnlineChargeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'the failed part may already be billed'**
+  String get shadowingOnlineChargeWarning;
+
+  /// No description provided for @shadowingOnlineRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry unfinished parts'**
+  String get shadowingOnlineRetry;
+
   /// No description provided for @recognitionChangeTitle.
   ///
   /// In en, this message translates to:

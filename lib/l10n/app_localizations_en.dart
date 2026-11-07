@@ -5943,6 +5943,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String shadowingOnlineChunkProgress(int completed, int total) {
+    return '$completed/$total parts done';
+  }
+
+  @override
+  String get shadowingOnlineChargeWarning =>
+      'the failed part may already be billed';
+
+  @override
+  String get shadowingOnlineRetry => 'Retry unfinished parts';
+
+  @override
   String get recognitionChangeTitle => 'Change recognition settings?';
 
   @override

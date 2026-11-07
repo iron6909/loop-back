@@ -1,4 +1,5 @@
-/// 长音频分块规划的行为测试：块边界、静音切点、无声判定与边界局部对齐。
+/// 长音频分块规划的行为测试：块边界、静音切点、无声判定与边界局部对齐
+/// （字幕按整句对齐，练习录音按纯文本词序对齐）。
 library;
 
 import 'dart:typed_data';
@@ -96,9 +97,7 @@ void main() {
     test('在探测窗口内选出静音处，返回静音窗口中心', () async {
       final pcm = _pcm(
         duration: const Duration(seconds: 40),
-        silent: const [
-          (Duration(seconds: 18), Duration(seconds: 21)),
-        ],
+        silent: const [(Duration(seconds: 18), Duration(seconds: 21))],
       );
 
       final cut = quietestCutInPcm(
@@ -115,13 +114,19 @@ void main() {
     test('整段都有声时不给切点，交由硬切处理', () async {
       final pcm = _pcm(duration: const Duration(seconds: 40));
 
-      expect(quietestCutInPcm(wavBytes: pcm, windowStart: Duration.zero), isNull);
+      expect(
+        quietestCutInPcm(wavBytes: pcm, windowStart: Duration.zero),
+        isNull,
+      );
     });
 
     test('载荷不足一个评估窗口时不给切点', () {
       final pcm = _pcm(duration: const Duration(milliseconds: 100));
 
-      expect(quietestCutInPcm(wavBytes: pcm, windowStart: Duration.zero), isNull);
+      expect(
+        quietestCutInPcm(wavBytes: pcm, windowStart: Duration.zero),
+        isNull,
+      );
     });
   });
 
@@ -132,9 +137,7 @@ void main() {
         isSilentPcm(
           _pcm(
             duration: const Duration(seconds: 5),
-            silent: const [
-              (Duration.zero, Duration(seconds: 5)),
-            ],
+            silent: const [(Duration.zero, Duration(seconds: 5))],
           ),
         ),
         isTrue,
@@ -206,6 +209,63 @@ void main() {
       );
 
       expect(trimmed, hasLength(1));
+    });
+  });
+
+  group('trimChunkTextOverlap', () {
+    test('硬切重叠区里重复识别的词只保留一份', () {
+      final merged = trimChunkTextOverlap(
+        previousText: 'we should keep the change',
+        nextText: 'keep the change and move on',
+      );
+
+      expect(merged, 'and move on');
+    });
+
+    test('跨在切点上的单词不会丢', () {
+      final merged = trimChunkTextOverlap(
+        previousText: 'we keep the',
+        nextText: 'the idea continues',
+      );
+
+      expect(merged, 'idea continues');
+    });
+
+    test('远离边界的真实重复句保留，只删重叠区内那一份', () {
+      final merged = trimChunkTextOverlap(
+        previousText: 'I like it. I like it.',
+        nextText: 'I like it. But it is hard.',
+      );
+
+      // 下一块开头与上一块末尾是同一段重叠音频：只去掉下一块那份。
+      expect(merged, 'But it is hard.');
+    });
+
+    test('材料中间的真实重复句不受边界对齐影响', () {
+      final merged = trimChunkTextOverlap(
+        previousText: 'let us try again',
+        nextText: 'completely different start. let us try again.',
+      );
+
+      expect(merged, 'completely different start. let us try again.');
+    });
+
+    test('文本对不上时整段保留', () {
+      expect(
+        trimChunkTextOverlap(
+          previousText: 'nothing in common here',
+          nextText: 'different words entirely',
+        ),
+        'different words entirely',
+      );
+    });
+
+    test('任一侧为空时不做处理', () {
+      expect(
+        trimChunkTextOverlap(previousText: '', nextText: 'next text'),
+        'next text',
+      );
+      expect(trimChunkTextOverlap(previousText: 'tail text', nextText: ''), '');
     });
   });
 }

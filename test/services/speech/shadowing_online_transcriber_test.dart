@@ -1,7 +1,8 @@
-/// 单块在线跟读转写的请求前检查与上传测试。
+/// 单块在线跟读转写的请求前判定与上传测试。
 ///
-/// 只替换网络边界：用真实文件证明格式、大小与时长判定，用假 adapter 证明
-/// 请求形状与请求次数。测试不构造真实录音，也不发任何付费请求。
+/// 只替换网络边界：用真实文件证明格式、大小与时长判定（单块内直接上传，超出则
+/// 交给分块转写），用假 adapter 证明请求形状与请求次数。测试不构造真实录音，
+/// 也不发任何付费请求。
 library;
 
 import 'dart:convert';
@@ -118,6 +119,17 @@ void main() {
     return file.path;
   }
 
+  Future<ShadowingRecordingUpload> prepareUpload(
+    ShadowingOnlineTranscriber transcriber,
+    String path,
+  ) async {
+    final access = await transcriber.prepare(path);
+    return switch (access) {
+      ShadowingRecordingUpload() => access,
+      ShadowingRecordingNeedsChunking() => fail('应可直接上传'),
+    };
+  }
+
   group('请求前检查', () {
     test('缺失文件明确拒绝', () async {
       final transcriber = ShadowingOnlineTranscriber(
@@ -152,7 +164,7 @@ void main() {
       );
     });
 
-    test('超出单块时长上限时拒绝，而不截断录音', () async {
+    test('超出单块时长时交给分块转写，不截断录音', () async {
       final path = await writeRecording(
         'long.wav',
         _wav(const Duration(minutes: 3)),
@@ -160,35 +172,35 @@ void main() {
       final transcriber = ShadowingOnlineTranscriber(
         client: SpeechTranscriptionClient(dio: Dio()),
       );
-      await expectLater(
-        transcriber.prepare(path),
-        throwsA(
-          isA<ShadowingRecordingRejected>().having(
-            (error) => error.rejection,
-            'rejection',
-            ShadowingRecordingRejection.tooLong,
-          ),
-        ),
-      );
+
+      final access = await transcriber.prepare(path);
+
+      expect(access, isA<ShadowingRecordingNeedsChunking>());
+      expect(switch (access) {
+        ShadowingRecordingNeedsChunking() => access.duration,
+        ShadowingRecordingUpload() => fail('超出单块时不应直接上传'),
+      }, const Duration(minutes: 3));
     });
 
-    test('超出单块字节上限时拒绝', () async {
-      final path = await writeRecording(
-        'huge.wav',
-        Uint8List(shadowingOnlineMaxBytes + 1),
-      );
+    test('超出单块字节上限时交给分块转写，不整份读入内存', () async {
+      final big = Uint8List(shadowingOnlineMaxBytes + 1);
+      // 文件头保持合法容器，只有大小超出单块上限。
+      big.setAll(0, _wav(Duration.zero).sublist(0, 12));
+      final path = await writeRecording('huge.wav', big);
       final transcriber = ShadowingOnlineTranscriber(
         client: SpeechTranscriptionClient(dio: Dio()),
       );
-      await expectLater(
-        transcriber.prepare(path),
-        throwsA(
-          isA<ShadowingRecordingRejected>().having(
-            (error) => error.rejection,
-            'rejection',
-            ShadowingRecordingRejection.tooLarge,
-          ),
-        ),
+
+      final access = await transcriber.prepare(path);
+
+      expect(access, isA<ShadowingRecordingNeedsChunking>());
+      expect(
+        switch (access) {
+          ShadowingRecordingNeedsChunking() => access.duration,
+          ShadowingRecordingUpload() => fail('超出单块时不应直接上传'),
+        },
+        isNull,
+        reason: '时长交给分块转写测长',
       );
     });
 
@@ -201,7 +213,7 @@ void main() {
         client: SpeechTranscriptionClient(dio: Dio()),
       );
 
-      final upload = await transcriber.prepare(path);
+      final upload = await prepareUpload(transcriber, path);
 
       expect(upload.fileName, 'take.wav');
       expect(upload.contentType, 'audio/wav');
@@ -221,7 +233,7 @@ void main() {
         'take.wav',
         _wav(const Duration(seconds: 2)),
       );
-      final upload = await transcriber.prepare(path);
+      final upload = await prepareUpload(transcriber, path);
       final progress = <double>[];
 
       final result = await transcriber.transcribe(
@@ -237,7 +249,10 @@ void main() {
       final request = adapter.requests.single;
       expect(request.uri.path, '/api/v1/audio/transcriptions');
       expect(request.headers['Authorization'], 'Bearer sk-shadowing-test');
-      expect(_field(request, adapter.bodies.single, 'model'), 'openai/whisper-1');
+      expect(
+        _field(request, adapter.bodies.single, 'model'),
+        'openai/whisper-1',
+      );
       expect(_field(request, adapter.bodies.single, 'language'), 'en');
       expect(
         _field(request, adapter.bodies.single, 'response_format'),
@@ -254,7 +269,8 @@ void main() {
         dio: Dio()..httpClientAdapter = adapter,
       );
       final transcriber = ShadowingOnlineTranscriber(client: client);
-      final upload = await transcriber.prepare(
+      final upload = await prepareUpload(
+        transcriber,
         await writeRecording('take.wav', _wav(const Duration(seconds: 1))),
       );
 
