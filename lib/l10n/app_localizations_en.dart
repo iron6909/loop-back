@@ -5929,4 +5929,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recognitionChangeConfirm => 'Cancel tasks and change';
+
+  @override
+  String get speechProviderTitle => 'Online speech service';
+
+  @override
+  String get speechProviderDescription =>
+      'Subtitles, shadowing, and retelling share one service address and key. The address is used as-is with /audio/transcriptions appended; /v1 is not added.';
+
+  @override
+  String get speechProviderStatusUnconfigured => 'Not configured';
+
+  @override
+  String get speechProviderStatusMissingKey => 'API key missing';
+
+  @override
+  String get speechProviderStatusUnverified => 'Saved, not verified';
+
+  @override
+  String get speechProviderSaveFailed =>
+      'Could not save the online speech settings';
+
+  @override
+  String speechProviderOnlineModel(String purpose) {
+    return '$purpose online model';
+  }
 }

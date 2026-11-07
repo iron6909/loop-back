@@ -5661,4 +5661,28 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recognitionChangeConfirm => '取消任务并修改';
+
+  @override
+  String get speechProviderTitle => '在线语音服务';
+
+  @override
+  String get speechProviderDescription =>
+      '字幕、跟读与复述共用一份服务地址与 Key；根地址直接追加 /audio/transcriptions，不自动补 /v1。';
+
+  @override
+  String get speechProviderStatusUnconfigured => '未配置';
+
+  @override
+  String get speechProviderStatusMissingKey => '缺少 API Key';
+
+  @override
+  String get speechProviderStatusUnverified => '已保存，尚未验证';
+
+  @override
+  String get speechProviderSaveFailed => '无法保存在线语音配置';
+
+  @override
+  String speechProviderOnlineModel(String purpose) {
+    return '$purpose在线模型';
+  }
 }

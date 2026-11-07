@@ -2852,5 +2852,15 @@
   "@recognitionChangeMessage": {
     "placeholders": { "count": { "type": "int" } }
   },
-  "recognitionChangeConfirm": "Cancel tasks and change"
+  "recognitionChangeConfirm": "Cancel tasks and change",
+  "speechProviderTitle": "Online speech service",
+  "speechProviderDescription": "Subtitles, shadowing, and retelling share one service address and key. The address is used as-is with /audio/transcriptions appended; /v1 is not added.",
+  "speechProviderStatusUnconfigured": "Not configured",
+  "speechProviderStatusMissingKey": "API key missing",
+  "speechProviderStatusUnverified": "Saved, not verified",
+  "speechProviderSaveFailed": "Could not save the online speech settings",
+  "speechProviderOnlineModel": "{purpose} online model",
+  "@speechProviderOnlineModel": {
+    "placeholders": { "purpose": { "type": "String" } }
+  }
 }
