@@ -3608,6 +3608,48 @@ abstract class AppLocalizations {
   /// **'Use the app\'s AI model. It works offline after downloading'**
   String get asrBackendOfflineDescription;
 
+  /// No description provided for @asrBackendLocalWhisper.
+  ///
+  /// In en, this message translates to:
+  /// **'Whisper (on-device)'**
+  String get asrBackendLocalWhisper;
+
+  /// No description provided for @asrBackendLocalWhisperDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the built-in Whisper model. It works offline after downloading'**
+  String get asrBackendLocalWhisperDescription;
+
+  /// No description provided for @asrDownloadSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model Source'**
+  String get asrDownloadSourceTitle;
+
+  /// No description provided for @asrDownloadSourceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to public models only. Both sources serve the same version and checksums.'**
+  String get asrDownloadSourceDescription;
+
+  /// No description provided for @asrDownloadSourceHuggingFace.
+  ///
+  /// In en, this message translates to:
+  /// **'Hugging Face'**
+  String get asrDownloadSourceHuggingFace;
+
+  /// No description provided for @asrDownloadSourceHuggingFaceMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'hf-mirror.com (mirror)'**
+  String get asrDownloadSourceHuggingFaceMirror;
+
+  /// No description provided for @asrModelSourceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {source} · License: {license}'**
+  String asrModelSourceLine(String source, String license);
+
   /// No description provided for @asrModelTier.
   ///
   /// In en, this message translates to:

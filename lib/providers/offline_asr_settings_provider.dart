@@ -28,6 +28,7 @@ import 'asr_engine_provider.dart';
 bool _asrCrashMarkerChecked = false;
 const _backendKey = 'offline_asr_backend';
 const _selectedModelKey = 'offline_asr_selected_model_id';
+const _downloadSourceKey = 'offline_asr_download_source';
 
 // ---------------------------------------------------------------------------
 // State
@@ -102,10 +103,14 @@ class OfflineAsrSettingsState {
   /// 各 Whisper 模型的下载状态（key 为 model id）。
   final Map<String, AsrModelState> modelStates;
 
+  /// 已迁移公开模型的下载来源；仅影响有同版本镜像的资源。
+  final AsrDownloadSource downloadSource;
+
   OfflineAsrSettingsState({
     this.enabled = true,
     this.backend = AsrBackend.platform,
     this.engineReady = false,
+    this.downloadSource = AsrDownloadSource.huggingFace,
     required this.recommendedModel,
     AsrModelInfo? selectedModel,
     Map<String, AsrModelState> modelStates = const {},
@@ -193,6 +198,7 @@ class OfflineAsrSettingsState {
     bool? engineReady,
     AsrModelInfo? selectedModel,
     Map<String, AsrModelState>? modelStates,
+    AsrDownloadSource? downloadSource,
   }) {
     final nextSelected = selectedModel ?? this.selectedModel;
     final currentStates = modelStates ?? this.modelStates;
@@ -208,6 +214,7 @@ class OfflineAsrSettingsState {
       enabled: true,
       backend: backend ?? this.backend,
       engineReady: engineReady ?? this.engineReady,
+      downloadSource: downloadSource ?? this.downloadSource,
       recommendedModel: recommendedModel,
       selectedModel: nextSelected,
       modelStates: clearError
@@ -493,6 +500,7 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
     try {
       await modelManager.downloadModel(
         modelId,
+        source: state.downloadSource,
         cancelToken: cancelToken,
         onProgress: (progress) {
           if (cancelToken.isCancelled ||
@@ -514,10 +522,8 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
         },
       );
 
-      // 下载 VAD 模型（静默，不影响主进度条）。
-      if (!await modelManager.isModelDownloaded(vadModelId)) {
-        await modelManager.downloadModel(vadModelId, cancelToken: cancelToken);
-      }
+      // 共享 VAD 由下载器在同一流程内静默补齐（缺 VAD 只补 VAD），
+      // 不计入主模型进度条。
 
       if (cancelToken.isCancelled ||
           !identical(_downloadCancelTokens[modelId], cancelToken)) {
@@ -665,6 +671,15 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
     await prefs.setString(_selectedModelKey, modelId);
   }
 
+  /// 切换已迁移公开模型的下载来源。已安装资源不重下，只影响下一次安装。
+  Future<void> setDownloadSource(AsrDownloadSource source) async {
+    if (state.downloadSource == source) return;
+    state = state.copyWith(downloadSource: source);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_downloadSourceKey, source.name);
+    AppLogger.log('OfflineAsr', 'download source changed: ${source.name}');
+  }
+
   AsrModelInfo _modelInfoById(String modelId) {
     return availableModels.firstWhere(
       (m) => m.id == modelId,
@@ -761,10 +776,16 @@ OfflineAsrSettingsState offlineAsrSettingsStateFromPrefs({
     (m) => m.id == selectedModelId,
     orElse: () => recommendedModel,
   );
+  final downloadSourceName = prefs.getString(_downloadSourceKey);
+  final downloadSource = AsrDownloadSource.values.firstWhere(
+    (source) => source.name == downloadSourceName,
+    orElse: () => AsrDownloadSource.huggingFace,
+  );
 
   return OfflineAsrSettingsState(
     enabled: true,
     backend: backend,
+    downloadSource: downloadSource,
     recommendedModel: recommendedModel,
     selectedModel: selectedModel,
     modelStates: const {},

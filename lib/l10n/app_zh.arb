@@ -917,6 +917,19 @@
   "asrBackendPlatformDescription": "使用系统自带的语音识别，无需下载",
   "asrBackendOffline": "Echo Loop AI",
   "asrBackendOfflineDescription": "使用应用自带的 AI 模型，支持离线使用，需下载",
+  "asrBackendLocalWhisper": "Whisper（本机）",
+  "asrBackendLocalWhisperDescription": "使用应用内置的 Whisper 模型，下载后可离线使用",
+  "asrDownloadSourceTitle": "模型来源",
+  "asrDownloadSourceDescription": "仅作用于已迁移的公开模型，两个来源使用相同版本与校验值。",
+  "asrDownloadSourceHuggingFace": "Hugging Face",
+  "asrDownloadSourceHuggingFaceMirror": "hf-mirror.com（镜像）",
+  "asrModelSourceLine": "来源：{source} · 许可：{license}",
+  "@asrModelSourceLine": {
+    "placeholders": {
+      "source": { "type": "String" },
+      "license": { "type": "String" }
+    }
+  },
   "asrModelTier": "模型：{tier}（根据设备性能自动选择）",
   "@asrModelTier": {
     "placeholders": {

@@ -89,16 +89,38 @@ class _RangeAdapter implements HttpClientAdapter {
 }
 
 void main() {
-  test('发布目录使用 v1 归档及实测摘要', () {
+  test('发布目录只把未迁移模型留在归档来源，Tiny 已迁移到公开来源', () {
     expect(
-      asrModelResourceCatalog.values.every(
+      asrArchiveResourceCatalog.values.every(
         (spec) => spec.archivePath.endsWith('-v1.zip'),
       ),
       isTrue,
     );
     expect(
-      asrModelResourceCatalog['whisper-base-en-int8']!.sha256,
-      'ff8af5965f6d017ad317e9a7c023c3f457259cef3de33e543c2fa87338a32fbb',
+      asrArchiveResourceCatalog['whisper-base-en-int8'],
+      isA<AsrModelResourceSpec>().having(
+        (spec) => spec.sha256,
+        'sha256',
+        'ff8af5965f6d017ad317e9a7c023c3f457259cef3de33e543c2fa87338a32fbb',
+      ),
+    );
+    expect(
+      asrArchiveResourceCatalog.containsKey('whisper-tiny-en-int8'),
+      isFalse,
+    );
+    expect(
+      asrPublicResourceCatalog['whisper-tiny-en-int8'],
+      isA<AsrPublicResourceSpec>(),
+    );
+    // 统一清单位于两者之上，历史安装与迁移仍能遍历全部资源。
+    expect(
+      asrModelResourceCatalog.keys,
+      containsAll(<String>[
+        'whisper-tiny-en-int8',
+        'whisper-base-en-int8',
+        'whisper-small-en-int8',
+        vadModelId,
+      ]),
     );
   });
 

@@ -61,6 +61,7 @@ class _DelayedAsrModelManager extends _FakeAsrModelManager {
   @override
   Future<String> downloadModel(
     String modelId, {
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) {
@@ -75,6 +76,7 @@ class _BurstProgressAsrModelManager extends _FakeAsrModelManager {
   @override
   Future<String> downloadModel(
     String modelId, {
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
@@ -98,14 +100,48 @@ void main() {
     type: AsrModelType.whisper,
   );
 
-  test('推荐模型默认保持 Balanced，不依赖 availableModels 顺序', () {
+  test('推荐模型默认保持 Base，不依赖 availableModels 顺序', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
     final model = container.read(recommendedAsrModelProvider);
 
     expect(model.id, 'whisper-base-en-int8');
-    expect(model.displayName, contains('Balanced'));
+    expect(model.displayName, 'Whisper Base (English)');
+  });
+
+  test('下载来源默认 Hugging Face，切换后持久化并恢复', () async {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final prefs = await SharedPreferences.getInstance();
+    final initial = offlineAsrSettingsStateFromPrefs(
+      prefs: prefs,
+      recommendedModel: recommendedModel,
+      defaultBackend: AsrBackend.offline,
+    );
+    expect(initial.downloadSource, AsrDownloadSource.huggingFace);
+
+    final container = ProviderContainer(
+      overrides: [
+        offlineAsrSettingsProvider.overrideWith(
+          () => _TestOfflineAsrSettingsNotifier(initial),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container
+        .read(offlineAsrSettingsProvider.notifier)
+        .setDownloadSource(AsrDownloadSource.huggingFaceMirror);
+    expect(
+      container.read(offlineAsrSettingsProvider).downloadSource,
+      AsrDownloadSource.huggingFaceMirror,
+    );
+
+    final restored = offlineAsrSettingsStateFromPrefs(
+      prefs: await SharedPreferences.getInstance(),
+      recommendedModel: recommendedModel,
+      defaultBackend: AsrBackend.offline,
+    );
+    expect(restored.downloadSource, AsrDownloadSource.huggingFaceMirror);
   });
 
   test('旧完成标记不再恢复 downloaded，避免与安装清单漂移', () async {
