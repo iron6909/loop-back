@@ -2348,6 +2348,34 @@
   "recognitionPurposeRetell": "复述",
   "recognitionModeLocal": "本机识别",
   "recognitionModeSystem": "系统识别",
+  "recognitionModeOnline": "在线识别",
+  "recognitionOnlineModelSummary": "在线识别 · {model}",
+  "@recognitionOnlineModelSummary": {
+    "placeholders": { "model": { "type": "String" } }
+  },
+  "shadowingOnlineProgress": "在线 · {service} · {model} · {percent}%",
+  "@shadowingOnlineProgress": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "shadowingOnlineCost": "在线 · {service} · {model} · 费用 {cost}",
+  "@shadowingOnlineCost": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" },
+      "cost": { "type": "String" }
+    }
+  },
+  "shadowingOnlineCostUnknown": "在线 · {service} · {model} · 费用未知",
+  "@shadowingOnlineCostUnknown": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" }
+    }
+  },
   "recognitionChangeTitle": "修改识别设置？",
   "recognitionChangeMessage": "有 {count} 个正在进行的识别任务会受影响。继续将取消这些任务，未完成的结果不会写回。",
   "@recognitionChangeMessage": {

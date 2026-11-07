@@ -166,6 +166,7 @@ class SpeechTranscriptionClient {
     SpeechResponseFormat format = SpeechResponseFormat.verboseJson,
     bool requestWordTimestamps = false,
     String fileContentType = 'audio/wav',
+    void Function(int sent, int total)? onSendProgress,
     CancelToken? cancelToken,
   }) async {
     if (modelId.trim().isEmpty) {
@@ -209,6 +210,7 @@ class SpeechTranscriptionClient {
           },
           validateStatus: (_) => true,
         ),
+        onSendProgress: onSendProgress,
         cancelToken: cancelToken,
       );
       final status = response.statusCode ?? 0;

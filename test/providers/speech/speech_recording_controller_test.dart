@@ -42,6 +42,20 @@ class _FakeOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   OfflineAsrSettingsState build() => _state;
 }
 
+/// 跟读选择替身：本文件只验证录音生命周期与平台行为，固定为本机方式，
+/// 不让识别设置依赖偏好初始化。
+Override recognitionSettingsLocalOverride() =>
+    recognitionSettingsProvider.overrideWith(_LocalRecognitionSettingsNotifier.new);
+
+class _LocalRecognitionSettingsNotifier extends RecognitionSettingsNotifier {
+  @override
+  RecognitionSettings build() => const RecognitionSettings(
+    subtitle: RecognitionSelection.local('test-model'),
+    shadowing: RecognitionSelection.local('test-model'),
+    retell: RecognitionSelection.local('test-model'),
+  );
+}
+
 class _FakeSpeechPracticeBackend implements SpeechPracticeBackend {
   final _controller = StreamController<SpeechPracticeEvent>.broadcast();
   bool autoEmitFinal;
@@ -197,6 +211,7 @@ void main() {
       );
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(listenAndRepeatRatingEnabled: false),
           speechPracticeBackendProvider.overrideWith(
@@ -244,6 +259,7 @@ void main() {
         ..warmupGate = Completer<void>();
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(listenAndRepeatRatingEnabled: false),
           speechPracticeBackendProvider.overrideWithValue(backend),
@@ -283,6 +299,7 @@ void main() {
       final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(listenAndRepeatRatingEnabled: false),
           speechPracticeBackendProvider.overrideWithValue(backend),
@@ -326,6 +343,7 @@ void main() {
       final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(listenAndRepeatRatingEnabled: false),
           speechPracticeBackendProvider.overrideWithValue(backend),
@@ -479,6 +497,7 @@ void main() {
         backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
         container = ProviderContainer(
           overrides: [
+            recognitionSettingsLocalOverride(),
             analyticsOverride(),
             ...learningSettingsOverrides(listenAndRepeatRatingEnabled: false),
             speechPracticeBackendProvider.overrideWithValue(backend!),
@@ -529,6 +548,7 @@ void main() {
         backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
         container = ProviderContainer(
           overrides: [
+            recognitionSettingsLocalOverride(),
             analyticsOverride(),
             ...learningSettingsOverrides(),
             speechPracticeBackendProvider.overrideWithValue(backend!),
@@ -572,6 +592,7 @@ void main() {
         backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
         container = ProviderContainer(
           overrides: [
+            recognitionSettingsLocalOverride(),
             analyticsOverride(),
             ...learningSettingsOverrides(),
             speechPracticeBackendProvider.overrideWithValue(backend!),
@@ -629,6 +650,7 @@ void main() {
         backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
         container = ProviderContainer(
           overrides: [
+            recognitionSettingsLocalOverride(),
             analyticsOverride(),
             ...learningSettingsOverrides(),
             speechPracticeBackendProvider.overrideWithValue(backend!),
@@ -684,6 +706,7 @@ void main() {
         backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
         container = ProviderContainer(
           overrides: [
+            recognitionSettingsLocalOverride(),
             analyticsOverride(),
             ...learningSettingsOverrides(),
             speechPracticeBackendProvider.overrideWithValue(backend!),
@@ -739,6 +762,7 @@ void main() {
         backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
         container = ProviderContainer(
           overrides: [
+            recognitionSettingsLocalOverride(),
             analyticsOverride(),
             ...learningSettingsOverrides(),
             speechPracticeBackendProvider.overrideWithValue(backend!),
@@ -795,6 +819,7 @@ void main() {
         backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
         container = ProviderContainer(
           overrides: [
+            recognitionSettingsLocalOverride(),
             analyticsOverride(),
             ...learningSettingsOverrides(),
             speechPracticeBackendProvider.overrideWithValue(backend!),
@@ -854,6 +879,7 @@ void main() {
       final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(),
           speechPracticeBackendProvider.overrideWithValue(backend),
@@ -896,6 +922,7 @@ void main() {
       final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(),
           speechPracticeBackendProvider.overrideWithValue(backend),
@@ -937,6 +964,7 @@ void main() {
       final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(),
           speechPracticeBackendProvider.overrideWithValue(backend),
@@ -979,6 +1007,7 @@ void main() {
       final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(),
           speechPracticeBackendProvider.overrideWithValue(backend),
@@ -1023,6 +1052,7 @@ void main() {
       final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
       final container = ProviderContainer(
         overrides: [
+          recognitionSettingsLocalOverride(),
           analyticsOverride(),
           ...learningSettingsOverrides(),
           speechPracticeBackendProvider.overrideWithValue(backend),

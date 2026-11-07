@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/speech_practice_models.dart';
 import '../../services/audio_preview_controller.dart';
+import '../../services/speech/shadowing_online_transcriber.dart';
+import '../../services/speech/speech_error_text.dart';
 import '../../theme/app_theme.dart';
 import 'playback_controls.dart' show PlaybackControls;
 import 'processing_indicator.dart';
@@ -60,6 +62,9 @@ class RepeatPracticePanel extends StatelessWidget {
 
   /// 当前评估结果
   final SpeechPracticeAttempt? currentAttempt;
+
+  /// 在线跟读的转写状态；非在线方式或未开始时为 null。
+  final ShadowingOnlineState? onlineStatus;
 
   /// 本地化
   final AppLocalizations l10n;
@@ -124,6 +129,7 @@ class RepeatPracticePanel extends StatelessWidget {
     this.recordingMode = RecordingButtonMode.idle,
     this.isProcessing = false,
     this.currentAttempt,
+    this.onlineStatus,
     required this.l10n,
     required this.theme,
     this.hintText,
@@ -151,7 +157,7 @@ class RepeatPracticePanel extends StatelessWidget {
         child: SizedBox(
           height: kTurnAreaHeight,
           child: Center(
-            child: ProcessingIndicator(text: l10n.listenAndRepeatAnalyzing),
+            child: ProcessingIndicator(text: _processingText(context)),
           ),
         ),
       );
@@ -430,12 +436,72 @@ class RepeatPracticePanel extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  /// 错误文案允许更高的状态槽位（避免英文提示在窄屏截断）。
-  bool get _usesExpandedStatusSlot => currentAttempt?.errorMessage != null;
+  /// 处理中提示：在线方式显示服务、模型与上传进度，其余沿用既有文案。
+  String _processingText(BuildContext context) {
+    final online = onlineStatus;
+    if (online == null || online.isFailed) return l10n.listenAndRepeatAnalyzing;
+    final percent = ((online.progress ?? 0) * 100).round();
+    return l10n.shadowingOnlineProgress(
+      online.serviceHost,
+      online.modelId,
+      percent,
+    );
+  }
 
-  /// 状态文字（录音提示 / 错误信息）
+  /// 在线转写在完成或失败后的状态行：费用与未知费用必须分开显示。
+  Widget? _onlineStatusText(BuildContext context) {
+    final online = onlineStatus;
+    if (online == null) return null;
+    final theme = Theme.of(context);
+    if (online.isFailed) {
+      final error = online.error;
+      if (error == null) return null;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(
+          speechErrorText(context, error),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.visible,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.error,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      );
+    }
+    if (!online.isCompleted) return null;
+    final cost = online.reportedCost;
+    return Text(
+      cost == null
+          ? l10n.shadowingOnlineCostUnknown(
+              online.serviceHost,
+              online.modelId,
+            )
+          : l10n.shadowingOnlineCost(
+              online.serviceHost,
+              online.modelId,
+              cost.toString(),
+            ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  /// 错误文案允许更高的状态槽位（避免英文提示在窄屏截断）。
+  bool get _usesExpandedStatusSlot =>
+      currentAttempt?.errorMessage != null ||
+      (onlineStatus?.isFailed ?? false);
+
+  /// 状态文字（在线转写结果 / 录音提示 / 错误信息）
   Widget? _buildStatusText(BuildContext context) {
     if (!isInPause || isProcessing) return null;
+
+    final onlineText = _onlineStatusText(context);
+    if (onlineText != null) return onlineText;
 
     final errorMessage = currentAttempt?.errorMessage;
     if (errorMessage != null) {

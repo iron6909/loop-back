@@ -10436,6 +10436,36 @@ abstract class AppLocalizations {
   /// **'System speech'**
   String get recognitionModeSystem;
 
+  /// No description provided for @recognitionModeOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online speech'**
+  String get recognitionModeOnline;
+
+  /// No description provided for @recognitionOnlineModelSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Online speech · {model}'**
+  String recognitionOnlineModelSummary(String model);
+
+  /// No description provided for @shadowingOnlineProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Online · {service} · {model} · {percent}%'**
+  String shadowingOnlineProgress(String service, String model, int percent);
+
+  /// No description provided for @shadowingOnlineCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Online · {service} · {model} · cost {cost}'**
+  String shadowingOnlineCost(String service, String model, String cost);
+
+  /// No description provided for @shadowingOnlineCostUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Online · {service} · {model} · cost unknown'**
+  String shadowingOnlineCostUnknown(String service, String model);
+
   /// No description provided for @recognitionChangeTitle.
   ///
   /// In en, this message translates to:

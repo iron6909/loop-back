@@ -7,10 +7,47 @@ library;
 import 'package:flutter/widgets.dart';
 
 import '../provider/provider_error_text.dart';
+import 'shadowing_online_transcriber.dart';
 import 'speech_transcription_client.dart';
 
 String speechErrorText(BuildContext context, Object error) {
   final zh = Localizations.localeOf(context).languageCode == 'zh';
+  if (error is ShadowingRecordingRejected) {
+    return switch (error.rejection) {
+      ShadowingRecordingRejection.fileMissing =>
+        zh ? '没有找到可上传的录音文件' : 'The recording file was not found',
+      ShadowingRecordingRejection.unsupportedFormat =>
+        zh
+            ? '录音格式不受支持，无法上传'
+            : 'The recording format is not supported for upload',
+      ShadowingRecordingRejection.emptyAudio =>
+        zh ? '录音没有可用的人声内容' : 'The recording contains no usable speech',
+      ShadowingRecordingRejection.tooLong =>
+        zh
+            ? '录音超过单次在线转写时长上限，长录音将在后续版本支持'
+            : 'The recording exceeds the single-request limit; long recordings come later',
+      ShadowingRecordingRejection.tooLarge =>
+        zh
+            ? '录音超过单次上传大小上限，长录音将在后续版本支持'
+            : 'The recording exceeds the single-upload size limit; long recordings come later',
+    };
+  }
+  if (error is ShadowingOnlineAccessDenied) {
+    return switch (error.reason) {
+      ShadowingOnlineAccessDenial.missingConfiguration =>
+        zh
+            ? '在线语音未配置服务地址或 Key，请前往设置 → 语音识别'
+            : 'Online speech has no service address or key. Open Settings → Speech recognition',
+      ShadowingOnlineAccessDenial.uploadNoticeMissing =>
+        zh
+            ? '首次上传录音前需先确认上传告知，请前往设置 → 在线语音服务'
+            : 'Confirm the upload notice in Settings → Online speech before the first upload',
+      ShadowingOnlineAccessDenial.capabilityUnverified =>
+        zh
+            ? '跟读的在线模型尚未通过文本能力验证，请先在设置里验证'
+            : 'Verify the shadowing online model in Settings before transcribing',
+    };
+  }
   if (error is! SpeechTranscriptionException) {
     return providerErrorCodeText('invalidResponse', zh);
   }

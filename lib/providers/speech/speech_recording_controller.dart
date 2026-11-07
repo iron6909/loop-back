@@ -21,6 +21,7 @@ library;
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:dio/dio.dart' show CancelToken;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -28,12 +29,14 @@ import '../../models/recognition_selection.dart';
 import '../../models/speech_practice_models.dart';
 import '../../services/app_logger.dart';
 import '../../services/recording_service.dart';
+import '../../services/speech/shadowing_online_transcriber.dart';
 import '../../services/speech_completion_detector.dart';
 import '../../services/speech_practice_matcher.dart';
 import '../../services/speech_practice_platform.dart';
 import '../learning_settings_provider.dart';
 import '../offline_asr_settings_provider.dart';
 import '../recognition_settings_provider.dart';
+import '../speech_capability_provider.dart';
 
 /// 等待开口最大时长
 const _awaitingSpeechTimeout = Duration(seconds: 60);
@@ -62,6 +65,9 @@ class SpeechRecordingState {
   /// 当前录音评估结果
   final SpeechPracticeAttempt? currentAttempt;
 
+  /// 在线跟读的转写状态（服务、模型、进度、费用）；本机与系统方式为 null。
+  final ShadowingOnlineState? onlineShadowing;
+
   /// 实时转录
   final String? liveTranscript;
 
@@ -79,6 +85,7 @@ class SpeechRecordingState {
     this.promptId,
     this.referenceText,
     this.currentAttempt,
+    this.onlineShadowing,
     this.liveTranscript,
     this.hasDetectedSpeech = false,
     this.silenceDuration = Duration.zero,
@@ -101,6 +108,8 @@ class SpeechRecordingState {
     bool clearReferenceText = false,
     SpeechPracticeAttempt? currentAttempt,
     bool clearCurrentAttempt = false,
+    ShadowingOnlineState? onlineShadowing,
+    bool clearOnlineShadowing = false,
     String? liveTranscript,
     bool clearLiveTranscript = false,
     bool? hasDetectedSpeech,
@@ -116,6 +125,9 @@ class SpeechRecordingState {
       currentAttempt: clearCurrentAttempt
           ? null
           : (currentAttempt ?? this.currentAttempt),
+      onlineShadowing: clearOnlineShadowing
+          ? null
+          : (onlineShadowing ?? this.onlineShadowing),
       liveTranscript: clearLiveTranscript
           ? null
           : (liveTranscript ?? this.liveTranscript),
@@ -257,6 +269,12 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   /// 当前回合在识别设置里登记的在途任务。
   RecognitionInFlightTask? _inFlightTask;
 
+  /// 本回合是否使用在线转写；录音期间只有它决定停录后的处理路径。
+  bool _roundUsesOnline = false;
+
+  /// 在途的在线转写请求；取消、切换录音或退出时取消它，丢弃过期结果。
+  CancelToken? _onlineCancelToken;
+
   /// 登记时持有的注册处：销毁阶段不能再从已释放的容器读 provider。
   RecognitionInFlightRegistry? _inFlightRegistry;
 
@@ -362,6 +380,11 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     _referenceDuration = referenceDuration;
     _voicedDuration = Duration.zero;
     _lastVoicedTimestamp = null;
+    // 本回合的识别方式在开始时定下：录音期间不因局部状态变化改走其它后端。
+    _roundUsesOnline = ref
+        .read(recognitionSettingsProvider)
+        .forPurpose(RecognitionPurpose.shadowing)
+        .usesOnlineModel;
     // 录音一开始就登记在途任务：识别设置变更需要能告知并取消本回合。
     _registerInFlight(promptId);
 
@@ -392,20 +415,25 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     await cleanup;
     if (generation != _roundGeneration) return;
 
-    final backend = ref.read(speechPracticeBackendProvider);
+    final backend = _roundUsesOnline
+        ? ref.read(speechRecordingOnlyBackendProvider)
+        : ref.read(speechPracticeBackendProvider);
     AppLogger.log(
       'SpeechRec',
-      '│ backend=${backend.runtimeType} permissions=${state.permissions.microphone.name}/${state.permissions.speech.name}',
+      '│ backend=${backend.runtimeType} online=$_roundUsesOnline permissions=${state.permissions.microphone.name}/${state.permissions.speech.name}',
     );
     final service = RecordingService(backend);
     _recordingService = service;
     try {
-      final asrSettings = ref.read(offlineAsrSettingsProvider);
       await service.startRecording(
         promptId: promptId,
         // Apple 实时转录同时服务自动结束检测；关闭评级只跳过最终评分，
         // 不能关闭该检测通道而退化为固定静音兜底。
-        recognitionEnabled: asrSettings.backend == AsrBackend.platform,
+        // 在线只保留平台已有的实时反馈，最终文本只由在线请求产生。
+        recognitionEnabled: _roundUsesOnline
+            ? ref.read(systemRecognitionPlatformProvider)
+            : ref.read(offlineAsrSettingsProvider).backend ==
+                  AsrBackend.platform,
       );
       if (generation != _roundGeneration) {
         await service.cancelRecording();
@@ -476,6 +504,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     _cancelAllTimers();
     _speechStartTime = null;
     _recordingService = null;
+    _cancelOnlineTranscription();
     _unregisterInFlight();
     state = state.copyWith(
       phase: SpeechRecordingPhase.idle,
@@ -500,6 +529,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   Future<void> clearRecording() async {
     AppLogger.log('SpeechRec', '● clearRecording → idle');
     ++_roundGeneration;
+    _cancelOnlineTranscription();
     _unregisterInFlight();
     _cancelAllTimers();
     _isStopping = false;
@@ -574,7 +604,6 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       return;
     }
     if (!_isCurrentRound(generation, promptId)) return;
-    final backend = ref.read(speechPracticeBackendProvider);
     final ratingEnabled = ref
         .read(learningSettingsProvider)
         .listenAndRepeatRatingEnabled;
@@ -603,7 +632,10 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       return;
     }
     final filePath = stopResult.filePath;
-    AppLogger.log('SpeechRec', '│ backend=${backend.runtimeType}');
+    AppLogger.log(
+      'SpeechRec',
+      '│ stop done online=$_roundUsesOnline file=$filePath',
+    );
 
     if (stopResult.errorCode != null || filePath == null || filePath.isEmpty) {
       AppLogger.log('SpeechRec', '✗ 停止录音失败: ${stopResult.errorCode}');
@@ -642,7 +674,19 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     // ── 阶段 2：进入 processing（显示"分析中..."）──
     _enterProcessing(promptId);
 
-    // ── 阶段 3：等待转录结果 ──
+    // ── 阶段 3a：在线方式只在停录后上传一次，不使用平台/本机最终结果 ──
+    if (_roundUsesOnline) {
+      await _transcribeOnline(
+        promptId: promptId,
+        referenceText: referenceText,
+        filePath: filePath,
+        generation: generation,
+        service: service,
+      );
+      return;
+    }
+
+    // ── 阶段 3b：等待本机或平台转录结果 ──
     final result = await service.waitForTranscript(filePath: filePath);
     if (!_isCurrentRound(generation, promptId)) return;
     AppLogger.log(
@@ -725,6 +769,21 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       '│ evaluate transcriptLen=${transcript.trim().length} '
           'liveLen=${(_lastKnownTranscript ?? '').trim().length}',
     );
+    _evaluateTranscript(
+      promptId: promptId,
+      referenceText: referenceText,
+      filePath: result.filePath,
+      transcript: transcript,
+    );
+  }
+
+  /// 用一段最终文本做覆盖率评估；跟读的本机、系统与在线路径共用同一判定。
+  void _evaluateTranscript({
+    required String promptId,
+    required String referenceText,
+    required String? filePath,
+    required String transcript,
+  }) {
     final matcher = ref.read(speechTranscriptMatcherProvider);
     final matchResult = matcher.evaluate(
       referenceText: referenceText,
@@ -732,7 +791,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     );
 
     final attempt = SpeechPracticeAttempt(promptId: promptId).copyWith(
-      filePath: result.filePath,
+      filePath: filePath,
       status: matchResult.status,
       finalTranscript: matchResult.finalTranscript,
       score: matchResult.score,
@@ -764,6 +823,147 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       hasDetectedSpeech: false,
       silenceDuration: Duration.zero,
     );
+  }
+
+  /// 停录后只发一次的在线转写。
+  ///
+  /// 录音期间不发请求；先释放麦克风再上传，结果或失败都只回写本回合；
+  /// 取消、换录音或配置变更后旧回调不覆盖新状态，源录音始终保留。
+  Future<void> _transcribeOnline({
+    required String promptId,
+    required String referenceText,
+    required String filePath,
+    required int generation,
+    required RecordingService service,
+  }) async {
+    await service.shutdown();
+    if (!_isCurrentRound(generation, promptId)) return;
+
+    final access = await resolveShadowingOnlineAccess(ref);
+    if (!_isCurrentRound(generation, promptId)) return;
+    final granted = access is ShadowingOnlineAccessGranted ? access : null;
+    // 准入失败也要留下可见状态：服务与模型取自已保存配置，缺失时为空。
+    final base = ShadowingOnlineState(
+      serviceHost: Uri.tryParse(granted?.config.baseUrl ?? '')?.host ?? '',
+      modelId: granted?.modelId ?? '',
+      phase: ShadowingOnlinePhase.preparing,
+    );
+    state = state.copyWith(onlineShadowing: base);
+    if (granted == null) {
+      AppLogger.log('SpeechRec', '✗ 在线跟读不具备发请求条件: $access');
+      _failOnlineTurn(
+        promptId: promptId,
+        filePath: filePath,
+        error: access,
+      );
+      return;
+    }
+
+    final transcriber = ShadowingOnlineTranscriber(
+      client: ref.read(speechTranscriptionClientProvider),
+    );
+
+    final ShadowingRecordingUpload upload;
+    try {
+      upload = await transcriber.prepare(filePath);
+    } on Object catch (error) {
+      // 文件缺失、格式或单块边界不满足：明确拒绝，不截断、不改成本机。
+      if (!_isCurrentRound(generation, promptId)) return;
+      AppLogger.log('SpeechRec', '✗ 在线跟读请求前拒绝: $error');
+      _failOnlineTurn(promptId: promptId, filePath: filePath, error: error);
+      return;
+    }
+    if (!_isCurrentRound(generation, promptId)) return;
+
+    final cancelToken = CancelToken();
+    _onlineCancelToken = cancelToken;
+    state = state.copyWith(
+      onlineShadowing: base.copyWith(
+        phase: ShadowingOnlinePhase.uploading,
+        progress: 0,
+      ),
+    );
+    try {
+      final result = await transcriber.transcribe(
+        config: granted.config,
+        apiKey: granted.apiKey,
+        modelId: granted.modelId,
+        recording: upload,
+        cancelToken: cancelToken,
+        onProgress: (progress) {
+          if (!_isCurrentRound(generation, promptId) ||
+              !identical(_onlineCancelToken, cancelToken)) {
+            return;
+          }
+          state = state.copyWith(
+            onlineShadowing: state.onlineShadowing?.copyWith(
+              progress: progress,
+            ),
+          );
+        },
+      );
+      // 旧回合（取消、换录音）的结果不覆盖新状态。
+      if (!_isCurrentRound(generation, promptId) ||
+          !identical(_onlineCancelToken, cancelToken)) {
+        return;
+      }
+      _onlineCancelToken = null;
+      state = state.copyWith(
+        onlineShadowing: base.copyWith(
+          phase: ShadowingOnlinePhase.completed,
+          progress: 1,
+          reportedCost: result.reportedCost,
+        ),
+      );
+      AppLogger.log(
+        'SpeechRec',
+        '✓ 在线转写完成: textLen=${result.text.length} '
+            'cost=${result.reportedCost ?? 'unknown'}',
+      );
+      _evaluateTranscript(
+        promptId: promptId,
+        referenceText: referenceText,
+        filePath: filePath,
+        transcript: result.text,
+      );
+    } on Object catch (error) {
+      if (!_isCurrentRound(generation, promptId) ||
+          !identical(_onlineCancelToken, cancelToken)) {
+        return;
+      }
+      _onlineCancelToken = null;
+      AppLogger.log('SpeechRec', '✗ 在线转写失败: $error');
+      // 失败只说明原因并等用户操作：不自动重试、不换服务、不改成本机。
+      _failOnlineTurn(promptId: promptId, filePath: filePath, error: error);
+    }
+  }
+
+  /// 在线转写失败或拒绝：保留录音与原因，回到 idle 等用户决定。
+  void _failOnlineTurn({
+    required String promptId,
+    required String filePath,
+    required Object error,
+  }) {
+    state = state.copyWith(
+      phase: SpeechRecordingPhase.idle,
+      currentAttempt: SpeechPracticeAttempt(promptId: promptId).copyWith(
+        filePath: filePath,
+        status: SpeechPracticeAttemptStatus.error,
+      ),
+      onlineShadowing: state.onlineShadowing?.copyWith(
+        phase: ShadowingOnlinePhase.failed,
+        error: error,
+      ),
+      clearLiveTranscript: true,
+      hasDetectedSpeech: false,
+      silenceDuration: Duration.zero,
+    );
+  }
+
+  /// 取消在途的在线请求；之后的旧回调不会再写状态。
+  void _cancelOnlineTranscription() {
+    _onlineCancelToken?.cancel();
+    _onlineCancelToken = null;
   }
 
   void _recordCompletionDuration(Duration duration) {

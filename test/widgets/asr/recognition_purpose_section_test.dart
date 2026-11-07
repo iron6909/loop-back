@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
+import 'package:echo_loop/providers/speech_capability_provider.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/asr/recognition_purpose_section.dart';
 
@@ -64,11 +65,15 @@ class _RecordingRecognitionSettings extends RecognitionSettingsNotifier {
 Widget _buildHarness(
   _RecordingRecognitionSettings notifier, {
   required bool systemSupported,
+  bool onlineAvailable = false,
 }) {
   return ProviderScope(
     overrides: [
       recognitionSettingsProvider.overrideWith(() => notifier),
       systemRecognitionPlatformProvider.overrideWithValue(systemSupported),
+      shadowingOnlineAvailabilityProvider.overrideWith(
+        (ref) async => onlineAvailable,
+      ),
     ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
@@ -211,5 +216,41 @@ void main() {
     expect(cancelled, [task]);
     expect(find.text('System speech'), findsNWidgets(2));
     expect(find.text('On-device · Whisper Small (English)'), findsOneWidget);
+  });
+
+  testWidgets('具备 Key、告知与文本验证时跟读可选在线，保存为跟读自己的在线方式', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(notifier, systemSupported: true, onlineAvailable: true),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Shadowing'));
+    await tester.pumpAndSettle();
+    expect(find.text('Online speech'), findsOneWidget);
+
+    await tester.tap(find.text('Online speech'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.calls, hasLength(1));
+    expect(notifier.calls.single.purpose, RecognitionPurpose.shadowing);
+    expect(notifier.calls.single.selection.mode, RecognitionMode.online);
+    expect(
+      notifier.calls.single.selection.localModelId,
+      'whisper-base-en-int8',
+      reason: '切到在线后仍保留本机档位，切回时不用重选',
+    );
+  });
+
+  testWidgets('条件不齐时在线不作为可选方式出现', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Shadowing'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Online speech'), findsNothing);
+    expect(find.text('System speech'), findsOneWidget);
   });
 }

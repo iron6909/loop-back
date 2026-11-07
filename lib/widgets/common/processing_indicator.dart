@@ -25,6 +25,10 @@ class ProcessingIndicator extends StatelessWidget {
         if (text != null) ...[
           Text(
             text!,
+            // 固定高度槽位里的提示只占一行，长文案省略而不撑破布局。
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
