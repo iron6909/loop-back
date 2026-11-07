@@ -12,6 +12,7 @@ void main() {
       int wordCount = 50,
       bool isPinned = false,
       TranscriptSource? transcriptSource,
+      TranscriptWordTimingSource? transcriptWordTimingSource,
       String? audioSha256,
       String? originalAudioSha256,
       String? transcriptLanguage,
@@ -30,6 +31,7 @@ void main() {
         wordCount: wordCount,
         isPinned: isPinned,
         transcriptSource: transcriptSource,
+        transcriptWordTimingSource: transcriptWordTimingSource,
         audioSha256: audioSha256,
         originalAudioSha256: originalAudioSha256,
         transcriptLanguage: transcriptLanguage,
@@ -301,6 +303,88 @@ void main() {
         expect(TranscriptSource.local.index, 0);
         expect(TranscriptSource.ai.index, 1);
         expect(TranscriptSource.device.index, 2);
+      });
+
+      test('online 追加在末尾，不重排既有值', () {
+        expect(TranscriptSource.online.index, 3);
+        expect(TranscriptSource.fromIndex(3), TranscriptSource.online);
+      });
+    });
+
+    group('TranscriptWordTimingSource', () {
+      test('fromIndex 只认模型提供/估算/混合，其他为未知', () {
+        expect(
+          TranscriptWordTimingSource.fromIndex(0),
+          TranscriptWordTimingSource.model,
+        );
+        expect(
+          TranscriptWordTimingSource.fromIndex(1),
+          TranscriptWordTimingSource.estimated,
+        );
+        expect(
+          TranscriptWordTimingSource.fromIndex(2),
+          TranscriptWordTimingSource.mixed,
+        );
+        expect(TranscriptWordTimingSource.fromIndex(null), isNull);
+        expect(TranscriptWordTimingSource.fromIndex(3), isNull);
+      });
+
+      test('JSON 往返保留整体词时间戳来源', () {
+        final item = createSample(
+          transcriptSource: TranscriptSource.online,
+          transcriptWordTimingSource: TranscriptWordTimingSource.mixed,
+        );
+        final json = item.toJson();
+        expect(json['transcriptWordTimingSource'], 2);
+
+        final restored = AudioItem.fromJson(json);
+        expect(restored.transcriptSource, TranscriptSource.online);
+        expect(
+          restored.transcriptWordTimingSource,
+          TranscriptWordTimingSource.mixed,
+        );
+      });
+
+      test('copyWith 不传词时间戳来源时保持原值', () {
+        final item = createSample(
+          transcriptWordTimingSource: TranscriptWordTimingSource.estimated,
+        );
+        expect(
+          item.copyWith().transcriptWordTimingSource,
+          TranscriptWordTimingSource.estimated,
+        );
+      });
+
+      test('只有明确标记模型提供时才不提示近似时间戳', () {
+        bool approximate(
+          TranscriptSource source,
+          TranscriptWordTimingSource? timing,
+        ) => wordTimingIsApproximate(
+          transcriptSource: source,
+          timingSource: timing,
+        );
+
+        expect(
+          approximate(TranscriptSource.online, TranscriptWordTimingSource.model),
+          isFalse,
+        );
+        expect(
+          approximate(TranscriptSource.online, TranscriptWordTimingSource.mixed),
+          isTrue,
+        );
+        expect(
+          approximate(
+            TranscriptSource.online,
+            TranscriptWordTimingSource.estimated,
+          ),
+          isTrue,
+        );
+        // 在线来源缺标记时按未知处理，不能凭来源宣称逐词精确。
+        expect(approximate(TranscriptSource.online, null), isTrue);
+        // 历史 ai 含义不被重解释（随包示例与云端结果自带真实词时间戳）。
+        expect(approximate(TranscriptSource.ai, null), isFalse);
+        expect(approximate(TranscriptSource.local, null), isTrue);
+        expect(approximate(TranscriptSource.device, null), isTrue);
       });
     });
 

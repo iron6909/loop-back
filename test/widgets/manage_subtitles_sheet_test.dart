@@ -13,7 +13,12 @@ import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/local_transcription_task_provider.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
+import 'package:echo_loop/providers/online_subtitle_task_provider.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
+import 'package:echo_loop/providers/speech_capability_provider.dart';
+import 'package:echo_loop/services/speech/speech_config.dart';
+import 'package:echo_loop/services/speech/speech_config_store.dart';
+import 'package:echo_loop/providers/speech_configuration_provider.dart';
 import 'package:echo_loop/providers/settings_provider.dart';
 import 'package:echo_loop/services/app_logger.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
@@ -108,6 +113,32 @@ class _FixedRecognitionSettings extends RecognitionSettingsNotifier {
 
   @override
   RecognitionSettings build() => _fixed;
+}
+
+/// 只放内存的语音配置替身，避免 widget 测试访问安全存储。
+class _SpeechStore extends SpeechConfigStore {
+  _SpeechStore(this.config);
+
+  final SpeechConfig? config;
+
+  @override
+  Future<SpeechConfig?> read() async => config;
+
+  @override
+  Future<String?> readApiKey() async => 'sk-test';
+
+  @override
+  Future<String?> readCredentialVersion() async => 'credential-a';
+}
+
+/// 字幕用途固定为在线方式的识别选择。
+class _OnlineSubtitleSettings extends RecognitionSettingsNotifier {
+  @override
+  RecognitionSettings build() => const RecognitionSettings(
+    subtitle: RecognitionSelection.online(),
+    shadowing: RecognitionSelection.local('test-model'),
+    retell: RecognitionSelection.local('test-model'),
+  );
 }
 
 void main() {
@@ -487,6 +518,78 @@ void main() {
       await tester.pump(const Duration(seconds: 12));
       await tester.pumpAndSettle();
     });
+  });
+
+  testWidgets('字幕用途选择在线时启动在线任务，不要求本机模型就绪', (tester) async {
+    manager = _RecordingManager();
+    final online = TestOnlineSubtitleTaskManager();
+    final item = createTestAudioItem(transcriptPath: null);
+    await tester.pumpWidget(
+      buildSheet(
+        item,
+        extra: [
+          onlineSubtitleTaskManagerProvider.overrideWith(() => online),
+          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
+          onlineSubtitleAvailableProvider.overrideWithValue(true),
+          speechConfigStoreProvider.overrideWithValue(
+            _SpeechStore(
+              const SpeechConfig(
+                kind: SpeechProviderKind.openrouter,
+                baseUrl: 'https://openrouter.ai/api/v1',
+                onlineModels: {
+                  RecognitionPurpose.subtitle: 'openai/whisper-large-v3',
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await open(tester);
+    await pressPrimary(tester);
+
+    expect(online.calls, [(item.id, true)]);
+    expect(manager.calls, isEmpty, reason: '在线不走本机转录入口');
+  });
+
+  testWidgets('已保存字幕如实显示整体词时间戳来源', (tester) async {
+    manager = _RecordingManager();
+    await tester.pumpWidget(
+      buildSheet(
+        createTestAudioItem(
+          transcriptSource: TranscriptSource.online,
+          transcriptWordTimingSource: TranscriptWordTimingSource.mixed,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await open(tester);
+
+    expect(find.textContaining('Word timing source: mixed'), findsOneWidget);
+  });
+
+  testWidgets('在线字幕未通过能力验证时明确不可用', (tester) async {
+    manager = _RecordingManager();
+    await tester.pumpWidget(
+      buildSheet(
+        createTestAudioItem(transcriptPath: null),
+        extra: [
+          onlineSubtitleTaskManagerProvider.overrideWith(
+            TestOnlineSubtitleTaskManager.new,
+          ),
+          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
+          onlineSubtitleAvailableProvider.overrideWithValue(false),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await open(tester);
+
+    expect(
+      find.textContaining('has not passed subtitle capability verification'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('删除确认显示收藏与进度警告', (tester) async {

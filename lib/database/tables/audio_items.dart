@@ -43,8 +43,13 @@ class AudioItems extends Table {
   /// 是否置顶
   BoolColumn get isPinned => boolean().withDefault(const Constant(false))();
 
-  /// 字幕来源：0=local, 1=ai, null=无字幕
+  /// 字幕来源：0=local, 1=ai, 2=device, 3=online, null=无字幕
   IntColumn get transcriptSource => integer().nullable()();
+
+  /// 字幕整体词级时间戳来源：0=模型提供, 1=估算, 2=混合, null=未知（历史数据）。
+  ///
+  /// 只表达整份字幕的时间戳来源；有句子按词长估算时不能标成模型对齐。
+  IntColumn get transcriptWordTimingSource => integer().nullable()();
 
   /// 媒体文件 SHA256 指纹（缓存，避免重复计算）。纯文件哈希，音视频通用。
   TextColumn get audioSha256 => text().nullable()();

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/recognition_selection.dart';
 import '../../providers/recognition_settings_provider.dart';
+import '../../providers/speech_capability_provider.dart';
 import '../../services/asr/asr_model_manager.dart';
 import '../../theme/app_theme.dart';
 
@@ -72,6 +73,7 @@ String recognitionModeLabel(AppLocalizations l10n, RecognitionMode mode) =>
     switch (mode) {
       RecognitionMode.local => l10n.recognitionModeLocal,
       RecognitionMode.system => l10n.recognitionModeSystem,
+      RecognitionMode.online => l10n.recognitionModeOnline,
     };
 
 /// 当前选择的一行摘要：方式（本机时带模型名）。
@@ -129,6 +131,7 @@ class RecognitionPurposeSection extends ConsumerWidget {
     final modes = availableRecognitionModes(
       purpose,
       systemSupported: systemSupported,
+      onlineSubtitleAvailable: ref.read(onlineSubtitleAvailableProvider),
     );
     return showModalBottomSheet<void>(
       context: context,
@@ -167,14 +170,17 @@ class RecognitionPurposeSection extends ConsumerWidget {
                           innerContext,
                           innerRef,
                           purpose: purpose,
-                          selection: mode == RecognitionMode.system
-                              ? RecognitionSelection(
-                                  mode: RecognitionMode.system,
-                                  localModelId: selection.localModelId,
-                                )
-                              : RecognitionSelection.local(
-                                  selection.localModelId,
-                                ),
+                          selection: switch (mode) {
+                            RecognitionMode.system => RecognitionSelection(
+                              mode: RecognitionMode.system,
+                              localModelId: selection.localModelId,
+                            ),
+                            RecognitionMode.online =>
+                              const RecognitionSelection.online(),
+                            RecognitionMode.local => RecognitionSelection.local(
+                              selection.localModelId,
+                            ),
+                          },
                         );
                       },
                       child: Column(

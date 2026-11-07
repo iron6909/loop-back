@@ -337,6 +337,9 @@ class _SentenceDetailScreenState extends ConsumerState<SentenceDetailScreen> {
           transcriptSource: model.TranscriptSource.fromIndex(
             row.transcriptSource,
           ),
+          transcriptWordTimingSource: model.TranscriptWordTimingSource.fromIndex(
+            row.transcriptWordTimingSource,
+          ),
           audioSha256: row.audioSha256,
           originalAudioSha256: row.originalAudioSha256,
           transcriptLanguage: row.transcriptLanguage,

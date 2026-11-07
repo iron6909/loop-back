@@ -105,7 +105,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   /// 当前 schema 版本（静态访问，用于导入前版本检查）
-  static const currentSchemaVersion = 61;
+  static const currentSchemaVersion = 62;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -284,6 +284,15 @@ class AppDatabase extends _$AppDatabase {
             'audio_items',
             'podcast_transcript_format',
             'TEXT',
+          );
+        }
+        // v61→v62：字幕整体词时间戳来源（0=模型提供, 1=估算, 2=混合）。
+        // 旧字幕不写标记（NULL = 未知），不重解释既有来源与内容。
+        if (from < 62) {
+          await _addColumnIfNotExists(
+            'audio_items',
+            'transcript_word_timing_source',
+            'INTEGER',
           );
         }
         // v49→v50：为收藏单词/意群补稳定的记忆主体 ID，并把收藏句专属的每日

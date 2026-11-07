@@ -3,8 +3,8 @@
 /// 每个用途各自保存方式与模型，设置页、字幕入口与三条业务入口都读这份状态。
 /// 各用途的存储位置不同，但语义只有这一份：
 /// - 字幕：本机模型沿用旧偏好 `local_transcription_model_id`，由
-///   [localTranscriptionModelProvider] 持有；方式在本切片恒为本机（系统识别
-///   没有可用片段时间戳、在线尚未接入），因此不写冗余的方式偏好。
+///   [localTranscriptionModelProvider] 持有；方式在 [subtitleModePrefsKey] 保存，
+///   默认本机，在线只在当前配置通过字幕能力验证后可选。
 /// - 跟读：方式与模型沿用离线 ASR 设置（共享本机引擎的档位与后端），由
 ///   [offlineAsrSettingsProvider] 持有唯一来源，避免引擎档位出现第二份真相。
 /// - 复述：独立偏好，首次建立时继承升级前实际字幕模型并快照下来。
@@ -33,6 +33,9 @@ const retellModePrefsKey = 'recognition_retell_mode';
 
 /// 复述本机模型偏好 key。
 const retellModelPrefsKey = 'recognition_retell_model_id';
+
+/// 字幕识别方式偏好 key；只持久化「在线」与「本机」（本机为默认）。
+const subtitleModePrefsKey = 'recognition_subtitle_mode';
 
 // ---------------------------------------------------------------------------
 // State
@@ -167,14 +170,21 @@ final systemRecognitionPlatformProvider = Provider<bool>(
 
 /// 某用途当前可选的识别方式。
 ///
-/// 字幕需要片段时间戳，系统识别不提供，因此只开放本机；跟读与复述在受支持的
-/// 平台同时开放系统识别。在线方式在对应业务切片完成前不出现。
+/// 字幕需要片段时间戳：系统识别不提供，只有当前配置通过字幕能力验证后
+/// （[onlineSubtitleAvailable]）才出现在线方式。跟读与复述在受支持的平台
+/// 同时开放系统识别。
 List<RecognitionMode> availableRecognitionModes(
   RecognitionPurpose purpose, {
   required bool systemSupported,
+  bool onlineSubtitleAvailable = false,
 }) {
   const local = [RecognitionMode.local];
-  if (!systemSupported || purpose == RecognitionPurpose.subtitle) return local;
+  if (purpose == RecognitionPurpose.subtitle) {
+    return onlineSubtitleAvailable
+        ? const [RecognitionMode.local, RecognitionMode.online]
+        : local;
+  }
+  if (!systemSupported) return local;
   return const [RecognitionMode.local, RecognitionMode.system];
 }
 
@@ -232,8 +242,15 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
 
     final retellModelId = _resolveRetellModelId(prefs, subtitleModelId);
     final retellMode = _modeFromPrefs(prefs.getString(retellModePrefsKey));
+    final subtitleMode =
+        prefs.getString(subtitleModePrefsKey) == RecognitionMode.online.name
+        ? RecognitionMode.online
+        : RecognitionMode.local;
     return RecognitionSettings(
-      subtitle: RecognitionSelection.local(subtitleModelId),
+      subtitle: RecognitionSelection(
+        mode: subtitleMode,
+        localModelId: subtitleModelId,
+      ),
       shadowing: shadowingMode == AsrBackend.offline
           ? RecognitionSelection.local(shadowingModelId)
           : RecognitionSelection(
@@ -292,9 +309,14 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
 
     switch (purpose) {
       case RecognitionPurpose.subtitle:
-        await ref
-            .read(localTranscriptionModelProvider.notifier)
-            .select(modelById(selection.localModelId));
+        final prefs = ref.read(sharedPreferencesProvider);
+        state = state.withPurpose(purpose, selection);
+        await prefs.setString(subtitleModePrefsKey, selection.mode.name);
+        if (selection.usesLocalModel) {
+          await ref
+              .read(localTranscriptionModelProvider.notifier)
+              .select(modelById(selection.localModelId));
+        }
       case RecognitionPurpose.shadowing:
         final backend = selection.usesLocalModel
             ? AsrBackend.offline

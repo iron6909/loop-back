@@ -585,10 +585,10 @@ class _SentenceExplanationViewState
     }
   }
 
-  /// 确保用户已知晓上传字幕生成的意群时间只是推测值。
+  /// 确保用户已知晓意群时间可能是估算值。
   ///
-  /// AI 转录字幕自带词级时间戳；本地上传字幕的词级时间戳由字幕片段按词长
-  /// 推算，意群播放边界可能不准，因此首次播放前展示一次阻塞提示。
+  /// 只有词时间戳明确标为模型提供时不提示；估算、混合与历史未知（含在线来源
+  /// 缺标记、本地/设备来源）都提示，不因来源是在线就宣称逐词精确。
   Future<bool> _ensureSyntheticTimingNoticeAcknowledged() async {
     final audioItemId = widget.audioItemId;
     if (audioItemId == null) return true;
@@ -601,13 +601,15 @@ class _SentenceExplanationViewState
 
     final audioItem = await ref.read(audioItemDaoProvider).getById(audioItemId);
     if (!mounted || widget.audioItemId != audioItemId) return false;
-    // 本地上传与设备离线转录的词级时间戳都是合成近似值，均需提示；AI 转录自带
-    // 真实词级时间戳，无需提示。
-    final source = audioItem?.transcriptSource;
-    if (source != app_model.TranscriptSource.local.index &&
-        source != app_model.TranscriptSource.device.index) {
-      return true;
-    }
+    final approximate = app_model.wordTimingIsApproximate(
+      transcriptSource: app_model.TranscriptSource.fromIndex(
+        audioItem?.transcriptSource,
+      ),
+      timingSource: app_model.TranscriptWordTimingSource.fromIndex(
+        audioItem?.transcriptWordTimingSource,
+      ),
+    );
+    if (!approximate) return true;
 
     try {
       _isShowingSyntheticTimingNotice = true;
@@ -622,7 +624,7 @@ class _SentenceExplanationViewState
           ),
           content: Text(
             l10n?.senseGroupSyntheticTimingNoticeMessage ??
-                'This sense group playback timing is estimated from your uploaded subtitles and may be inaccurate.',
+                'This sense group playback timing is estimated and may be inaccurate.',
           ),
           actions: [
             FilledButton(

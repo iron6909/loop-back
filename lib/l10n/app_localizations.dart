@@ -6419,7 +6419,7 @@ abstract class AppLocalizations {
   /// No description provided for @senseGroupSyntheticTimingNoticeMessage.
   ///
   /// In en, this message translates to:
-  /// **'This sense group playback timing is estimated from your uploaded subtitles and may be inaccurate.'**
+  /// **'This sense group playback timing is estimated from word lengths and may not match the actual speech.'**
   String get senseGroupSyntheticTimingNoticeMessage;
 
   /// No description provided for @transcriptionSignInRequiredTitle.
@@ -10597,6 +10597,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send test'**
   String get speechUploadNoticeConfirm;
+
+  /// No description provided for @recognitionModeOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get recognitionModeOnline;
+
+  /// No description provided for @onlineSubtitleService.
+  ///
+  /// In en, this message translates to:
+  /// **'Online subtitles: {service} · {model}'**
+  String onlineSubtitleService(String service, String model);
+
+  /// No description provided for @onlineSubtitleCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost reported by the provider: {cost}'**
+  String onlineSubtitleCost(String cost);
+
+  /// No description provided for @onlineSubtitleCostUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider reported no cost, so the actual charge is unknown'**
+  String get onlineSubtitleCostUnknown;
+
+  /// No description provided for @onlineSubtitleNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No online speech service or API key configured'**
+  String get onlineSubtitleNotConfigured;
+
+  /// No description provided for @onlineSubtitleNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'The current speech configuration has not passed subtitle capability verification'**
+  String get onlineSubtitleNotVerified;
+
+  /// No description provided for @onlineSubtitleAudioTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio exceeds the single online subtitle limit ({maxMin} minutes max)'**
+  String onlineSubtitleAudioTooLong(int maxMin);
+
+  /// No description provided for @onlineSubtitleDecodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio could not be decoded, so nothing was uploaded'**
+  String get onlineSubtitleDecodeFailed;
+
+  /// No description provided for @onlineSubtitleInvalidResult.
+  ///
+  /// In en, this message translates to:
+  /// **'The service returned unusable timestamps, so no subtitles were saved'**
+  String get onlineSubtitleInvalidResult;
+
+  /// No description provided for @onlineSubtitleConfigChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The speech configuration changed, so this result was discarded'**
+  String get onlineSubtitleConfigChanged;
+
+  /// No description provided for @wordTimingSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Word timing source: {source}'**
+  String wordTimingSourceLabel(String source);
+
+  /// No description provided for @wordTimingSourceModel.
+  ///
+  /// In en, this message translates to:
+  /// **'model-provided'**
+  String get wordTimingSourceModel;
+
+  /// No description provided for @wordTimingSourceEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'estimated'**
+  String get wordTimingSourceEstimated;
+
+  /// No description provided for @wordTimingSourceMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'mixed'**
+  String get wordTimingSourceMixed;
+
+  /// No description provided for @wordTimingSourceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown'**
+  String get wordTimingSourceUnknown;
 }
 
 class _AppLocalizationsDelegate

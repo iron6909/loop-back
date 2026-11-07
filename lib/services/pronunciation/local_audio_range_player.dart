@@ -15,6 +15,9 @@ model.AudioItem audioItemFromDatabaseRow(db.AudioItem row) => model.AudioItem(
   wordCount: row.wordCount,
   isPinned: row.isPinned,
   transcriptSource: model.TranscriptSource.fromIndex(row.transcriptSource),
+  transcriptWordTimingSource: model.TranscriptWordTimingSource.fromIndex(
+    row.transcriptWordTimingSource,
+  ),
   audioSha256: row.audioSha256,
   originalAudioSha256: row.originalAudioSha256,
   transcriptLanguage: row.transcriptLanguage,

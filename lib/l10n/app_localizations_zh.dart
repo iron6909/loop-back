@@ -3502,7 +3502,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get senseGroupSyntheticTimingNoticeMessage =>
-      '这个意群播放时间是从你上传的字幕推测出来的，可能不准确。';
+      '这个意群播放时间由词长估算得出，可能与实际发音不完全一致。';
 
   @override
   String get transcriptionSignInRequiredTitle => '登录后使用 AI 转录';
@@ -5740,4 +5740,57 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get speechUploadNoticeConfirm => '发送测试';
+
+  @override
+  String get recognitionModeOnline => '在线转写';
+
+  @override
+  String onlineSubtitleService(String service, String model) {
+    return '在线字幕：$service · $model';
+  }
+
+  @override
+  String onlineSubtitleCost(String cost) {
+    return '供应商报告的本次费用：$cost';
+  }
+
+  @override
+  String get onlineSubtitleCostUnknown => '供应商未报告费用，实际花费未知';
+
+  @override
+  String get onlineSubtitleNotConfigured => '尚未配置在线语音服务或 Key';
+
+  @override
+  String get onlineSubtitleNotVerified => '当前语音配置未通过字幕能力验证';
+
+  @override
+  String onlineSubtitleAudioTooLong(int maxMin) {
+    return '音频超出单次在线字幕范围（最长 $maxMin 分钟）';
+  }
+
+  @override
+  String get onlineSubtitleDecodeFailed => '无法解码音频，未上传';
+
+  @override
+  String get onlineSubtitleInvalidResult => '服务返回的时间戳无效，未保存字幕';
+
+  @override
+  String get onlineSubtitleConfigChanged => '语音配置已变化，已放弃本次结果';
+
+  @override
+  String wordTimingSourceLabel(String source) {
+    return '词时间戳来源：$source';
+  }
+
+  @override
+  String get wordTimingSourceModel => '模型提供';
+
+  @override
+  String get wordTimingSourceEstimated => '估算';
+
+  @override
+  String get wordTimingSourceMixed => '混合';
+
+  @override
+  String get wordTimingSourceUnknown => '未知';
 }

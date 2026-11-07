@@ -220,7 +220,7 @@ void main() {
   });
 
   group('可选方式', () {
-    test('系统识别只在受支持的平台与用途出现，在线方式不出现', () {
+    test('系统识别只在受支持的平台与用途出现，字幕不提供系统识别', () {
       expect(
         availableRecognitionModes(
           RecognitionPurpose.subtitle,
@@ -250,8 +250,56 @@ void main() {
         ),
         [RecognitionMode.local, RecognitionMode.system],
       );
-      expect(RecognitionMode.values, hasLength(2));
+      expect(RecognitionMode.values, hasLength(3));
     });
+
+    test('字幕只有通过字能力验证后才出现方式', () {
+      expect(
+        availableRecognitionModes(
+          RecognitionPurpose.subtitle,
+          systemSupported: false,
+        ),
+        [RecognitionMode.local],
+      );
+      expect(
+        availableRecognitionModes(
+          RecognitionPurpose.subtitle,
+          systemSupported: false,
+          onlineSubtitleAvailable: true,
+        ),
+        [RecognitionMode.local, RecognitionMode.online],
+        reason: '在线字幕需要片段时间戳能力，未验证前不出现',
+      );
+    });
+  });
+
+  test('字幕在线方式被持久化并在重启后恢复', () async {
+    final container = await _container(prefs: {localTranscriptionModelKey: _small});
+    addTearDown(container.dispose);
+
+    await container
+        .read(recognitionSettingsProvider.notifier)
+        .change(
+          purpose: RecognitionPurpose.subtitle,
+          selection: const RecognitionSelection.online(),
+        );
+    expect(
+      container.read(recognitionSettingsProvider).subtitle.mode,
+      RecognitionMode.online,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    final restarted = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        recommendedAsrModelProvider.overrideWithValue(_model(_base)),
+      ],
+    );
+    addTearDown(restarted.dispose);
+    final restored = restarted.read(recognitionSettingsProvider).subtitle;
+    expect(restored.mode, RecognitionMode.online);
+    // 切回本机时仍保留大小模型偏好。
+    expect(restored.localModelId, _small);
   });
 
   group('影响在途任务的选择变更', () {

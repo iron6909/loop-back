@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/database/app_database.dart';
+import 'package:echo_loop/database/daos/audio_item_dao.dart';
 
 void main() {
   late AppDatabase db;
@@ -73,6 +74,136 @@ void main() {
       // 其余文件派生列仍清空
       expect(row.audioContentStatus, isNull);
       expect(row.originalAudioSha256, isNull);
+    });
+  });
+
+  group('AudioItemDao.commitTranscription', () {
+    const srt = '1\n00:00:00,000 --> 00:00:02,000\nHello there.\n';
+
+    Future<void> seedWithTranscript({
+      required String id,
+      required String? content,
+      int? transcriptWordTimingSource,
+    }) async {
+      await db.audioItemDao.upsert(
+        AudioItemsCompanion(
+          id: Value(id),
+          name: const Value('Existing'),
+          transcriptSrt: Value(content),
+          transcriptSource: const Value(0),
+          transcriptWordTimingSource: Value(transcriptWordTimingSource),
+          addedDate: Value(DateTime(2026, 1, 1)),
+          updatedAt: Value(DateTime(2026, 1, 1)),
+        ),
+      );
+    }
+
+    test('一次写入字幕、来源、词时间戳来源与句词计数', () async {
+      await seedWithTranscript(id: 'c1', content: null);
+
+      final result = await db.audioItemDao.commitTranscription(
+        audioItemId: 'c1',
+        srt: srt,
+        wordTimestampsJson: '[{"word":"hello"}]',
+        transcriptSource: 3,
+        transcriptWordTimingSource: 2,
+        transcriptLanguage: 'en',
+        sentenceCount: 1,
+        wordCount: 2,
+        expectedSrt: null,
+        isCancelled: () => false,
+      );
+
+      expect(result, TranscriptCommitResult.committed);
+      final row = await db.audioItemDao.getById('c1');
+      expect(row?.transcriptSrt, srt);
+      expect(row?.transcriptSource, 3);
+      expect(row?.transcriptWordTimingSource, 2);
+      expect(row?.transcriptLanguage, 'en');
+      expect(row?.sentenceCount, 1);
+      expect(row?.wordCount, 2);
+    });
+
+    test('目标字幕已被替换时不写入，保留用户较新的内容', () async {
+      await seedWithTranscript(
+        id: 'c2',
+        content: 'user import',
+        transcriptWordTimingSource: 0,
+      );
+
+      final result = await db.audioItemDao.commitTranscription(
+        audioItemId: 'c2',
+        srt: srt,
+        wordTimestampsJson: null,
+        transcriptSource: 3,
+        transcriptWordTimingSource: 1,
+        transcriptLanguage: 'en',
+        sentenceCount: 1,
+        wordCount: 2,
+        expectedSrt: null,
+        isCancelled: () => false,
+      );
+
+      expect(result, TranscriptCommitResult.conflict);
+      final row = await db.audioItemDao.getById('c2');
+      expect(row?.transcriptSrt, 'user import');
+      expect(row?.transcriptSource, 0);
+      expect(row?.transcriptWordTimingSource, 0);
+    });
+
+    test('提交前取消不写入任何字幕元数据', () async {
+      await seedWithTranscript(id: 'c3', content: null);
+
+      final result = await db.audioItemDao.commitTranscription(
+        audioItemId: 'c3',
+        srt: srt,
+        wordTimestampsJson: null,
+        transcriptSource: 3,
+        transcriptWordTimingSource: 1,
+        transcriptLanguage: 'en',
+        sentenceCount: 1,
+        wordCount: 2,
+        expectedSrt: null,
+        isCancelled: () => true,
+      );
+
+      expect(result, TranscriptCommitResult.cancelled);
+      final row = await db.audioItemDao.getById('c3');
+      expect(row?.transcriptSrt, isNull);
+      expect(row?.transcriptSource, 0);
+      expect(row?.transcriptWordTimingSource, isNull);
+    });
+
+    test('编辑保存不传词时间戳来源时保留原有标记', () async {
+      await seedWithTranscript(
+        id: 'c4',
+        content: srt,
+        transcriptWordTimingSource: 0,
+      );
+
+      await db.audioItemDao.saveTranscriptContent(
+        'c4',
+        srt: '1\n00:00:00,000 --> 00:00:01,000\nEdited.\n',
+        wordTimestampsJson: null,
+      );
+
+      final row = await db.audioItemDao.getById('c4');
+      expect(row?.transcriptSrt, contains('Edited.'));
+      expect(row?.transcriptWordTimingSource, 0);
+    });
+
+    test('本地上传字幕可标记合成词时间戳来源', () async {
+      await seedWithTranscript(id: 'c5', content: null);
+
+      await db.audioItemDao.saveTranscriptContent(
+        'c5',
+        srt: srt,
+        wordTimestampsJson: null,
+        transcriptWordTimingSource: 1,
+      );
+
+      final row = await db.audioItemDao.getById('c5');
+      expect(row?.transcriptWordTimingSource, 1);
     });
   });
 

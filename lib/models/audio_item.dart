@@ -1,5 +1,6 @@
-import '../utils/app_data_dir.dart';
 import 'package:path/path.dart' as path;
+
+import '../utils/app_data_dir.dart';
 
 /// copyWith 用于区分"未传参"与"显式传 null"的哨兵值
 const _sentinel = Object();
@@ -17,7 +18,13 @@ enum TranscriptSource {
   /// 词级时间戳与 [local] 一样是按字符长度合成的近似值（VAD 提供句级真实边界，
   /// sherpa-onnx Whisper 不产词级时间戳），故凡按「ai vs 非 ai」区分词级时间戳
   /// 质量的逻辑，[device] 都与 [local] 同侧处理。
-  device;
+  device,
+
+  /// 用户配置的在线转写服务生成。
+  ///
+  /// 与历史 [ai] 不同：这里的片段时间戳来自当前供应商，词时间戳可能部分或全部
+  /// 为估算。是否精确由 [TranscriptWordTimingSource] 决定，不能凭本值宣称逐词对齐。
+  online;
 
   /// 从整数值创建（数据库存储用）
   static TranscriptSource? fromIndex(int? index) {
@@ -26,6 +33,44 @@ enum TranscriptSource {
     return null;
   }
 }
+
+/// 字幕整体词级时间戳的来源。
+///
+/// 只记录整份字幕的来源，不逐词扩展 [WordTimestamp]：只要有句子按字数比例估算，
+/// 整份就不能标成模型对齐。数据库缺省（null）表示未知——历史字幕，或产生时
+/// 尚无该标记的旧版本。
+enum TranscriptWordTimingSource {
+  /// 全部词时间戳来自模型返回且通过校验的时间戳。
+  model,
+
+  /// 全部按句子起止时间与词长估算合成。
+  estimated,
+
+  /// 部分句子沿用模型时间戳，其余为估算。
+  mixed;
+
+  /// 从整数值创建（数据库存储用）；越界或 null 视为未知。
+  static TranscriptWordTimingSource? fromIndex(int? index) {
+    if (index == null) return null;
+    if (index >= 0 && index < values.length) return values[index];
+    return null;
+  }
+}
+
+/// 词级时间戳是否为近似值，界面据此提示「意群边界可能不准」。
+///
+/// 明确标记为 [TranscriptWordTimingSource.model] 才视为精确。历史行缺少标记时
+/// 不重解释旧的 ai 含义（随包示例与云端结果自带真实词时间戳），本机、在线或
+/// 无来源的字幕都按未知处理并提示。
+bool wordTimingIsApproximate({
+  required TranscriptSource? transcriptSource,
+  required TranscriptWordTimingSource? timingSource,
+}) => switch (timingSource) {
+  TranscriptWordTimingSource.model => false,
+  TranscriptWordTimingSource.estimated ||
+  TranscriptWordTimingSource.mixed => true,
+  null => transcriptSource != TranscriptSource.ai,
+};
 
 /// 音频内容有效性状态。
 ///
@@ -127,6 +172,9 @@ class AudioItem {
   /// 字幕来源：null 表示无字幕
   final TranscriptSource? transcriptSource;
 
+  /// 字幕整体词级时间戳来源；null 表示未知（历史数据）。
+  final TranscriptWordTimingSource? transcriptWordTimingSource;
+
   /// 媒体文件 SHA256 指纹（缓存，避免重复计算）。纯文件哈希，音视频通用。
   final String? audioSha256;
 
@@ -206,6 +254,7 @@ class AudioItem {
     this.wordCount = 0,
     this.isPinned = false,
     this.transcriptSource,
+    this.transcriptWordTimingSource,
     this.audioSha256,
     this.originalAudioSha256,
     this.transcriptLanguage,
@@ -241,6 +290,12 @@ class AudioItem {
   /// 是否为社区合集媒体条目。
   bool get isCommunity => remoteAudioId != null;
 
+  /// 词级时间戳是否为近似值；界面提示意群播放边界的依据。
+  bool get hasApproximateWordTiming => wordTimingIsApproximate(
+    transcriptSource: transcriptSource,
+    timingSource: transcriptWordTimingSource,
+  );
+
   /// 是否有字幕。
   ///
   /// 字幕内容入库后，以 [transcriptSource] 是否有值为准（内容存 DB 列，不再依赖
@@ -275,6 +330,7 @@ class AudioItem {
     'wordCount': wordCount,
     'isPinned': isPinned,
     'transcriptSource': transcriptSource?.index,
+    'transcriptWordTimingSource': transcriptWordTimingSource?.index,
     'audioSha256': audioSha256,
     'originalAudioSha256': originalAudioSha256,
     'transcriptLanguage': transcriptLanguage,
@@ -306,6 +362,9 @@ class AudioItem {
     wordCount: json['wordCount'] ?? 0,
     isPinned: json['isPinned'] ?? json['isStarred'] ?? false,
     transcriptSource: TranscriptSource.fromIndex(json['transcriptSource']),
+    transcriptWordTimingSource: TranscriptWordTimingSource.fromIndex(
+      json['transcriptWordTimingSource'],
+    ),
     audioSha256: json['audioSha256'],
     originalAudioSha256: json['originalAudioSha256'],
     transcriptLanguage: json['transcriptLanguage'],
@@ -346,6 +405,7 @@ class AudioItem {
     int? wordCount,
     bool? isPinned,
     Object? transcriptSource = _sentinel,
+    Object? transcriptWordTimingSource = _sentinel,
     Object? audioSha256 = _sentinel,
     Object? originalAudioSha256 = _sentinel,
     Object? transcriptLanguage = _sentinel,
@@ -380,6 +440,9 @@ class AudioItem {
       transcriptSource: transcriptSource == _sentinel
           ? this.transcriptSource
           : transcriptSource as TranscriptSource?,
+      transcriptWordTimingSource: transcriptWordTimingSource == _sentinel
+          ? this.transcriptWordTimingSource
+          : transcriptWordTimingSource as TranscriptWordTimingSource?,
       audioSha256: audioSha256 == _sentinel
           ? this.audioSha256
           : audioSha256 as String?,
