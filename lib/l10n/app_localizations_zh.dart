@@ -1959,6 +1959,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get asrBackendOfflineDescription => '使用应用自带的 AI 模型，支持离线使用，需下载';
 
   @override
+  String get asrBackendLocalWhisper => 'Whisper（本机）';
+
+  @override
+  String get asrBackendLocalWhisperDescription => '使用应用内置的 Whisper 模型，下载后可离线使用';
+
+  @override
+  String get asrDownloadSourceTitle => '模型来源';
+
+  @override
+  String get asrDownloadSourceDescription => '仅作用于已迁移的公开模型，两个来源使用相同版本与校验值。';
+
+  @override
+  String get asrDownloadSourceHuggingFace => 'Hugging Face';
+
+  @override
+  String get asrDownloadSourceHuggingFaceMirror => 'hf-mirror.com（镜像）';
+
+  @override
+  String asrModelSourceLine(String source, String license) {
+    return '来源：$source · 许可：$license';
+  }
+
+  @override
   String asrModelTier(String tier) {
     return '模型：$tier（根据设备性能自动选择）';
   }

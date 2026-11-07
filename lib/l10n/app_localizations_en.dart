@@ -2038,6 +2038,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the app\'s AI model. It works offline after downloading';
 
   @override
+  String get asrBackendLocalWhisper => 'Whisper (on-device)';
+
+  @override
+  String get asrBackendLocalWhisperDescription =>
+      'Use the built-in Whisper model. It works offline after downloading';
+
+  @override
+  String get asrDownloadSourceTitle => 'Model Source';
+
+  @override
+  String get asrDownloadSourceDescription =>
+      'Applies to public models only. Both sources serve the same version and checksums.';
+
+  @override
+  String get asrDownloadSourceHuggingFace => 'Hugging Face';
+
+  @override
+  String get asrDownloadSourceHuggingFaceMirror => 'hf-mirror.com (mirror)';
+
+  @override
+  String asrModelSourceLine(String source, String license) {
+    return 'Source: $source · License: $license';
+  }
+
+  @override
   String asrModelTier(String tier) {
     return 'Model: $tier (auto-selected for your device)';
   }

@@ -46,6 +46,7 @@
 ## 优先处理
 
 - [ ] 实施语音识别去 EchoLoop 化：按[已确认方案](./docs/features/20261106-asr-provider-decoupling/plan.md)和[实施任务 I1–I10](./docs/features/20261106-asr-provider-decoupling/implementation.md)按 [子 issue #2–#13](https://github.com/iron6909/loop-back/issues?q=is%3Aissue+is%3Aopen) 逐步完成；从固定公开 Whisper/VAD 资源与许可核验开始，再接入独立在线语音配置、三用途转写及迁移/设备验收。方案已定稿，代码实施尚未开始。
+  - [x] 完成三档 Whisper 公开分发与旧安装兼容（子 issue #4）：Whisper Base、Small 迁入固定公开来源清单（HF revision + 逐文件 SHA-256/字节数，hf-mirror 同身份），复用现有逐文件安装器；三档统一显示 Whisper Tiny / Base / Small（English）并保留内部 ID、安装目录与有效旧偏好。旧归档安装清单、旧逐文件安装（按目录规格摘要迁移）继续识别、合法缓存不重下；安装清单现在校验文件字节数，被截断/不完整的安装回到未安装态，重新下载即修复且逐文件摘要重新校验、旧安装不被破坏；缺共享 VAD 只补 VAD。删除 ASR 归档下载分支与 `RuntimeEndpointRouter` 依赖（词典/TTS/播客共用路由保留），集成测试 VAD 来源改为公开发布资产。Base/Small 六个文件经独立下载核对：HF 与 hf-mirror 逐文件 SHA-256 与字节数一致，且与旧归档内文件字节相同；许可为 Whisper MIT / sherpa-onnx Apache-2.0。模型管理、公开安装、ASR 设置页、下载弹窗、启动迁移相关测试与 `flutter analyze` 通过。**真机三档安装与推理、EchoLoop 域名不可达环境证据仍缺，未以下载成功代替推理兼容性；本机无可用设备，保留为未验证。** **完成时间**: 2026-11-07
 
 - [ ] 供应商直连与本地化改造的 Android 真机验收：SAF 目录入库、缺字幕本机转录、历史社区缺媒体禁用、AI 服务页状态与配置切换；当前 `adb devices` 无设备，保留为未验证。
 

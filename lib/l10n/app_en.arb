@@ -1132,6 +1132,19 @@
   "asrBackendPlatformDescription": "Use the built-in system speech recognition.No download needed",
   "asrBackendOffline": "Echo Loop AI",
   "asrBackendOfflineDescription": "Use the app's AI model. It works offline after downloading",
+  "asrBackendLocalWhisper": "Whisper (on-device)",
+  "asrBackendLocalWhisperDescription": "Use the built-in Whisper model. It works offline after downloading",
+  "asrDownloadSourceTitle": "Model Source",
+  "asrDownloadSourceDescription": "Applies to public models only. Both sources serve the same version and checksums.",
+  "asrDownloadSourceHuggingFace": "Hugging Face",
+  "asrDownloadSourceHuggingFaceMirror": "hf-mirror.com (mirror)",
+  "asrModelSourceLine": "Source: {source} · License: {license}",
+  "@asrModelSourceLine": {
+    "placeholders": {
+      "source": { "type": "String" },
+      "license": { "type": "String" }
+    }
+  },
   "asrModelTier": "Model: {tier} (auto-selected for your device)",
   "@asrModelTier": {
     "placeholders": {
