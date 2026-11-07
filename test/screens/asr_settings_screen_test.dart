@@ -5,12 +5,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/screens/asr_settings_screen.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
 import 'package:echo_loop/services/asr/offline_asr_engine.dart';
 import 'package:echo_loop/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   _StaticOfflineAsrSettingsNotifier(this._initialState);
@@ -34,7 +36,10 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
 
 Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
   return ProviderScope(
-    overrides: [offlineAsrSettingsProvider.overrideWith(() => notifier)],
+    overrides: [
+      offlineAsrSettingsProvider.overrideWith(() => notifier),
+      sharedPreferencesProvider.overrideWithValue(_prefs),
+    ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
       localizationsDelegates: const [
@@ -49,7 +54,17 @@ Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
   );
 }
 
+/// 识别设置页读取的偏好（每个用例在 setUp 里重置）。
+late SharedPreferences _prefs;
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   const recommendedModel = AsrModelInfo(
     id: 'whisper-base-en-int8',
     displayName: 'Whisper Base.en',
@@ -161,7 +176,8 @@ void main() {
     // iOS/macOS 额外显示后端选择器中的 Echo Loop AI；Linux CI 不显示平台后端选择器。
     final expectedEchoLoopLabels = Platform.isIOS || Platform.isMacOS ? 2 : 1;
     expect(find.text('Echo Loop AI'), findsNWidgets(expectedEchoLoopLabels));
-    expect(find.byType(Card), findsNWidgets(2));
+    // 用途选择卡片 + 引擎卡片。
+    expect(find.byType(Card), findsNWidgets(3));
     expect(find.textContaining('~100 MB'), findsOneWidget);
     expect(find.textContaining('~150 MB'), findsOneWidget);
     expect(find.textContaining('~360 MB'), findsOneWidget);

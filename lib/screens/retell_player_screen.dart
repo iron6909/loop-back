@@ -468,6 +468,7 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
           attemptKey: '${attempt.promptId}:$path',
           recordingPath: path,
           localTranscript: attempt.isRecognitionFailure ? null : attempt.finalTranscript,
+          localTranscriptIdentity: attempt.recognitionIdentity,
           originalText: ref
               .read(retellPlayerProvider.notifier)
               .currentParagraphReferenceText,

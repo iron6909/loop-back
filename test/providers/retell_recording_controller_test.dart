@@ -4,10 +4,13 @@ import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/models/speech_practice_models.dart';
 import 'package:echo_loop/providers/learning_settings_provider.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
+import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/retell_recording_controller_provider.dart';
+import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
 import 'package:echo_loop/services/speech_practice_platform.dart';
 
 import '../helpers/mock_providers.dart';
@@ -28,6 +31,30 @@ class _FakeOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   @override
   OfflineAsrSettingsState build() => _testAsrSettings;
 }
+
+/// 固定用途识别选择，避免用例依赖偏好读写。
+class _FixedRecognitionSettings extends RecognitionSettingsNotifier {
+  _FixedRecognitionSettings(this._fixed);
+
+  final RecognitionSettings _fixed;
+
+  @override
+  RecognitionSettings build() => _fixed;
+}
+
+/// 现有用例验证平台实时识别路径，因此固定为系统方式。
+const _systemRecognition = RecognitionSettings(
+  subtitle: RecognitionSelection.local('subtitle-model'),
+  shadowing: RecognitionSelection.local('shadowing-model'),
+  retell: RecognitionSelection.system(),
+);
+
+/// 复述自己的本机档位与字幕、跟读都不同，用来验证不再借用字幕模型。
+const _localRecognition = RecognitionSettings(
+  subtitle: RecognitionSelection.local('subtitle-model'),
+  shadowing: RecognitionSelection.local('shadowing-model'),
+  retell: RecognitionSelection.local('retell-model'),
+);
 
 class _FakeSpeechPracticeBackend implements SpeechPracticeBackend {
   final _controller = StreamController<SpeechPracticeEvent>.broadcast();
@@ -183,6 +210,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -219,6 +249,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -251,6 +284,9 @@ void main() {
         recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
         ),
       ],
     );
@@ -290,6 +326,9 @@ void main() {
         recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
         ),
       ],
     );
@@ -348,6 +387,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -393,6 +435,9 @@ void main() {
         recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
         ),
       ],
     );
@@ -445,6 +490,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -494,6 +542,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -536,6 +587,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -577,6 +631,9 @@ void main() {
         recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
         ),
       ],
     );
@@ -625,6 +682,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -664,6 +724,9 @@ void main() {
         offlineAsrSettingsProvider.overrideWith(
           () => _FakeOfflineAsrSettingsNotifier(),
         ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
       ],
     );
     final controller = container.read(
@@ -688,5 +751,110 @@ void main() {
     await controller.stopAndEvaluate(referenceText: 'ask your professor today');
 
     expect(recordedDuration, isNull);
+  });
+
+  test('本机方式在停止录音后按复述自己的模型转写并记录识别身份', () async {
+    final backend = _FakeSpeechPracticeBackend();
+    final transcribed = <String>[];
+    final container = ProviderContainer(
+      overrides: [
+        analyticsOverride(),
+        initialLearningSettingsProvider.overrideWithValue(
+          const LearningSettings(),
+        ),
+        speechPracticeBackendProvider.overrideWithValue(backend),
+        recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
+        offlineAsrSettingsProvider.overrideWith(
+          () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_localRecognition),
+        ),
+        retellTranscriptProvider.overrideWithValue((path) async {
+          transcribed.add(path);
+          return 'own retell transcript';
+        }),
+      ],
+    );
+    final controller = container.read(
+      retellRecordingControllerProvider.notifier,
+    );
+    addTearDown(
+      () => disposeTestResources(
+        controller: controller,
+        container: container,
+        backend: backend,
+      ),
+    );
+
+    await controller.startRecording(
+      promptId: 'retell:a1:0',
+      referenceText: 'ask your professor today',
+    );
+    expect(
+      container
+          .read(recognitionInFlightTasksProvider)
+          .pendingFor(RecognitionPurpose.retell),
+      hasLength(1),
+      reason: '录音中的复述任务要能被设置变更告知并取消',
+    );
+
+    await controller.stopAndEvaluate(referenceText: 'ask your professor today');
+
+    final attempt = controller.state.currentAttempt;
+    expect(transcribed, hasLength(1), reason: '按复述自己的模型转写录音文件');
+    expect(attempt?.recognitionIdentity, 'local:retell-model');
+    expect(
+      attempt?.isRecognitionFailure,
+      isFalse,
+      reason: '本机转写成功时不应被判为识别失败',
+    );
+    expect(
+      container
+          .read(recognitionInFlightTasksProvider)
+          .pendingFor(RecognitionPurpose.retell),
+      isEmpty,
+    );
+  });
+
+  test('系统方式使用平台实时结果并标记系统识别身份', () async {
+    final backend = _FakeSpeechPracticeBackend();
+    final container = ProviderContainer(
+      overrides: [
+        analyticsOverride(),
+        initialLearningSettingsProvider.overrideWithValue(
+          const LearningSettings(),
+        ),
+        speechPracticeBackendProvider.overrideWithValue(backend),
+        recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
+        offlineAsrSettingsProvider.overrideWith(
+          () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_systemRecognition),
+        ),
+        retellTranscriptProvider.overrideWithValue(
+          (_) async => 'should not be used',
+        ),
+      ],
+    );
+    final controller = container.read(
+      retellRecordingControllerProvider.notifier,
+    );
+    addTearDown(
+      () => disposeTestResources(
+        controller: controller,
+        container: container,
+        backend: backend,
+      ),
+    );
+
+    await controller.startRecording(
+      promptId: 'retell:a1:0',
+      referenceText: 'ask your professor today',
+    );
+    await controller.stopAndEvaluate(referenceText: 'ask your professor today');
+
+    expect(controller.state.currentAttempt?.recognitionIdentity, 'system');
   });
 }

@@ -2327,5 +2327,18 @@
   "folderIgnoredSubdirectories": "已忽略子文件夹 {count} 个",
   "@folderIgnoredSubdirectories": { "placeholders": { "count": { "type": "int" } } },
   "folderUnsupportedFiles": "已忽略不支持的文件 {count} 个",
-  "@folderUnsupportedFiles": { "placeholders": { "count": { "type": "int" } } }
+  "@folderUnsupportedFiles": { "placeholders": { "count": { "type": "int" } } },
+  "recognitionPurposeTitle": "按用途识别",
+  "recognitionPurposeDescription": "字幕、跟读、复述各自选择识别方式与模型，互不影响。",
+  "recognitionPurposeSubtitle": "字幕转录",
+  "recognitionPurposeShadowing": "跟读",
+  "recognitionPurposeRetell": "复述",
+  "recognitionModeLocal": "本机识别",
+  "recognitionModeSystem": "系统识别",
+  "recognitionChangeTitle": "修改识别设置？",
+  "recognitionChangeMessage": "有 {count} 个正在进行的识别任务会受影响。继续将取消这些任务，未完成的结果不会写回。",
+  "@recognitionChangeMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recognitionChangeConfirm": "取消任务并修改"
 }

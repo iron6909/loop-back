@@ -22,9 +22,10 @@ import '../utils/file_size.dart';
 import '../utils/media_duration.dart';
 import '../l10n/app_localizations.dart';
 import '../models/audio_item.dart';
+import '../models/recognition_selection.dart';
 import '../providers/audio_library_provider.dart';
-import '../providers/local_transcription_model_provider.dart';
 import '../providers/local_transcription_task_provider.dart';
+import '../providers/recognition_settings_provider.dart';
 import '../router/app_router.dart';
 import '../utils/transcript_picker.dart';
 import 'asr_download_prompt_dialog.dart';
@@ -321,7 +322,10 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
       if (!await _confirmContent(item, status) || !mounted) return;
     }
     if (item.hasTranscript && (!await _confirmOverwrite() || !mounted)) return;
-    final model = ref.read(localTranscriptionModelProvider);
+    // 字幕用途的选择与设置页共用同一份状态。
+    final model = ref.read(
+      recognitionLocalModelProvider(RecognitionPurpose.subtitle),
+    );
     if (!await ensureAsrModelReadyForTranscription(
           context,
           ref,

@@ -5871,4 +5871,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String folderUnsupportedFiles(int count) {
     return 'Unsupported files ignored: $count';
   }
+
+  @override
+  String get recognitionPurposeTitle => 'Recognition by purpose';
+
+  @override
+  String get recognitionPurposeDescription =>
+      'Subtitles, shadowing, and retelling each keep their own recognition mode and model.';
+
+  @override
+  String get recognitionPurposeSubtitle => 'Subtitles';
+
+  @override
+  String get recognitionPurposeShadowing => 'Shadowing';
+
+  @override
+  String get recognitionPurposeRetell => 'Retelling';
+
+  @override
+  String get recognitionModeLocal => 'On-device';
+
+  @override
+  String get recognitionModeSystem => 'System speech';
+
+  @override
+  String get recognitionChangeTitle => 'Change recognition settings?';
+
+  @override
+  String recognitionChangeMessage(int count) {
+    return 'Running recognition tasks affected: $count. Continuing cancels them and discards unfinished results.';
+  }
+
+  @override
+  String get recognitionChangeConfirm => 'Cancel tasks and change';
 }

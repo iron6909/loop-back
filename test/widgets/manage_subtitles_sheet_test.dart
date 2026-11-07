@@ -9,9 +9,11 @@ import 'package:echo_loop/database/providers.dart';
 import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/features/podcast/podcast_transcript_downloader.dart';
 import 'package:echo_loop/models/audio_item.dart';
+import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/local_transcription_task_provider.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
+import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/settings_provider.dart';
 import 'package:echo_loop/services/app_logger.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
@@ -96,6 +98,16 @@ class _ReadyAsr extends FakeOfflineAsrSettings {
 
   @override
   Future<void> refreshInstalledStates({bool Function()? shouldCommit}) async {}
+}
+
+/// 固定三用途选择，验证字幕入口读的是与设置页同一份状态。
+class _FixedRecognitionSettings extends RecognitionSettingsNotifier {
+  _FixedRecognitionSettings(this._fixed);
+
+  final RecognitionSettings _fixed;
+
+  @override
+  RecognitionSettings build() => _fixed;
 }
 
 void main() {
@@ -227,8 +239,32 @@ void main() {
     expect(manager.calls, [('test-model', false)]);
   });
 
-  testWidgets('已有字幕时取消覆盖确认则不启动转录', (tester) async {
+  testWidgets('字幕入口与设置页共用同一份用途选择', (tester) async {
     manager = _RecordingManager();
+    await tester.pumpWidget(
+      buildSheet(
+        createTestAudioItem(transcriptPath: null),
+        extra: [
+          recognitionSettingsProvider.overrideWith(
+            () => _FixedRecognitionSettings(
+              const RecognitionSettings(
+                subtitle: RecognitionSelection.local('whisper-small-en-int8'),
+                shadowing: RecognitionSelection.local('whisper-tiny-en-int8'),
+                retell: RecognitionSelection.local('whisper-base-en-int8'),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await open(tester);
+
+    // 字幕入口直接展示共享状态里的字幕档位，不维护弹窗镜像。
+    expect(find.text('Echo Loop AI (Accurate)'), findsOneWidget);
+  });
+
+  testWidgets('已有字幕时取消覆盖确认则不启动转录', (tester) async {    manager = _RecordingManager();
     await tester.pumpWidget(buildSheet(createTestAudioItem()));
     await tester.pumpAndSettle();
     await open(tester);

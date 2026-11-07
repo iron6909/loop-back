@@ -2826,5 +2826,18 @@
   "folderIgnoredSubdirectories": "Subfolders skipped: {count}",
   "@folderIgnoredSubdirectories": { "placeholders": { "count": { "type": "int" } } },
   "folderUnsupportedFiles": "Unsupported files ignored: {count}",
-  "@folderUnsupportedFiles": { "placeholders": { "count": { "type": "int" } } }
+  "@folderUnsupportedFiles": { "placeholders": { "count": { "type": "int" } } },
+  "recognitionPurposeTitle": "Recognition by purpose",
+  "recognitionPurposeDescription": "Subtitles, shadowing, and retelling each keep their own recognition mode and model.",
+  "recognitionPurposeSubtitle": "Subtitles",
+  "recognitionPurposeShadowing": "Shadowing",
+  "recognitionPurposeRetell": "Retelling",
+  "recognitionModeLocal": "On-device",
+  "recognitionModeSystem": "System speech",
+  "recognitionChangeTitle": "Change recognition settings?",
+  "recognitionChangeMessage": "Running recognition tasks affected: {count}. Continuing cancels them and discards unfinished results.",
+  "@recognitionChangeMessage": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "recognitionChangeConfirm": "Cancel tasks and change"
 }

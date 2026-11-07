@@ -12,9 +12,10 @@ import '../services/provider/provider_http_client.dart';
 import '../services/retell_transcriber.dart';
 import '../services/sentence_ai_api_client.dart';
 import 'asr_engine_provider.dart';
-import 'local_transcription_model_provider.dart';
 import 'local_transcription_task_provider.dart';
 import 'provider_configuration_provider.dart';
+import 'recognition_settings_provider.dart';
+import '../models/recognition_selection.dart';
 
 enum RetellReviewEvaluationPhase { idle, loading, streaming, completed, failed }
 
@@ -31,13 +32,17 @@ class RetellReviewEvaluationState {
   bool get hasCachedResult => phase == RetellReviewEvaluationPhase.completed && evaluation != null;
 }
 
-/// 独立本机转写入口；复用已安装的英语模型，不上传录音。
+/// 独立本机转写入口；按复述自己的识别选择执行，不上传录音。
+///
+/// 复述不再借用字幕模型：模型来自复述用途的本机档位，与字幕、跟读各自独立。
 final retellTranscriptProvider = Provider<Future<String?> Function(String)>((ref) {
   return RetellTranscriber(
     engineFactory: ref.read(localTranscriptionEngineFactoryProvider),
     transcode: ref.read(localTranscriptionTranscodeServiceProvider),
     configuration: () async {
-      final model = ref.read(localTranscriptionModelProvider);
+      final model = ref.read(
+        recognitionLocalModelProvider(RecognitionPurpose.retell),
+      );
       final manager = ref.read(asrModelManagerProvider);
       if (!await manager.isModelDownloaded(model.id)) {
         throw StateError('请先下载英语识别模型');
@@ -75,7 +80,7 @@ class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationSt
 
   Future<void> evaluate({required String attemptKey, required String recordingPath,
     required String originalText, required String targetLanguage,
-    String? localTranscript}) async {
+    String? localTranscript, String? localTranscriptIdentity}) async {
     if (state.attemptKey != attemptKey) syncAttempt(attemptKey);
     if (state.hasCachedResult || state.phase == RetellReviewEvaluationPhase.loading ||
       state.phase == RetellReviewEvaluationPhase.streaming) {
@@ -87,9 +92,13 @@ class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationSt
     state = RetellReviewEvaluationState(attemptKey: attemptKey,
       phase: RetellReviewEvaluationPhase.loading);
     try {
+      final selection = ref.read(recognitionSettingsProvider).retell;
       final supplied = localTranscript?.trim();
-      final transcript = supplied != null && supplied.isNotEmpty ? supplied
-        : await ref.read(retellTranscriptProvider)(recordingPath);
+      // 只复用同 attempt 且实际识别身份与复述选择一致的结果；身份缺失或不同
+      // 来源（如字幕模型）一律重新按复述自己的选择识别。
+      final reusable = supplied != null && supplied.isNotEmpty &&
+        localTranscriptIdentity == selection.recognitionIdentity;
+      final transcript = reusable ? supplied : await _transcribe(recordingPath, selection);
       if (!_current(generation, attemptKey)) return;
       if (transcript == null || transcript.trim().isEmpty) {
         _fail(generation, attemptKey, 'transcription_failed'); return;
@@ -107,8 +116,16 @@ class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationSt
     }
   }
 
-  Future<void> _evaluateText(int generation, String attempt, String transcript,
-    String original, String language, CancelToken token) async {
+  /// 按复述自己的选择取得转写。
+  ///
+  /// 系统识别只能随录音会话产生实时结果，无法对录音文件二次转写；此时返回
+  /// null 由上层报告识别失败，不自动改用其它方式。
+  Future<String?> _transcribe(String recordingPath, RecognitionSelection selection) {
+    if (!selection.usesLocalModel) return Future<String?>.value();
+    return ref.read(retellTranscriptProvider)(recordingPath);
+  }
+
+  Future<void> _evaluateText(int generation, String attempt, String transcript,    String original, String language, CancelToken token) async {
     var complete = false;
     await for (final frame in ref.read(sentenceAiApiClientProvider)
       .evaluateTranscriptStream(transcript: transcript, originalText: original,

@@ -21,6 +21,7 @@ import '../database/daos/audio_item_dao.dart';
 import '../database/providers.dart';
 import '../features/audio_import/audio_transcode_service.dart';
 import '../models/audio_item.dart';
+import '../models/recognition_selection.dart';
 import '../models/word_timestamp.dart';
 import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
@@ -33,6 +34,7 @@ import '../utils/synthetic_word_timestamps.dart';
 import '../utils/transcript_stats.dart';
 import 'asr_engine_provider.dart';
 import 'audio_library_provider.dart';
+import 'recognition_settings_provider.dart';
 
 part 'local_transcription_task_provider.g.dart';
 
@@ -164,6 +166,13 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
     _cancelled.remove(audioId);
     final cancelSignal = Completer<void>();
     _cancelSignals[audioId] = cancelSignal;
+    // 登记在途任务：识别设置变更需要能告知用户并取消本任务。
+    final inFlightTask = RecognitionInFlightTask(
+      purpose: RecognitionPurpose.subtitle,
+      label: audioId,
+      onCancel: () async => cancelTranscription(audioId),
+    );
+    ref.read(recognitionInFlightTasksProvider).register(inFlightTask);
 
     OfflineAsrEngine? engine;
     File? tempWav;
@@ -320,6 +329,7 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
       }
       _cancelled.remove(audioId);
       _cancelSignals.remove(audioId);
+      ref.read(recognitionInFlightTasksProvider).unregister(inFlightTask);
     }
   }
 
