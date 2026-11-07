@@ -150,7 +150,7 @@ class _AsrModelDownloadDialog extends ConsumerWidget {
       offlineAsrSettingsProvider.select((state) => state.modelStateOf(modelId)),
     );
     final size = formatBytes(
-      asrModelResourceCatalog[modelId]?.estimatedDownloadBytes ?? 0,
+      asrPublicResourceCatalog[modelId]?.estimatedDownloadBytes ?? 0,
     );
     final status = model.downloadStatus;
     final notDownloaded = status == AsrModelDownloadStatus.notDownloaded;

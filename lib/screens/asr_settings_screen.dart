@@ -264,7 +264,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
         ),
       ),
     ];
-    // 只有已迁移到公开来源的模型才展示来源与许可，未迁移模型不冒充公开源。
+    // 三档模型都已迁移到公开来源，展示来源与许可。
     final publicSpec = asrPublicResourceCatalog[modelId];
     if (publicSpec != null) {
       children.add(
@@ -453,14 +453,10 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
 
   static String _approxModelSizeText(AppLocalizations l10n, String modelId) {
     final publicSpec = asrPublicResourceCatalog[modelId];
-    if (publicSpec != null) {
-      return l10n.speechModelApproxSize(
-        _formatBytes(publicSpec.estimatedDownloadBytes),
-      );
-    }
-    if (modelId.contains('base')) return l10n.speechModelApproxSize('150 MB');
-    if (modelId.contains('small')) return l10n.speechModelApproxSize('360 MB');
-    return '';
+    if (publicSpec == null) return '';
+    return l10n.speechModelApproxSize(
+      _formatBytes(publicSpec.estimatedDownloadBytes),
+    );
   }
 
   static String _formatBytes(int bytes) {

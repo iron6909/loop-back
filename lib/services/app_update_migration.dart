@@ -32,7 +32,7 @@ Future<void> removeLegacyTtsModelDownloadFlags(SharedPreferences prefs) async {
 Future<void> migrateLegacyAsrModelInstallLayout(SharedPreferences prefs) async {
   final manager = AsrModelManager();
   try {
-    for (final resourceId in asrModelResourceCatalog.keys) {
+    for (final resourceId in asrPublicResourceCatalog.keys) {
       if (await manager.readInstallManifest(resourceId) != null) continue;
       if (!await manager.validateLegacyModelFiles(resourceId)) continue;
       await writeResourceInstallManifest(
