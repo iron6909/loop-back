@@ -10,14 +10,18 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:echo_loop/database/app_database.dart' as db;
 import 'package:echo_loop/database/daos/audio_item_dao.dart';
 import 'package:echo_loop/database/providers.dart';
 import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
+import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/models/audio_item.dart';
+import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/local_transcription_task_provider.dart';
+import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
 import 'package:echo_loop/providers/asr_engine_provider.dart';
 import 'package:echo_loop/services/asr/offline_asr_engine.dart';
@@ -250,10 +254,13 @@ Future<void> _seedRow(db.AppDatabase database, AudioItem item) async {
 void main() {
   late db.AppDatabase database;
   late Directory dataDir;
+  late SharedPreferences prefs;
 
   setUp(() async {
     database = db.AppDatabase(NativeDatabase.memory());
     dataDir = await Directory.systemTemp.createTemp('local_tx_');
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
   });
 
   tearDown(() async {
@@ -272,6 +279,7 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWithValue(database),
+        sharedPreferencesProvider.overrideWithValue(prefs),
         if (dao != null) audioItemDaoProvider.overrideWithValue(dao),
         audioLibraryProvider.overrideWith(TestAudioLibrary.new),
         transcriptionFileOpsProvider.overrideWithValue(fileOps),
@@ -1040,6 +1048,81 @@ void main() {
         seg('tail', 4200, 4700), // 残余短段独立保留
       ]);
       expect(result.map((s) => s.text).toList(), ['a', 'tail']);
+    });
+  });
+
+  group('识别设置变更与在途字幕任务', () {
+    test('识别中先告知受影响任务，接受后才取消且旧结果不写库', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      final gate = Completer<List<AsrSegment>>();
+      final container = buildContainer(
+        engine: _GatedEngine(gate),
+        transcode: _FakeTranscode(),
+        items: [item],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        localTranscriptionTaskManagerProvider.notifier,
+      );
+
+      final future = notifier.startLocalTranscription(
+        item,
+        model: availableModels.first,
+      );
+      for (
+        var i = 0;
+        i < 200 &&
+            notifier.getTaskState(item.id) is! LocalTranscriptionTranscribing;
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
+      expect(
+        notifier.getTaskState(item.id),
+        isA<LocalTranscriptionTranscribing>(),
+      );
+
+      final settings = container.read(recognitionSettingsProvider.notifier);
+      final nextModel = availableModels[2];
+      final declined = await settings.change(
+        purpose: RecognitionPurpose.subtitle,
+        selection: RecognitionSelection.local(nextModel.id),
+      );
+      expect(declined.applied, isFalse);
+      expect(declined.affectedTasks, hasLength(1));
+      expect(
+        container.read(localTranscriptionTaskManagerProvider)[item.id],
+        isA<LocalTranscriptionTranscribing>(),
+        reason: '未确认前任务与配置都保持原样',
+      );
+
+      final accepted = await settings.change(
+        purpose: RecognitionPurpose.subtitle,
+        selection: RecognitionSelection.local(nextModel.id),
+        cancelInFlight: true,
+      );
+      expect(accepted.applied, isTrue);
+      expect(
+        container.read(recognitionSettingsProvider).subtitle.localModelId,
+        nextModel.id,
+      );
+
+      gate.complete(const [
+        AsrSegment(
+          text: 'Model text.',
+          start: Duration(milliseconds: 200),
+          end: Duration(milliseconds: 900),
+        ),
+      ]);
+      await future;
+
+      // 取消后迟到的识别结果不能写回字幕。
+      expect(await database.audioItemDao.getTranscriptSrt(item.id), isNull);
+      expect(
+        notifier.getTaskState(item.id),
+        isNot(isA<LocalTranscriptionCompleted>()),
+      );
     });
   });
 }

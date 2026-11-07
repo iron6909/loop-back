@@ -5629,4 +5629,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String folderUnsupportedFiles(int count) {
     return '已忽略不支持的文件 $count 个';
   }
+
+  @override
+  String get recognitionPurposeTitle => '按用途识别';
+
+  @override
+  String get recognitionPurposeDescription => '字幕、跟读、复述各自选择识别方式与模型，互不影响。';
+
+  @override
+  String get recognitionPurposeSubtitle => '字幕转录';
+
+  @override
+  String get recognitionPurposeShadowing => '跟读';
+
+  @override
+  String get recognitionPurposeRetell => '复述';
+
+  @override
+  String get recognitionModeLocal => '本机识别';
+
+  @override
+  String get recognitionModeSystem => '系统识别';
+
+  @override
+  String get recognitionChangeTitle => '修改识别设置？';
+
+  @override
+  String recognitionChangeMessage(int count) {
+    return '有 $count 个正在进行的识别任务会受影响。继续将取消这些任务，未完成的结果不会写回。';
+  }
+
+  @override
+  String get recognitionChangeConfirm => '取消任务并修改';
 }

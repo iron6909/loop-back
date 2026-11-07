@@ -4,10 +4,12 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
-import '../providers/local_transcription_model_provider.dart';
+import '../models/recognition_selection.dart';
 import '../providers/offline_asr_settings_provider.dart';
+import '../providers/recognition_settings_provider.dart';
 import '../providers/settings_provider.dart';
 import '../services/asr/asr_model_manager.dart';
+import 'asr/recognition_purpose_section.dart';
 
 /// 与既有偏好共用同一来源，弹窗不再维护一份镜像。
 final transcriptionMergeEnabledProvider = Provider<bool>(
@@ -22,7 +24,7 @@ class TranscriptionOptions extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final selected = ref.watch(localTranscriptionModelProvider);
+    final selection = ref.watch(recognitionSettingsProvider).subtitle;
     final settings = ref.watch(offlineAsrSettingsProvider);
     return Column(
       children: [
@@ -43,12 +45,17 @@ class TranscriptionOptions extends ConsumerWidget {
         ),
         ListTile(
           title: Text(l10n.transcriptionModelTier),
+          subtitle: Text(recognitionModeLabel(l10n, selection.mode)),
           trailing: PopupMenuButton<String>(
             tooltip: '',
-            initialValue: selected.id,
-            onSelected: (id) => ref
-                .read(localTranscriptionModelProvider.notifier)
-                .select(availableModels.firstWhere((m) => m.id == id)),
+            initialValue: selection.localModelId,
+            // 与设置页共用同一份字幕用途状态，不在弹窗里维护镜像。
+            onSelected: (id) => applyRecognitionSelectionChange(
+              context,
+              ref,
+              purpose: RecognitionPurpose.subtitle,
+              selection: RecognitionSelection.local(id),
+            ),
             itemBuilder: (_) => [
               for (final model in availableModels)
                 PopupMenuItem(
@@ -60,7 +67,13 @@ class TranscriptionOptions extends ConsumerWidget {
             ],
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(selected.displayName),
+              child: Text(
+                availableModels
+                        .where((model) => model.id == selection.localModelId)
+                        .firstOrNull
+                        ?.displayName ??
+                    selection.localModelId,
+              ),
             ),
           ),
         ),

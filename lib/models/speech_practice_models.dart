@@ -212,6 +212,11 @@ class SpeechPracticeAttempt {
   /// 最终转录。
   final String? finalTranscript;
 
+  /// 产生 [finalTranscript] 的实际识别身份。
+  ///
+  /// 形如 `local:<模型 id>` 或 `system`；为空表示来源不明，不能当作同源结果复用。
+  final String? recognitionIdentity;
+
   /// 最终匹配分值，范围 0~1。
   final double? score;
 
@@ -242,6 +247,7 @@ class SpeechPracticeAttempt {
     this.status = SpeechPracticeAttemptStatus.idle,
     this.liveTranscript,
     this.finalTranscript,
+    this.recognitionIdentity,
     this.score,
     this.matchedTokenCount = 0,
     this.totalTargetTokenCount = 0,
@@ -278,6 +284,7 @@ class SpeechPracticeAttempt {
     bool clearLiveTranscript = false,
     String? finalTranscript,
     bool clearFinalTranscript = false,
+    String? recognitionIdentity,
     double? score,
     bool clearScore = false,
     int? matchedTokenCount,
@@ -303,6 +310,7 @@ class SpeechPracticeAttempt {
       finalTranscript: clearFinalTranscript
           ? null
           : (finalTranscript ?? this.finalTranscript),
+      recognitionIdentity: recognitionIdentity ?? this.recognitionIdentity,
       score: clearScore ? null : (score ?? this.score),
       matchedTokenCount: matchedTokenCount ?? this.matchedTokenCount,
       totalTargetTokenCount:

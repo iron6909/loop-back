@@ -24,6 +24,7 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../models/recognition_selection.dart';
 import '../../models/speech_practice_models.dart';
 import '../../services/app_logger.dart';
 import '../../services/recording_service.dart';
@@ -32,6 +33,7 @@ import '../../services/speech_practice_matcher.dart';
 import '../../services/speech_practice_platform.dart';
 import '../learning_settings_provider.dart';
 import '../offline_asr_settings_provider.dart';
+import '../recognition_settings_provider.dart';
 
 /// 等待开口最大时长
 const _awaitingSpeechTimeout = Duration(seconds: 60);
@@ -252,6 +254,12 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   /// 原句音频时长（用于有声时长比例兜底）
   Duration? _referenceDuration;
 
+  /// 当前回合在识别设置里登记的在途任务。
+  RecognitionInFlightTask? _inFlightTask;
+
+  /// 登记时持有的注册处：销毁阶段不能再从已释放的容器读 provider。
+  RecognitionInFlightRegistry? _inFlightRegistry;
+
   /// 累计有声时长（silenceMs == 0 区间的加总）
   Duration _voicedDuration = Duration.zero;
 
@@ -274,6 +282,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       _cancelAllTimers();
       ++_roundGeneration;
       _eventSub?.cancel();
+      _unregisterInFlight();
       final service = _recordingService;
       if (service != null) unawaited(service.dispose());
     });
@@ -281,6 +290,28 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   }
 
   // ========== 配置方法 ==========
+
+  /// 登记本回合为跟读用途的在途任务，供识别设置变更告知与取消。
+  void _registerInFlight(String promptId) {
+    _unregisterInFlight();
+    final task = RecognitionInFlightTask(
+      purpose: RecognitionPurpose.shadowing,
+      label: promptId,
+      onCancel: cancelActiveRecording,
+    );
+    _inFlightTask = task;
+    _inFlightRegistry = ref.read(recognitionInFlightTasksProvider);
+    _inFlightRegistry?.register(task);
+  }
+
+  /// 注销本回合的在途登记。
+  void _unregisterInFlight() {
+    final task = _inFlightTask;
+    final registry = _inFlightRegistry;
+    _inFlightTask = null;
+    _inFlightRegistry = null;
+    if (task != null && registry != null) registry.unregister(task);
+  }
 
   /// 设置录音完成回调，供新学习统计链路接收有效输出时长。
   ///
@@ -331,6 +362,8 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     _referenceDuration = referenceDuration;
     _voicedDuration = Duration.zero;
     _lastVoicedTimestamp = null;
+    // 录音一开始就登记在途任务：识别设置变更需要能告知并取消本回合。
+    _registerInFlight(promptId);
 
     // 先切断旧回合的所有入口，再串行释放其服务；新回合不会与旧服务并存。
     final oldFilePath = state.currentAttempt?.filePath;
@@ -443,6 +476,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     _cancelAllTimers();
     _speechStartTime = null;
     _recordingService = null;
+    _unregisterInFlight();
     state = state.copyWith(
       phase: SpeechRecordingPhase.idle,
       clearLiveTranscript: true,
@@ -466,6 +500,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   Future<void> clearRecording() async {
     AppLogger.log('SpeechRec', '● clearRecording → idle');
     ++_roundGeneration;
+    _unregisterInFlight();
     _cancelAllTimers();
     _isStopping = false;
     _hasDetectedSpeech = false;

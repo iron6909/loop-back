@@ -10393,6 +10393,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unsupported files ignored: {count}'**
   String folderUnsupportedFiles(int count);
+
+  /// No description provided for @recognitionPurposeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition by purpose'**
+  String get recognitionPurposeTitle;
+
+  /// No description provided for @recognitionPurposeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles, shadowing, and retelling each keep their own recognition mode and model.'**
+  String get recognitionPurposeDescription;
+
+  /// No description provided for @recognitionPurposeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles'**
+  String get recognitionPurposeSubtitle;
+
+  /// No description provided for @recognitionPurposeShadowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Shadowing'**
+  String get recognitionPurposeShadowing;
+
+  /// No description provided for @recognitionPurposeRetell.
+  ///
+  /// In en, this message translates to:
+  /// **'Retelling'**
+  String get recognitionPurposeRetell;
+
+  /// No description provided for @recognitionModeLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device'**
+  String get recognitionModeLocal;
+
+  /// No description provided for @recognitionModeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System speech'**
+  String get recognitionModeSystem;
+
+  /// No description provided for @recognitionChangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change recognition settings?'**
+  String get recognitionChangeTitle;
+
+  /// No description provided for @recognitionChangeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Running recognition tasks affected: {count}. Continuing cancels them and discards unfinished results.'**
+  String recognitionChangeMessage(int count);
+
+  /// No description provided for @recognitionChangeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel tasks and change'**
+  String get recognitionChangeConfirm;
 }
 
 class _AppLocalizationsDelegate

@@ -5,12 +5,14 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/screens/asr_settings_screen.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
 import 'package:echo_loop/services/asr/offline_asr_engine.dart';
 import 'package:echo_loop/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   _StaticOfflineAsrSettingsNotifier(this._initialState);
@@ -40,7 +42,10 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
 
 Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
   return ProviderScope(
-    overrides: [offlineAsrSettingsProvider.overrideWith(() => notifier)],
+    overrides: [
+      offlineAsrSettingsProvider.overrideWith(() => notifier),
+      sharedPreferencesProvider.overrideWithValue(_prefs),
+    ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
       localizationsDelegates: const [
@@ -55,7 +60,25 @@ Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
   );
 }
 
+/// 识别设置页读取的偏好（每个用例在 setUp 里重置）。
+late SharedPreferences _prefs;
+
+/// 用途卡片加入后整页超过默认 800 高视口，需要断言整页卡片与底部来源选项的
+/// 用例改用更高的视口，避免只挂载视口内的组件。
+void _useTallViewport(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1200, 2400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    _prefs = await SharedPreferences.getInstance();
+  });
+
   const recommendedModel = AsrModelInfo(
     id: 'whisper-base-en-int8',
     displayName: 'Whisper Base.en',
@@ -155,6 +178,7 @@ void main() {
   });
 
   testWidgets('本机 Whisper 模型列表单独成组并显示预估大小', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -173,8 +197,8 @@ void main() {
       find.text('Whisper (on-device)'),
       findsNWidgets(expectedLocalLabels),
     );
-    // 引擎卡片 + 模型列表卡片 + 下载来源卡片。
-    expect(find.byType(Card), findsNWidgets(3));
+    // 用途选择卡片 + 引擎卡片 + 模型列表卡片 + 下载来源卡片。
+    expect(find.byType(Card), findsNWidgets(4));
     expect(find.textContaining('~99 MB'), findsOneWidget);
     expect(find.textContaining('~153 MB'), findsOneWidget);
     expect(find.textContaining('~358 MB'), findsOneWidget);
@@ -199,6 +223,7 @@ void main() {
   });
 
   testWidgets('Apple Speech 后端允许删除所有已下载 Whisper 模型', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -237,6 +262,7 @@ void main() {
   });
 
   testWidgets('已迁移模型显示真实名称、来源与许可，来源选项只影响未安装下载', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
