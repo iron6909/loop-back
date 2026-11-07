@@ -63,7 +63,8 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
       localTranscriptionTaskManagerProvider,
     )[widget.audioItem.id];
     if (task is LocalTranscriptionFailed ||
-        task is LocalTranscriptionEmptyResult) {
+        task is LocalTranscriptionEmptyResult ||
+        task is LocalTranscriptionConflict) {
       Future(() {
         if (mounted) {
           ref
@@ -140,6 +141,8 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
               else ...[
                 if (task is LocalTranscriptionFailed)
                   _notice(l10n.transcriptionFailed, Icons.error_outline),
+                if (task is LocalTranscriptionConflict)
+                  _notice(l10n.transcriptionConflict, Icons.sync_problem),
                 if (task is LocalTranscriptionEmptyResult)
                   _notice(
                     '${l10n.transcriptionEmptyResult}\n${l10n.transcriptionEmptyResultHint}',

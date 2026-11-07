@@ -2280,6 +2280,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transcriptionFailed => 'Transcription failed';
 
   @override
+  String get transcriptionConflict =>
+      'Subtitles were replaced by another action; your newer subtitles are kept';
+
+  @override
   String get transcriptionErrorConnection => 'Unable to connect to server';
 
   @override

@@ -5,6 +5,20 @@ import '../tables/audio_items.dart';
 
 part 'audio_item_dao.g.dart';
 
+/// 字幕提交结果。
+///
+/// 只有 [committed] 表示字幕、词级时间戳、来源、语言与句词计数已整体落库。
+enum TranscriptCommitResult {
+  /// 已整体写入。
+  committed,
+
+  /// 提交前用户已取消，未写入。
+  cancelled,
+
+  /// 目标字幕已被其他操作（如用户导入或编辑）替换，未写入。
+  conflict,
+}
+
 /// 音频元数据 DAO
 /// 提供音频项的 CRUD 操作
 @DriftAccessor(tables: [AudioItems])
@@ -213,6 +227,51 @@ class AudioItemDao extends DatabaseAccessor<AppDatabase>
           wordTimestampsJson: Value(wordTimestampsJson),
         ),
       );
+    });
+  }
+
+  /// 一次性提交转录结果：字幕、词级时间戳、来源、语言与句词计数同事务写入。
+  ///
+  /// 供字幕识别任务在完整成功时提交整体结果。事务内先复查两项前置条件，均不通过
+  /// 则不写入并返回对应结果：
+  /// - [isCancelled]：用户在写入前取消，已取消则不写库，避免「报了取消但字幕已被覆盖」。
+  /// - [expectedSrt]：任务开始识别时观察到的字幕内容；当前内容已变说明用户在此期间
+  ///   导入或编辑了字幕，保留用户较新的结果。
+  /// 任一写入失败则整个事务回滚，原字幕与元数据保持不变。
+  Future<TranscriptCommitResult> commitTranscription({
+    required String audioItemId,
+    required String srt,
+    required String? wordTimestampsJson,
+    required int transcriptSource,
+    required String? transcriptLanguage,
+    required int sentenceCount,
+    required int wordCount,
+    required String? expectedSrt,
+    required bool Function() isCancelled,
+  }) {
+    return transaction(() async {
+      final query = selectOnly(audioItems)
+        ..addColumns([audioItems.transcriptSrt])
+        ..where(audioItems.id.equals(audioItemId));
+      final row = await query.getSingleOrNull();
+      // 目标行已不存在（如被删除）时无可替换对象，按冲突处理。
+      if (row == null) return TranscriptCommitResult.conflict;
+      if (row.read(audioItems.transcriptSrt) != expectedSrt) {
+        return TranscriptCommitResult.conflict;
+      }
+      if (isCancelled()) return TranscriptCommitResult.cancelled;
+      await (update(audioItems)..where((t) => t.id.equals(audioItemId))).write(
+        AudioItemsCompanion(
+          transcriptSrt: Value(srt),
+          wordTimestampsJson: Value(wordTimestampsJson),
+          transcriptSource: Value(transcriptSource),
+          transcriptLanguage: Value(transcriptLanguage),
+          sentenceCount: Value(sentenceCount),
+          wordCount: Value(wordCount),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+      return TranscriptCommitResult.committed;
     });
   }
 }

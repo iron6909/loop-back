@@ -60,6 +60,27 @@ class FakeAudioItemDao implements AudioItemDao {
   }
 
   @override
+  Future<TranscriptCommitResult> commitTranscription({
+    required String audioItemId,
+    required String srt,
+    required String? wordTimestampsJson,
+    required int transcriptSource,
+    required String? transcriptLanguage,
+    required int sentenceCount,
+    required int wordCount,
+    required String? expectedSrt,
+    required bool Function() isCancelled,
+  }) async {
+    if (transcriptSrtStore[audioItemId] != expectedSrt) {
+      return TranscriptCommitResult.conflict;
+    }
+    if (isCancelled()) return TranscriptCommitResult.cancelled;
+    transcriptSrtStore[audioItemId] = srt;
+    wordTimestampsStore[audioItemId] = wordTimestampsJson;
+    return TranscriptCommitResult.committed;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => Future<dynamic>.value();
 }
 

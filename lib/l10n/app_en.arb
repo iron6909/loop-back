@@ -1267,6 +1267,7 @@
   "transcriptionProcessing": "Transcribing...",
   "transcriptionComplete": "Complete!",
   "transcriptionFailed": "Transcription failed",
+  "transcriptionConflict": "Subtitles were replaced by another action; your newer subtitles are kept",
   "transcriptionErrorConnection": "Unable to connect to server",
   "transcriptionErrorTimeout": "Request timed out, please retry",
   "transcriptionErrorServer": "Please check the audio and try again later",
