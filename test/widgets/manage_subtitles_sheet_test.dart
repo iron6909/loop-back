@@ -553,6 +553,80 @@ void main() {
     expect(manager.calls, isEmpty, reason: '在线不走本机转录入口');
   });
 
+  testWidgets('在线分块任务进行中显示块进度与取消入口', (tester) async {
+    manager = _RecordingManager();
+    final online = TestOnlineSubtitleTaskManager({
+      'test-audio-1': const OnlineSubtitleWorking(
+        service: 'openrouter',
+        modelId: 'openai/whisper-large-v3',
+        completedChunks: 1,
+        totalChunks: 3,
+      ),
+    });
+    final item = createTestAudioItem(transcriptPath: null);
+    await tester.pumpWidget(
+      buildSheet(
+        item,
+        extra: [
+          onlineSubtitleTaskManagerProvider.overrideWith(() => online),
+          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
+          onlineSubtitleAvailableProvider.overrideWithValue(true),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await open(tester);
+
+    expect(find.textContaining('Chunks done: 1/3'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+  });
+
+  testWidgets('可续试失败在重开弹窗后保留：显示失败块、未知费用与重试入口', (tester) async {
+    manager = _RecordingManager();
+    final online = TestOnlineSubtitleTaskManager({
+      'test-audio-1': const OnlineSubtitleFailed(
+        OnlineSubtitleFailureReason.unknown,
+        completedChunks: 2,
+        totalChunks: 3,
+        failedChunk: 3,
+        mayHaveBeenCharged: true,
+        retryable: true,
+      ),
+    });
+    final item = createTestAudioItem(transcriptPath: null);
+    await tester.pumpWidget(
+      buildSheet(
+        item,
+        extra: [
+          onlineSubtitleTaskManagerProvider.overrideWith(() => online),
+          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
+          onlineSubtitleAvailableProvider.overrideWithValue(true),
+          speechConfigStoreProvider.overrideWithValue(
+            _SpeechStore(
+              const SpeechConfig(
+                kind: SpeechProviderKind.openrouter,
+                baseUrl: 'https://openrouter.ai/api/v1',
+                onlineModels: {
+                  RecognitionPurpose.subtitle: 'openai/whisper-large-v3',
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await open(tester);
+
+    // 失败位置与“可能重复计费”都要如实说明，且失败态不随弹窗重开被清掉。
+    expect(find.textContaining('Failed at chunk 3/3'), findsOneWidget);
+    expect(find.textContaining('may have been charged'), findsOneWidget);
+    await pressPrimary(tester);
+
+    expect(online.calls, [(item.id, true)], reason: '重试只继续未完成块');
+    expect(manager.calls, isEmpty);
+  });
+
   testWidgets('已保存字幕如实显示整体词时间戳来源', (tester) async {
     manager = _RecordingManager();
     await tester.pumpWidget(

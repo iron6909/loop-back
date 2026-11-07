@@ -198,6 +198,83 @@ class AudioTranscodeService {
     }
   }
 
+  /// 有界区间提取：把 [source] 从 [start] 起的 [duration] 解码为 16kHz 单声道
+  /// PCM16 WAV 写入 [output]。
+  ///
+  /// 只解码需要的区间，供长材料分块上传使用；源媒体不动，失败时删除半成品。
+  /// [duration] 为 null 时提取到文件末尾。[onSessionStarted] 交出 ffmpeg 会话 id，
+  /// 调用方可用 [cancelSession] 主动终止这次提取。
+  Future<bool> transcodeRangeToPcmWav16k({
+    required File source,
+    required File output,
+    required Duration start,
+    Duration? duration,
+    void Function(int sessionId)? onSessionStarted,
+  }) async {
+    if (!await source.exists()) {
+      AppLogger.log(_logTag, 'skip wav16k range: source missing');
+      return false;
+    }
+    await output.parent.create(recursive: true);
+
+    try {
+      // -ss 放在 -i 之前：快速定位，再由 -accurate_seek（默认）解码到精确起点。
+      final session = await FFmpegKit.executeWithArguments([
+        '-nostdin',
+        '-y',
+        '-loglevel',
+        'error',
+        '-ss',
+        '${start.inMilliseconds / 1000}',
+        '-i',
+        source.path,
+        if (duration != null) ...[
+          '-t',
+          '${duration.inMilliseconds / 1000}',
+        ],
+        '-vn',
+        '-map',
+        '0:a:0',
+        '-map_metadata',
+        '-1',
+        '-map_chapters',
+        '-1',
+        '-ac',
+        '1',
+        '-ar',
+        '16000',
+        '-c:a',
+        'pcm_s16le',
+        output.path,
+      ]);
+      final sessionId = session.getSessionId();
+      if (sessionId != null) onSessionStarted?.call(sessionId);
+      final returnCode = await session.getReturnCode();
+      if (!ReturnCode.isSuccess(returnCode) || !await output.exists()) {
+        final logs = await session.getOutput();
+        AppLogger.log(
+          _logTag,
+          'wav16k range failed: returnCode=$returnCode '
+              'start=${start.inSeconds}s source=${p.basename(source.path)} '
+              'logs=${logs ?? ''}',
+        );
+        await _deleteIfExists(output);
+        return false;
+      }
+      return true;
+    } catch (error, stackTrace) {
+      AppLogger.log(
+        _logTag,
+        'wav16k range exception: start=${start.inSeconds}s error=$error stack=$stackTrace',
+      );
+      await _deleteIfExists(output);
+      return false;
+    }
+  }
+
+  /// 终止一次在途的 ffmpeg 会话；已结束或未知 id 时什么也不做。
+  void cancelSession(int sessionId) => FFmpegKit.cancel(sessionId);
+
   Future<void> _deleteIfExists(File file) async {
     if (!await file.exists()) return;
     try {

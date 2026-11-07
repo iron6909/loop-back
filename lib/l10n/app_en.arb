@@ -2931,10 +2931,23 @@
   "onlineSubtitleCostUnknown": "The provider reported no cost, so the actual charge is unknown",
   "onlineSubtitleNotConfigured": "No online speech service or API key configured",
   "onlineSubtitleNotVerified": "The current speech configuration has not passed subtitle capability verification",
-  "onlineSubtitleAudioTooLong": "The audio exceeds the single online subtitle limit ({maxMin} minutes max)",
-  "@onlineSubtitleAudioTooLong": {
-    "placeholders": { "maxMin": { "type": "int" } }
+  "onlineSubtitleChunkProgress": "Chunks done: {completed}/{total}",
+  "@onlineSubtitleChunkProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
   },
+  "onlineSubtitleFailedChunk": "Failed at chunk {chunk}/{total}",
+  "@onlineSubtitleFailedChunk": {
+    "placeholders": {
+      "chunk": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "onlineSubtitleRetryUnfinished": "Continue unfinished chunks",
+  "onlineSubtitleRetryCostWarning": "The failed chunk was already sent, so it may have been charged; continuing can charge it again",
+  "onlineSubtitleNoSpeech": "No speech recognized in this material, so the subtitles were left unchanged",
   "onlineSubtitleDecodeFailed": "The audio could not be decoded, so nothing was uploaded",
   "onlineSubtitleInvalidResult": "The service returned unusable timestamps, so no subtitles were saved",
   "onlineSubtitleConfigChanged": "The speech configuration changed, so this result was discarded",

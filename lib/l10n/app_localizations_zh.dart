@@ -5784,9 +5784,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineSubtitleNotVerified => '当前语音配置未通过字幕能力验证';
 
   @override
-  String onlineSubtitleAudioTooLong(int maxMin) {
-    return '音频超出单次在线字幕范围（最长 $maxMin 分钟）';
+  String onlineSubtitleChunkProgress(int completed, int total) {
+    return '已完成 $completed/$total 块';
   }
+
+  @override
+  String onlineSubtitleFailedChunk(int chunk, int total) {
+    return '第 $chunk/$total 块失败';
+  }
+
+  @override
+  String get onlineSubtitleRetryUnfinished => '继续未完成的块';
+
+  @override
+  String get onlineSubtitleRetryCostWarning => '失败的那一块请求已经发出，可能已经计费；继续可能重复计费';
+
+  @override
+  String get onlineSubtitleNoSpeech => '这份材料未识别到语音，字幕未改动';
 
   @override
   String get onlineSubtitleDecodeFailed => '无法解码音频，未上传';
