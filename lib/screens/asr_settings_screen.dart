@@ -1,7 +1,7 @@
 /// 语音识别设置页。
 ///
-/// iOS/macOS：后端选择（Apple Speech / Echo Loop AI）+ 离线模型状态。
-/// Android：离线模型状态（固定 Echo Loop AI）。
+/// iOS/macOS：后端选择（系统识别 / 本机 Whisper）+ 离线模型状态。
+/// Android：离线模型状态（固定本机 Whisper）。
 library;
 
 import 'dart:io' show Platform;
@@ -80,7 +80,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
                 ] else ...[
                   ListTile(
                     title: Text(l10n.localSpeechRecognition),
-                    subtitle: Text(l10n.asrBackendOfflineDescription),
+                    subtitle: Text(l10n.asrBackendLocalWhisperDescription),
                   ),
                 ],
               ],
@@ -89,8 +89,11 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
 
           if (state.backend == AsrBackend.offline) ...[
             const SizedBox(height: AppSpacing.m),
-            _SectionLabel(text: l10n.asrBackendOffline),
+            _SectionLabel(text: l10n.asrBackendLocalWhisper),
             Card(child: _buildModelList(l10n, state, theme)),
+            const SizedBox(height: AppSpacing.m),
+            _SectionLabel(text: l10n.asrDownloadSourceTitle),
+            Card(child: _buildDownloadSourceSelector(l10n, state, theme)),
           ] else if (state.totalDownloadedModelBytes > 0) ...[
             const SizedBox(height: AppSpacing.m),
             Card(child: _buildDownloadedModelsStorageRow(l10n, state, theme)),
@@ -130,9 +133,9 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
           ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           RadioListTile<AsrBackend>(
-            title: Text(l10n.asrBackendOffline),
+            title: Text(l10n.asrBackendLocalWhisper),
             subtitle: Text(
-              l10n.asrBackendOfflineDescription,
+              l10n.asrBackendLocalWhisperDescription,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant.withValues(
                   alpha: 0.6,
@@ -141,6 +144,45 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
             ),
             value: AsrBackend.offline,
           ),
+        ],
+      ),
+    );
+  }
+
+  // ========== 下载来源 ==========
+
+  Widget _buildDownloadSourceSelector(
+    AppLocalizations l10n,
+    OfflineAsrSettingsState state,
+    ThemeData theme,
+  ) {
+    return RadioGroup<AsrDownloadSource>(
+      groupValue: state.downloadSource,
+      onChanged: (value) {
+        if (value == null) return;
+        ref.read(offlineAsrSettingsProvider.notifier).setDownloadSource(value);
+      },
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.m,
+              AppSpacing.m,
+              AppSpacing.m,
+              AppSpacing.s,
+            ),
+            child: Text(
+              l10n.asrDownloadSourceDescription,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          for (final source in AsrDownloadSource.values)
+            RadioListTile<AsrDownloadSource>(
+              title: Text(_sourceLabel(l10n, source)),
+              value: source,
+            ),
         ],
       ),
     );
@@ -184,14 +226,20 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       ),
       title: Row(
         children: [
-          Flexible(child: Text(_modelLabel(model.id))),
+          Flexible(child: Text(model.displayName)),
           if (isRecommended) ...[
             const SizedBox(width: 8),
             _RecommendedBadge(text: l10n.ttsModelRecommended, theme: theme),
           ],
         ],
       ),
-      subtitle: _modelSubtitle(l10n, theme, model.id, modelState),
+      subtitle: _modelSubtitle(
+        l10n,
+        theme,
+        model.id,
+        modelState,
+        state.downloadSource,
+      ),
       trailing: _modelTrailing(context, l10n, model.id, modelState, isSelected),
       onTap: () =>
           ref.read(offlineAsrSettingsProvider.notifier).selectModel(model),
@@ -203,6 +251,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
     ThemeData theme,
     String modelId,
     AsrModelState state,
+    AsrDownloadSource downloadSource,
   ) {
     final approxSize = _approxModelSizeText(l10n, modelId);
     final description = _modelDescription(l10n, modelId);
@@ -215,6 +264,21 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
         ),
       ),
     ];
+    // 只有已迁移到公开来源的模型才展示来源与许可，未迁移模型不冒充公开源。
+    final publicSpec = asrPublicResourceCatalog[modelId];
+    if (publicSpec != null) {
+      children.add(
+        Text(
+          l10n.asrModelSourceLine(
+            _sourceLabel(l10n, downloadSource),
+            publicSpec.license,
+          ),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          ),
+        ),
+      );
+    }
     if (state.isDownloading) {
       final pct = '${(state.downloadProgress * 100).toStringAsFixed(0)}%';
       children.add(const SizedBox(height: 6));
@@ -372,22 +436,28 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
 
   // ========== 工具方法 ==========
 
-  static String _modelLabel(String modelId) {
-    if (modelId.contains('tiny')) return 'Fast';
-    if (modelId.contains('base')) return 'Balanced';
-    if (modelId.contains('small')) return 'Accurate';
-    return '';
+  static String _sourceLabel(AppLocalizations l10n, AsrDownloadSource source) {
+    return switch (source) {
+      AsrDownloadSource.huggingFace => l10n.asrDownloadSourceHuggingFace,
+      AsrDownloadSource.huggingFaceMirror =>
+        l10n.asrDownloadSourceHuggingFaceMirror,
+    };
   }
 
   static String _modelDescription(AppLocalizations l10n, String modelId) {
     if (modelId.contains('tiny')) return l10n.asrModelFastDescription;
     if (modelId.contains('base')) return l10n.asrModelBalancedDescription;
     if (modelId.contains('small')) return l10n.asrModelAccurateDescription;
-    return l10n.asrBackendOfflineDescription;
+    return l10n.asrBackendLocalWhisperDescription;
   }
 
   static String _approxModelSizeText(AppLocalizations l10n, String modelId) {
-    if (modelId.contains('tiny')) return l10n.speechModelApproxSize('100 MB');
+    final publicSpec = asrPublicResourceCatalog[modelId];
+    if (publicSpec != null) {
+      return l10n.speechModelApproxSize(
+        _formatBytes(publicSpec.estimatedDownloadBytes),
+      );
+    }
     if (modelId.contains('base')) return l10n.speechModelApproxSize('150 MB');
     if (modelId.contains('small')) return l10n.speechModelApproxSize('360 MB');
     return '';

@@ -18,6 +18,12 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   final OfflineAsrSettingsState _initialState;
   bool deleteAllDownloadedModelsCalled = false;
   bool? deleteAllIncludeSelected;
+  final downloadSourceChanges = <AsrDownloadSource>[];
+
+  @override
+  Future<void> setDownloadSource(AsrDownloadSource source) async {
+    downloadSourceChanges.add(source);
+  }
 
   @override
   OfflineAsrSettingsState build() => _initialState;
@@ -70,8 +76,8 @@ void main() {
     await tester.pumpWidget(_buildTestWidget(notifier));
     await tester.pumpAndSettle();
 
-    // 显示模型档位名称
-    expect(find.textContaining('Balanced'), findsAny);
+    // 显示真实模型名称
+    expect(find.textContaining('Whisper Base (English)'), findsAny);
     // 不显示 Ready（下载失败）
     expect(find.textContaining('Ready'), findsNothing);
   });
@@ -91,7 +97,7 @@ void main() {
 
     expect(find.byType(SwitchListTile), findsNothing);
     expect(find.text('Disabled'), findsNothing);
-    expect(find.textContaining('Balanced'), findsAny);
+    expect(find.textContaining('Whisper Base (English)'), findsAny);
   });
 
   testWidgets('已下载模型显示 Ready 和大小', (tester) async {
@@ -108,7 +114,7 @@ void main() {
     await tester.pumpWidget(_buildTestWidget(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Balanced'), findsAny);
+    expect(find.textContaining('Whisper Base (English)'), findsAny);
     expect(find.textContaining('Ready'), findsAny);
     expect(find.textContaining('153 MB'), findsAny);
   });
@@ -145,7 +151,7 @@ void main() {
     expect(find.text('Cancel'), findsOneWidget);
   });
 
-  testWidgets('Echo Loop AI 模型列表单独成组并显示预估大小', (tester) async {
+  testWidgets('本机 Whisper 模型列表单独成组并显示预估大小', (tester) async {
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -158,11 +164,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Speech Engine'), findsOneWidget);
-    // iOS/macOS 额外显示后端选择器中的 Echo Loop AI；Linux CI 不显示平台后端选择器。
-    final expectedEchoLoopLabels = Platform.isIOS || Platform.isMacOS ? 2 : 1;
-    expect(find.text('Echo Loop AI'), findsNWidgets(expectedEchoLoopLabels));
-    expect(find.byType(Card), findsNWidgets(2));
-    expect(find.textContaining('~100 MB'), findsOneWidget);
+    // iOS/macOS 额外显示后端选择器中的本机 Whisper；Linux CI 不显示平台后端选择器。
+    final expectedLocalLabels = Platform.isIOS || Platform.isMacOS ? 2 : 1;
+    expect(
+      find.text('Whisper (on-device)'),
+      findsNWidgets(expectedLocalLabels),
+    );
+    // 引擎卡片 + 模型列表卡片 + 下载来源卡片。
+    expect(find.byType(Card), findsNWidgets(3));
+    expect(find.textContaining('~99 MB'), findsOneWidget);
     expect(find.textContaining('~150 MB'), findsOneWidget);
     expect(find.textContaining('~360 MB'), findsOneWidget);
   });
@@ -180,9 +190,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Speech Engine'), findsOneWidget);
-    expect(find.text('Fast'), findsNothing);
-    expect(find.text('Balanced'), findsNothing);
-    expect(find.text('Accurate'), findsNothing);
+    expect(find.text('Whisper Tiny (English)'), findsNothing);
+    expect(find.text('Whisper Base (English)'), findsNothing);
+    expect(find.text('Whisper Small (English)'), findsNothing);
   });
 
   testWidgets('Apple Speech 后端允许删除所有已下载 Whisper 模型', (tester) async {
@@ -221,5 +231,35 @@ void main() {
 
     expect(notifier.deleteAllDownloadedModelsCalled, isTrue);
     expect(notifier.deleteAllIncludeSelected, isTrue);
+  });
+
+  testWidgets('已迁移模型显示真实名称、来源与许可，来源选项只影响未安装下载', (tester) async {
+    final notifier = _StaticOfflineAsrSettingsNotifier(
+      OfflineAsrSettingsState(
+        enabled: true,
+        backend: AsrBackend.offline,
+        recommendedModel: recommendedModel,
+      ),
+    );
+
+    await tester.pumpWidget(_buildTestWidget(notifier));
+    await tester.pumpAndSettle();
+
+    // 三档模型都显示真实 Whisper 名称与英语。
+    expect(find.text('Whisper Tiny (English)'), findsOneWidget);
+    expect(find.text('Whisper Base (English)'), findsOneWidget);
+    expect(find.text('Whisper Small (English)'), findsOneWidget);
+    // 仅已迁移的 Tiny 展示公开来源与许可；Base/Small 不冒充公开源。
+    expect(find.textContaining('Source: Hugging Face'), findsOneWidget);
+    expect(find.textContaining('License: MIT'), findsOneWidget);
+    // 来源选项只出现在下载来源卡片中。
+    expect(find.text('hf-mirror.com (mirror)'), findsOneWidget);
+
+    await tester.tap(find.text('hf-mirror.com (mirror)'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.downloadSourceChanges, [
+      AsrDownloadSource.huggingFaceMirror,
+    ]);
   });
 }

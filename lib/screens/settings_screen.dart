@@ -231,7 +231,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ref.watch(offlineAsrSettingsProvider).backend ==
                           AsrBackend.platform
                       ? l10n.asrBackendPlatform
-                      : l10n.asrBackendOffline,
+                      : l10n.asrBackendLocalWhisper,
                   style: TextStyle(color: colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(width: AppSpacing.xs),

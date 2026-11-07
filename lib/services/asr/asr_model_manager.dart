@@ -1,4 +1,4 @@
-/// ASR 模型归档下载、原子安装和缓存管理。
+/// ASR 模型下载、原子安装和缓存管理。
 library;
 
 export 'asr_model_catalog.dart';
@@ -14,8 +14,8 @@ import 'package:path_provider/path_provider.dart';
 import '../app_logger.dart';
 import '../reliable_http_downloader.dart';
 import '../resource_install_manifest.dart';
-import 'asr_archive_installer.dart';
 import 'asr_model_catalog.dart';
+import 'asr_resource_installer.dart';
 import '../runtime_endpoint_router.dart';
 import 'offline_asr_engine.dart';
 
@@ -102,20 +102,21 @@ const defaultLegacyModelFileRegistry = <String, AsrModelManifest>{
   ),
 };
 
+/// 三档本机模型保留既有内部 ID 与安装目录，只展示真实模型身份。
 final List<AsrModelInfo> availableModels = [
   const AsrModelInfo(
     id: 'whisper-tiny-en-int8',
-    displayName: 'Echo Loop AI (Fast)',
+    displayName: 'Whisper Tiny (English)',
     type: AsrModelType.whisper,
   ),
   const AsrModelInfo(
     id: 'whisper-base-en-int8',
-    displayName: 'Echo Loop AI (Balanced)',
+    displayName: 'Whisper Base (English)',
     type: AsrModelType.whisper,
   ),
   const AsrModelInfo(
     id: 'whisper-small-en-int8',
-    displayName: 'Echo Loop AI (Accurate)',
+    displayName: 'Whisper Small (English)',
     type: AsrModelType.whisper,
   ),
 ];
@@ -136,13 +137,15 @@ class AsrModelDownloadProgress {
   );
 }
 
-/// 统一使用归档校验、staging 和原子替换的 ASR 安装器。
+/// 统一使用校验、staging 和原子替换的 ASR 安装器。
 class AsrModelManager {
   AsrModelManager({
     Dio? dio,
     this.baseUrlOverride,
     RuntimeEndpointRouter? endpointRouter,
-    Map<String, AsrModelResourceSpec>? resourceRegistryOverride,
+    Map<String, AsrResourceSpec>? resourceRegistryOverride,
+    ReliableHttpDownloader? downloader,
+    RenameDirectory? renameDirectory,
     this.modelsRootResolver,
   }) : _endpointRouter = endpointRouter ?? runtimeEndpointRouter,
        resourceRegistry = resourceRegistryOverride ?? asrModelResourceCatalog {
@@ -155,16 +158,21 @@ class AsrModelManager {
             receiveTimeout: const Duration(seconds: 30),
           ),
         );
-    _downloader = DioReliableHttpDownloader(dio: _dio);
-    _installer = AsrArchiveInstaller(_downloader);
+    _downloader = downloader ?? DioReliableHttpDownloader(dio: _dio);
+    _installer = AsrResourceInstaller(
+      _downloader,
+      renameDirectory: renameDirectory,
+    );
   }
 
   late final Dio _dio;
   late final ReliableHttpDownloader _downloader;
-  late final AsrArchiveInstaller _installer;
+  late final AsrResourceInstaller _installer;
   final String? baseUrlOverride;
   final RuntimeEndpointRouter _endpointRouter;
-  final Map<String, AsrModelResourceSpec> resourceRegistry;
+
+  /// 全部 ASR 资源清单：公开逐文件来源与仍使用归档的资源共用一份身份描述。
+  final Map<String, AsrResourceSpec> resourceRegistry;
   final Future<String> Function()? modelsRootResolver;
 
   Future<String> get _modelsRoot async {
@@ -209,55 +217,45 @@ class AsrModelManager {
   Future<int> modelLocalSize(String modelId) async =>
       (await readInstallManifest(modelId))?.resourceSize ?? 0;
 
-  /// 下载、归档哈希校验、解压关键文件校验后才原子替换当前安装。
+  /// 下载资源本体（含缺失的共享依赖），逐文件校验通过后才原子替换当前安装。
+  ///
+  /// 已安装的资源不会重复下载；主模型已安装但共享 VAD 缺失时只补 VAD。
+  /// [source] 只影响有同版本镜像的公开资源，未迁移的归档资源保持原来源。
   Future<String> downloadModel(
     String modelId, {
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
     final spec = resourceRegistry[modelId];
     if (spec == null) throw ArgumentError('Unknown model: $modelId');
-    // 模型本体与共享 VAD 分开安装；VAD 缺失时不能触发模型本体重复下载。
-    if (await readInstallManifest(modelId) != null) {
+    final target = Directory(await modelDir(modelId));
+    if (await readInstallManifest(modelId) == null) {
       onProgress?.call(
         const AsrModelDownloadProgress(
-          status: AsrModelDownloadStatus.downloaded,
-          progress: 1,
+          status: AsrModelDownloadStatus.downloading,
         ),
       );
-      return modelDir(modelId);
+      await _installResource(
+        spec,
+        source: source,
+        cancelToken: cancelToken,
+        onProgress: onProgress,
+      );
     }
-    final root = Directory(await _modelsRoot);
-    final target = Directory(await modelDir(modelId));
-    onProgress?.call(
-      const AsrModelDownloadProgress(
-        status: AsrModelDownloadStatus.downloading,
-      ),
-    );
-    await _installer.install(
-      root: root,
-      target: target,
-      resourceId: modelId,
-      uri: baseUrlOverride == null
-          ? _endpointRouter.modelCdnUri('/model/${spec.archivePath}')
-          : Uri.parse('$baseUrlOverride/model/${spec.archivePath}'),
-      expectedSha256: spec.sha256,
-      cancelToken: cancelToken,
-      onProgress: (value) => onProgress?.call(
-        AsrModelDownloadProgress(
-          status: AsrModelDownloadStatus.downloading,
-          progress: value,
-        ),
-      ),
-      onInstalling: () => onProgress?.call(
-        const AsrModelDownloadProgress(
-          status: AsrModelDownloadStatus.downloading,
-          progress: 1,
-        ),
-      ),
-      extractAndValidate: (archive, staging) =>
-          _extractAndValidate(archive, staging, spec),
-    );
+    // 共享依赖单独补齐：缺 VAD 只补 VAD，不重复下载完整模型。
+    for (final dependency in spec.dependencies) {
+      if (await isModelDownloaded(dependency)) continue;
+      final dependencySpec = resourceRegistry[dependency];
+      if (dependencySpec == null) {
+        throw StateError('Unknown ASR dependency: $dependency');
+      }
+      await _installResource(
+        dependencySpec,
+        source: source,
+        cancelToken: cancelToken,
+      );
+    }
     final result = await validateModel(modelId);
     if (!result.isValid) throw StateError(result.describe());
     onProgress?.call(
@@ -323,6 +321,70 @@ class AsrModelManager {
   AsrModelInfo recommendModel({int ramBytes = 0}) =>
       availableModels.firstWhere((model) => model.id == 'whisper-base-en-int8');
   void dispose() => _dio.close();
+
+  /// 按资源类型选择安装流程：公开来源逐文件安装，未迁移资源沿用归档安装。
+  Future<void> _installResource(
+    AsrResourceSpec spec, {
+    required AsrDownloadSource source,
+    CancelToken? cancelToken,
+    void Function(AsrModelDownloadProgress)? onProgress,
+  }) async {
+    final root = Directory(await _modelsRoot);
+    final target = Directory(await modelDir(spec.id));
+    switch (spec) {
+      case AsrPublicResourceSpec():
+        await _installer.installFiles(
+          root: root,
+          target: target,
+          resourceId: spec.id,
+          downloads: [
+            for (final file in spec.files)
+              AsrResourceFileDownload(
+                file: file,
+                uri: spec.fileUri(source, file),
+              ),
+          ],
+          cancelToken: cancelToken,
+          onProgress: (value) => onProgress?.call(
+            AsrModelDownloadProgress(
+              status: AsrModelDownloadStatus.downloading,
+              progress: value,
+            ),
+          ),
+          onInstalling: () => onProgress?.call(
+            const AsrModelDownloadProgress(
+              status: AsrModelDownloadStatus.downloading,
+              progress: 1,
+            ),
+          ),
+        );
+      case AsrModelResourceSpec():
+        await _installer.installArchive(
+          root: root,
+          target: target,
+          resourceId: spec.id,
+          uri: baseUrlOverride == null
+              ? _endpointRouter.modelCdnUri('/model/${spec.archivePath}')
+              : Uri.parse('$baseUrlOverride/model/${spec.archivePath}'),
+          expectedSha256: spec.sha256,
+          cancelToken: cancelToken,
+          onProgress: (value) => onProgress?.call(
+            AsrModelDownloadProgress(
+              status: AsrModelDownloadStatus.downloading,
+              progress: value,
+            ),
+          ),
+          onInstalling: () => onProgress?.call(
+            const AsrModelDownloadProgress(
+              status: AsrModelDownloadStatus.downloading,
+              progress: 1,
+            ),
+          ),
+          extractAndValidate: (archive, staging) =>
+              _extractAndValidate(archive, staging, spec),
+        );
+    }
+  }
 
   Future<void> _extractAndValidate(
     File archive,
