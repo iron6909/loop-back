@@ -108,3 +108,17 @@
 9. 宁可写少量高价值测试，也不要写大量浅层测试。
 10. 不要仅为了提高覆盖率而增加测试。每个测试都应该保护重要行为，或能够发现真实可能发生的回归问题。
 11. 完成任务前，运行相关测试并确保全部通过。
+
+## Agent skills
+
+### Issue tracker
+
+规格和任务使用 GitHub Issues。发布、读取或更新票据前，读取 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+使用默认 triage 标签。设置或筛选分流状态前，读取 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+采用单领域布局。探索业务代码或编写规格前，按 `docs/agents/domain.md` 读取术语表和相关 ADR。
