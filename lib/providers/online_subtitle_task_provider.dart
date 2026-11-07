@@ -32,7 +32,6 @@ import '../utils/srt_generator.dart';
 import '../utils/transcript_stats.dart';
 import '../models/word_timestamp.dart';
 import 'audio_library_provider.dart';
-import 'speech_capability_provider.dart' show speechTranscriptionClientProvider;
 import 'local_transcription_task_provider.dart'
     show
         localTranscriptionTranscodeServiceProvider,
