@@ -81,6 +81,21 @@ void main() {
     expect(await other.readAsString(), 'keep');
   });
 
+  test('清理旧在线字幕分块临时音频时保留源媒体与其它临时文件', () async {
+    final chunk = File(
+      '${fakeAppDataDir.path}/tmp/online_subtitle/run-1/chunk_0.wav',
+    );
+    await chunk.parent.create(recursive: true);
+    await chunk.writeAsBytes(List.filled(64, 0));
+    final media = File('${fakeAppDataDir.path}/audio.m4a');
+    await media.writeAsString('source');
+
+    await cleanupOnlineSubtitleTmp();
+
+    expect(await chunk.parent.parent.exists(), isFalse);
+    expect(await media.readAsString(), 'source');
+  });
+
   group('cleanupRecordingTempFiles', () {
     test('删除 tmp/ 中的旧文件', () async {
       final oldFile = File('${fakeTmpDir.path}/old.caf');

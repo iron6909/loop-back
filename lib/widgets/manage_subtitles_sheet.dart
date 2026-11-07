@@ -83,7 +83,8 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     final onlineTask = ref.read(
       onlineSubtitleTaskManagerProvider,
     )[widget.audioItem.id];
-    if (onlineTask is OnlineSubtitleFailed ||
+    // 可续试的失败要留到用户主动重试；只有不可续试的旧失败才随弹窗重开清掉。
+    if (onlineTask is OnlineSubtitleFailed && !onlineTask.retryable ||
         onlineTask is OnlineSubtitleConflict) {
       Future(() {
         if (mounted) {
@@ -133,9 +134,7 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     final localActive =
         task is LocalTranscriptionDecoding ||
         task is LocalTranscriptionTranscribing;
-    final onlineActive =
-        onlineTask is OnlineSubtitlePreparing ||
-        onlineTask is OnlineSubtitleUploading;
+    final onlineActive = onlineTask is OnlineSubtitleWorking;
     final active = localActive || onlineActive;
     ref.listen(
       onlineSubtitleTaskManagerProvider.select((m) => m[item.id]),
@@ -188,9 +187,34 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
                     _onlineFailureText(l10n, reason, speechError),
                     Icons.error_outline,
                   ),
+                if (onlineTask case OnlineSubtitleFailed(
+                  retryable: true,
+                  mayHaveBeenCharged: true,
+                ))
+                  _notice(l10n.onlineSubtitleRetryCostWarning, Icons.payments_outlined),
+                if (onlineTask case OnlineSubtitleFailed(
+                  retryable: true,
+                  :final completedChunks,
+                  :final totalChunks,
+                  :final failedChunk,
+                ))
+                  _notice(
+                    failedChunk == null
+                        ? l10n.onlineSubtitleChunkProgress(
+                            completedChunks,
+                            totalChunks,
+                          )
+                        : l10n.onlineSubtitleFailedChunk(
+                            failedChunk,
+                            totalChunks,
+                          ),
+                    Icons.list_alt,
+                  ),
                 if (task is LocalTranscriptionConflict ||
                     onlineTask is OnlineSubtitleConflict)
                   _notice(l10n.transcriptionConflict, Icons.sync_problem),
+                if (onlineTask is OnlineSubtitleNoSpeech)
+                  _notice(l10n.onlineSubtitleNoSpeech, Icons.hearing_disabled),
                 if (task is LocalTranscriptionEmptyResult)
                   _notice(
                     '${l10n.transcriptionEmptyResult}\n${l10n.transcriptionEmptyResultHint}',
@@ -198,7 +222,7 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
                   ),
                 _options(item, l10n),
                 const SizedBox(height: 16),
-                _action(item, l10n),
+                _action(item, l10n, onlineTask),
               ],
             ],
           ),
@@ -311,11 +335,20 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     onTap: _downloading ? null : () => setState(() => _selectedAction = action),
   );
 
-  Widget _action(AudioItem item, AppLocalizations l10n) {
+  Widget _action(
+    AudioItem item,
+    AppLocalizations l10n,
+    OnlineSubtitleTaskState? onlineTask,
+  ) {
     final disabled =
         _downloading ||
         (_selectedAction == _SubtitleAction.transcription &&
             item.transcriptLanguage == 'auto');
+    // 可续试的失败：主按钮只重发失败与未完成块，不重新上传已成功部分。
+    final resumable =
+        _selectedAction == _SubtitleAction.transcription &&
+        onlineTask is OnlineSubtitleFailed &&
+        onlineTask.retryable;
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
@@ -326,11 +359,15 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
                 height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : Text(switch (_selectedAction) {
-                _SubtitleAction.podcastDownload => l10n.downloadSubtitle,
-                _SubtitleAction.localUpload => l10n.uploadTranscript,
-                _SubtitleAction.transcription => l10n.startTranscription,
-              }),
+            : Text(
+                resumable
+                    ? l10n.onlineSubtitleRetryUnfinished
+                    : switch (_selectedAction) {
+                        _SubtitleAction.podcastDownload => l10n.downloadSubtitle,
+                        _SubtitleAction.localUpload => l10n.uploadTranscript,
+                        _SubtitleAction.transcription => l10n.startTranscription,
+                      },
+              ),
       ),
     );
   }
@@ -341,22 +378,29 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     OnlineSubtitleTaskState? onlineTask,
     AppLocalizations l10n,
   ) {
-    if (onlineTask is OnlineSubtitlePreparing ||
-        onlineTask is OnlineSubtitleUploading) {
-      final modelId = onlineTask is OnlineSubtitlePreparing
-          ? onlineTask.modelId
-          : (onlineTask as OnlineSubtitleUploading).modelId;
-      final service = onlineTask is OnlineSubtitlePreparing
-          ? onlineTask.service
-          : (onlineTask as OnlineSubtitleUploading).service;
+    if (onlineTask is OnlineSubtitleWorking) {
       return Column(
         children: [
           _notice(
-            l10n.onlineSubtitleService(_serviceLabel(l10n, service), modelId),
+            l10n.onlineSubtitleService(
+              _serviceLabel(l10n, onlineTask.service),
+              onlineTask.modelId,
+            ),
             Icons.cloud_upload_outlined,
           ),
+          _notice(
+            l10n.onlineSubtitleChunkProgress(
+              onlineTask.completedChunks,
+              onlineTask.totalChunks,
+            ),
+            Icons.list_alt,
+          ),
           _notice(l10n.transcriptionProcessing, Icons.graphic_eq),
-          const LinearProgressIndicator(),
+          LinearProgressIndicator(
+            value: onlineTask.totalChunks == 0
+                ? null
+                : onlineTask.completedChunks / onlineTask.totalChunks,
+          ),
         ],
       );
     }
@@ -471,10 +515,6 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
       OnlineSubtitleFailureReason.notConfigured =>
         l10n.onlineSubtitleNotConfigured,
       OnlineSubtitleFailureReason.notVerified => l10n.onlineSubtitleNotVerified,
-      OnlineSubtitleFailureReason.audioTooLong =>
-        l10n.onlineSubtitleAudioTooLong(
-          onlineSubtitleMaxDuration.inMinutes,
-        ),
       OnlineSubtitleFailureReason.decodeFailed =>
         l10n.onlineSubtitleDecodeFailed,
       OnlineSubtitleFailureReason.invalidResult =>

@@ -10658,11 +10658,35 @@ abstract class AppLocalizations {
   /// **'The current speech configuration has not passed subtitle capability verification'**
   String get onlineSubtitleNotVerified;
 
-  /// No description provided for @onlineSubtitleAudioTooLong.
+  /// No description provided for @onlineSubtitleChunkProgress.
   ///
   /// In en, this message translates to:
-  /// **'The audio exceeds the single online subtitle limit ({maxMin} minutes max)'**
-  String onlineSubtitleAudioTooLong(int maxMin);
+  /// **'Chunks done: {completed}/{total}'**
+  String onlineSubtitleChunkProgress(int completed, int total);
+
+  /// No description provided for @onlineSubtitleFailedChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed at chunk {chunk}/{total}'**
+  String onlineSubtitleFailedChunk(int chunk, int total);
+
+  /// No description provided for @onlineSubtitleRetryUnfinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue unfinished chunks'**
+  String get onlineSubtitleRetryUnfinished;
+
+  /// No description provided for @onlineSubtitleRetryCostWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The failed chunk was already sent, so it may have been charged; continuing can charge it again'**
+  String get onlineSubtitleRetryCostWarning;
+
+  /// No description provided for @onlineSubtitleNoSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech recognized in this material, so the subtitles were left unchanged'**
+  String get onlineSubtitleNoSpeech;
 
   /// No description provided for @onlineSubtitleDecodeFailed.
   ///

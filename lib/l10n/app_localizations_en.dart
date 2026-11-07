@@ -6061,9 +6061,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'The current speech configuration has not passed subtitle capability verification';
 
   @override
-  String onlineSubtitleAudioTooLong(int maxMin) {
-    return 'The audio exceeds the single online subtitle limit ($maxMin minutes max)';
+  String onlineSubtitleChunkProgress(int completed, int total) {
+    return 'Chunks done: $completed/$total';
   }
+
+  @override
+  String onlineSubtitleFailedChunk(int chunk, int total) {
+    return 'Failed at chunk $chunk/$total';
+  }
+
+  @override
+  String get onlineSubtitleRetryUnfinished => 'Continue unfinished chunks';
+
+  @override
+  String get onlineSubtitleRetryCostWarning =>
+      'The failed chunk was already sent, so it may have been charged; continuing can charge it again';
+
+  @override
+  String get onlineSubtitleNoSpeech =>
+      'No speech recognized in this material, so the subtitles were left unchanged';
 
   @override
   String get onlineSubtitleDecodeFailed =>

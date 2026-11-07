@@ -2432,10 +2432,23 @@
   "onlineSubtitleCostUnknown": "供应商未报告费用，实际花费未知",
   "onlineSubtitleNotConfigured": "尚未配置在线语音服务或 Key",
   "onlineSubtitleNotVerified": "当前语音配置未通过字幕能力验证",
-  "onlineSubtitleAudioTooLong": "音频超出单次在线字幕范围（最长 {maxMin} 分钟）",
-  "@onlineSubtitleAudioTooLong": {
-    "placeholders": { "maxMin": { "type": "int" } }
+  "onlineSubtitleChunkProgress": "已完成 {completed}/{total} 块",
+  "@onlineSubtitleChunkProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
   },
+  "onlineSubtitleFailedChunk": "第 {chunk}/{total} 块失败",
+  "@onlineSubtitleFailedChunk": {
+    "placeholders": {
+      "chunk": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "onlineSubtitleRetryUnfinished": "继续未完成的块",
+  "onlineSubtitleRetryCostWarning": "失败的那一块请求已经发出，可能已经计费；继续可能重复计费",
+  "onlineSubtitleNoSpeech": "这份材料未识别到语音，字幕未改动",
   "onlineSubtitleDecodeFailed": "无法解码音频，未上传",
   "onlineSubtitleInvalidResult": "服务返回的时间戳无效，未保存字幕",
   "onlineSubtitleConfigChanged": "语音配置已变化，已放弃本次结果",

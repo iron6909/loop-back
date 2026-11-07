@@ -244,6 +244,7 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
     unawaited(cleanupRecordingTempFiles());
     unawaited(cleanupStalePdfExportTemp());
     unawaited(cleanupCommunityDownloadTmp());
+    unawaited(cleanupOnlineSubtitleTmp());
     Future<void>.delayed(const Duration(seconds: 8), () async {
       final cache = TtsCacheStore(
         resolveDao: () => _database.ttsCacheDao,
