@@ -257,6 +257,9 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   /// 当前回合在识别设置里登记的在途任务。
   RecognitionInFlightTask? _inFlightTask;
 
+  /// 登记时持有的注册处：销毁阶段不能再从已释放的容器读 provider。
+  RecognitionInFlightRegistry? _inFlightRegistry;
+
   /// 累计有声时长（silenceMs == 0 区间的加总）
   Duration _voicedDuration = Duration.zero;
 
@@ -297,16 +300,17 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       onCancel: cancelActiveRecording,
     );
     _inFlightTask = task;
-    ref.read(recognitionInFlightTasksProvider).register(task);
+    _inFlightRegistry = ref.read(recognitionInFlightTasksProvider);
+    _inFlightRegistry?.register(task);
   }
 
   /// 注销本回合的在途登记。
   void _unregisterInFlight() {
     final task = _inFlightTask;
+    final registry = _inFlightRegistry;
     _inFlightTask = null;
-    if (task != null) {
-      ref.read(recognitionInFlightTasksProvider).unregister(task);
-    }
+    _inFlightRegistry = null;
+    if (task != null && registry != null) registry.unregister(task);
   }
 
   /// 设置录音完成回调，供新学习统计链路接收有效输出时长。

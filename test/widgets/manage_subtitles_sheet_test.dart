@@ -261,7 +261,7 @@ void main() {
     await open(tester);
 
     // 字幕入口直接展示共享状态里的字幕档位，不维护弹窗镜像。
-    expect(find.text('Echo Loop AI (Accurate)'), findsOneWidget);
+    expect(find.text('Whisper Small (English)'), findsOneWidget);
   });
 
   testWidgets('已有字幕时取消覆盖确认则不启动转录', (tester) async {    manager = _RecordingManager();

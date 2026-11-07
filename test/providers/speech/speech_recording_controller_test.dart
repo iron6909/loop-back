@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/models/speech_practice_models.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
+import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
 import 'package:echo_loop/services/recording_service.dart';
 import 'package:echo_loop/services/speech_practice_platform.dart';
@@ -22,10 +24,22 @@ final _testAsrSettings = OfflineAsrSettingsState(
   recommendedModel: _testAsrModel,
 );
 
+/// 跟读选择本机方式时的离线 ASR 设置。
+final _localAsrSettings = OfflineAsrSettingsState(
+  enabled: true,
+  backend: AsrBackend.offline,
+  recommendedModel: _testAsrModel,
+);
+
 /// 测试用的离线 ASR 设置 Notifier，返回预设状态
 class _FakeOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
+  _FakeOfflineAsrSettingsNotifier([OfflineAsrSettingsState? state])
+    : _state = state ?? _testAsrSettings;
+
+  final OfflineAsrSettingsState _state;
+
   @override
-  OfflineAsrSettingsState build() => _testAsrSettings;
+  OfflineAsrSettingsState build() => _state;
 }
 
 class _FakeSpeechPracticeBackend implements SpeechPracticeBackend {
@@ -259,6 +273,85 @@ void main() {
 
       expect(backend.startSessionCalls, 0);
       expect(backend.cancelSessionCalls, 0);
+      expect(
+        container.read(speechRecordingControllerProvider).phase,
+        SpeechRecordingPhase.idle,
+      );
+    });
+
+    test('跟读选本机方式时不开启平台实时识别，并登记跟读在途任务', () async {
+      final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
+      final container = ProviderContainer(
+        overrides: [
+          analyticsOverride(),
+          ...learningSettingsOverrides(listenAndRepeatRatingEnabled: false),
+          speechPracticeBackendProvider.overrideWithValue(backend),
+          recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
+          offlineAsrSettingsProvider.overrideWith(
+            () => _FakeOfflineAsrSettingsNotifier(_localAsrSettings),
+          ),
+        ],
+      );
+      final controller = container.read(
+        speechRecordingControllerProvider.notifier,
+      );
+      final registry = container.read(recognitionInFlightTasksProvider);
+      addTearDown(() async {
+        await controller.fullReset();
+        await backend.dispose();
+        container.dispose();
+      });
+
+      await controller.startRecording(
+        promptId: 'shadowing:local:0',
+        referenceText: 'Hello world',
+      );
+
+      expect(backend.recognitionEnabled, isFalse, reason: '本机方式不开平台识别');
+      expect(
+        registry.pendingFor(RecognitionPurpose.shadowing).single.label,
+        'shadowing:local:0',
+      );
+      expect(
+        registry.pendingFor(RecognitionPurpose.subtitle),
+        isEmpty,
+        reason: '跟读录音不占用其它用途的在途登记',
+      );
+
+      await controller.cancelActiveRecording();
+      expect(registry.pendingFor(RecognitionPurpose.shadowing), isEmpty);
+    });
+
+    test('识别设置变更取消跟读任务时停止录音', () async {
+      final backend = _FakeSpeechPracticeBackend(autoEmitFinal: false);
+      final container = ProviderContainer(
+        overrides: [
+          analyticsOverride(),
+          ...learningSettingsOverrides(listenAndRepeatRatingEnabled: false),
+          speechPracticeBackendProvider.overrideWithValue(backend),
+          recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
+          offlineAsrSettingsProvider.overrideWith(
+            () => _FakeOfflineAsrSettingsNotifier(_localAsrSettings),
+          ),
+        ],
+      );
+      final controller = container.read(
+        speechRecordingControllerProvider.notifier,
+      );
+      final registry = container.read(recognitionInFlightTasksProvider);
+      addTearDown(() async {
+        await controller.fullReset();
+        await backend.dispose();
+        container.dispose();
+      });
+
+      await controller.startRecording(
+        promptId: 'shadowing:cancel:0',
+        referenceText: 'Hello world',
+      );
+      await registry.pendingFor(RecognitionPurpose.shadowing).single.onCancel();
+
+      expect(backend.cancelSessionCalls, 1);
       expect(
         container.read(speechRecordingControllerProvider).phase,
         SpeechRecordingPhase.idle,

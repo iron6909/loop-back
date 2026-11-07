@@ -167,12 +167,14 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
     final cancelSignal = Completer<void>();
     _cancelSignals[audioId] = cancelSignal;
     // 登记在途任务：识别设置变更需要能告知用户并取消本任务。
+    // 持有注册处引用：finally 不能从可能已释放的容器再读 provider。
+    final inFlightRegistry = ref.read(recognitionInFlightTasksProvider);
     final inFlightTask = RecognitionInFlightTask(
       purpose: RecognitionPurpose.subtitle,
       label: audioId,
       onCancel: () async => cancelTranscription(audioId),
     );
-    ref.read(recognitionInFlightTasksProvider).register(inFlightTask);
+    inFlightRegistry.register(inFlightTask);
 
     OfflineAsrEngine? engine;
     File? tempWav;
@@ -329,7 +331,7 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
       }
       _cancelled.remove(audioId);
       _cancelSignals.remove(audioId);
-      ref.read(recognitionInFlightTasksProvider).unregister(inFlightTask);
+      inFlightRegistry.unregister(inFlightTask);
     }
   }
 

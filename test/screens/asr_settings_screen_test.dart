@@ -63,6 +63,14 @@ Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
 /// 识别设置页读取的偏好（每个用例在 setUp 里重置）。
 late SharedPreferences _prefs;
 
+/// 用途卡片加入后整页超过默认 800 高视口，需要断言整页卡片与底部来源选项的
+/// 用例改用更高的视口，避免只挂载视口内的组件。
+void _useTallViewport(WidgetTester tester) {
+  tester.view.physicalSize = const Size(1200, 2400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -170,6 +178,7 @@ void main() {
   });
 
   testWidgets('本机 Whisper 模型列表单独成组并显示预估大小', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -214,6 +223,7 @@ void main() {
   });
 
   testWidgets('Apple Speech 后端允许删除所有已下载 Whisper 模型', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -252,6 +262,7 @@ void main() {
   });
 
   testWidgets('已迁移模型显示真实名称、来源与许可，来源选项只影响未安装下载', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
