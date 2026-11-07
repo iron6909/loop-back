@@ -38,6 +38,7 @@ class _RecordingClient implements SpeechTranscriptionClient {
     SpeechResponseFormat format = SpeechResponseFormat.verboseJson,
     bool requestWordTimestamps = false,
     String fileContentType = 'audio/wav',
+    void Function(int, int)? onSendProgress,
     CancelToken? cancelToken,
   }) async {
     this.config = config;
@@ -190,7 +191,9 @@ void main() {
   });
 
   test('随包样本是 4 秒 16 kHz 单声道 WAV', () async {
-    final bytes = await File(SpeechCapabilityProbe.sampleAssetPath).readAsBytes();
+    final bytes = await File(
+      SpeechCapabilityProbe.sampleAssetPath,
+    ).readAsBytes();
     expect(bytes.length, 128044);
     expect(String.fromCharCodes(bytes.sublist(0, 4)), 'RIFF');
     expect(String.fromCharCodes(bytes.sublist(8, 12)), 'WAVE');

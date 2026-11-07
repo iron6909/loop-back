@@ -530,7 +530,7 @@ class _ListenAndRepeatPlayerScreenState
     // watch 录音相关状态（仅监听 build 中实际使用的字段，避免转录更新触发重建）
     ref.watch(
       speechRecordingControllerProvider.select(
-        (s) => (s.phase, s.currentAttempt, s.promptId),
+        (s) => (s.phase, s.currentAttempt, s.promptId, s.onlineShadowing),
       ),
     );
     final turnState = ref.read(speechRecordingControllerProvider);
@@ -760,6 +760,7 @@ class _ListenAndRepeatPlayerScreenState
                                 recordingMode: recordingMode,
                                 isProcessing: isProcessing,
                                 currentAttempt: currentAttempt,
+                                onlineStatus: turnState.onlineShadowing,
                                 hintText: isPlaying
                                     ? l10n.listenAndRepeatListenHint
                                     : null,

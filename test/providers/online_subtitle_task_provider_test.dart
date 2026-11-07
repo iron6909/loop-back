@@ -12,10 +12,8 @@ import 'package:dio/dio.dart' show CancelToken;
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:echo_loop/database/app_database.dart' as db;
-import 'package:echo_loop/database/daos/audio_item_dao.dart';
 import 'package:echo_loop/database/providers.dart';
 import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/models/audio_item.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
@@ -43,10 +41,10 @@ final _config = SpeechConfig(
 
 /// 只放内存的语音配置替身。
 class _MemoryConfigStore extends SpeechConfigStore {
-  _MemoryConfigStore({this.config, this.apiKey = 'sk-test'});
+  _MemoryConfigStore({required this.config});
 
   SpeechConfig? config;
-  String? apiKey;
+  String? apiKey = 'sk-test';
   String credentialVersion = _credentialVersion;
 
   @override
@@ -61,10 +59,8 @@ class _MemoryConfigStore extends SpeechConfigStore {
 
 /// 只放内存的能力记录替身；[segments] 决定是否具备字幕能力。
 class _MemoryCapabilityStore extends SpeechCapabilityStore {
-  _MemoryCapabilityStore({this.segments = true, this.wordTimestamps = false});
-
-  bool segments;
-  bool wordTimestamps;
+  bool segments = true;
+  bool wordTimestamps = false;
 
   String get identity => SpeechCapability.identityFor(
     kind: _config.kind,
@@ -87,8 +83,6 @@ class _MemoryCapabilityStore extends SpeechCapabilityStore {
 
 /// 受控转写客户端：记录请求参数，按测试给出结果或阻塞。
 class _FakeClient extends SpeechTranscriptionClient {
-  _FakeClient({this.result, this.gate});
-
   SpeechTranscriptionResult? result;
   Completer<void>? gate;
   final List<({String modelId, bool wordTimestamps, Duration duration})> calls =
@@ -105,6 +99,7 @@ class _FakeClient extends SpeechTranscriptionClient {
     SpeechResponseFormat format = SpeechResponseFormat.verboseJson,
     bool requestWordTimestamps = false,
     String fileContentType = 'audio/wav',
+    void Function(int sent, int total)? onSendProgress,
     CancelToken? cancelToken,
   }) async {
     calls.add((
@@ -126,9 +121,7 @@ class _FakeClient extends SpeechTranscriptionClient {
 
 /// 假转码：写入指定字节量的占位 WAV（16 kHz 单声道按 32000 字节/秒换算）。
 class _FakeTranscode extends AudioTranscodeService {
-  _FakeTranscode({this.bytes = 32000});
-
-  int bytes;
+  int bytes = 32000;
 
   @override
   Future<bool> transcodeToPcmWav16k({

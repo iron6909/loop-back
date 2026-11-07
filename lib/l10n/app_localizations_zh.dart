@@ -5652,6 +5652,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recognitionModeSystem => '系统识别';
 
   @override
+  String get recognitionModeOnline => '在线识别';
+
+  @override
+  String recognitionOnlineModelSummary(String model) {
+    return '在线识别 · $model';
+  }
+
+  @override
+  String shadowingOnlineProgress(String service, String model, int percent) {
+    return '在线 · $service · $model · $percent%';
+  }
+
+  @override
+  String shadowingOnlineCost(String service, String model, String cost) {
+    return '在线 · $service · $model · 费用 $cost';
+  }
+
+  @override
+  String shadowingOnlineCostUnknown(String service, String model) {
+    return '在线 · $service · $model · 费用未知';
+  }
+
+  @override
   String get recognitionChangeTitle => '修改识别设置？';
 
   @override
@@ -5740,9 +5763,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get speechUploadNoticeConfirm => '发送测试';
-
-  @override
-  String get recognitionModeOnline => '在线转写';
 
   @override
   String onlineSubtitleService(String service, String model) {

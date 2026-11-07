@@ -35,6 +35,14 @@ final speechPracticeBackendProvider = Provider<SpeechPracticeBackend>((ref) {
   return platform;
 });
 
+/// 纯录音后端：在线跟读用它只录音并保留平台已有的实时反馈。
+///
+/// 在线方式的最终文本由停录后的在线请求产生，本机离线引擎与平台最终识别都
+/// 不参与同一结果，避免重复处理。
+final speechRecordingOnlyBackendProvider = Provider<SpeechPracticeBackend>(
+  (ref) => SpeechPracticePlatform.instance,
+);
+
 /// 平台桥接异常。
 class SpeechPracticePlatformException implements Exception {
   /// 平台错误码。

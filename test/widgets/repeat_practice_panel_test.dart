@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/speech_practice_models.dart';
+import 'package:echo_loop/services/speech/shadowing_online_transcriber.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/common/recording_button.dart';
 import 'package:echo_loop/widgets/common/repeat_practice_panel.dart';
@@ -193,5 +194,107 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Recording'), findsOneWidget);
+  });
+
+  testWidgets('在线转写进行中显示服务、模型与进度', (tester) async {
+    await tester.pumpWidget(
+      await wrap(
+        Builder(
+          builder: (context) => RepeatPracticePanel(
+            l10n: AppLocalizations.of(context)!,
+            theme: Theme.of(context),
+            isInPause: true,
+            isProcessing: true,
+            showCountdown: false,
+            onlineStatus: const ShadowingOnlineState(
+              serviceHost: 'openrouter.ai',
+              modelId: 'openai/whisper-1',
+              phase: ShadowingOnlinePhase.uploading,
+              progress: 0.42,
+            ),
+            onRecordTap: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.text('Online · openrouter.ai · openai/whisper-1 · 42%'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('完成后显示报告费用；没有报告时显示未知而不是免费', (tester) async {
+    Future<void> pumpWithCost(double? cost) async {
+      await tester.pumpWidget(
+        await wrap(
+          Builder(
+            builder: (context) => RepeatPracticePanel(
+              l10n: AppLocalizations.of(context)!,
+              theme: Theme.of(context),
+              isInPause: true,
+              showCountdown: false,
+              onlineStatus: ShadowingOnlineState(
+                serviceHost: 'openrouter.ai',
+                modelId: 'openai/whisper-1',
+                phase: ShadowingOnlinePhase.completed,
+                reportedCost: cost,
+              ),
+              onRecordTap: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await pumpWithCost(0.0002);
+    expect(
+      find.text('Online · openrouter.ai · openai/whisper-1 · cost 0.0002'),
+      findsOneWidget,
+    );
+
+    await pumpWithCost(null);
+    expect(
+      find.text('Online · openrouter.ai · openai/whisper-1 · cost unknown'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('在线失败显示具体原因而不是通用错误', (tester) async {
+    await tester.pumpWidget(
+      await wrap(
+        Builder(
+          builder: (context) => RepeatPracticePanel(
+            l10n: AppLocalizations.of(context)!,
+            theme: Theme.of(context),
+            isInPause: true,
+            showCountdown: false,
+            currentAttempt: const SpeechPracticeAttempt(
+              promptId: 'shadowing:online:0',
+              filePath: '/tmp/take.wav',
+              status: SpeechPracticeAttemptStatus.error,
+            ),
+            onlineStatus: const ShadowingOnlineState(
+              serviceHost: 'openrouter.ai',
+              modelId: 'openai/whisper-1',
+              phase: ShadowingOnlinePhase.failed,
+              error: ShadowingRecordingRejected(
+                ShadowingRecordingRejection.tooLong,
+              ),
+            ),
+            onRecordTap: () {},
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.text(
+        'The recording exceeds the single-request limit; long recordings '
+        'come later',
+      ),
+      findsOneWidget,
+    );
   });
 }

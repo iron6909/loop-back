@@ -32,6 +32,7 @@ import '../utils/srt_generator.dart';
 import '../utils/transcript_stats.dart';
 import '../models/word_timestamp.dart';
 import 'audio_library_provider.dart';
+import 'speech_capability_provider.dart' show speechTranscriptionClientProvider;
 import 'local_transcription_task_provider.dart'
     show
         localTranscriptionTranscodeServiceProvider,
@@ -130,11 +131,6 @@ class OnlineSubtitleFailed extends OnlineSubtitleTaskState {
 class OnlineSubtitleConflict extends OnlineSubtitleTaskState {
   const OnlineSubtitleConflict();
 }
-
-/// 在线转写客户端（测试注入假 transport，生产使用真实网络）。
-final speechTranscriptionClientProvider = Provider<SpeechTranscriptionClient>(
-  (ref) => SpeechTranscriptionClient(),
-);
 
 /// 在线字幕任务管理器。
 ///
