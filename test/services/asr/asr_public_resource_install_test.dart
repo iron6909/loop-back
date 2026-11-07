@@ -170,7 +170,6 @@ Future<_Harness> _createHarness({
   )..failPublish = failPublish;
   harness.manager = AsrModelManager(
     dio: dio,
-    baseUrlOverride: 'http://mock.local',
     modelsRootResolver: () async => p.join(root.path, 'models'),
     downloader: DioReliableHttpDownloader(
       dio: dio,
@@ -255,6 +254,60 @@ void main() {
       vad.fileUri(AsrDownloadSource.huggingFaceMirror, vad.files.single),
       vad.fileUri(AsrDownloadSource.huggingFace, vad.files.single),
     );
+  });
+
+  test('Base 与 Small 使用与 Tiny 相同的公开来源与逐文件安装流程', () {
+    const tiers = {
+      'whisper-base-en-int8': (
+        repository: 'csukuangfj/sherpa-onnx-whisper-base.en',
+        revision: '59eea950fc76df2453efb57e6c0fd334548e8ffe',
+        names: ['base.en-encoder.int8.onnx', 'base.en-decoder.int8.onnx'],
+        sha256: [
+          'ef6b936f4c9b1d90a3b68634b60c4ed8576b26172b33c2535ec0e933c9edb823',
+          'f7162ad6db2dbef16cfaeaa7f945b9d7dd9c1b8d472f6aca82f2273d185e4d41',
+        ],
+        sizes: [29120534, 130669978],
+      ),
+      'whisper-small-en-int8': (
+        repository: 'csukuangfj/sherpa-onnx-whisper-small.en',
+        revision: 'd9533f69affd85061aee349af7fea5cb2996dbbe',
+        names: ['small.en-encoder.int8.onnx', 'small.en-decoder.int8.onnx'],
+        sha256: [
+          '8bdac288f369aa94ee2194059238c465ed82ea9d47ee8fa4a8c0a891873e462f',
+          '710ccf890e10f3faa15f51ec346081a2723c9f3adb6e4da81c6573a5a6f877fb',
+        ],
+        sizes: [112442483, 262223042],
+      ),
+    };
+    for (final entry in tiers.entries) {
+      final spec = asrPublicResourceCatalog[entry.key];
+      if (spec == null) throw StateError('公开资源目录缺少 ${entry.key}');
+      expect(spec.repository, entry.value.repository);
+      expect(spec.revision, entry.value.revision);
+      expect(spec.license, 'MIT');
+      expect(spec.dependencies, [vadModelId]);
+      expect(
+        spec.files.take(2).map((file) => file.name),
+        entry.value.names,
+      );
+      expect(
+        spec.files.take(2).map((file) => file.sha256),
+        entry.value.sha256,
+      );
+      expect(
+        spec.files.take(2).map((file) => file.sizeBytes),
+        entry.value.sizes,
+      );
+      expect(spec.files.last.name, '${entry.key.split('-')[1]}.en-tokens.txt');
+      // 上游与镜像只换域名，版本、路径与摘要完全相同。
+      for (final file in spec.files) {
+        final upstream = spec.fileUri(AsrDownloadSource.huggingFace, file);
+        final mirror = spec.fileUri(AsrDownloadSource.huggingFaceMirror, file);
+        expect(mirror.path, upstream.path);
+        expect(upstream.host, 'huggingface.co');
+        expect(mirror.host, 'hf-mirror.com');
+      }
+    }
   });
 
   test('逐文件下载到临时目录，校验通过后才发布并写入安装清单', () async {

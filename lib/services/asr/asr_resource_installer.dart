@@ -20,9 +20,9 @@ class AsrResourceFileDownload {
 
 /// ASR 资源的下载、断点续传与原子安装流程。
 ///
-/// 两种来源共用同一套 staging、校验与原子发布：已迁移的公开来源逐文件下载并
-/// 逐文件校验 SHA-256；尚未迁移的归档资源沿用原有归档安装。此实现刻意只服务
-/// ASR，避免本次改动影响既有 TTS 下载安装机制。
+/// 三档 Whisper 模型与共享 VAD 都来自固定公开来源：逐文件下载、逐文件校验
+/// SHA-256，全部就绪后才写入安装清单并原子替换旧安装。此实现刻意只服务
+/// ASR，避免影响既有 TTS 下载安装机制。
 class AsrResourceInstaller {
   AsrResourceInstaller(this._downloader, {RenameDirectory? renameDirectory})
     : _renameDirectory = renameDirectory ?? _defaultRenameDirectory;
@@ -34,62 +34,6 @@ class AsrResourceInstaller {
 
   static Future<void> _defaultRenameDirectory(String from, String to) async {
     await Directory(from).rename(to);
-  }
-
-  /// 下载归档、整包校验后原子替换当前安装。
-  Future<void> installArchive({
-    required Directory root,
-    required Directory target,
-    required String resourceId,
-    required Uri uri,
-    required String expectedSha256,
-    required Future<void> Function(File archive, Directory staging)
-    extractAndValidate,
-    CancelToken? cancelToken,
-    void Function(double progress)? onProgress,
-    void Function()? onInstalling,
-  }) async {
-    await root.create(recursive: true);
-    final archive = File(p.join(root.path, '_download_$resourceId.zip'));
-    await _cleanupOrphanedStagingDirectories(root, resourceId);
-    Directory? staging;
-    try {
-      AppLogger.log('AsrInstall', 'downloading resource=$resourceId url=$uri');
-      await _downloader.download(
-        uri: uri,
-        savePath: archive.path,
-        identityKey: expectedSha256,
-        // 网络中断或应用退出时保留 `.part` 和元数据，下一次同版本资源
-        // 使用 SHA-256 identityKey 发起 HTTP Range 续传。
-        allowResume: true,
-        cancelToken: cancelToken,
-        onProgress: (received, total) {
-          if (total != null && total > 0) {
-            onProgress?.call((received / total).clamp(0.0, 1.0));
-          }
-        },
-      );
-      final actualSha256 = await sha256.bind(archive.openRead()).first;
-      if (actualSha256.toString() != expectedSha256) {
-        throw StateError(
-          'ASR archive SHA-256 mismatch: expected=$expectedSha256 '
-          'actual=$actualSha256',
-        );
-      }
-      staging = await root.createTemp('_staging_${resourceId}_');
-      onInstalling?.call();
-      await extractAndValidate(archive, staging);
-      await writeResourceInstallManifest(
-        staging,
-        resourceId: resourceId,
-        installAt: DateTime.now(),
-      );
-      await _publish(staging: staging, target: target, resourceId: resourceId);
-      AppLogger.log('AsrInstall', 'install finished resource=$resourceId');
-    } finally {
-      await _deleteFileQuietly(archive);
-      if (staging != null) await _deleteDirectoryQuietly(staging);
-    }
   }
 
   /// 逐文件下载公开来源资源：每个文件校验通过后才进入 staging，
@@ -182,6 +126,7 @@ class AsrResourceInstaller {
   /// 丢弃用户明确取消的资源下载残留。
   ///
   /// 仅显式取消调用此方法；网络失败和进程中断保留 `.part`，以便后续续传。
+  /// 旧版本用整体归档安装，这里同时清理它们遗留的归档半成品。
   Future<void> discardPartial({
     required Directory root,
     required String resourceId,

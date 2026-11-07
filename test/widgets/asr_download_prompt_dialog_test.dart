@@ -161,7 +161,7 @@ void main() {
       find.textContaining('automatically evaluate your pronunciation'),
       findsOneWidget,
     );
-    expect(find.text('Estimated download: ~90.6 MB'), findsOneWidget);
+    expect(find.text('Estimated download: ~153.2 MB'), findsOneWidget);
     expect(
       find.text(
         'You can also choose another speech recognition model in Settings.',

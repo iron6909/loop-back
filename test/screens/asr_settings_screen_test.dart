@@ -62,7 +62,7 @@ void main() {
     type: AsrModelType.whisper,
   );
 
-  testWidgets('残缺模型显示失败状态和模型档位', (tester) async {
+  testWidgets('残缺模型显示失败状态与修复动作', (tester) async {
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -80,6 +80,9 @@ void main() {
     expect(find.textContaining('Whisper Base (English)'), findsAny);
     // 不显示 Ready（下载失败）
     expect(find.textContaining('Ready'), findsNothing);
+    // 失败保留已下载内容，并提供重试（重新下载即修复）
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.textContaining('153 MB'), findsAny);
   });
 
   testWidgets('不再显示语音识别总开关，关闭旧状态也显示模型列表', (tester) async {
@@ -173,8 +176,8 @@ void main() {
     // 引擎卡片 + 模型列表卡片 + 下载来源卡片。
     expect(find.byType(Card), findsNWidgets(3));
     expect(find.textContaining('~99 MB'), findsOneWidget);
-    expect(find.textContaining('~150 MB'), findsOneWidget);
-    expect(find.textContaining('~360 MB'), findsOneWidget);
+    expect(find.textContaining('~153 MB'), findsOneWidget);
+    expect(find.textContaining('~358 MB'), findsOneWidget);
   });
 
   testWidgets('Apple Speech 后端不平铺模型列表', (tester) async {
@@ -249,9 +252,9 @@ void main() {
     expect(find.text('Whisper Tiny (English)'), findsOneWidget);
     expect(find.text('Whisper Base (English)'), findsOneWidget);
     expect(find.text('Whisper Small (English)'), findsOneWidget);
-    // 仅已迁移的 Tiny 展示公开来源与许可；Base/Small 不冒充公开源。
-    expect(find.textContaining('Source: Hugging Face'), findsOneWidget);
-    expect(find.textContaining('License: MIT'), findsOneWidget);
+    // 三档都已迁移到固定公开来源，都展示来源与许可。
+    expect(find.textContaining('Source: Hugging Face'), findsNWidgets(3));
+    expect(find.textContaining('License: MIT'), findsNWidgets(3));
     // 来源选项只出现在下载来源卡片中。
     expect(find.text('hf-mirror.com (mirror)'), findsOneWidget);
 

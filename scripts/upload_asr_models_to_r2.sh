@@ -4,6 +4,10 @@ set -euo pipefail
 # 从 HuggingFace 镜像下载 whisper 模型文件，校验 SHA256，上传到 R2。
 # 支持断点续传：自动跳过 R2 上已存在且大小匹配的文件。
 #
+# 已退役：ASR 三档模型与共享 VAD 改由 App 直接从公开来源逐文件安装
+# （见 lib/services/asr/asr_model_catalog.dart），不再经 EchoLoop R2 分发。
+# 本脚本仅保留为上游 revision 与文件摘要的历史核对依据，不要用它作为发布流程。
+#
 # 用法:
 #   scripts/upload_asr_models_to_r2.sh
 #
