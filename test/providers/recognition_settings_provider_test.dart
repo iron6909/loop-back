@@ -220,7 +220,7 @@ void main() {
   });
 
   group('可选方式', () {
-    test('系统识别只在受支持的平台与用途出现，在线方式不出现', () {
+    test('系统识别只在受支持的平台与用途出现，在线只在跟读且具备条件时出现', () {
       expect(
         availableRecognitionModes(
           RecognitionPurpose.subtitle,
@@ -235,6 +235,7 @@ void main() {
           systemSupported: false,
         ),
         [RecognitionMode.local],
+        reason: '条件未就绪时在线不作为可选方式',
       );
       expect(
         availableRecognitionModes(
@@ -245,12 +246,75 @@ void main() {
       );
       expect(
         availableRecognitionModes(
+          RecognitionPurpose.shadowing,
+          systemSupported: true,
+          onlineAvailable: true,
+        ),
+        [
+          RecognitionMode.local,
+          RecognitionMode.system,
+          RecognitionMode.online,
+        ],
+      );
+      expect(
+        availableRecognitionModes(
+          RecognitionPurpose.shadowing,
+          systemSupported: false,
+          onlineAvailable: true,
+        ),
+        [RecognitionMode.local, RecognitionMode.online],
+      );
+      expect(
+        availableRecognitionModes(
           RecognitionPurpose.retell,
           systemSupported: true,
+          onlineAvailable: true,
         ),
         [RecognitionMode.local, RecognitionMode.system],
+        reason: '复述的在线分支由它自己的切片接通',
       );
-      expect(RecognitionMode.values, hasLength(2));
+      expect(RecognitionMode.values, hasLength(3));
+    });
+
+    test('跟读选在线被持久化，且不改变离线 ASR 档位', () async {
+      final asr = _FakeOfflineAsrNotifier(
+        OfflineAsrSettingsState(
+          backend: AsrBackend.offline,
+          selectedModel: _model(_base),
+          recommendedModel: _model(_base),
+        ),
+      );
+      final container = await _container(asrNotifier: asr);
+      addTearDown(container.dispose);
+
+      final result = await container
+          .read(recognitionSettingsProvider.notifier)
+          .change(
+            purpose: RecognitionPurpose.shadowing,
+            selection: const RecognitionSelection.online(),
+          );
+
+      expect(result.applied, isTrue);
+      expect(
+        container.read(recognitionSettingsProvider).shadowing.mode,
+        RecognitionMode.online,
+      );
+      expect(asr.backends, isEmpty, reason: '在线不切换本机后端');
+      expect(asr.selectedModelIds, isEmpty, reason: '在线不触发模型下载/初始化');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(shadowingOnlinePrefsKey), 'online');
+
+      await container
+          .read(recognitionSettingsProvider.notifier)
+          .change(
+            purpose: RecognitionPurpose.shadowing,
+            selection: const RecognitionSelection.local(_base),
+          );
+      expect(
+        container.read(recognitionSettingsProvider).shadowing.mode,
+        RecognitionMode.local,
+      );
+      expect(prefs.getString(shadowingOnlinePrefsKey), isNull);
     });
   });
 

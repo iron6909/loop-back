@@ -5,8 +5,9 @@
 /// - 字幕：本机模型沿用旧偏好 `local_transcription_model_id`，由
 ///   [localTranscriptionModelProvider] 持有；方式在本切片恒为本机（系统识别
 ///   没有可用片段时间戳、在线尚未接入），因此不写冗余的方式偏好。
-/// - 跟读：方式与模型沿用离线 ASR 设置（共享本机引擎的档位与后端），由
-///   [offlineAsrSettingsProvider] 持有唯一来源，避免引擎档位出现第二份真相。
+/// - 跟读：本机 / 系统方式与模型沿用离线 ASR 设置（共享本机引擎的档位与后端），
+///   由 [offlineAsrSettingsProvider] 持有唯一来源，避免引擎档位出现第二份真相；
+///   只有选用在线时额外记一份在线标记，在线模型由语音配置按用途保存。
 /// - 复述：独立偏好，首次建立时继承升级前实际字幕模型并快照下来。
 ///
 /// 修改会影响在途任务的选择时，先返回受影响任务让界面告知用户；只有用户接受
@@ -33,6 +34,12 @@ const retellModePrefsKey = 'recognition_retell_mode';
 
 /// 复述本机模型偏好 key。
 const retellModelPrefsKey = 'recognition_retell_model_id';
+
+/// 跟读选用在线方式时的偏好 key。
+///
+/// 只有「在线」需要额外记录：本机与系统方式继续由离线 ASR 设置的唯一档位
+/// 决定，避免同一选择存两份。
+const shadowingOnlinePrefsKey = 'recognition_shadowing_online';
 
 // ---------------------------------------------------------------------------
 // State
@@ -168,14 +175,21 @@ final systemRecognitionPlatformProvider = Provider<bool>(
 /// 某用途当前可选的识别方式。
 ///
 /// 字幕需要片段时间戳，系统识别不提供，因此只开放本机；跟读与复述在受支持的
-/// 平台同时开放系统识别。在线方式在对应业务切片完成前不出现。
+/// 平台同时开放系统识别；在线只在具备 Key、上传告知与文本能力验证的跟读开放，
+/// 其余用途的在线分支在各自切片完成前不出现。
 List<RecognitionMode> availableRecognitionModes(
   RecognitionPurpose purpose, {
   required bool systemSupported,
+  bool onlineAvailable = false,
 }) {
   const local = [RecognitionMode.local];
-  if (!systemSupported || purpose == RecognitionPurpose.subtitle) return local;
-  return const [RecognitionMode.local, RecognitionMode.system];
+  if (purpose == RecognitionPurpose.subtitle) return local;
+  return [
+    RecognitionMode.local,
+    if (systemSupported) RecognitionMode.system,
+    if (purpose == RecognitionPurpose.shadowing && onlineAvailable)
+      RecognitionMode.online,
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -232,9 +246,15 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
 
     final retellModelId = _resolveRetellModelId(prefs, subtitleModelId);
     final retellMode = _modeFromPrefs(prefs.getString(retellModePrefsKey));
+    // 跟读在线是一个显式的额外选择；未选在线时继续由离线 ASR 档位决定。
+    final shadowingOnline =
+        prefs.getString(shadowingOnlinePrefsKey) ==
+        RecognitionMode.online.name;
     return RecognitionSettings(
       subtitle: RecognitionSelection.local(subtitleModelId),
-      shadowing: shadowingMode == AsrBackend.offline
+      shadowing: shadowingOnline
+          ? RecognitionSelection.online(localModelId: shadowingModelId)
+          : shadowingMode == AsrBackend.offline
           ? RecognitionSelection.local(shadowingModelId)
           : RecognitionSelection(
               mode: RecognitionMode.system,
@@ -296,19 +316,33 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
             .read(localTranscriptionModelProvider.notifier)
             .select(modelById(selection.localModelId));
       case RecognitionPurpose.shadowing:
-        final backend = selection.usesLocalModel
-            ? AsrBackend.offline
-            : AsrBackend.platform;
-        // 档位没变时不重复触发下载/引擎初始化。
-        final modelChanged =
-            selection.usesLocalModel &&
-            selection.localModelId != state.shadowing.localModelId;
-        await ref.read(offlineAsrSettingsProvider.notifier).setBackend(backend);
-        if (modelChanged) {
+        final prefs = ref.read(sharedPreferencesProvider);
+        if (selection.usesOnlineModel) {
+          // 在线不改变离线 ASR 档位：用户切回本机时沿用原选择。
+          state = state.withPurpose(purpose, selection);
+          await prefs.setString(
+            shadowingOnlinePrefsKey,
+            RecognitionMode.online.name,
+          );
+        } else {
+          await prefs.remove(shadowingOnlinePrefsKey);
+          final backend = selection.usesLocalModel
+              ? AsrBackend.offline
+              : AsrBackend.platform;
+          // 档位没变时不重复触发下载/引擎初始化。
+          final modelChanged =
+              selection.usesLocalModel &&
+              selection.localModelId != state.shadowing.localModelId;
           await ref
               .read(offlineAsrSettingsProvider.notifier)
-              .selectModel(modelById(selection.localModelId));
+              .setBackend(backend);
+          if (modelChanged) {
+            await ref
+                .read(offlineAsrSettingsProvider.notifier)
+                .selectModel(modelById(selection.localModelId));
+          }
         }
+        state = state.withPurpose(purpose, selection);
       case RecognitionPurpose.retell:
         final prefs = ref.read(sharedPreferencesProvider);
         state = state.withPurpose(purpose, selection);

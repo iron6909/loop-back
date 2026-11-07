@@ -7,6 +7,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/recognition_selection.dart';
+import '../services/speech/shadowing_online_transcriber.dart';
 import '../services/speech/speech_capability.dart';
 import '../services/speech/speech_capability_probe.dart';
 import '../services/speech/speech_config.dart';
@@ -58,6 +59,58 @@ final speechCapabilityProbeProvider = Provider<SpeechCapabilityProbe>(
 final speechModelCatalogClientProvider = Provider<SpeechModelCatalogClient>(
   (ref) => SpeechModelCatalogClient(),
 );
+
+/// 在线文件转写客户端；业务入口共用同一实例，测试覆盖为假 transport。
+final speechTranscriptionClientProvider = Provider<SpeechTranscriptionClient>(
+  (ref) => SpeechTranscriptionClient(),
+);
+
+/// 跟读能否选用在线：需要 Key、上传告知与跟读用途的有效文本能力验证。
+///
+/// 界面据此决定是否把在线列为可选方式；录音入口在发请求前用
+/// [resolveShadowingOnlineAccess] 再确认一次，避免配置已变时静默上传。
+final shadowingOnlineAvailabilityProvider = FutureProvider<bool>((ref) async {
+  final access = await resolveShadowingOnlineAccess(ref);
+  return access is ShadowingOnlineAccessGranted;
+});
+
+/// 解析跟读在线的准入结果：不具备条件时返回拒绝原因，不发任何请求。
+Future<ShadowingOnlineAccess> resolveShadowingOnlineAccess(Ref ref) async {
+  final configStore = ref.read(speechConfigStoreProvider);
+  final config = await configStore.read();
+  final apiKey = await configStore.readApiKey();
+  final modelId = config?.onlineModelFor(RecognitionPurpose.shadowing) ?? '';
+  if (config == null || apiKey == null || modelId.isEmpty) {
+    return const ShadowingOnlineAccessDenied(
+      ShadowingOnlineAccessDenial.missingConfiguration,
+    );
+  }
+  // 首次向该服务上传用户录音前必须有告知；没有告知就不上传。
+  final noticeDone = await ref
+      .read(speechCapabilityStoreProvider)
+      .hasUploadNotice(config.baseUrl);
+  if (!noticeDone) {
+    return const ShadowingOnlineAccessDenied(
+      ShadowingOnlineAccessDenial.uploadNoticeMissing,
+    );
+  }
+  final capability = (await ref.read(speechCapabilityProvider.future))
+      .capabilityFor(
+        config: config,
+        credentialVersion: await configStore.readCredentialVersion(),
+        purpose: RecognitionPurpose.shadowing,
+      );
+  if (capability == null || !capability.text) {
+    return const ShadowingOnlineAccessDenied(
+      ShadowingOnlineAccessDenial.capabilityUnverified,
+    );
+  }
+  return ShadowingOnlineAccessGranted(
+    config: config,
+    apiKey: apiKey,
+    modelId: modelId,
+  );
+}
 
 /// 当前能力验证状态。
 final speechCapabilityProvider =

@@ -11,6 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/recognition_selection.dart';
 import '../../providers/recognition_settings_provider.dart';
+import '../../providers/speech_capability_provider.dart';
+import '../../providers/speech_configuration_provider.dart';
 import '../../services/asr/asr_model_manager.dart';
 import '../../theme/app_theme.dart';
 
@@ -72,14 +74,23 @@ String recognitionModeLabel(AppLocalizations l10n, RecognitionMode mode) =>
     switch (mode) {
       RecognitionMode.local => l10n.recognitionModeLocal,
       RecognitionMode.system => l10n.recognitionModeSystem,
+      RecognitionMode.online => l10n.recognitionModeOnline,
     };
 
-/// 当前选择的一行摘要：方式（本机时带模型名）。
+/// 当前选择的一行摘要：方式（本机带本地模型名，在线带在线模型 id）。
 String recognitionSelectionSummary(
   AppLocalizations l10n,
-  RecognitionSelection selection,
-) {
-  if (!selection.usesLocalModel) return recognitionModeLabel(l10n, selection.mode);
+  RecognitionSelection selection, {
+  String onlineModelId = '',
+}) {
+  if (selection.usesOnlineModel) {
+    return onlineModelId.isEmpty
+        ? recognitionModeLabel(l10n, selection.mode)
+        : l10n.recognitionOnlineModelSummary(onlineModelId);
+  }
+  if (!selection.usesLocalModel) {
+    return recognitionModeLabel(l10n, selection.mode);
+  }
   final model = availableModels
       .where((candidate) => candidate.id == selection.localModelId)
       .firstOrNull;
@@ -95,6 +106,10 @@ class RecognitionPurposeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(recognitionSettingsProvider);
+    final speechConfig = ref
+        .watch(speechConfigurationProvider)
+        .valueOrNull
+        ?.config;
     final theme = Theme.of(context);
     return Card(
       child: Column(
@@ -105,7 +120,12 @@ class RecognitionPurposeSection extends ConsumerWidget {
             ListTile(
               title: Text(recognitionPurposeLabel(l10n, purpose)),
               subtitle: Text(
-                recognitionSelectionSummary(l10n, settings.forPurpose(purpose)),
+                recognitionSelectionSummary(
+                  l10n,
+                  settings.forPurpose(purpose),
+                  onlineModelId:
+                      speechConfig?.onlineModelFor(purpose) ?? '',
+                ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -126,10 +146,6 @@ class RecognitionPurposeSection extends ConsumerWidget {
     RecognitionPurpose purpose,
   ) {
     final systemSupported = ref.read(systemRecognitionPlatformProvider);
-    final modes = availableRecognitionModes(
-      purpose,
-      systemSupported: systemSupported,
-    );
     return showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -139,6 +155,15 @@ class RecognitionPurposeSection extends ConsumerWidget {
           final selection = innerRef
               .watch(recognitionSettingsProvider)
               .forPurpose(purpose);
+          // 在线是否可选取决于 Key、上传告知与该用途的文本能力验证是否就绪。
+          final onlineAvailable =
+              innerRef.watch(shadowingOnlineAvailabilityProvider).valueOrNull ??
+              false;
+          final modes = availableRecognitionModes(
+            purpose,
+            systemSupported: systemSupported,
+            onlineAvailable: onlineAvailable,
+          );
           final theme = Theme.of(innerContext);
           return SafeArea(
             child: SingleChildScrollView(
@@ -167,14 +192,21 @@ class RecognitionPurposeSection extends ConsumerWidget {
                           innerContext,
                           innerRef,
                           purpose: purpose,
-                          selection: mode == RecognitionMode.system
-                              ? RecognitionSelection(
-                                  mode: RecognitionMode.system,
-                                  localModelId: selection.localModelId,
-                                )
-                              : RecognitionSelection.local(
-                                  selection.localModelId,
-                                ),
+                          selection: switch (mode) {
+                            RecognitionMode.system =>
+                              RecognitionSelection(
+                                mode: RecognitionMode.system,
+                                localModelId: selection.localModelId,
+                              ),
+                            RecognitionMode.online =>
+                              RecognitionSelection.online(
+                                localModelId: selection.localModelId,
+                              ),
+                            RecognitionMode.local =>
+                              RecognitionSelection.local(
+                                selection.localModelId,
+                              ),
+                          },
                         );
                       },
                       child: Column(

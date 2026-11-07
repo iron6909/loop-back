@@ -5920,6 +5920,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recognitionModeSystem => 'System speech';
 
   @override
+  String get recognitionModeOnline => 'Online speech';
+
+  @override
+  String recognitionOnlineModelSummary(String model) {
+    return 'Online speech · $model';
+  }
+
+  @override
+  String shadowingOnlineProgress(String service, String model, int percent) {
+    return 'Online · $service · $model · $percent%';
+  }
+
+  @override
+  String shadowingOnlineCost(String service, String model, String cost) {
+    return 'Online · $service · $model · cost $cost';
+  }
+
+  @override
+  String shadowingOnlineCostUnknown(String service, String model) {
+    return 'Online · $service · $model · cost unknown';
+  }
+
+  @override
   String get recognitionChangeTitle => 'Change recognition settings?';
 
   @override

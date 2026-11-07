@@ -2847,6 +2847,34 @@
   "recognitionPurposeRetell": "Retelling",
   "recognitionModeLocal": "On-device",
   "recognitionModeSystem": "System speech",
+  "recognitionModeOnline": "Online speech",
+  "recognitionOnlineModelSummary": "Online speech · {model}",
+  "@recognitionOnlineModelSummary": {
+    "placeholders": { "model": { "type": "String" } }
+  },
+  "shadowingOnlineProgress": "Online · {service} · {model} · {percent}%",
+  "@shadowingOnlineProgress": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" },
+      "percent": { "type": "int" }
+    }
+  },
+  "shadowingOnlineCost": "Online · {service} · {model} · cost {cost}",
+  "@shadowingOnlineCost": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" },
+      "cost": { "type": "String" }
+    }
+  },
+  "shadowingOnlineCostUnknown": "Online · {service} · {model} · cost unknown",
+  "@shadowingOnlineCostUnknown": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" }
+    }
+  },
   "recognitionChangeTitle": "Change recognition settings?",
   "recognitionChangeMessage": "Running recognition tasks affected: {count}. Continuing cancels them and discards unfinished results.",
   "@recognitionChangeMessage": {
