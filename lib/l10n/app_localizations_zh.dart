@@ -5679,10 +5679,65 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speechProviderStatusUnverified => '已保存，尚未验证';
 
   @override
+  String get speechProviderStatusVerified => '已保存，已验证';
+
+  @override
   String get speechProviderSaveFailed => '无法保存在线语音配置';
 
   @override
   String speechProviderOnlineModel(String purpose) {
     return '$purpose在线模型';
   }
+
+  @override
+  String get speechCapabilityTest => '验证模型';
+
+  @override
+  String get speechCapabilityTesting => '验证中…';
+
+  @override
+  String get speechCapabilityUnverified => '尚未验证';
+
+  @override
+  String get speechCapabilitySubtitles => '字幕可用';
+
+  @override
+  String get speechCapabilityTextOnly => '仅文本可用（无可用片段）';
+
+  @override
+  String get speechCapabilityWords => '词时间戳可用';
+
+  @override
+  String speechCapabilityVerifiedCost(String cost) {
+    return '验证完成。供应商报告的本次费用：$cost';
+  }
+
+  @override
+  String get speechCapabilityVerifiedCostUnknown => '验证完成。供应商未报告费用，实际花费未知';
+
+  @override
+  String get speechModelRefresh => '刷新转写模型目录';
+
+  @override
+  String get speechModelRefreshEmpty => '服务没有返回转写模型，仍可手填模型 ID';
+
+  @override
+  String get speechModelRefreshFailed => '无法获取模型目录，仍可手填模型 ID';
+
+  @override
+  String get speechUploadNoticeTitle => '发送测试音频？';
+
+  @override
+  String speechUploadNoticeBody(String host, String provider) {
+    return 'Echo Loop 会把随包的 4 秒英语样本上传到 $host，下游推理供应商为 $provider。该服务可能为此向你收费；测试不会使用你自己的录音。';
+  }
+
+  @override
+  String get speechUploadProviderOpenRouter => 'OpenRouter 及其路由到的下游供应商';
+
+  @override
+  String get speechUploadProviderCustom => '该服务的运营方（下游供应商未知）';
+
+  @override
+  String get speechUploadNoticeConfirm => '发送测试';
 }

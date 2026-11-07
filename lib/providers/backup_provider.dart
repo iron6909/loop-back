@@ -17,6 +17,7 @@ import 'learning_progress_provider.dart';
 import 'package_info_provider.dart';
 import 'settings_provider.dart';
 import 'provider_configuration_provider.dart';
+import 'speech_capability_provider.dart';
 import 'speech_configuration_provider.dart';
 import '../services/provider/provider_config.dart';
 import '../services/speech/speech_config.dart';
@@ -117,6 +118,9 @@ Future<BackupManifest> performImport(
     // 恢复的语音配置没有 Key，也不能沿用本机旧验证：换新凭据版本并重读状态。
     await speechStore.rotateCredentialVersion();
     await ref.read(speechConfigurationProvider.notifier).reload();
+    // 能力验证与上传告知被备份黑名单保留在本机，必须显式清理，避免旧验证描述新配置。
+    await ref.read(speechCapabilityStoreProvider).clear();
+    ref.invalidate(speechCapabilityProvider);
     await applied.commit();
     AppLogger.log('Backup', 'restore_committed');
 

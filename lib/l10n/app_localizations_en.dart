@@ -5947,6 +5947,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speechProviderStatusUnverified => 'Saved, not verified';
 
   @override
+  String get speechProviderStatusVerified => 'Saved and verified';
+
+  @override
   String get speechProviderSaveFailed =>
       'Could not save the online speech settings';
 
@@ -5954,4 +5957,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String speechProviderOnlineModel(String purpose) {
     return '$purpose online model';
   }
+
+  @override
+  String get speechCapabilityTest => 'Verify model';
+
+  @override
+  String get speechCapabilityTesting => 'Verifying…';
+
+  @override
+  String get speechCapabilityUnverified => 'Not verified';
+
+  @override
+  String get speechCapabilitySubtitles => 'Subtitles available';
+
+  @override
+  String get speechCapabilityTextOnly => 'Text only, no usable segments';
+
+  @override
+  String get speechCapabilityWords => 'Word timestamps available';
+
+  @override
+  String speechCapabilityVerifiedCost(String cost) {
+    return 'Verified. Provider-reported cost: $cost';
+  }
+
+  @override
+  String get speechCapabilityVerifiedCostUnknown =>
+      'Verified. The provider reported no cost, so the charge is unknown';
+
+  @override
+  String get speechModelRefresh => 'Refresh transcription models';
+
+  @override
+  String get speechModelRefreshEmpty =>
+      'The service returned no transcription models; you can still enter a model ID';
+
+  @override
+  String get speechModelRefreshFailed =>
+      'Could not load the model list; you can still enter a model ID';
+
+  @override
+  String get speechUploadNoticeTitle => 'Send a test sample?';
+
+  @override
+  String speechUploadNoticeBody(String host, String provider) {
+    return 'Echo Loop will upload the bundled 4-second English sample to $host. Downstream inference provider: $provider. The service may charge your account for this request. Your own recordings are not used.';
+  }
+
+  @override
+  String get speechUploadProviderOpenRouter =>
+      'OpenRouter and the downstream providers it routes to';
+
+  @override
+  String get speechUploadProviderCustom =>
+      'the service operator (downstream provider unknown)';
+
+  @override
+  String get speechUploadNoticeConfirm => 'Send test';
 }

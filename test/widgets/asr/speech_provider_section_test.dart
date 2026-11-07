@@ -1,10 +1,17 @@
-/// 在线语音服务配置区：状态显示与编辑只落本机配置，不发请求。
+/// 在线语音服务配置区：状态显示、能力验证与上传告知。
 library;
 
+import 'package:dio/dio.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
+import 'package:echo_loop/models/recognition_selection.dart';
+import 'package:echo_loop/providers/speech_capability_provider.dart';
 import 'package:echo_loop/providers/speech_configuration_provider.dart';
+import 'package:echo_loop/services/speech/speech_capability.dart';
+import 'package:echo_loop/services/speech/speech_capability_probe.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
 import 'package:echo_loop/services/speech/speech_config_store.dart';
+import 'package:echo_loop/services/speech/speech_model_catalog.dart';
+import 'package:echo_loop/services/speech/speech_transcription_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/asr/speech_provider_section.dart';
 import 'package:flutter/material.dart';
@@ -45,9 +52,118 @@ const _openRouterConfig = SpeechConfig(
   baseUrl: 'https://openrouter.ai/api/v1',
 );
 
+const _openRouterConfigWithModels = SpeechConfig(
+  kind: SpeechProviderKind.openrouter,
+  baseUrl: 'https://openrouter.ai/api/v1',
+  onlineModels: {
+    RecognitionPurpose.subtitle: 'openai/whisper-large-v3',
+    RecognitionPurpose.shadowing: 'openai/whisper-large-v3',
+  },
+);
+
+/// 与待验证配置身份匹配的结论。
+SpeechCapability _capability({
+  required String modelId,
+  required bool segments,
+  bool words = false,
+  double? cost,
+}) => SpeechCapability(
+  identity: SpeechCapability.identityFor(
+    kind: SpeechProviderKind.openrouter,
+    baseUrl: 'https://openrouter.ai/api/v1',
+    modelId: modelId,
+    credentialVersion: 'test-credential-version',
+  ),
+  text: true,
+  segments: segments,
+  wordTimestamps: words,
+  validatedAt: DateTime.utc(2026, 11, 7, 12),
+  reportedCost: cost,
+);
+
+/// 只保存在内存里的能力记录替身，不碰普通偏好。
+class _InMemoryCapabilityStore extends SpeechCapabilityStore {
+  final Map<String, SpeechCapability> records = {};
+  final Set<String> notices = {};
+
+  @override
+  Future<Map<String, SpeechCapability>> readAll() async => Map.of(records);
+
+  @override
+  Future<SpeechCapability?> read(String identity) async => records[identity];
+
+  @override
+  Future<void> save(SpeechCapability capability) async =>
+      records[capability.identity] = capability;
+
+  @override
+  Future<bool> hasUploadNotice(String baseUrl) async =>
+      notices.contains(baseUrl);
+
+  @override
+  Future<void> rememberUploadNotice(String baseUrl) async =>
+      notices.add(baseUrl);
+
+  @override
+  Future<void> clear() async {
+    records.clear();
+    notices.clear();
+  }
+}
+
+/// 可控的能力验证替身：不发付费请求。
+class _FakeProbe implements SpeechCapabilityProbe {
+  int runCount = 0;
+  SpeechCapability? capability;
+  Object? failure;
+
+  @override
+  Future<SpeechCapability> run({
+    required SpeechConfig config,
+    required String apiKey,
+    required String modelId,
+    required String? credentialVersion,
+    CancelToken? cancelToken,
+  }) async {
+    runCount++;
+    if (failure case final error?) throw error;
+    return capability ?? (throw StateError('没有预设结论'));
+  }
+}
+
+/// 可控的模型目录替身。
+class _FakeCatalog implements SpeechModelCatalogClient {
+  List<String> models = const [];
+  Object? failure;
+  int callCount = 0;
+
+  @override
+  Future<List<String>> fetchTranscriptionModels({
+    required SpeechConfig config,
+    required String apiKey,
+    CancelToken? cancelToken,
+  }) async {
+    callCount++;
+    if (failure case final error?) throw error;
+    return models;
+  }
+}
+
 void main() {
-  Widget app(SpeechConfigStore speechStore) => ProviderScope(
-    overrides: [speechConfigStoreProvider.overrideWithValue(speechStore)],
+  Widget app(
+    SpeechConfigStore speechStore, {
+    SpeechCapabilityStore? capabilityStore,
+    SpeechCapabilityProbe? probe,
+    SpeechModelCatalogClient? catalog,
+  }) => ProviderScope(
+    overrides: [
+      speechConfigStoreProvider.overrideWithValue(speechStore),
+      if (capabilityStore != null)
+        speechCapabilityStoreProvider.overrideWithValue(capabilityStore),
+      if (probe != null) speechCapabilityProbeProvider.overrideWithValue(probe),
+      if (catalog != null)
+        speechModelCatalogClientProvider.overrideWithValue(catalog),
+    ],
     child: MaterialApp(
       locale: const Locale('en'),
       supportedLocales: const [Locale('en'), Locale('zh')],
@@ -137,5 +253,270 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Not configured'), findsOneWidget);
+  });
+
+  testWidgets('手填模型 ID 始终可编辑', (tester) async {
+    final store = _InMemorySpeechConfigStore(
+      config: _openRouterConfig,
+      apiKey: 'sk-speech-sentinel-4b7d',
+    );
+    await tester.pumpWidget(app(store));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Subtitles online model'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'openai/whisper-large-v3');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(
+      store.config?.onlineModelFor(RecognitionPurpose.subtitle),
+      'openai/whisper-large-v3',
+    );
+  });
+
+  testWidgets('OpenRouter 可刷新转写目录并选用模型', (tester) async {
+    final store = _InMemorySpeechConfigStore(
+      config: _openRouterConfig,
+      apiKey: 'sk-speech-sentinel-4b7d',
+    );
+    final catalog = _FakeCatalog()
+      ..models = const ['openai/whisper-large-v3'];
+    await tester.pumpWidget(app(store, catalog: catalog));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Refresh transcription models').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('openai/whisper-large-v3'));
+    await tester.pumpAndSettle();
+
+    expect(catalog.callCount, 1);
+    expect(
+      store.config?.onlineModelFor(RecognitionPurpose.subtitle),
+      'openai/whisper-large-v3',
+    );
+  });
+
+  testWidgets('自定义服务不提供目录刷新，但手填仍可用', (tester) async {
+    final store = _InMemorySpeechConfigStore(
+      config: const SpeechConfig(
+        kind: SpeechProviderKind.custom,
+        baseUrl: 'https://speech.example.com/stt',
+      ),
+      apiKey: 'sk-speech-sentinel-4b7d',
+    );
+    await tester.pumpWidget(app(store));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Refresh transcription models'), findsNothing);
+
+    await tester.tap(find.text('Shadowing online model'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'whisper-1');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(
+      store.config?.onlineModelFor(RecognitionPurpose.shadowing),
+      'whisper-1',
+    );
+  });
+
+  testWidgets('目录刷新失败时提示，手填不受影响', (tester) async {
+    final catalog = _FakeCatalog()
+      ..failure = const SpeechTranscriptionException(
+        SpeechTranscriptionErrorKind.network,
+      );
+    final store = _InMemorySpeechConfigStore(
+      config: _openRouterConfig,
+      apiKey: 'sk-speech-sentinel-4b7d',
+    );
+    await tester.pumpWidget(app(store, catalog: catalog));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Refresh transcription models').first);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Could not load the model list; you can still enter a model ID'),
+      findsOneWidget,
+    );
+
+    // 列表失败不影响手填。
+    await tester.tap(find.text('Subtitles online model'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'openai/whisper-large-v3');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(
+      store.config?.onlineModelFor(RecognitionPurpose.subtitle),
+      'openai/whisper-large-v3',
+    );
+  });
+
+  testWidgets('首次验证前告知上传目标、下游供应商与可能收费，取消则不发请求', (tester) async {
+    final probe = _FakeProbe()
+      ..capability = _capability(
+        modelId: 'openai/whisper-large-v3',
+        segments: true,
+        words: true,
+      );
+    await tester.pumpWidget(
+      app(
+        _InMemorySpeechConfigStore(
+          config: _openRouterConfigWithModels,
+          apiKey: 'sk-speech-sentinel-4b7d',
+        ),
+        capabilityStore: _InMemoryCapabilityStore(),
+        probe: probe,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Send a test sample?'), findsOneWidget);
+    expect(find.textContaining('openrouter.ai'), findsWidgets);
+    expect(
+      find.textContaining('OpenRouter and the downstream providers'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('charge your account'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(probe.runCount, 0);
+  });
+
+  testWidgets('确认告知后只发一次请求，分别显示字幕与词能力，同一服务不再重复告知', (tester) async {
+    final probe = _FakeProbe()
+      ..capability = _capability(
+        modelId: 'openai/whisper-large-v3',
+        segments: true,
+        words: true,
+        cost: 0.0004,
+      );
+    final capabilityStore = _InMemoryCapabilityStore();
+    await tester.pumpWidget(
+      app(
+        _InMemorySpeechConfigStore(
+          config: _openRouterConfigWithModels,
+          apiKey: 'sk-speech-sentinel-4b7d',
+        ),
+        capabilityStore: capabilityStore,
+        probe: probe,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Send test'));
+    await tester.pumpAndSettle();
+
+    expect(probe.runCount, 1);
+    expect(
+      find.textContaining('Subtitles available · Word timestamps available'),
+      findsWidgets,
+    );
+    expect(
+      find.textContaining('Provider-reported cost: 0.0004'),
+      findsOneWidget,
+    );
+
+    // 同一服务已确认：再验证时不重复告知，但仍可手动重测。
+    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Send a test sample?'), findsNothing);
+    expect(probe.runCount, 2);
+  });
+
+  testWidgets('只有文本没有合法片段时显示仅文本可用', (tester) async {
+    final capabilityStore = _InMemoryCapabilityStore();
+    capabilityStore.records[_capability(
+      modelId: 'openai/whisper-large-v3',
+      segments: false,
+    ).identity] = _capability(
+      modelId: 'openai/whisper-large-v3',
+      segments: false,
+    );
+    await tester.pumpWidget(
+      app(
+        _InMemorySpeechConfigStore(
+          config: _openRouterConfigWithModels,
+          apiKey: 'sk-speech-sentinel-4b7d',
+        ),
+        capabilityStore: capabilityStore,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Text only, no usable segments'), findsWidgets);
+    expect(find.textContaining('Subtitles available'), findsNothing);
+  });
+
+  testWidgets('验证失败显示可分类原因，状态不变成已验证', (tester) async {
+    final capabilityStore = _InMemoryCapabilityStore()
+      ..notices.add(_openRouterConfigWithModels.baseUrl);
+    final probe = _FakeProbe()
+      ..failure = const SpeechTranscriptionException(
+        SpeechTranscriptionErrorKind.insufficientBalance,
+      );
+    await tester.pumpWidget(
+      app(
+        _InMemorySpeechConfigStore(
+          config: _openRouterConfigWithModels,
+          apiKey: 'sk-speech-sentinel-4b7d',
+        ),
+        capabilityStore: capabilityStore,
+        probe: probe,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Provider balance or plan is insufficient'),
+      findsOneWidget,
+    );
+    expect(find.text('Saved, not verified'), findsOneWidget);
+  });
+
+  testWidgets('供应商未报告费用时标注未知而不是零，并显示已验证', (tester) async {
+    final capabilityStore = _InMemoryCapabilityStore()
+      ..notices.add(_openRouterConfigWithModels.baseUrl);
+    final probe = _FakeProbe()
+      ..capability = _capability(
+        modelId: 'openai/whisper-large-v3',
+        segments: false,
+      );
+    await tester.pumpWidget(
+      app(
+        _InMemorySpeechConfigStore(
+          config: _openRouterConfigWithModels,
+          apiKey: 'sk-speech-sentinel-4b7d',
+        ),
+        capabilityStore: capabilityStore,
+        probe: probe,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Verified. The provider reported no cost, so the charge is unknown',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Saved and verified'), findsOneWidget);
   });
 }

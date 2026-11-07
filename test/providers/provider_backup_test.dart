@@ -26,6 +26,7 @@ import 'package:echo_loop/services/backup/backup_service.dart';
 import 'package:echo_loop/services/provider/provider_config.dart';
 import 'package:echo_loop/services/provider/provider_config_store.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
+import 'package:echo_loop/services/speech/speech_capability.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
 import 'package:echo_loop/services/speech/speech_config_store.dart';
 import 'package:echo_loop/utils/app_data_dir.dart';
@@ -378,6 +379,50 @@ void main() {
       expect(state.credentialVersion, isNot(localCredentialVersion));
       // 恢复不自动测试、不上传。
       expect(adapter.requests, isEmpty);
+    });
+  });
+
+  testWidgets('能力验证与上传告知不进入备份，恢复后显式失效', (tester) async {
+    await pump(tester);
+    await tester.runAsync(() async {
+      await speechStore.save(
+        _localSpeechConfig,
+        apiKey: 'synthetic-speech-key',
+      );
+      final capabilityStore = SpeechCapabilityStore();
+      await capabilityStore.save(
+        SpeechCapability(
+          identity: SpeechCapability.identityFor(
+            kind: _localSpeechConfig.kind,
+            baseUrl: _localSpeechConfig.baseUrl,
+            modelId: 'local/whisper-large-v3',
+            credentialVersion: await speechStore.readCredentialVersion(),
+          ),
+          text: true,
+          segments: true,
+          wordTimestamps: false,
+          validatedAt: DateTime.utc(2026, 11, 7, 12),
+        ),
+      );
+      await capabilityStore.rememberUploadNotice(_localSpeechConfig.baseUrl);
+
+      final path = await backup();
+      final settings = await _backupSettings(path);
+      expect(
+        settings.keys.where(
+          (key) => key.startsWith(SpeechCapabilityStore.preferencePrefix),
+        ),
+        isEmpty,
+      );
+
+      // 黑名单只会保留本机旧值，恢复必须显式清理，否则旧验证会描述新配置。
+      await performImport(widgetRef, path);
+
+      expect(await capabilityStore.readAll(), isEmpty);
+      expect(
+        await capabilityStore.hasUploadNotice(_localSpeechConfig.baseUrl),
+        isFalse,
+      );
     });
   });
 

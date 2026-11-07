@@ -10484,6 +10484,12 @@ abstract class AppLocalizations {
   /// **'Saved, not verified'**
   String get speechProviderStatusUnverified;
 
+  /// No description provided for @speechProviderStatusVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved and verified'**
+  String get speechProviderStatusVerified;
+
   /// No description provided for @speechProviderSaveFailed.
   ///
   /// In en, this message translates to:
@@ -10495,6 +10501,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{purpose} online model'**
   String speechProviderOnlineModel(String purpose);
+
+  /// No description provided for @speechCapabilityTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify model'**
+  String get speechCapabilityTest;
+
+  /// No description provided for @speechCapabilityTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying…'**
+  String get speechCapabilityTesting;
+
+  /// No description provided for @speechCapabilityUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get speechCapabilityUnverified;
+
+  /// No description provided for @speechCapabilitySubtitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles available'**
+  String get speechCapabilitySubtitles;
+
+  /// No description provided for @speechCapabilityTextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Text only, no usable segments'**
+  String get speechCapabilityTextOnly;
+
+  /// No description provided for @speechCapabilityWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Word timestamps available'**
+  String get speechCapabilityWords;
+
+  /// No description provided for @speechCapabilityVerifiedCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified. Provider-reported cost: {cost}'**
+  String speechCapabilityVerifiedCost(String cost);
+
+  /// No description provided for @speechCapabilityVerifiedCostUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified. The provider reported no cost, so the charge is unknown'**
+  String get speechCapabilityVerifiedCostUnknown;
+
+  /// No description provided for @speechModelRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh transcription models'**
+  String get speechModelRefresh;
+
+  /// No description provided for @speechModelRefreshEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The service returned no transcription models; you can still enter a model ID'**
+  String get speechModelRefreshEmpty;
+
+  /// No description provided for @speechModelRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the model list; you can still enter a model ID'**
+  String get speechModelRefreshFailed;
+
+  /// No description provided for @speechUploadNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a test sample?'**
+  String get speechUploadNoticeTitle;
+
+  /// No description provided for @speechUploadNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo Loop will upload the bundled 4-second English sample to {host}. Downstream inference provider: {provider}. The service may charge your account for this request. Your own recordings are not used.'**
+  String speechUploadNoticeBody(String host, String provider);
+
+  /// No description provided for @speechUploadProviderOpenRouter.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter and the downstream providers it routes to'**
+  String get speechUploadProviderOpenRouter;
+
+  /// No description provided for @speechUploadProviderCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'the service operator (downstream provider unknown)'**
+  String get speechUploadProviderCustom;
+
+  /// No description provided for @speechUploadNoticeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send test'**
+  String get speechUploadNoticeConfirm;
 }
 
 class _AppLocalizationsDelegate
