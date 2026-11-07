@@ -17,6 +17,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:universal_io/io.dart';
 import 'package:uuid/uuid.dart';
 
+import '../database/daos/audio_item_dao.dart';
 import '../database/providers.dart';
 import '../features/audio_import/audio_transcode_service.dart';
 import '../models/audio_item.dart';
@@ -110,6 +111,11 @@ class LocalTranscriptionEmptyResult extends LocalTranscriptionState {
   const LocalTranscriptionEmptyResult();
 }
 
+/// 提交时发现字幕已被用户导入或编辑替换：保留用户较新的结果，本次结果丢弃。
+class LocalTranscriptionConflict extends LocalTranscriptionState {
+  const LocalTranscriptionConflict();
+}
+
 // ─── Provider ────────────────────────────────────────────
 
 /// 本地转录任务管理器。
@@ -172,6 +178,10 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
       final fullPath = p.isAbsolute(audioPath)
           ? audioPath
           : p.join(dataDir.path, audioPath);
+
+      // 记录开始识别前的字幕基线：提交时对比，识别期间用户导入/替换过则不覆盖。
+      final dao = ref.read(audioItemDaoProvider);
+      final baselineSrt = await dao.getTranscriptSrt(audioId);
 
       // ── 1. 解码为 16kHz WAV ──
       _update(audioId, const LocalTranscriptionDecoding());
@@ -248,14 +258,32 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
       final wordsJson = words.isEmpty ? null : encodeWordTimestamps(words);
       final stats = await getTranscriptStatsFromSrt(srt);
 
-      // ── 6. 写库 + 更新 AudioItem ──
-      await ref
-          .read(audioItemDaoProvider)
-          .saveTranscriptContent(
-            audioId,
-            srt: srt,
-            wordTimestampsJson: wordsJson,
-          );
+      // ── 6. 提交：事务内复查取消与目标字幕变化，成功后才刷新内存 ──
+      final result = await dao.commitTranscription(
+        audioItemId: audioId,
+        srt: srt,
+        wordTimestampsJson: wordsJson,
+        transcriptSource: TranscriptSource.device.index,
+        transcriptLanguage: 'en',
+        sentenceCount: stats.$1,
+        wordCount: stats.$2,
+        expectedSrt: baselineSrt,
+        isCancelled: () => _isCancelled(audioId),
+      );
+      if (result == TranscriptCommitResult.conflict) {
+        AppLogger.log(
+          'LocalTranscription',
+          '⚠️ 字幕已被用户更新的内容替换，放弃本次结果 id=$audioId',
+        );
+        _update(audioId, const LocalTranscriptionConflict());
+        return;
+      }
+      if (result == TranscriptCommitResult.cancelled) {
+        AppLogger.log('LocalTranscription', '已取消，未写入字幕 id=$audioId');
+        return;
+      }
+
+      // 事务已提交成功，才刷新界面内存与完成状态。
       ref
           .read(audioLibraryProvider.notifier)
           .updateAudioItem(

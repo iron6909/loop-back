@@ -2189,6 +2189,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transcriptionFailed => '转录失败';
 
   @override
+  String get transcriptionConflict => '字幕已被其他操作替换，保留了你较新的字幕';
+
+  @override
   String get transcriptionErrorConnection => '无法连接服务器';
 
   @override

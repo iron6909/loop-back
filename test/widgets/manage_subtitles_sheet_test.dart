@@ -168,6 +168,26 @@ void main() {
     );
   });
 
+  testWidgets('提交时发现字幕已被用户替换：提示冲突并保留转录入口', (tester) async {
+    manager = _RecordingManager();
+    final item = createTestAudioItem(transcriptPath: null);
+    await tester.pumpWidget(buildSheet(item));
+    await tester.pumpAndSettle();
+    await open(tester);
+
+    manager.emit(item.id, const LocalTranscriptionConflict());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('replaced by another action'),
+      findsOneWidget,
+    );
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNotNull,
+    );
+  });
+
   testWidgets('历史 auto 字幕只读：提示且按钮禁用，不发起转录', (tester) async {
     manager = _RecordingManager();
     final item = createTestAudioItem().copyWith(transcriptLanguage: 'auto');

@@ -4010,6 +4010,12 @@ abstract class AppLocalizations {
   /// **'Transcription failed'**
   String get transcriptionFailed;
 
+  /// No description provided for @transcriptionConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles were replaced by another action; your newer subtitles are kept'**
+  String get transcriptionConflict;
+
   /// No description provided for @transcriptionErrorConnection.
   ///
   /// In en, this message translates to:
