@@ -8,11 +8,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
+import 'package:echo_loop/providers/speech_configuration_provider.dart';
 import 'package:echo_loop/screens/asr_settings_screen.dart';
+import 'package:echo_loop/services/speech/speech_config.dart';
+import 'package:echo_loop/services/speech/speech_config_store.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
 import 'package:echo_loop/services/asr/offline_asr_engine.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// 未配置的在线语音服务：本页测试只关心配置区不发起请求、不触发真实存储。
+class _EmptySpeechConfigStore extends SpeechConfigStore {
+  @override
+  Future<SpeechConfig?> read() async => null;
+
+  @override
+  Future<String?> readApiKey() async => null;
+
+  @override
+  Future<String?> readCredentialVersion() async => null;
+}
 
 class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   _StaticOfflineAsrSettingsNotifier(this._initialState);
@@ -45,6 +60,7 @@ Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
     overrides: [
       offlineAsrSettingsProvider.overrideWith(() => notifier),
       sharedPreferencesProvider.overrideWithValue(_prefs),
+      speechConfigStoreProvider.overrideWithValue(_EmptySpeechConfigStore()),
     ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
@@ -63,8 +79,8 @@ Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
 /// 识别设置页读取的偏好（每个用例在 setUp 里重置）。
 late SharedPreferences _prefs;
 
-/// 用途卡片加入后整页超过默认 800 高视口，需要断言整页卡片与底部来源选项的
-/// 用例改用更高的视口，避免只挂载视口内的组件。
+/// 用途卡片与在线语音服务卡片加入后整页超过默认 800 高视口，需要断言整页卡片与
+/// 底部来源选项的用例改用更高的视口，避免只挂载视口内的组件。
 void _useTallViewport(WidgetTester tester) {
   tester.view.physicalSize = const Size(1200, 2400);
   tester.view.devicePixelRatio = 1;
@@ -86,6 +102,7 @@ void main() {
   );
 
   testWidgets('残缺模型显示失败状态与修复动作', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -127,6 +144,7 @@ void main() {
   });
 
   testWidgets('已下载模型显示 Ready 和大小', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,
@@ -146,6 +164,7 @@ void main() {
   });
 
   testWidgets('取消下载仅显示在未选中的下载模型上', (tester) async {
+    _useTallViewport(tester);
     const selectedId = 'whisper-base-en-int8';
     const otherId = 'whisper-tiny-en-int8';
     final notifier = _StaticOfflineAsrSettingsNotifier(
@@ -197,14 +216,15 @@ void main() {
       find.text('Whisper (on-device)'),
       findsNWidgets(expectedLocalLabels),
     );
-    // 用途选择卡片 + 引擎卡片 + 模型列表卡片 + 下载来源卡片。
-    expect(find.byType(Card), findsNWidgets(4));
+    // 用途选择卡片 + 在线语音服务卡片 + 引擎卡片 + 模型列表卡片 + 下载来源卡片。
+    expect(find.byType(Card), findsNWidgets(5));
     expect(find.textContaining('~99 MB'), findsOneWidget);
     expect(find.textContaining('~153 MB'), findsOneWidget);
     expect(find.textContaining('~358 MB'), findsOneWidget);
   });
 
   testWidgets('Apple Speech 后端不平铺模型列表', (tester) async {
+    _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
       OfflineAsrSettingsState(
         enabled: true,

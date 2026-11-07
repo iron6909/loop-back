@@ -17,7 +17,9 @@ import 'learning_progress_provider.dart';
 import 'package_info_provider.dart';
 import 'settings_provider.dart';
 import 'provider_configuration_provider.dart';
+import 'speech_configuration_provider.dart';
 import '../services/provider/provider_config.dart';
+import '../services/speech/speech_config.dart';
 import 'tag_provider.dart';
 
 /// BackupService Provider
@@ -64,9 +66,13 @@ Future<BackupManifest> performImport(
   AppDatabase? candidateDatabase;
   var databaseWasClosed = false;
   var providerKeyCleared = false;
+  var speechKeyCleared = false;
   final providerStore = ref.read(providerConfigStoreProvider);
+  final speechStore = ref.read(speechConfigStoreProvider);
   ProviderConfig? previousProviderConfig;
   String? previousProviderKey;
+  SpeechConfig? previousSpeechConfig;
+  String? previousSpeechKey;
 
   try {
     // 完整校验和数据库快照提取期间保持当前 Drift 连接可用。
@@ -81,6 +87,11 @@ Future<BackupManifest> performImport(
     previousProviderKey = await providerStore.readApiKey();
     await ref.read(providerConfigurationProvider.notifier).clearKey();
     providerKeyCleared = true;
+    // 语音配置同样不可信任本机旧 Key：两份额度独立清除，失败时中止恢复。
+    previousSpeechConfig = await speechStore.read();
+    previousSpeechKey = await speechStore.readApiKey();
+    await ref.read(speechConfigurationProvider.notifier).clearKey();
+    speechKeyCleared = true;
     await closeCurrentDatabase(
       studyTimeService: ref.read(studyTimeServiceProvider),
     );
@@ -103,6 +114,9 @@ Future<BackupManifest> performImport(
     ref.read(dictionaryProvider);
     AppLogger.log('Backup', 'database_providers_reloaded');
     await ref.read(providerConfigurationProvider.notifier).reload();
+    // 恢复的语音配置没有 Key，也不能沿用本机旧验证：换新凭据版本并重读状态。
+    await speechStore.rotateCredentialVersion();
+    await ref.read(speechConfigurationProvider.notifier).reload();
     await applied.commit();
     AppLogger.log('Backup', 'restore_committed');
 
@@ -123,6 +137,12 @@ Future<BackupManifest> performImport(
         await providerStore.save(config, apiKey: previousProviderKey);
       }
       await ref.read(providerConfigurationProvider.notifier).reload();
+    }
+    if (speechKeyCleared) {
+      if (previousSpeechConfig case final config?) {
+        await speechStore.save(config, apiKey: previousSpeechKey);
+      }
+      await ref.read(speechConfigurationProvider.notifier).reload();
     }
     rethrow;
   } finally {

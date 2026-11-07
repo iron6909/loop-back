@@ -10453,6 +10453,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel tasks and change'**
   String get recognitionChangeConfirm;
+
+  /// No description provided for @speechProviderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online speech service'**
+  String get speechProviderTitle;
+
+  /// No description provided for @speechProviderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles, shadowing, and retelling share one service address and key. The address is used as-is with /audio/transcriptions appended; /v1 is not added.'**
+  String get speechProviderDescription;
+
+  /// No description provided for @speechProviderStatusUnconfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get speechProviderStatusUnconfigured;
+
+  /// No description provided for @speechProviderStatusMissingKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key missing'**
+  String get speechProviderStatusMissingKey;
+
+  /// No description provided for @speechProviderStatusUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved, not verified'**
+  String get speechProviderStatusUnverified;
+
+  /// No description provided for @speechProviderSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the online speech settings'**
+  String get speechProviderSaveFailed;
+
+  /// No description provided for @speechProviderOnlineModel.
+  ///
+  /// In en, this message translates to:
+  /// **'{purpose} online model'**
+  String speechProviderOnlineModel(String purpose);
 }
 
 class _AppLocalizationsDelegate

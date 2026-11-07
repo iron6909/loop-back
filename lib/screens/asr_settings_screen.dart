@@ -17,6 +17,7 @@ import '../services/asr/offline_asr_engine.dart';
 import '../theme/app_theme.dart';
 import '../utils/download_failure_message.dart';
 import '../widgets/asr/recognition_purpose_section.dart';
+import '../widgets/asr/speech_provider_section.dart';
 
 /// 语音识别设置页。
 class AsrSettingsScreen extends ConsumerStatefulWidget {
@@ -88,6 +89,23 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
             ),
           ),
           const RecognitionPurposeSection(),
+
+          _SectionLabel(text: l10n.speechProviderTitle),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s,
+              0,
+              AppSpacing.s,
+              AppSpacing.s,
+            ),
+            child: Text(
+              l10n.speechProviderDescription,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SpeechProviderSection(),
 
           _SectionLabel(text: l10n.asrEngine),
           Card(
