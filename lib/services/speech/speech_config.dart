@@ -51,12 +51,12 @@ class SpeechConfig {
       );
 
   /// 在线转写请求地址：根地址直接追加 `/audio/transcriptions`。
-  String get transcriptionUrl {
-    final root = baseUrl.endsWith('/')
-        ? baseUrl.substring(0, baseUrl.length - 1)
-        : baseUrl;
-    return '$root/audio/transcriptions';
-  }
+  String get transcriptionUrl => '$baseRoot/audio/transcriptions';
+
+  /// 去掉末尾斜杠的根地址；用于拼接同服务的其它接口，避免出现双斜杠。
+  String get baseRoot => baseUrl.endsWith('/')
+      ? baseUrl.substring(0, baseUrl.length - 1)
+      : baseUrl;
 
   Map<String, Object?> toJson() => {
     'kind': kind.name,

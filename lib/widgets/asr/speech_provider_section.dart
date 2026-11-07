@@ -1,7 +1,8 @@
 /// 在线语音服务配置区：一份服务类型、根地址与 Key，三个用途各自的在线模型。
 ///
-/// 保存只写本机普通配置与安全存储里的 Key，不发出任何请求；本切片只区分未配置
-/// 与已保存未验证，能力验证由后续切片接入后才影响在线可用性。
+/// 保存与刷新只写本机配置或只读模型目录；测试按用户主动触发并先完成上传告知，
+/// 使用随包英语样本，不发用户录音。模型目录成功不等于能力验证，逐用途显示
+/// 文本可用 / 字幕可用 / 可选词时间戳。
 library;
 
 import 'package:flutter/material.dart';
@@ -10,9 +11,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/provider_settings/widgets/provider_input_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/recognition_selection.dart';
+import '../../providers/speech_capability_provider.dart';
 import '../../providers/speech_configuration_provider.dart';
 import '../../services/provider/provider_config.dart' show baseUrlError;
+import '../../services/speech/speech_capability.dart';
 import '../../services/speech/speech_config.dart';
+import '../../services/speech/speech_error_text.dart';
 import '../../theme/app_theme.dart';
 import 'recognition_purpose_section.dart' show recognitionPurposeLabel;
 
@@ -36,6 +40,9 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
     final state =
         ref.watch(speechConfigurationProvider).valueOrNull ??
         const SpeechConfigurationState();
+    final capabilities =
+        ref.watch(speechCapabilityProvider).valueOrNull ??
+        const SpeechCapabilityState();
     final config = state.config;
     return Card(
       child: Column(
@@ -47,7 +54,7 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
             ),
             title: Text(l10n.speechProviderTitle),
             subtitle: Text(
-              _statusText(l10n, state),
+              _statusText(l10n, state, capabilities),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: state.isConfigured
                     ? theme.colorScheme.onSurfaceVariant
@@ -73,13 +80,7 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
           ),
           for (final purpose in RecognitionPurpose.values) ...[
             const Divider(height: 1, indent: 16, endIndent: 16),
-            _row(
-              l10n.speechProviderOnlineModel(
-                recognitionPurposeLabel(l10n, purpose),
-              ),
-              config == null ? null : _modelLabel(config, purpose),
-              config == null ? null : () => _editModel(config, purpose),
-            ),
+            _modelRow(l10n, config, state, capabilities, purpose),
           ],
           if (_error case final error?)
             Padding(
@@ -106,10 +107,27 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
     onTap: _saving ? null : action,
   );
 
-  String _statusText(AppLocalizations l10n, SpeechConfigurationState state) {
-    if (state.config == null) return l10n.speechProviderStatusUnconfigured;
+  /// 已保存并已验证的能力摘要；有任一可用模型时不再显示为未验证。
+  String _statusText(
+    AppLocalizations l10n,
+    SpeechConfigurationState state,
+    SpeechCapabilityState capabilities,
+  ) {
+    final config = state.config;
+    if (config == null) return l10n.speechProviderStatusUnconfigured;
     if (!state.hasApiKey) return l10n.speechProviderStatusMissingKey;
-    return l10n.speechProviderStatusUnverified;
+    final verified = RecognitionPurpose.values.any(
+      (purpose) =>
+          capabilities.capabilityFor(
+            config: config,
+            credentialVersion: state.credentialVersion,
+            purpose: purpose,
+          ) !=
+          null,
+    );
+    return verified
+        ? l10n.speechProviderStatusVerified
+        : l10n.speechProviderStatusUnverified;
   }
 
   String _kindLabel(AppLocalizations l10n, SpeechProviderKind kind) =>
@@ -118,9 +136,195 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
         SpeechProviderKind.custom => l10n.providerKindCustom,
       };
 
-  String _modelLabel(SpeechConfig config, RecognitionPurpose purpose) {
-    final modelId = config.onlineModelFor(purpose);
-    return modelId.isEmpty ? '—' : modelId;
+  /// 一个用途的在线模型行：手填始终可用，OpenRouter 额外提供目录刷新，
+  /// 右侧按钮对已保存的模型做一次真实能力验证。
+  Widget _modelRow(
+    AppLocalizations l10n,
+    SpeechConfig? config,
+    SpeechConfigurationState state,
+    SpeechCapabilityState capabilities,
+    RecognitionPurpose purpose,
+  ) {
+    final modelId = config?.onlineModelFor(purpose) ?? '';
+    final capability = config == null
+        ? null
+        : capabilities.capabilityFor(
+            config: config,
+            credentialVersion: state.credentialVersion,
+            purpose: purpose,
+          );
+    final testing = capabilities.testingPurpose == purpose;
+    final canTest =
+        config != null &&
+        state.hasApiKey &&
+        modelId.isNotEmpty &&
+        !_saving &&
+        !testing;
+    return ListTile(
+      enabled: config != null && !_saving,
+      title: Text(
+        l10n.speechProviderOnlineModel(recognitionPurposeLabel(l10n, purpose)),
+      ),
+      subtitle: Text(
+        modelId.isEmpty
+            ? '—'
+            : '$modelId\n${_capabilityLabel(l10n, capability)}',
+      ),
+      isThreeLine: modelId.isNotEmpty,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (config?.kind == SpeechProviderKind.openrouter)
+            IconButton(
+              tooltip: l10n.speechModelRefresh,
+              icon: const Icon(Icons.refresh),
+              onPressed: _saving || testing
+                  ? null
+                  : () => _refreshModels(purpose),
+            ),
+          if (testing)
+            const Padding(
+              padding: EdgeInsets.all(12),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else
+            IconButton(
+              tooltip: l10n.speechCapabilityTest,
+              icon: const Icon(Icons.verified_outlined),
+              onPressed: canTest ? () => _test(purpose) : null,
+            ),
+        ],
+      ),
+      onTap: config == null || _saving
+          ? null
+          : () => _editModel(config, purpose),
+    );
+  }
+
+  /// 字幕可用是比「有文本」更强的结论；词时间戳单独标注，未请求时不算支持。
+  String _capabilityLabel(AppLocalizations l10n, SpeechCapability? capability) {
+    if (capability == null) return l10n.speechCapabilityUnverified;
+    return [
+      capability.segments
+          ? l10n.speechCapabilitySubtitles
+          : l10n.speechCapabilityTextOnly,
+      if (capability.wordTimestamps) l10n.speechCapabilityWords,
+    ].join(' · ');
+  }
+
+  /// 首次向该服务上传样本前告知接收方、下游供应商与可能收费。
+  Future<bool> _confirmUpload(
+    AppLocalizations l10n,
+    SpeechConfig config,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.speechUploadNoticeTitle),
+        content: Text(
+          l10n.speechUploadNoticeBody(
+            Uri.parse(config.baseUrl).host,
+            config.kind == SpeechProviderKind.openrouter
+                ? l10n.speechUploadProviderOpenRouter
+                : l10n.speechUploadProviderCustom,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.speechUploadNoticeConfirm),
+          ),
+        ],
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  /// 一次付费验证：先告知，再发一次请求；失败只提示原因，不自动重试。
+  Future<void> _test(RecognitionPurpose purpose) async {
+    final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
+    final notifier = ref.read(speechCapabilityProvider.notifier);
+    final config = ref.read(speechConfigurationProvider).valueOrNull?.config;
+    if (config == null) return;
+    if (await notifier.needsUploadNotice()) {
+      if (!mounted) return;
+      if (!await _confirmUpload(l10n, config) || !mounted) return;
+    }
+    setState(() => _error = null);
+    try {
+      await notifier.test(purpose);
+      if (!mounted) return;
+      final verified = ref
+          .read(speechCapabilityProvider)
+          .valueOrNull
+          ?.capabilityFor(
+            config: config,
+            credentialVersion: ref
+                .read(speechConfigurationProvider)
+                .valueOrNull
+                ?.credentialVersion,
+            purpose: purpose,
+          );
+      if (verified == null) return;
+      final cost = verified.reportedCost;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            cost == null
+                ? l10n.speechCapabilityVerifiedCostUnknown
+                : l10n.speechCapabilityVerifiedCost(cost.toString()),
+          ),
+        ),
+      );
+    } catch (error) {
+      if (mounted) setState(() => _error = speechErrorText(context, error));
+    }
+  }
+
+  /// 刷新 OpenRouter 专用转写目录；列表为空或失败都只提示，手填不受影响。
+  Future<void> _refreshModels(RecognitionPurpose purpose) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _error = null);
+    final List<String> models;
+    try {
+      models = await ref
+          .read(speechCapabilityProvider.notifier)
+          .refreshModels();
+    } catch (_) {
+      if (mounted) setState(() => _error = l10n.speechModelRefreshFailed);
+      return;
+    }
+    if (!mounted) return;
+    if (models.isEmpty) {
+      setState(() => _error = l10n.speechModelRefreshEmpty);
+      return;
+    }
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(l10n.speechModelRefresh),
+        children: [
+          for (final modelId in models)
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(dialogContext, modelId),
+              child: Text(modelId),
+            ),
+        ],
+      ),
+    );
+    if (selected == null || !mounted) return;
+    final config = ref.read(speechConfigurationProvider).valueOrNull?.config;
+    if (config == null) return;
+    await _save(config.withOnlineModel(purpose, selected));
   }
 
   Future<void> _pickKind(SpeechConfig? current) async {

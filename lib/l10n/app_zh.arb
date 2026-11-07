@@ -2359,9 +2359,35 @@
   "speechProviderStatusUnconfigured": "未配置",
   "speechProviderStatusMissingKey": "缺少 API Key",
   "speechProviderStatusUnverified": "已保存，尚未验证",
+  "speechProviderStatusVerified": "已保存，已验证",
   "speechProviderSaveFailed": "无法保存在线语音配置",
   "speechProviderOnlineModel": "{purpose}在线模型",
   "@speechProviderOnlineModel": {
     "placeholders": { "purpose": { "type": "String" } }
-  }
+  },
+  "speechCapabilityTest": "验证模型",
+  "speechCapabilityTesting": "验证中…",
+  "speechCapabilityUnverified": "尚未验证",
+  "speechCapabilitySubtitles": "字幕可用",
+  "speechCapabilityTextOnly": "仅文本可用（无可用片段）",
+  "speechCapabilityWords": "词时间戳可用",
+  "speechCapabilityVerifiedCost": "验证完成。供应商报告的本次费用：{cost}",
+  "@speechCapabilityVerifiedCost": {
+    "placeholders": { "cost": { "type": "String" } }
+  },
+  "speechCapabilityVerifiedCostUnknown": "验证完成。供应商未报告费用，实际花费未知",
+  "speechModelRefresh": "刷新转写模型目录",
+  "speechModelRefreshEmpty": "服务没有返回转写模型，仍可手填模型 ID",
+  "speechModelRefreshFailed": "无法获取模型目录，仍可手填模型 ID",
+  "speechUploadNoticeTitle": "发送测试音频？",
+  "speechUploadNoticeBody": "Echo Loop 会把随包的 4 秒英语样本上传到 {host}，下游推理供应商为 {provider}。该服务可能为此向你收费；测试不会使用你自己的录音。",
+  "@speechUploadNoticeBody": {
+    "placeholders": {
+      "host": { "type": "String" },
+      "provider": { "type": "String" }
+    }
+  },
+  "speechUploadProviderOpenRouter": "OpenRouter 及其路由到的下游供应商",
+  "speechUploadProviderCustom": "该服务的运营方（下游供应商未知）",
+  "speechUploadNoticeConfirm": "发送测试"
 }

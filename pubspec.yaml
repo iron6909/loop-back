@@ -214,6 +214,9 @@ flutter:
     - assets/animation/done-check.lottie
     # 后台静音保活轨：停顿期间循环播放以保持 iOS 音频会话活跃（见 background_audio_handler）
     - assets/audio/silence_2s.m4a
+    # 在线语音能力验证的随包样本：4 秒 en-US 合成语音，16 kHz 单声道 WAV
+    # （见 speech_capability_probe）。用户主动触发，绝不使用用户录音。
+    - assets/audio/speech_probe_en.wav
     # PDF 导出内嵌字体（TrueType 轮廓；pdf 包不支持 CFF/OTF，也无法读系统 CJK 字体）。
     # 不注册进 fonts: 段——仅经 rootBundle 读原始字节喂 pw.Font.ttf，生成时自动子集化。
     - assets/fonts/pdf/

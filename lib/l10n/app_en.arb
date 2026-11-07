@@ -2858,9 +2858,35 @@
   "speechProviderStatusUnconfigured": "Not configured",
   "speechProviderStatusMissingKey": "API key missing",
   "speechProviderStatusUnverified": "Saved, not verified",
+  "speechProviderStatusVerified": "Saved and verified",
   "speechProviderSaveFailed": "Could not save the online speech settings",
   "speechProviderOnlineModel": "{purpose} online model",
   "@speechProviderOnlineModel": {
     "placeholders": { "purpose": { "type": "String" } }
-  }
+  },
+  "speechCapabilityTest": "Verify model",
+  "speechCapabilityTesting": "Verifying…",
+  "speechCapabilityUnverified": "Not verified",
+  "speechCapabilitySubtitles": "Subtitles available",
+  "speechCapabilityTextOnly": "Text only, no usable segments",
+  "speechCapabilityWords": "Word timestamps available",
+  "speechCapabilityVerifiedCost": "Verified. Provider-reported cost: {cost}",
+  "@speechCapabilityVerifiedCost": {
+    "placeholders": { "cost": { "type": "String" } }
+  },
+  "speechCapabilityVerifiedCostUnknown": "Verified. The provider reported no cost, so the charge is unknown",
+  "speechModelRefresh": "Refresh transcription models",
+  "speechModelRefreshEmpty": "The service returned no transcription models; you can still enter a model ID",
+  "speechModelRefreshFailed": "Could not load the model list; you can still enter a model ID",
+  "speechUploadNoticeTitle": "Send a test sample?",
+  "speechUploadNoticeBody": "Echo Loop will upload the bundled 4-second English sample to {host}. Downstream inference provider: {provider}. The service may charge your account for this request. Your own recordings are not used.",
+  "@speechUploadNoticeBody": {
+    "placeholders": {
+      "host": { "type": "String" },
+      "provider": { "type": "String" }
+    }
+  },
+  "speechUploadProviderOpenRouter": "OpenRouter and the downstream providers it routes to",
+  "speechUploadProviderCustom": "the service operator (downstream provider unknown)",
+  "speechUploadNoticeConfirm": "Send test"
 }
