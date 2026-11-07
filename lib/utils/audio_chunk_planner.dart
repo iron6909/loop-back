@@ -135,7 +135,8 @@ Duration? quietestCutInPcm({
   required Duration windowStart,
 }) {
   final offset = pcmPayloadOffset(wavBytes);
-  final windowSamples = _quietWindow.inMicroseconds * _samplesPerSecond ~/ 1000000;
+  final windowSamples =
+      _quietWindow.inMicroseconds * _samplesPerSecond ~/ 1000000;
   final totalSamples = (wavBytes.length - offset) ~/ 2;
   if (totalSamples < windowSamples) return null;
 
@@ -157,7 +158,8 @@ Duration? quietestCutInPcm({
   if (loudest > 0 && quietest > loudest * _quietRatio) return null;
   return windowStart +
       Duration(
-        microseconds: (quietestIndex + windowSamples ~/ 2) * 1000000 ~/ _samplesPerSecond,
+        microseconds:
+            (quietestIndex + windowSamples ~/ 2) * 1000000 ~/ _samplesPerSecond,
       );
 }
 
@@ -221,9 +223,58 @@ List<AsrSegment> trimChunkOverlap({
   return droppedSentences == 0 ? next : next.sublist(droppedSentences);
 }
 
+/// 纯文本块的边界局部对齐：去掉下一块开头重复识别的前缀单词。
+///
+/// 字幕能用句时间判断重叠区，练习录音只要求文本，因此按词序在边界处比对：
+/// 只在上一块末尾与下一块开头最多 [maxOverlapWords] 个词的窗口内找最长相同词序，
+/// 命中则从下一块删掉重复的那部分。比较窗口限定在边界附近，材料里远处真实重复
+/// 的句子不会被误删，也不对全文做字符串去重。
+String trimChunkTextOverlap({
+  required String previousText,
+  required String nextText,
+  int maxOverlapWords = 16,
+}) {
+  if (previousText.trim().isEmpty || nextText.trim().isEmpty) return nextText;
+  final nextMatches = RegExp(r'\S+').allMatches(nextText).toList();
+  final previousTokens = _textTokens(previousText);
+  final nextTokens = _textTokens(nextText);
+  if (previousTokens.isEmpty || nextTokens.isEmpty) return nextText;
+  // 只在边界窗口内比对：下一块开头最多取这么多词。
+  final headLimit = nextMatches.length < maxOverlapWords
+      ? nextMatches.length
+      : maxOverlapWords;
+  final headTokens = <String>[
+    for (var i = 0; i < headLimit && i < nextTokens.length; i++) nextTokens[i],
+  ];
+  final tailStart = previousTokens.length > maxOverlapWords
+      ? previousTokens.length - maxOverlapWords
+      : 0;
+  final matched = _commonSuffixPrefix(
+    previousTokens.sublist(tailStart),
+    headTokens,
+  );
+  if (matched == 0) return nextText;
+  return nextText.substring(nextMatches[matched - 1].end).trimLeft();
+}
+
+/// 纯文本的比较词序：忽略大小写与标点，撇号保留（don't 仍是一个词）。
+List<String> _textTokens(String text) {
+  final tokens = <String>[];
+  for (final match in RegExp(r'\S+').allMatches(text)) {
+    final token = (match.group(0) ?? '').toLowerCase().replaceAll(
+      RegExp(r"[^a-z0-9']"),
+      '',
+    );
+    if (token.isNotEmpty) tokens.add(token);
+  }
+  return tokens;
+}
+
 /// 最长的一段「上一块尾部」与「本块开头」相同的词序长度。
 int _commonSuffixPrefix(List<String> previous, List<String> leading) {
-  final max = leading.length < previous.length ? leading.length : previous.length;
+  final max = leading.length < previous.length
+      ? leading.length
+      : previous.length;
   for (var length = max; length > 0; length--) {
     var same = true;
     for (var i = 0; i < length; i++) {
@@ -242,9 +293,10 @@ List<String> _tokens(List<AsrSegment> segments) {
   final tokens = <String>[];
   for (final segment in segments) {
     for (final match in RegExp(r'\S+').allMatches(segment.text)) {
-      final token = (match.group(0) ?? '')
-          .toLowerCase()
-          .replaceAll(RegExp(r"[^a-z0-9']"), '');
+      final token = (match.group(0) ?? '').toLowerCase().replaceAll(
+        RegExp(r"[^a-z0-9']"),
+        '',
+      );
       if (token.isNotEmpty) tokens.add(token);
     }
   }

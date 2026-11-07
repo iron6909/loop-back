@@ -5675,6 +5675,17 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String shadowingOnlineChunkProgress(int completed, int total) {
+    return '$completed/$total 块已完成';
+  }
+
+  @override
+  String get shadowingOnlineChargeWarning => '失败块可能已计费';
+
+  @override
+  String get shadowingOnlineRetry => '重试未完成部分';
+
+  @override
   String get recognitionChangeTitle => '修改识别设置？';
 
   @override

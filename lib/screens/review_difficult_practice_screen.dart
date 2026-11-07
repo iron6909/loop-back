@@ -942,6 +942,14 @@ class _ReviewDifficultPracticeScreenState
         if (engine == null) return;
         unawaited(engine.onRecordButtonTapped());
       },
+      // 分块转写失败后只重发未完成块，不自动重试。
+      onRetryOnline: () => unawaited(
+        ref
+            .read(speechRecordingControllerProvider.notifier)
+            .retryOnlineTranscription(
+              referenceText: turnState.referenceText ?? '',
+            ),
+      ),
       onBeforePlayback: engine != null
           ? () => engine.prepareForPlayback()
           : null,

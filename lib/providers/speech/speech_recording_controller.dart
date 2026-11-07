@@ -29,14 +29,19 @@ import '../../models/recognition_selection.dart';
 import '../../models/speech_practice_models.dart';
 import '../../services/app_logger.dart';
 import '../../services/recording_service.dart';
+import '../../services/speech/practice_chunk_transcriber.dart';
 import '../../services/speech/shadowing_online_transcriber.dart';
+import '../../services/speech/speech_capability.dart';
 import '../../services/speech_completion_detector.dart';
 import '../../services/speech_practice_matcher.dart';
 import '../../services/speech_practice_platform.dart';
 import '../learning_settings_provider.dart';
+import '../local_transcription_task_provider.dart'
+    show localTranscriptionTranscodeServiceProvider;
 import '../offline_asr_settings_provider.dart';
 import '../recognition_settings_provider.dart';
 import '../speech_capability_provider.dart';
+import '../speech_configuration_provider.dart' show speechConfigStoreProvider;
 
 /// 等待开口最大时长
 const _awaitingSpeechTimeout = Duration(seconds: 60);
@@ -275,6 +280,12 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   /// 在途的在线转写请求；取消、切换录音或退出时取消它，丢弃过期结果。
   CancelToken? _onlineCancelToken;
 
+  /// 本回合的分块转写会话：绑定录音与语音配置身份，失败后可手动续试。
+  PracticeChunkSession? _chunkSession;
+
+  /// 在途的分块转码会话；取消时终止它，停止后续块。
+  int? _onlineTranscodeSession;
+
   /// 登记时持有的注册处：销毁阶段不能再从已释放的容器读 provider。
   RecognitionInFlightRegistry? _inFlightRegistry;
 
@@ -301,6 +312,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       ++_roundGeneration;
       _eventSub?.cancel();
       _unregisterInFlight();
+      unawaited(_discardChunkSession());
       final service = _recordingService;
       if (service != null) unawaited(service.dispose());
     });
@@ -387,6 +399,8 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
         .usesOnlineModel;
     // 录音一开始就登记在途任务：识别设置变更需要能告知并取消本回合。
     _registerInFlight(promptId);
+    // 新一次录音不复用上一回合的分块进度与临时音频。
+    await _discardChunkSession();
 
     // 先切断旧回合的所有入口，再串行释放其服务；新回合不会与旧服务并存。
     final oldFilePath = state.currentAttempt?.filePath;
@@ -504,7 +518,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     _cancelAllTimers();
     _speechStartTime = null;
     _recordingService = null;
-    _cancelOnlineTranscription();
+    await _cancelOnlineTranscription();
     _unregisterInFlight();
     state = state.copyWith(
       phase: SpeechRecordingPhase.idle,
@@ -529,7 +543,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
   Future<void> clearRecording() async {
     AppLogger.log('SpeechRec', '● clearRecording → idle');
     ++_roundGeneration;
-    _cancelOnlineTranscription();
+    await _cancelOnlineTranscription();
     _unregisterInFlight();
     _cancelAllTimers();
     _isStopping = false;
@@ -825,7 +839,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     );
   }
 
-  /// 停录后只发一次的在线转写。
+  /// 停录后的在线转写：单块内一次上传，超出单块范围按有界分块顺序上传。
   ///
   /// 录音期间不发请求；先释放麦克风再上传，结果或失败都只回写本回合；
   /// 取消、换录音或配置变更后旧回调不覆盖新状态，源录音始终保留。
@@ -851,11 +865,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     state = state.copyWith(onlineShadowing: base);
     if (granted == null) {
       AppLogger.log('SpeechRec', '✗ 在线跟读不具备发请求条件: $access');
-      _failOnlineTurn(
-        promptId: promptId,
-        filePath: filePath,
-        error: access,
-      );
+      _failOnlineTurn(promptId: promptId, filePath: filePath, error: access);
       return;
     }
 
@@ -863,11 +873,11 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       client: ref.read(speechTranscriptionClientProvider),
     );
 
-    final ShadowingRecordingUpload upload;
+    final ShadowingRecordingAccess recording;
     try {
-      upload = await transcriber.prepare(filePath);
+      recording = await transcriber.prepare(filePath);
     } on Object catch (error) {
-      // 文件缺失、格式或单块边界不满足：明确拒绝，不截断、不改成本机。
+      // 文件缺失或格式不支持：明确拒绝，不截断、不改成本机。
       if (!_isCurrentRound(generation, promptId)) return;
       AppLogger.log('SpeechRec', '✗ 在线跟读请求前拒绝: $error');
       _failOnlineTurn(promptId: promptId, filePath: filePath, error: error);
@@ -875,6 +885,43 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     }
     if (!_isCurrentRound(generation, promptId)) return;
 
+    switch (recording) {
+      case ShadowingRecordingUpload():
+        await _transcribeSingleUpload(
+          promptId: promptId,
+          referenceText: referenceText,
+          filePath: filePath,
+          generation: generation,
+          base: base,
+          granted: granted,
+          transcriber: transcriber,
+          upload: recording,
+        );
+      case ShadowingRecordingNeedsChunking():
+        // 超出单块范围：不截断也不只传开头，改走有界分块。
+        await _transcribeChunked(
+          promptId: promptId,
+          referenceText: referenceText,
+          filePath: filePath,
+          generation: generation,
+          base: base,
+          granted: granted,
+          knownDuration: recording.duration,
+        );
+    }
+  }
+
+  /// 单块范围内的录音：停录后只上传一次，成功后用该文本评估。
+  Future<void> _transcribeSingleUpload({
+    required String promptId,
+    required String referenceText,
+    required String filePath,
+    required int generation,
+    required ShadowingOnlineState base,
+    required ShadowingOnlineAccessGranted granted,
+    required ShadowingOnlineTranscriber transcriber,
+    required ShadowingRecordingUpload upload,
+  }) async {
     final cancelToken = CancelToken();
     _onlineCancelToken = cancelToken;
     state = state.copyWith(
@@ -938,21 +985,230 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     }
   }
 
+  /// 超出单块范围：按有界分块顺序上传，全部成功后用完整文本评估。
+  ///
+  /// 分块会话绑定本次尝试、录音与语音配置身份：[resume] 为真时只重发未完成块，
+  /// 否则丢弃旧会话重新规划。失败停在当前块并保留未完成块供用户手动续试。
+  Future<void> _transcribeChunked({
+    required String promptId,
+    required String referenceText,
+    required String filePath,
+    required int generation,
+    required ShadowingOnlineState base,
+    required ShadowingOnlineAccessGranted granted,
+    Duration? knownDuration,
+    bool resume = false,
+  }) async {
+    final transcriber = PracticeChunkTranscriber(
+      client: ref.read(speechTranscriptionClientProvider),
+      transcode: ref.read(localTranscriptionTranscodeServiceProvider),
+    );
+    var session = resume ? _chunkSession : null;
+    // 录音或配置身份不同时不能把旧块拼进新结果。
+    if (session != null &&
+        (session.recordingPath != filePath ||
+            session.identity != granted.identity)) {
+      await _discardChunkSession();
+      session = null;
+    }
+    if (!resume) await _discardChunkSession();
+
+    final cancelToken = CancelToken();
+    _onlineCancelToken = cancelToken;
+    state = state.copyWith(
+      onlineShadowing: base.copyWith(
+        phase: ShadowingOnlinePhase.uploading,
+        progress: 0,
+        completedChunks: session?.completedCount ?? 0,
+        totalChunks: session?.chunks.length ?? 0,
+      ),
+    );
+    try {
+      session ??= await transcriber.plan(
+        recordingPath: filePath,
+        identity: granted.identity,
+        audioDuration: knownDuration,
+        isSessionValid: () => _isCurrentRound(generation, promptId),
+        onSessionStarted: (id) => _onlineTranscodeSession = id,
+      );
+      _chunkSession = session;
+      if (!_isCurrentRound(generation, promptId) ||
+          !identical(_onlineCancelToken, cancelToken)) {
+        return;
+      }
+      await transcriber.run(
+        session: session,
+        config: granted.config,
+        apiKey: granted.apiKey,
+        modelId: granted.modelId,
+        cancelToken: cancelToken,
+        isSessionValid: () => _isCurrentRound(generation, promptId),
+        readCurrentIdentity: _currentOnlineIdentity,
+        onSessionStarted: (id) => _onlineTranscodeSession = id,
+        onProgress: (completed, total, current) {
+          if (!_isCurrentRound(generation, promptId) ||
+              !identical(_onlineCancelToken, cancelToken)) {
+            return;
+          }
+          state = state.copyWith(
+            onlineShadowing: base.copyWith(
+              phase: ShadowingOnlinePhase.uploading,
+              progress: total == 0 ? 0 : completed / total,
+              completedChunks: completed,
+              totalChunks: total,
+            ),
+          );
+        },
+      );
+      if (!_isCurrentRound(generation, promptId) ||
+          !identical(_onlineCancelToken, cancelToken)) {
+        return;
+      }
+      _onlineCancelToken = null;
+      _onlineTranscodeSession = null;
+      final text = session.text;
+      state = state.copyWith(
+        onlineShadowing: base.copyWith(
+          phase: ShadowingOnlinePhase.completed,
+          progress: 1,
+          reportedCost: session.reportedCost,
+          completedChunks: session.completedCount,
+          totalChunks: session.chunks.length,
+        ),
+      );
+      AppLogger.log(
+        'SpeechRec',
+        '✓ 在线分块转写完成: chunks=${session.chunks.length} '
+            'textLen=${text.length} cost=${session.reportedCost ?? 'unknown'}',
+      );
+      // 全部块成功：临时音频用完即删，评估只用完整文本。
+      await _discardChunkSession();
+      if (!_isCurrentRound(generation, promptId)) return;
+      _evaluateTranscript(
+        promptId: promptId,
+        referenceText: referenceText,
+        filePath: filePath,
+        transcript: text,
+      );
+    } on PracticeChunkFailure catch (error) {
+      if (!_isCurrentRound(generation, promptId) ||
+          !identical(_onlineCancelToken, cancelToken)) {
+        return;
+      }
+      _onlineCancelToken = null;
+      _onlineTranscodeSession = null;
+      if (error.reason == PracticeChunkFailureReason.cancelled) return;
+      AppLogger.log('SpeechRec', '✗ 在线分块转写失败: $error');
+      // 只有供应商请求失败才值得续试：无语音、解码失败与配置失效都不重发。
+      final retryable =
+          session != null &&
+          error.reason == PracticeChunkFailureReason.requestFailed;
+      if (!retryable) await _discardChunkSession();
+      _failOnlineTurn(
+        promptId: promptId,
+        filePath: filePath,
+        error: error,
+        retryable: retryable,
+        mayHaveBeenCharged: error.mayHaveBeenCharged,
+        completedChunks: session?.completedCount ?? 0,
+        totalChunks: session?.chunks.length ?? 0,
+      );
+    } on Object catch (error) {
+      if (!_isCurrentRound(generation, promptId) ||
+          !identical(_onlineCancelToken, cancelToken)) {
+        return;
+      }
+      _onlineCancelToken = null;
+      _onlineTranscodeSession = null;
+      AppLogger.log('SpeechRec', '✗ 在线分块转写异常: $error');
+      _failOnlineTurn(
+        promptId: promptId,
+        filePath: filePath,
+        error: error,
+        retryable: session != null,
+        completedChunks: session?.completedCount ?? 0,
+        totalChunks: session?.chunks.length ?? 0,
+      );
+    }
+  }
+
+  /// 手动续试本回合的分块转写：只重发未成功块，不自动重试也不跨尝试复用。
+  ///
+  /// 没有可续试的会话、录音已换或仍有在途回合时什么也不做；配置或验证失效
+  /// 会清掉临时结果并只报告原因，换了服务/模型/凭据则重新规划而不是拼旧块。
+  Future<void> retryOnlineTranscription({required String referenceText}) async {
+    final session = _chunkSession;
+    final promptId = state.promptId;
+    final filePath = state.currentAttempt?.filePath;
+    if (session == null ||
+        promptId == null ||
+        filePath == null ||
+        filePath.isEmpty ||
+        session.recordingPath != filePath ||
+        state.phase != SpeechRecordingPhase.idle) {
+      return;
+    }
+    final generation = _roundGeneration;
+    final access = await resolveShadowingOnlineAccess(ref);
+    if (!_isCurrentRound(generation, promptId)) return;
+    final granted = access is ShadowingOnlineAccessGranted ? access : null;
+    final base = ShadowingOnlineState(
+      serviceHost: Uri.tryParse(granted?.config.baseUrl ?? '')?.host ?? '',
+      modelId: granted?.modelId ?? '',
+      phase: ShadowingOnlinePhase.preparing,
+    );
+    if (granted == null) {
+      await _discardChunkSession();
+      _failOnlineTurn(promptId: promptId, filePath: filePath, error: access);
+      return;
+    }
+    if (granted.identity != session.identity) {
+      // 换了服务/模型/凭据：旧块不属于新配置，丢弃后重新规划。
+      await _discardChunkSession();
+    }
+    state = state.copyWith(phase: SpeechRecordingPhase.processing);
+    await _transcribeChunked(
+      promptId: promptId,
+      referenceText: referenceText,
+      filePath: filePath,
+      generation: generation,
+      base: base,
+      granted: granted,
+      resume: true,
+    );
+  }
+
   /// 在线转写失败或拒绝：保留录音与原因，回到 idle 等用户决定。
+  ///
+  /// [retryable] 为真时保留未完成块，界面提供手动续试；[mayHaveBeenCharged]
+  /// 为真时要如实提示失败块可能已被计费。
   void _failOnlineTurn({
     required String promptId,
     required String filePath,
     required Object error,
+    bool retryable = false,
+    bool mayHaveBeenCharged = false,
+    int completedChunks = 0,
+    int totalChunks = 0,
   }) {
     state = state.copyWith(
       phase: SpeechRecordingPhase.idle,
       currentAttempt: SpeechPracticeAttempt(promptId: promptId).copyWith(
         filePath: filePath,
-        status: SpeechPracticeAttemptStatus.error,
+        // 整段没有语音是识别结果的一种，不当作技术错误。
+        status:
+            error is PracticeChunkFailure &&
+                error.reason == PracticeChunkFailureReason.noSpeech
+            ? SpeechPracticeAttemptStatus.noEnglishDetected
+            : SpeechPracticeAttemptStatus.error,
       ),
       onlineShadowing: state.onlineShadowing?.copyWith(
         phase: ShadowingOnlinePhase.failed,
         error: error,
+        retryable: retryable,
+        mayHaveBeenCharged: mayHaveBeenCharged,
+        completedChunks: completedChunks,
+        totalChunks: totalChunks,
       ),
       clearLiveTranscript: true,
       hasDetectedSpeech: false,
@@ -960,10 +1216,42 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     );
   }
 
-  /// 取消在途的在线请求；之后的旧回调不会再写状态。
-  void _cancelOnlineTranscription() {
+  /// 取消在途的在线请求与分块转码，并丢弃本回合的分块临时结果。
+  Future<void> _cancelOnlineTranscription() async {
     _onlineCancelToken?.cancel();
     _onlineCancelToken = null;
+    final sessionId = _onlineTranscodeSession;
+    _onlineTranscodeSession = null;
+    if (sessionId != null) {
+      ref
+          .read(localTranscriptionTranscodeServiceProvider)
+          .cancelSession(sessionId);
+    }
+    await _discardChunkSession();
+  }
+
+  /// 丢弃分块会话与临时音频：取消、换尝试与全部成功后都调用。
+  Future<void> _discardChunkSession() async {
+    final session = _chunkSession;
+    _chunkSession = null;
+    _onlineTranscodeSession = null;
+    if (session == null) return;
+    await session.discardTemp();
+  }
+
+  /// 当前跟读在线的配置身份；与分块会话身份不一致即表示配置已变化。
+  Future<String?> _currentOnlineIdentity() async {
+    final store = ref.read(speechConfigStoreProvider);
+    final config = await store.read();
+    if (config == null) return null;
+    final modelId = config.onlineModelFor(RecognitionPurpose.shadowing);
+    if (modelId.isEmpty) return null;
+    return SpeechCapability.identityFor(
+      kind: config.kind,
+      baseUrl: config.baseUrl,
+      modelId: modelId,
+      credentialVersion: await store.readCredentialVersion(),
+    );
   }
 
   void _recordCompletionDuration(Duration duration) {

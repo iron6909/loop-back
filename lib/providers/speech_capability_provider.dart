@@ -94,10 +94,11 @@ Future<ShadowingOnlineAccess> resolveShadowingOnlineAccess(Ref ref) async {
       ShadowingOnlineAccessDenial.uploadNoticeMissing,
     );
   }
+  final credentialVersion = await configStore.readCredentialVersion();
   final capability = (await ref.read(speechCapabilityProvider.future))
       .capabilityFor(
         config: config,
-        credentialVersion: await configStore.readCredentialVersion(),
+        credentialVersion: credentialVersion,
         purpose: RecognitionPurpose.shadowing,
       );
   if (capability == null || !capability.text) {
@@ -109,6 +110,13 @@ Future<ShadowingOnlineAccess> resolveShadowingOnlineAccess(Ref ref) async {
     config: config,
     apiKey: apiKey,
     modelId: modelId,
+    // 分块进度只在同一服务、地址、模型与凭据版本下可以续试。
+    identity: SpeechCapability.identityFor(
+      kind: config.kind,
+      baseUrl: config.baseUrl,
+      modelId: modelId,
+      credentialVersion: credentialVersion,
+    ),
   );
 }
 

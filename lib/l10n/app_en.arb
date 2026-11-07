@@ -2875,6 +2875,15 @@
       "model": { "type": "String" }
     }
   },
+  "shadowingOnlineChunkProgress": "{completed}/{total} parts done",
+  "@shadowingOnlineChunkProgress": {
+    "placeholders": {
+      "completed": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "shadowingOnlineChargeWarning": "the failed part may already be billed",
+  "shadowingOnlineRetry": "Retry unfinished parts",
   "recognitionChangeTitle": "Change recognition settings?",
   "recognitionChangeMessage": "Running recognition tasks affected: {count}. Continuing cancels them and discards unfinished results.",
   "@recognitionChangeMessage": {

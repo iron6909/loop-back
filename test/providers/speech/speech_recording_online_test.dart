@@ -10,8 +10,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/models/speech_practice_models.dart';
+import 'package:echo_loop/providers/local_transcription_task_provider.dart'
+    show localTranscriptionTranscodeServiceProvider;
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
 import 'package:echo_loop/providers/speech_capability_provider.dart';
@@ -36,6 +39,7 @@ const _onlineText = 'the quick brown fox jumps';
 /// 记录请求并按队列返回预设响应的 adapter。
 class _FakeAdapter implements HttpClientAdapter {
   final List<RequestOptions> requests = [];
+  final List<Uint8List> bodies = [];
   final List<ResponseBody> _responses = [];
   final List<Completer<void>> _gates = [];
 
@@ -46,6 +50,20 @@ class _FakeAdapter implements HttpClientAdapter {
       ResponseBody.fromString(
         jsonEncode(payload),
         200,
+        headers: {
+          Headers.contentTypeHeader: [Headers.jsonContentType],
+        },
+      ),
+    );
+    _gates.add(Completer<void>()..complete());
+  }
+
+  /// 供应商返回的非 2xx 响应，用于覆盖失败与续试。
+  void enqueueStatus(int status) {
+    _responses.add(
+      ResponseBody.fromString(
+        jsonEncode({'error': 'failed'}),
+        status,
         headers: {
           Headers.contentTypeHeader: [Headers.jsonContentType],
         },
@@ -80,6 +98,15 @@ class _FakeAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     requests.add(options);
+    if (requestStream != null) {
+      bodies.add(
+        Uint8List.fromList([
+          for (final chunk in await requestStream.toList()) ...chunk,
+        ]),
+      );
+    } else {
+      bodies.add(Uint8List(0));
+    }
     final index = requests.length - 1;
     await _gates[index].future;
     if (cancelFuture != null) {
@@ -92,6 +119,17 @@ class _FakeAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// 取 multipart 请求里的字段值；缺失时返回 null。
+String? _field(Uint8List body, String name) {
+  final text = latin1.decode(body, allowInvalid: true);
+  final marker = 'name="$name"';
+  final start = text.indexOf(marker);
+  if (start < 0) return null;
+  final valueStart = text.indexOf('\r\n\r\n', start) + 4;
+  final valueEnd = text.indexOf('\r\n', valueStart);
+  return text.substring(valueStart, valueEnd);
+}
+
 /// 内置一份齐备在线语音配置的存储替身（Key 与凭据版本也在内存中）。
 class _InMemorySpeechConfigStore extends SpeechConfigStore {
   SpeechConfig? config = const SpeechConfig(
@@ -100,6 +138,14 @@ class _InMemorySpeechConfigStore extends SpeechConfigStore {
     onlineModels: {RecognitionPurpose.shadowing: _modelId},
   );
   String? apiKey = _apiKey;
+
+  /// 换一个在线模型，用于验证配置变化后不复用旧块。
+  void useModel(String modelId) {
+    config = const SpeechConfig(
+      kind: SpeechProviderKind.openrouter,
+      baseUrl: _baseUrl,
+    ).withOnlineModel(RecognitionPurpose.shadowing, modelId);
+  }
 
   @override
   Future<SpeechConfig?> read() async => config;
@@ -118,11 +164,14 @@ class _InMemoryCapabilityStore extends SpeechCapabilityStore {
   bool textVerified;
   bool noticeDone;
 
+  /// 结论绑定的在线模型，用于模拟配置变化后重新验证。
+  String modelId = _modelId;
+
   SpeechCapability _capability() => SpeechCapability(
     identity: SpeechCapability.identityFor(
       kind: SpeechProviderKind.openrouter,
       baseUrl: _baseUrl,
-      modelId: _modelId,
+      modelId: modelId,
       credentialVersion: 'credential-a',
     ),
     text: textVerified,
@@ -132,16 +181,13 @@ class _InMemoryCapabilityStore extends SpeechCapabilityStore {
   );
 
   @override
-  Future<Map<String, SpeechCapability>> readAll() async => textVerified
-      ? {_capability().identity: _capability()}
-      : const {};
+  Future<Map<String, SpeechCapability>> readAll() async =>
+      textVerified ? {_capability().identity: _capability()} : const {};
 
   @override
   Future<SpeechCapability?> read(String identity) async {
     final capability = _capability();
-    return textVerified && capability.identity == identity
-        ? capability
-        : null;
+    return textVerified && capability.identity == identity ? capability : null;
   }
 
   @override
@@ -192,6 +238,50 @@ Uint8List _wavBytes(Duration duration) {
   ascii(36, 'data');
   bytes.setUint32(40, dataSize, Endian.little);
   return bytes.buffer.asUint8List();
+}
+
+/// 生成指定时长、16 kHz 单声道 PCM16 的字节，供分块探测与上传。
+///
+/// [amplitude] 为 0 时是确认无声的块；默认持续有声，切点交给硬切。
+Uint8List _pcmBytes(Duration duration, {int amplitude = 8000}) {
+  final samples = duration.inMicroseconds * 16000 ~/ 1000000;
+  final bytes = Uint8List(samples * 2);
+  for (var i = 0; i < samples; i++) {
+    final value = amplitude == 0 ? 0 : (i.isEven ? amplitude : -amplitude);
+    bytes[i * 2] = value & 0xff;
+    bytes[i * 2 + 1] = (value >> 8) & 0xff;
+  }
+  return bytes;
+}
+
+/// 假转码：按请求区间写出对应时长的 PCM，并记录每次提取范围。
+class _FakeTranscode extends AudioTranscodeService {
+  _FakeTranscode({required this.totalDuration});
+
+  /// 整段录音时长：测长提取（`duration == null`）按它写 PCM。
+  final Duration totalDuration;
+
+  final List<({Duration start, Duration? duration})> ranges = [];
+  final List<int> cancelledSessions = [];
+
+  @override
+  Future<bool> transcodeRangeToPcmWav16k({
+    required File source,
+    required File output,
+    required Duration start,
+    Duration? duration,
+    void Function(int sessionId)? onSessionStarted,
+  }) async {
+    ranges.add((start: start, duration: duration));
+    onSessionStarted?.call(ranges.length);
+    final span = duration ?? totalDuration;
+    await output.parent.create(recursive: true);
+    await output.writeAsBytes(_pcmBytes(span));
+    return true;
+  }
+
+  @override
+  void cancelSession(int sessionId) => cancelledSessions.add(sessionId);
 }
 
 /// 录音后端假体：把每次录音写成真实 WAV 文件，可选自动发最终事件。
@@ -332,6 +422,9 @@ void main() {
     _FakeAdapter adapter,
     _FakeRecordingBackend recording,
     _FakeRecordingBackend localAsr,
+    _FakeTranscode transcode,
+    _InMemorySpeechConfigStore configStore,
+    _InMemoryCapabilityStore capabilityStore,
   })
   build({
     bool online = true,
@@ -353,6 +446,7 @@ void main() {
       textVerified: textVerified,
       noticeDone: noticeDone,
     );
+    final transcode = _FakeTranscode(totalDuration: recordingDuration);
     final container = ProviderContainer(
       overrides: [
         analyticsOverride(),
@@ -364,6 +458,7 @@ void main() {
         speechPracticeBackendProvider.overrideWithValue(localAsr),
         speechConfigStoreProvider.overrideWithValue(configStore),
         speechCapabilityStoreProvider.overrideWithValue(capabilityStore),
+        localTranscriptionTranscodeServiceProvider.overrideWithValue(transcode),
         speechTranscriptionClientProvider.overrideWithValue(
           SpeechTranscriptionClient(dio: Dio()..httpClientAdapter = adapter),
         ),
@@ -374,6 +469,9 @@ void main() {
       adapter: adapter,
       recording: recording,
       localAsr: localAsr,
+      transcode: transcode,
+      configStore: configStore,
+      capabilityStore: capabilityStore,
     );
   }
 
@@ -416,14 +514,16 @@ void main() {
     await settle();
     expect(env.adapter.requestCount, 0, reason: '录音期间不得上传');
 
-    env.adapter.enqueueJson({'text': _onlineText, 'usage': {'cost': 0.0002}});
+    env.adapter.enqueueJson({
+      'text': _onlineText,
+      'usage': {'cost': 0.0002},
+    });
     await controller.stopAndEvaluate(
       referenceText: 'The quick brown fox jumps over the lazy dog',
     );
     await waitFor(
       () =>
-          env
-              .container
+          env.container
               .read(speechRecordingControllerProvider)
               .currentAttempt
               ?.finalTranscript ==
@@ -488,8 +588,7 @@ void main() {
     await controller.stopAndEvaluate(referenceText: 'hello world');
     await waitFor(
       () =>
-          env
-              .container
+          env.container
               .read(speechRecordingControllerProvider)
               .onlineShadowing
               ?.isFailed ??
@@ -530,8 +629,7 @@ void main() {
     await controller.stopAndEvaluate(referenceText: 'hello world');
     await waitFor(
       () =>
-          env
-              .container
+          env.container
               .read(speechRecordingControllerProvider)
               .onlineShadowing
               ?.isFailed ??
@@ -541,7 +639,10 @@ void main() {
 
     expect(env.adapter.requestCount, 0);
     expect(
-      env.container.read(speechRecordingControllerProvider).onlineShadowing?.error,
+      env.container
+          .read(speechRecordingControllerProvider)
+          .onlineShadowing
+          ?.error,
       isA<ShadowingOnlineAccessDenied>().having(
         (error) => error.reason,
         'reason',
@@ -550,7 +651,7 @@ void main() {
     );
   });
 
-  test('超出单块时长的录音被拒绝且不截断上传', () async {
+  test('超出单块的录音按顺序分块转写，合并完整文本后再评估', () async {
     final env = build(recordingDuration: const Duration(minutes: 3));
     final controller = env.container.read(
       speechRecordingControllerProvider.notifier,
@@ -564,34 +665,188 @@ void main() {
 
     await controller.startRecording(
       promptId: 'shadowing:online:long',
-      referenceText: 'hello world',
+      referenceText: 'the quick brown fox jumps over',
     );
     env.recording.emitSpeechStarted();
-    await controller.stopAndEvaluate(referenceText: 'hello world');
+    env.adapter.enqueueJson({
+      'text': 'the quick brown',
+      'usage': {'cost': 0.0002},
+    });
+    env.adapter.enqueueJson({
+      'text': 'brown fox jumps over',
+      'usage': {'cost': 0.0003},
+    });
+    await controller.stopAndEvaluate(
+      referenceText: 'the quick brown fox jumps over',
+    );
     await waitFor(
       () =>
-          env
-              .container
+          env.container
+              .read(speechRecordingControllerProvider)
+              .currentAttempt
+              ?.finalTranscript ==
+          'the quick brown fox jumps over',
+      reason: '分块成功后应用完整文本评估',
+    );
+
+    expect(env.adapter.requestCount, 2, reason: '三分钟录音切成两块顺序上传');
+    for (final body in env.adapter.bodies) {
+      expect(
+        _field(body, 'response_format'),
+        'json',
+        reason: '练习只需要文本，不请求片段时间戳',
+      );
+      expect(_field(body, 'timestamp_granularities[]'), isNull);
+    }
+    final state = env.container.read(speechRecordingControllerProvider);
+    expect(state.onlineShadowing?.isCompleted, isTrue);
+    expect(state.onlineShadowing?.completedChunks, 2);
+    expect(state.onlineShadowing?.totalChunks, 2);
+    expect(state.onlineShadowing?.reportedCost, closeTo(0.0005, 1e-9));
+    expect(state.currentAttempt?.filePath, isNotNull, reason: '源录音保留');
+  });
+
+  test('分块失败后提示可能计费，手动续试只重发未完成块', () async {
+    final env = build(recordingDuration: const Duration(minutes: 3));
+    final controller = env.container.read(
+      speechRecordingControllerProvider.notifier,
+    );
+    addTearDown(() async {
+      await controller.fullReset();
+      await env.recording.dispose();
+      await env.localAsr.dispose();
+      env.container.dispose();
+    });
+
+    await controller.startRecording(
+      promptId: 'shadowing:online:retry',
+      referenceText: 'the quick brown dog runs',
+    );
+    env.recording.emitSpeechStarted();
+    env.adapter.enqueueJson({'text': 'the quick brown'});
+    env.adapter.enqueueStatus(504);
+    await controller.stopAndEvaluate(referenceText: 'the quick brown dog runs');
+    await waitFor(
+      () =>
+          env.container
               .read(speechRecordingControllerProvider)
               .onlineShadowing
               ?.isFailed ??
           false,
-      reason: '超出单块应明确失败',
+      reason: '失败块应停在原地并保留已成功块',
     );
 
-    expect(env.adapter.requestCount, 0, reason: '超出单块不得上传，也不能只传开头');
-    final state = env.container.read(speechRecordingControllerProvider);
-    expect(
-      state.onlineShadowing?.error,
-      isA<ShadowingRecordingRejected>().having(
-        (error) => error.rejection,
-        'rejection',
-        ShadowingRecordingRejection.tooLong,
-      ),
+    var state = env.container.read(speechRecordingControllerProvider);
+    expect(env.adapter.requestCount, 2);
+    expect(state.onlineShadowing?.retryable, isTrue);
+    expect(state.onlineShadowing?.mayHaveBeenCharged, isTrue);
+    expect(state.onlineShadowing?.completedChunks, 1);
+    expect(state.onlineShadowing?.totalChunks, 2);
+    expect(state.currentAttempt?.status.isRecognitionFailure, isTrue);
+
+    // 用户手动续试：只重发失败块，已成功块不再上传。
+    env.adapter.enqueueJson({'text': 'brown dog runs'});
+    await controller.retryOnlineTranscription(
+      referenceText: 'the quick brown dog runs',
     );
-    final filePath = state.currentAttempt?.filePath;
-    expect(filePath, isNotNull, reason: '被拒绝时源录音保留');
-    expect(File(filePath!).existsSync(), isTrue);
+    await waitFor(
+      () =>
+          env.container
+              .read(speechRecordingControllerProvider)
+              .currentAttempt
+              ?.finalTranscript ==
+          'the quick brown dog runs',
+      reason: '续试成功后用完整文本评估',
+    );
+
+    expect(env.adapter.requestCount, 3, reason: '只重发失败块');
+    state = env.container.read(speechRecordingControllerProvider);
+    expect(state.onlineShadowing?.isCompleted, isTrue);
+  });
+
+  test('续试前换了在线模型就不再复用旧块', () async {
+    final env = build(recordingDuration: const Duration(minutes: 3));
+    final controller = env.container.read(
+      speechRecordingControllerProvider.notifier,
+    );
+    addTearDown(() async {
+      await controller.fullReset();
+      await env.recording.dispose();
+      await env.localAsr.dispose();
+      env.container.dispose();
+    });
+
+    await controller.startRecording(
+      promptId: 'shadowing:online:config',
+      referenceText: 'hello there',
+    );
+    env.recording.emitSpeechStarted();
+    env.adapter.enqueueJson({'text': 'hello'});
+    env.adapter.enqueueStatus(429);
+    await controller.stopAndEvaluate(referenceText: 'hello there');
+    await waitFor(
+      () =>
+          env.container
+              .read(speechRecordingControllerProvider)
+              .onlineShadowing
+              ?.isFailed ??
+          false,
+      reason: '第一块成功后第二块失败',
+    );
+    expect(env.adapter.requestCount, 2);
+
+    // 换了在线模型且新模型也通过验证：旧块不能拼进新配置的结果。
+    const newModel = 'openai/whisper-large-v3';
+    env.configStore.useModel(newModel);
+    env.capabilityStore.modelId = newModel;
+    env.container.invalidate(speechCapabilityProvider);
+    await env.container.read(speechCapabilityProvider.future);
+    env.adapter.enqueueJson({'text': 'hello'});
+    env.adapter.enqueueJson({'text': 'there'});
+    await controller.retryOnlineTranscription(referenceText: 'hello there');
+    await waitFor(
+      () =>
+          env.container
+              .read(speechRecordingControllerProvider)
+              .currentAttempt
+              ?.finalTranscript ==
+          'hello there',
+      reason: '新配置下重新规划并完成全部分块',
+    );
+
+    expect(env.adapter.requestCount, 4, reason: '旧块不复用，两块都重新上传');
+  });
+
+  test('取消分块转写后不再发后续块', () async {
+    final env = build(recordingDuration: const Duration(minutes: 3));
+    final controller = env.container.read(
+      speechRecordingControllerProvider.notifier,
+    );
+    addTearDown(() async {
+      await controller.fullReset();
+      await env.recording.dispose();
+      await env.localAsr.dispose();
+      env.container.dispose();
+    });
+
+    env.adapter.enqueueGatedJson({'text': 'first part'});
+    await controller.startRecording(
+      promptId: 'shadowing:online:chunk-cancel',
+      referenceText: 'hello world',
+    );
+    env.recording.emitSpeechStarted();
+    final stop = controller.stopAndEvaluate(referenceText: 'hello world');
+    await waitFor(() => env.adapter.requestCount == 1, reason: '第一块应已发出请求');
+
+    await controller.cancelActiveRecording();
+    env.adapter.release(0);
+    await stop;
+    await settle();
+
+    expect(env.adapter.requestCount, 1, reason: '取消后不开始下一块');
+    final state = env.container.read(speechRecordingControllerProvider);
+    expect(state.phase, SpeechRecordingPhase.idle);
+    expect(state.currentAttempt, isNull, reason: '取消丢弃过期结果');
   });
 
   test('取消后到达的旧结果不覆盖新状态', () async {
@@ -613,10 +868,7 @@ void main() {
     );
     env.recording.emitSpeechStarted();
     final stop = controller.stopAndEvaluate(referenceText: 'hello world');
-    await waitFor(
-      () => env.adapter.requestCount == 1,
-      reason: '停录后应发出唯一一次请求',
-    );
+    await waitFor(() => env.adapter.requestCount == 1, reason: '停录后应发出唯一一次请求');
 
     await controller.cancelActiveRecording();
     env.adapter.release(0);
@@ -647,10 +899,7 @@ void main() {
     );
     env.recording.emitSpeechStarted();
     final stop = controller.stopAndEvaluate(referenceText: 'hello world');
-    await waitFor(
-      () => env.adapter.requestCount == 1,
-      reason: '第一回合应已发出请求',
-    );
+    await waitFor(() => env.adapter.requestCount == 1, reason: '第一回合应已发出请求');
 
     await controller.startRecording(
       promptId: 'shadowing:online:second',
