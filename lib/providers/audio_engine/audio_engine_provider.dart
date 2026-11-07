@@ -270,6 +270,9 @@ class AudioEngine extends _$AudioEngine {
     wordCount: row.wordCount,
     isPinned: row.isPinned,
     transcriptSource: TranscriptSource.fromIndex(row.transcriptSource),
+    transcriptWordTimingSource: TranscriptWordTimingSource.fromIndex(
+      row.transcriptWordTimingSource,
+    ),
     audioSha256: row.audioSha256,
     originalAudioSha256: row.originalAudioSha256,
     transcriptLanguage: row.transcriptLanguage,

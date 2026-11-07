@@ -3,8 +3,8 @@
 /// 每个用途各自保存方式与模型，设置页、字幕入口与三条业务入口都读这份状态。
 /// 各用途的存储位置不同，但语义只有这一份：
 /// - 字幕：本机模型沿用旧偏好 `local_transcription_model_id`，由
-///   [localTranscriptionModelProvider] 持有；方式在本切片恒为本机（系统识别
-///   没有可用片段时间戳、在线尚未接入），因此不写冗余的方式偏好。
+///   [localTranscriptionModelProvider] 持有；方式在 [subtitleModePrefsKey] 保存，
+///   默认本机，在线只在当前配置通过字幕能力验证后可选。
 /// - 跟读：本机 / 系统方式与模型沿用离线 ASR 设置（共享本机引擎的档位与后端），
 ///   由 [offlineAsrSettingsProvider] 持有唯一来源，避免引擎档位出现第二份真相；
 ///   只有选用在线时额外记一份在线标记，在线模型由语音配置按用途保存。
@@ -34,6 +34,9 @@ const retellModePrefsKey = 'recognition_retell_mode';
 
 /// 复述本机模型偏好 key。
 const retellModelPrefsKey = 'recognition_retell_model_id';
+
+/// 字幕识别方式偏好 key；只持久化「在线」与「本机」（本机为默认）。
+const subtitleModePrefsKey = 'recognition_subtitle_mode';
 
 /// 跟读选用在线方式时的偏好 key。
 ///
@@ -174,16 +177,21 @@ final systemRecognitionPlatformProvider = Provider<bool>(
 
 /// 某用途当前可选的识别方式。
 ///
-/// 字幕需要片段时间戳，系统识别不提供，因此只开放本机；跟读与复述在受支持的
-/// 平台同时开放系统识别；在线只在具备 Key、上传告知与文本能力验证的跟读开放，
-/// 其余用途的在线分支在各自切片完成前不出现。
+/// 字幕需要片段时间戳：系统识别不提供，只有当前配置通过字幕能力验证后
+/// （[onlineSubtitleAvailable]）才出现在线方式。跟读与复述在受支持的平台
+/// 同时开放系统识别；跟读的在线方式另需文本能力验证（[onlineAvailable]）。
 List<RecognitionMode> availableRecognitionModes(
   RecognitionPurpose purpose, {
   required bool systemSupported,
+  bool onlineSubtitleAvailable = false,
   bool onlineAvailable = false,
 }) {
-  const local = [RecognitionMode.local];
-  if (purpose == RecognitionPurpose.subtitle) return local;
+  if (purpose == RecognitionPurpose.subtitle) {
+    return [
+      RecognitionMode.local,
+      if (onlineSubtitleAvailable) RecognitionMode.online,
+    ];
+  }
   return [
     RecognitionMode.local,
     if (systemSupported) RecognitionMode.system,
@@ -246,12 +254,19 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
 
     final retellModelId = _resolveRetellModelId(prefs, subtitleModelId);
     final retellMode = _modeFromPrefs(prefs.getString(retellModePrefsKey));
+    final subtitleMode =
+        prefs.getString(subtitleModePrefsKey) == RecognitionMode.online.name
+        ? RecognitionMode.online
+        : RecognitionMode.local;
     // 跟读在线是一个显式的额外选择；未选在线时继续由离线 ASR 档位决定。
     final shadowingOnline =
         prefs.getString(shadowingOnlinePrefsKey) ==
         RecognitionMode.online.name;
     return RecognitionSettings(
-      subtitle: RecognitionSelection.local(subtitleModelId),
+      subtitle: RecognitionSelection(
+        mode: subtitleMode,
+        localModelId: subtitleModelId,
+      ),
       shadowing: shadowingOnline
           ? RecognitionSelection.online(localModelId: shadowingModelId)
           : shadowingMode == AsrBackend.offline
@@ -312,9 +327,14 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
 
     switch (purpose) {
       case RecognitionPurpose.subtitle:
-        await ref
-            .read(localTranscriptionModelProvider.notifier)
-            .select(modelById(selection.localModelId));
+        final prefs = ref.read(sharedPreferencesProvider);
+        state = state.withPurpose(purpose, selection);
+        await prefs.setString(subtitleModePrefsKey, selection.mode.name);
+        if (selection.usesLocalModel) {
+          await ref
+              .read(localTranscriptionModelProvider.notifier)
+              .select(modelById(selection.localModelId));
+        }
       case RecognitionPurpose.shadowing:
         final prefs = ref.read(sharedPreferencesProvider);
         if (selection.usesOnlineModel) {

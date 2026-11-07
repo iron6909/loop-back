@@ -215,16 +215,22 @@ class AudioItemDao extends DatabaseAccessor<AppDatabase>
   /// 出现 SRT 与词级时间戳不一致。[wordTimestampsJson] 为 null 表示同时清空词级
   /// 时间戳（如编辑后无词级数据）。句/词计数、来源、路径等模型列由
   /// `audioLibraryProvider.updateAudioItem` 单独写入（与本方法列不相交）。
+  /// [transcriptWordTimingSource] 为 null 时保留数据库里的旧标记：只改字幕内容
+  /// 或只调词级时间戳，不会让原有来源凭空变成另一类。
   Future<void> saveTranscriptContent(
     String audioItemId, {
     required String srt,
     required String? wordTimestampsJson,
+    int? transcriptWordTimingSource,
   }) {
     return transaction(() async {
       await (update(audioItems)..where((t) => t.id.equals(audioItemId))).write(
         AudioItemsCompanion(
           transcriptSrt: Value(srt),
           wordTimestampsJson: Value(wordTimestampsJson),
+          transcriptWordTimingSource: transcriptWordTimingSource == null
+              ? const Value.absent()
+              : Value(transcriptWordTimingSource),
         ),
       );
     });
@@ -238,11 +244,13 @@ class AudioItemDao extends DatabaseAccessor<AppDatabase>
   /// - [expectedSrt]：任务开始识别时观察到的字幕内容；当前内容已变说明用户在此期间
   ///   导入或编辑了字幕，保留用户较新的结果。
   /// 任一写入失败则整个事务回滚，原字幕与元数据保持不变。
+  /// [transcriptWordTimingSource] 记录整份字幕的词时间戳来源；null 表示未知。
   Future<TranscriptCommitResult> commitTranscription({
     required String audioItemId,
     required String srt,
     required String? wordTimestampsJson,
     required int transcriptSource,
+    required int? transcriptWordTimingSource,
     required String? transcriptLanguage,
     required int sentenceCount,
     required int wordCount,
@@ -265,6 +273,7 @@ class AudioItemDao extends DatabaseAccessor<AppDatabase>
           transcriptSrt: Value(srt),
           wordTimestampsJson: Value(wordTimestampsJson),
           transcriptSource: Value(transcriptSource),
+          transcriptWordTimingSource: Value(transcriptWordTimingSource),
           transcriptLanguage: Value(transcriptLanguage),
           sentenceCount: Value(sentenceCount),
           wordCount: Value(wordCount),

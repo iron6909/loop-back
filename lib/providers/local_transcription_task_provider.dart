@@ -275,6 +275,8 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
         srt: srt,
         wordTimestampsJson: wordsJson,
         transcriptSource: TranscriptSource.device.index,
+        // 本机引擎不产词级时间戳，整份按词长合成，如实标记为估算。
+        transcriptWordTimingSource: TranscriptWordTimingSource.estimated.index,
         transcriptLanguage: 'en',
         sentenceCount: stats.$1,
         wordCount: stats.$2,
@@ -301,6 +303,7 @@ class LocalTranscriptionTaskManager extends _$LocalTranscriptionTaskManager {
             audioItem.copyWith(
               transcriptPath: null,
               transcriptSource: TranscriptSource.device,
+              transcriptWordTimingSource: TranscriptWordTimingSource.estimated,
               transcriptLanguage: 'en',
               sentenceCount: stats.$1,
               wordCount: stats.$2,
@@ -436,7 +439,8 @@ const _mergeMinTargetSeconds = 4;
 /// 单个本就较长（≥下限）的段保持不动、绝不拆分；合并只发生在相邻短段之间。
 /// 文本按空格拼接；区间取并集。
 /// 空列表原样返回。
-@visibleForTesting
+///
+/// 本机与在线字幕共用这一份后处理，不要在别处另写一份合并规则。
 List<AsrSegment> mergeShortAsrSegments(List<AsrSegment> segments) {
   if (segments.length <= 1) return segments;
 

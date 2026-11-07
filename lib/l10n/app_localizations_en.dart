@@ -3659,7 +3659,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get senseGroupSyntheticTimingNoticeMessage =>
-      'This sense group playback timing is estimated from your uploaded subtitles and may be inaccurate.';
+      'This sense group playback timing is estimated from word lengths and may not match the actual speech.';
 
   @override
   String get transcriptionSignInRequiredTitle =>
@@ -6037,4 +6037,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechUploadNoticeConfirm => 'Send test';
+
+  @override
+  String onlineSubtitleService(String service, String model) {
+    return 'Online subtitles: $service · $model';
+  }
+
+  @override
+  String onlineSubtitleCost(String cost) {
+    return 'Cost reported by the provider: $cost';
+  }
+
+  @override
+  String get onlineSubtitleCostUnknown =>
+      'The provider reported no cost, so the actual charge is unknown';
+
+  @override
+  String get onlineSubtitleNotConfigured =>
+      'No online speech service or API key configured';
+
+  @override
+  String get onlineSubtitleNotVerified =>
+      'The current speech configuration has not passed subtitle capability verification';
+
+  @override
+  String onlineSubtitleAudioTooLong(int maxMin) {
+    return 'The audio exceeds the single online subtitle limit ($maxMin minutes max)';
+  }
+
+  @override
+  String get onlineSubtitleDecodeFailed =>
+      'The audio could not be decoded, so nothing was uploaded';
+
+  @override
+  String get onlineSubtitleInvalidResult =>
+      'The service returned unusable timestamps, so no subtitles were saved';
+
+  @override
+  String get onlineSubtitleConfigChanged =>
+      'The speech configuration changed, so this result was discarded';
+
+  @override
+  String wordTimingSourceLabel(String source) {
+    return 'Word timing source: $source';
+  }
+
+  @override
+  String get wordTimingSourceModel => 'model-provided';
+
+  @override
+  String get wordTimingSourceEstimated => 'estimated';
+
+  @override
+  String get wordTimingSourceMixed => 'mixed';
+
+  @override
+  String get wordTimingSourceUnknown => 'unknown';
 }

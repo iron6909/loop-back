@@ -146,6 +146,9 @@ class RecognitionPurposeSection extends ConsumerWidget {
     RecognitionPurpose purpose,
   ) {
     final systemSupported = ref.read(systemRecognitionPlatformProvider);
+    final onlineSubtitleAvailable = ref.read(
+      onlineSubtitleAvailableProvider,
+    );
     return showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -162,6 +165,7 @@ class RecognitionPurposeSection extends ConsumerWidget {
           final modes = availableRecognitionModes(
             purpose,
             systemSupported: systemSupported,
+            onlineSubtitleAvailable: onlineSubtitleAvailable,
             onlineAvailable: onlineAvailable,
           );
           final theme = Theme.of(innerContext);

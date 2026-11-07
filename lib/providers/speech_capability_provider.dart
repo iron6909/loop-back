@@ -118,6 +118,28 @@ final speechCapabilityProvider =
       SpeechCapabilityNotifier.new,
     );
 
+/// 当前语音配置是否已通过字幕（片段时间戳）能力验证。
+///
+/// 字幕在线方式的唯一准入依据：没保存完整配置、没有 Key，或结论不属于当前
+/// 非秘密配置身份时为 false。配置变化后旧结论自然不再匹配。
+final onlineSubtitleAvailableProvider = Provider<bool>((ref) {
+  final configuration = ref.watch(speechConfigurationProvider).valueOrNull;
+  final config = configuration?.config;
+  final capabilities = ref.watch(speechCapabilityProvider).valueOrNull;
+  if (configuration == null ||
+      !configuration.isConfigured ||
+      config == null ||
+      capabilities == null) {
+    return false;
+  }
+  final capability = capabilities.capabilityFor(
+    config: config,
+    credentialVersion: configuration.credentialVersion,
+    purpose: RecognitionPurpose.subtitle,
+  );
+  return capability?.segments ?? false;
+});
+
 /// 触发一次真实能力验证并维护结论。
 class SpeechCapabilityNotifier extends AsyncNotifier<SpeechCapabilityState> {
   int _generation = 0;

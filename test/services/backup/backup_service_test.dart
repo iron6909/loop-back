@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:echo_loop/database/app_database.dart';
+import 'package:echo_loop/models/audio_item.dart';
 import 'package:echo_loop/services/backup/backup_manifest.dart';
 import 'package:echo_loop/services/backup/backup_service.dart';
 import 'package:echo_loop/utils/app_data_dir.dart';
@@ -321,6 +322,56 @@ void main() {
         version.read<int>('user_version'),
         AppDatabase.currentSchemaVersion,
       );
+      await restored.close();
+      await applied.commit();
+    });
+
+    test('备份与恢复保留字幕来源与整体词时间戳来源', () async {
+      final now = DateTime.utc(2026, 11, 7);
+      await database
+          .into(database.audioItems)
+          .insert(
+            AudioItemsCompanion.insert(
+              id: 'online',
+              name: 'Online',
+              addedDate: now,
+              updatedAt: now,
+            ),
+          );
+      await database.audioItemDao.commitTranscription(
+        audioItemId: 'online',
+        srt: '1\n00:00:00,000 --> 00:00:02,000\nOnline line.\n',
+        wordTimestampsJson: '[{"word":"Online"}]',
+        transcriptSource: TranscriptSource.online.index,
+        transcriptWordTimingSource: TranscriptWordTimingSource.mixed.index,
+        transcriptLanguage: 'en',
+        sentenceCount: 1,
+        wordCount: 2,
+        expectedSrt: null,
+        isCancelled: () => false,
+      );
+
+      final backupPath = await service.exportData(
+        outputDir: outputDir.path,
+        appVersion: '1.0.0',
+        platform: 'test',
+      );
+      final prepared = await service.prepareImport(zipPath: backupPath);
+      addTearDown(prepared.dispose);
+      await database.close();
+      databaseClosed = true;
+      final applied = await service.applyPreparedImport(prepared);
+      final restored = AppDatabase(
+        NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+      );
+
+      final row = await restored.audioItemDao.getById('online');
+      expect(row?.transcriptSource, TranscriptSource.online.index);
+      expect(
+        row?.transcriptWordTimingSource,
+        TranscriptWordTimingSource.mixed.index,
+      );
+      expect(row?.transcriptSrt, contains('Online line.'));
       await restored.close();
       await applied.commit();
     });

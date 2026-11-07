@@ -1529,7 +1529,7 @@
   "senseGroupSignInRequiredTitle": "登录后使用 AI 功能",
   "senseGroupSignInRequiredMessage": "使用 AI 功能前，请先登录。",
   "senseGroupSyntheticTimingNoticeTitle": "意群时间可能不准",
-  "senseGroupSyntheticTimingNoticeMessage": "这个意群播放时间是从你上传的字幕推测出来的，可能不准确。",
+  "senseGroupSyntheticTimingNoticeMessage": "这个意群播放时间由词长估算得出，可能与实际发音不完全一致。",
   "transcriptionSignInRequiredTitle": "登录后使用 AI 转录",
   "transcriptionSignInRequiredMessage": "AI 转录需要使用云端转录服务。登录后可以继续用 AI 生成字幕。",
   "senseGroupNotAvailable": "当前音频暂不支持意群播放",
@@ -2417,5 +2417,34 @@
   },
   "speechUploadProviderOpenRouter": "OpenRouter 及其路由到的下游供应商",
   "speechUploadProviderCustom": "该服务的运营方（下游供应商未知）",
-  "speechUploadNoticeConfirm": "发送测试"
+  "speechUploadNoticeConfirm": "发送测试",
+  "onlineSubtitleService": "在线字幕：{service} · {model}",
+  "@onlineSubtitleService": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" }
+    }
+  },
+  "onlineSubtitleCost": "供应商报告的本次费用：{cost}",
+  "@onlineSubtitleCost": {
+    "placeholders": { "cost": { "type": "String" } }
+  },
+  "onlineSubtitleCostUnknown": "供应商未报告费用，实际花费未知",
+  "onlineSubtitleNotConfigured": "尚未配置在线语音服务或 Key",
+  "onlineSubtitleNotVerified": "当前语音配置未通过字幕能力验证",
+  "onlineSubtitleAudioTooLong": "音频超出单次在线字幕范围（最长 {maxMin} 分钟）",
+  "@onlineSubtitleAudioTooLong": {
+    "placeholders": { "maxMin": { "type": "int" } }
+  },
+  "onlineSubtitleDecodeFailed": "无法解码音频，未上传",
+  "onlineSubtitleInvalidResult": "服务返回的时间戳无效，未保存字幕",
+  "onlineSubtitleConfigChanged": "语音配置已变化，已放弃本次结果",
+  "wordTimingSourceLabel": "词时间戳来源：{source}",
+  "@wordTimingSourceLabel": {
+    "placeholders": { "source": { "type": "String" } }
+  },
+  "wordTimingSourceModel": "模型提供",
+  "wordTimingSourceEstimated": "估算",
+  "wordTimingSourceMixed": "混合",
+  "wordTimingSourceUnknown": "未知"
 }

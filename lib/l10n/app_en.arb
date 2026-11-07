@@ -1962,7 +1962,7 @@
   "senseGroupSignInRequiredTitle": "Sign in to use AI features",
   "senseGroupSignInRequiredMessage": "Please sign in before using AI features.",
   "senseGroupSyntheticTimingNoticeTitle": "Timing may be inaccurate",
-  "senseGroupSyntheticTimingNoticeMessage": "This sense group playback timing is estimated from your uploaded subtitles and may be inaccurate.",
+  "senseGroupSyntheticTimingNoticeMessage": "This sense group playback timing is estimated from word lengths and may not match the actual speech.",
   "transcriptionSignInRequiredTitle": "Sign in to use AI transcription",
   "transcriptionSignInRequiredMessage": "AI transcription uses the cloud transcription service. Sign in to transcribe audio with AI.",
   "senseGroupNotAvailable": "Sense group playback is not available for this audio yet",
@@ -2916,5 +2916,34 @@
   },
   "speechUploadProviderOpenRouter": "OpenRouter and the downstream providers it routes to",
   "speechUploadProviderCustom": "the service operator (downstream provider unknown)",
-  "speechUploadNoticeConfirm": "Send test"
+  "speechUploadNoticeConfirm": "Send test",
+  "onlineSubtitleService": "Online subtitles: {service} · {model}",
+  "@onlineSubtitleService": {
+    "placeholders": {
+      "service": { "type": "String" },
+      "model": { "type": "String" }
+    }
+  },
+  "onlineSubtitleCost": "Cost reported by the provider: {cost}",
+  "@onlineSubtitleCost": {
+    "placeholders": { "cost": { "type": "String" } }
+  },
+  "onlineSubtitleCostUnknown": "The provider reported no cost, so the actual charge is unknown",
+  "onlineSubtitleNotConfigured": "No online speech service or API key configured",
+  "onlineSubtitleNotVerified": "The current speech configuration has not passed subtitle capability verification",
+  "onlineSubtitleAudioTooLong": "The audio exceeds the single online subtitle limit ({maxMin} minutes max)",
+  "@onlineSubtitleAudioTooLong": {
+    "placeholders": { "maxMin": { "type": "int" } }
+  },
+  "onlineSubtitleDecodeFailed": "The audio could not be decoded, so nothing was uploaded",
+  "onlineSubtitleInvalidResult": "The service returned unusable timestamps, so no subtitles were saved",
+  "onlineSubtitleConfigChanged": "The speech configuration changed, so this result was discarded",
+  "wordTimingSourceLabel": "Word timing source: {source}",
+  "@wordTimingSourceLabel": {
+    "placeholders": { "source": { "type": "String" } }
+  },
+  "wordTimingSourceModel": "model-provided",
+  "wordTimingSourceEstimated": "estimated",
+  "wordTimingSourceMixed": "mixed",
+  "wordTimingSourceUnknown": "unknown"
 }
