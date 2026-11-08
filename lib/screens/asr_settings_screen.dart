@@ -100,8 +100,9 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
             ),
           ),
 
-          // 在线服务分组只有一行入口，卡片标题即分组标题。
+          // 在线服务分组只有一行入口，具体配置在独立的「在线语音服务」页。
           const SizedBox(height: AppSpacing.m),
+          _SectionLabel(text: l10n.onlineServiceSectionTitle),
           _buildOnlineServiceEntry(
             l10n,
             theme,
@@ -135,9 +136,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
         subtitle: Text(
           speechProviderStatusText(l10n, speechState, speechCapabilities),
           style: theme.textTheme.bodySmall?.copyWith(
-            color: speechState.isConfigured
-                ? theme.colorScheme.onSurfaceVariant
-                : theme.colorScheme.error,
+            color: speechProviderStatusColor(theme, speechState),
           ),
         ),
         trailing: Row(
@@ -218,15 +217,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
     AsrModelInfo model,
   ) {
     final modelState = state.modelStateOf(model.id);
-    final isSelected = state.selectedModel.id == model.id;
     final isRecommended = state.recommendedModel.id == model.id;
-    // 用途标签只标记「方式为本机且档位匹配」的用途，系统与在线不占用本机模型。
-    final usedBy = [
-      for (final purpose in RecognitionPurpose.values)
-        if (settings.forPurpose(purpose).usesLocalModel &&
-            settings.forPurpose(purpose).localModelId == model.id)
-          purpose,
-    ];
     return ListTile(
       title: Row(
         children: [
@@ -240,32 +231,49 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _modelSubtitle(
-            l10n,
-            theme,
-            model.id,
-            modelState,
-            state.downloadSource,
-          ),
-          if (usedBy.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: [
-                for (final purpose in usedBy)
-                  _UsageTag(
-                    text: l10n.localModelUsageTag(
-                      recognitionPurposeLabel(l10n, purpose),
-                    ),
-                    theme: theme,
-                  ),
-              ],
-            ),
-          ],
+          _modelSubtitle(l10n, theme, model.id, modelState, state.downloadSource),
+          _modelUsageTags(l10n, theme, settings, model.id),
         ],
       ),
-      trailing: _modelTrailing(context, l10n, model.id, modelState, isSelected),
+      trailing: _modelTrailing(
+        l10n,
+        model.id,
+        modelState,
+        isSelected: state.selectedModel.id == model.id,
+        backend: state.backend,
+      ),
+    );
+  }
+
+  /// 用途标签只标记「方式为本机且档位匹配」的用途，系统与在线不占用本机模型。
+  Widget _modelUsageTags(
+    AppLocalizations l10n,
+    ThemeData theme,
+    RecognitionSettings settings,
+    String modelId,
+  ) {
+    final usedBy = [
+      for (final purpose in RecognitionPurpose.values)
+        if (settings.forPurpose(purpose).usesLocalModel &&
+            settings.forPurpose(purpose).localModelId == modelId)
+          purpose,
+    ];
+    if (usedBy.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Wrap(
+        spacing: AppSpacing.xs,
+        runSpacing: AppSpacing.xs,
+        children: [
+          for (final purpose in usedBy)
+            _UsageTag(
+              text: l10n.localModelUsageTag(
+                recognitionPurposeLabel(l10n, purpose),
+              ),
+              theme: theme,
+            ),
+        ],
+      ),
     );
   }
 
@@ -338,16 +346,22 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
 
   /// 每行只保留与安装状态对应的动作：未下载下载、下载中取消、失败重试、已下载删除。
   ///
-  /// 跟读当前档位在下载中与已下载时不给取消 / 删除入口，与既有删除保护一致。
+  /// 跟读当前档位在下本机后端下不可删除，与
+  /// [OfflineAsrSettingsNotifier.deleteModel] 的保护一致；系统后端下它只是已下载
+  /// 资源，与「删除所有已下载模型」一样可以删。下载中的档位仍不给取消入口。
   Widget? _modelTrailing(
-    BuildContext context,
     AppLocalizations l10n,
     String modelId,
-    AsrModelState state,
-    bool isSelected,
-  ) {
+    AsrModelState state, {
+    required bool isSelected,
+    required AsrBackend backend,
+  }) {
+    final protected =
+        isSelected &&
+        (state.isDownloading ||
+            (state.isReady && backend == AsrBackend.offline));
+    if (protected) return null;
     if (state.isDownloading) {
-      if (isSelected) return null;
       return TextButton(
         onPressed: () => ref
             .read(offlineAsrSettingsProvider.notifier)
@@ -364,7 +378,6 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       );
     }
     if (state.isReady) {
-      if (isSelected) return null;
       return IconButton(
         icon: const Icon(Icons.delete_outline),
         tooltip: l10n.deleteModelAction,
@@ -547,7 +560,7 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.m,
         AppSpacing.s,
-        AppSpacing.s,
+        AppSpacing.m,
         AppSpacing.s,
       ),
       child: Row(
@@ -561,7 +574,7 @@ class _SectionLabel extends StatelessWidget {
               ),
             ),
           ),
-          if (trailing != null) trailing!,
+          if (trailing case final trailing?) trailing,
         ],
       ),
     );

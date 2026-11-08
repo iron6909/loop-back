@@ -349,6 +349,37 @@ void main() {
     );
   });
 
+  test('有服务地址但缺 Key 时说明缺的是 Key，而不是未配置', () async {
+    final container = createContainer(apiKey: null);
+    await container.read(speechConfigurationProvider.future);
+
+    expect(
+      container.read(
+        onlineModeBlockReasonProvider(RecognitionPurpose.shadowing),
+      ),
+      PracticeOnlineAccessDenial.missingApiKey,
+    );
+    expect(
+      await container.read(
+        onlinePracticeAvailabilityProvider(RecognitionPurpose.shadowing).future,
+      ),
+      isFalse,
+    );
+  });
+
+  test('没有保存服务地址时说明未配置，而不是缺 Key', () async {
+    final container = createContainer();
+    speechStore.config = null;
+    await container.read(speechConfigurationProvider.future);
+
+    expect(
+      container.read(
+        onlineModeBlockReasonProvider(RecognitionPurpose.shadowing),
+      ),
+      PracticeOnlineAccessDenial.missingConfiguration,
+    );
+  });
+
   test('已验证但只返回文本的模型不能用于字幕，原因不是「去验证」', () async {
     final container = createContainer();
     final textOnly = SpeechCapability(

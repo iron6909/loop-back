@@ -666,7 +666,7 @@ void main() {
     );
     expect(tile.enabled, isFalse);
     expect(
-      find.textContaining('Set the service address and key'),
+      find.textContaining('Set the service address under Settings'),
       findsOneWidget,
     );
     expect(

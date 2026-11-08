@@ -5,9 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
+import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
+import 'package:echo_loop/providers/speech_capability_provider.dart';
 import 'package:echo_loop/providers/speech_configuration_provider.dart';
 import 'package:echo_loop/screens/asr_settings_screen.dart';
+import 'package:echo_loop/services/speech/speech_capability.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
 import 'package:echo_loop/services/speech/speech_config_store.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
@@ -92,9 +95,23 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   }
 }
 
+/// 只保存在内存里的能力记录：入口状态测试不读取真实偏好。
+class _StaticCapabilityStore extends SpeechCapabilityStore {
+  _StaticCapabilityStore(this.records);
+
+  final Map<String, SpeechCapability> records;
+
+  @override
+  Future<Map<String, SpeechCapability>> readAll() async => records;
+
+  @override
+  Future<SpeechCapability?> read(String identity) async => records[identity];
+}
+
 Widget _buildTestWidget(
   _StaticOfflineAsrSettingsNotifier notifier, {
   SpeechConfigStore? speechStore,
+  SpeechCapabilityStore? capabilityStore,
 }) {
   return ProviderScope(
     overrides: [
@@ -103,6 +120,8 @@ Widget _buildTestWidget(
       speechConfigStoreProvider.overrideWithValue(
         speechStore ?? _StaticSpeechConfigStore(),
       ),
+      if (capabilityStore != null)
+        speechCapabilityStoreProvider.overrideWithValue(capabilityStore),
     ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
@@ -301,9 +320,13 @@ void main() {
 
     final recognitionTop = tester.getTopLeft(find.text('Recognition modes')).dy;
     final libraryTop = tester.getTopLeft(find.text('On-device models')).dy;
-    final onlineTop = tester.getTopLeft(find.text('Online speech service')).dy;
+    final onlineSectionTop = tester.getTopLeft(find.text('Online service')).dy;
+    final onlineTop = tester
+        .getTopLeft(find.text('Online speech service'))
+        .dy;
     expect(recognitionTop, lessThan(libraryTop));
-    expect(libraryTop, lessThan(onlineTop));
+    expect(libraryTop, lessThan(onlineSectionTop));
+    expect(onlineSectionTop, lessThan(onlineTop));
   });
 
   testWidgets('跟读使用系统识别时本机模型资源库仍可见，下载只装模型不改跟读选择', (tester) async {
@@ -388,6 +411,34 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(notifier.deletedModelIds, ['whisper-small-en-int8']);
+  });
+
+  testWidgets('系统后端下跟读当前档位也可删除，与本机后端的删除保护不同', (tester) async {
+    _useTallViewport(tester);
+    final notifier = _StaticOfflineAsrSettingsNotifier(
+      stateWith(
+        backend: AsrBackend.platform,
+        modelStates: const {
+          'whisper-base-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloaded,
+            localSizeBytes: 153 * 1024 * 1024,
+          ),
+        },
+      ),
+    );
+
+    await tester.pumpWidget(_buildTestWidget(notifier));
+    await tester.pumpAndSettle();
+
+    // 系统识别不依赖本机模型：跟读档位只是下载状态，删掉与本机清理规则一致。
+    expect(find.byTooltip('Delete Model'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Delete Model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete Model').last);
+    await tester.pumpAndSettle();
+
+    expect(notifier.deletedModelIds, ['whisper-base-en-int8']);
   });
 
   testWidgets('分组标题显示已下载总占用，清理沿用现有确认与保护规则', (tester) async {
@@ -521,6 +572,45 @@ void main() {
 
       expect(find.text('Saved, not verified'), findsOneWidget);
       expect(find.text('OpenRouter'), findsOneWidget);
+    });
+
+    testWidgets('配置与 Key 齐备且已验证时入口显示已保存已验证', (tester) async {
+      _useTallViewport(tester);
+      const config = SpeechConfig(
+        kind: SpeechProviderKind.openrouter,
+        baseUrl: 'https://openrouter.ai/api/v1',
+        onlineModels: {
+          RecognitionPurpose.shadowing: 'openai/whisper-large-v3',
+        },
+      );
+      final capability = SpeechCapability(
+        identity: SpeechCapability.identityFor(
+          kind: SpeechProviderKind.openrouter,
+          baseUrl: config.baseUrl,
+          modelId: 'openai/whisper-large-v3',
+          credentialVersion: 'test-credential-version',
+        ),
+        text: true,
+        segments: true,
+        wordTimestamps: false,
+        validatedAt: DateTime.utc(2026, 11, 8),
+      );
+
+      await tester.pumpWidget(
+        _buildTestWidget(
+          notifier(),
+          speechStore: _StaticSpeechConfigStore(
+            config: config,
+            apiKey: 'sk-speech-sentinel-4b7d',
+          ),
+          capabilityStore: _StaticCapabilityStore({
+            capability.identity: capability,
+          }),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Saved and verified'), findsOneWidget);
     });
 
     testWidgets('点击入口进入在线语音服务页，返回后回到语音识别页', (tester) async {

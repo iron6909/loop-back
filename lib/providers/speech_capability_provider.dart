@@ -94,14 +94,16 @@ final onlineModeBlockReasonProvider =
     ) {
       final configuration = ref.watch(speechConfigurationProvider).valueOrNull;
       final config = configuration?.config;
-      if (configuration == null ||
-          !configuration.isConfigured ||
-          config == null) {
+      if (configuration == null || config == null) {
         return PracticeOnlineAccessDenial.missingConfiguration;
       }
       final modelId = config.onlineModelFor(purpose);
       if (modelId.isEmpty) {
         return PracticeOnlineAccessDenial.missingConfiguration;
+      }
+      // 地址与模型齐备后，缺 Key 是另一件要补的事，不能混成「未配置」。
+      if (!configuration.hasApiKey) {
+        return PracticeOnlineAccessDenial.missingApiKey;
       }
       final capabilities = ref.watch(speechCapabilityProvider).valueOrNull;
       if (capabilities == null) {
@@ -118,7 +120,9 @@ final onlineModeBlockReasonProvider =
       final suitable = purpose == RecognitionPurpose.subtitle
           ? capability.segments
           : capability.text;
-      return suitable ? null : PracticeOnlineAccessDenial.capabilityNotSuitable;
+      return suitable
+          ? null
+          : PracticeOnlineAccessDenial.capabilityNotSuitable;
     });
 
 /// 在线方式需要的能力等级：练习只需文本，字幕必须有片段时间戳。
@@ -138,9 +142,14 @@ Future<PracticeOnlineAccess> resolvePracticeOnlineAccess(
   final config = await configStore.read();
   final apiKey = await configStore.readApiKey();
   final modelId = config?.onlineModelFor(purpose) ?? '';
-  if (config == null || apiKey == null || modelId.isEmpty) {
+  if (config == null || modelId.isEmpty) {
     return const PracticeOnlineAccessDenied(
       PracticeOnlineAccessDenial.missingConfiguration,
+    );
+  }
+  if (apiKey == null) {
+    return const PracticeOnlineAccessDenied(
+      PracticeOnlineAccessDenial.missingApiKey,
     );
   }
   // 首次向该服务上传用户录音前必须有告知；没有告知就不上传。

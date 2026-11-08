@@ -2611,6 +2611,7 @@
   },
   "recognitionModeTitle": "识别方式",
   "localModelLibraryTitle": "本机模型",
+  "onlineServiceSectionTitle": "在线服务",
   "localModelLibraryTotal": "已下载 {size}",
   "@localModelLibraryTotal": {
     "placeholders": {
@@ -2652,9 +2653,10 @@
       }
     }
   },
-  "recognitionOnlineNeedsConfiguration": "需先在下方「在线语音服务」填写服务地址与 Key",
-  "recognitionOnlineNeedsUploadNotice": "需先在下方「在线语音服务」点「验证模型」；首次会告知上传目标与可能费用",
-  "recognitionOnlineNeedsVerification": "需先在下方「在线语音服务」点「验证模型」，验证该用途的在线模型",
+  "recognitionOnlineNeedsConfiguration": "需先在设置 → 语音识别 → 在线语音服务填写服务地址",
+  "recognitionOnlineNeedsApiKey": "需先在设置 → 语音识别 → 在线语音服务保存 API Key",
+  "recognitionOnlineNeedsUploadNotice": "需先在设置 → 语音识别 → 在线语音服务点「验证模型」；首次会告知上传目标与可能费用",
+  "recognitionOnlineNeedsVerification": "需先在设置 → 语音识别 → 在线语音服务点「验证模型」，验证该用途的在线模型",
   "shadowingOnlineProgress": "在线 · {service} · {model} · {percent}%",
   "@shadowingOnlineProgress": {
     "placeholders": {
@@ -2841,5 +2843,5 @@
   "wordTimingSourceMixed": "混合",
   "wordTimingSourceUnknown": "未知",
   "recognitionOnlineNeedsSuitableModel": "该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证",
-  "subtitleOnlineModelSettingsHint": "在线模型与 Key 在下方「在线语音服务」中配置"
+  "subtitleOnlineModelSettingsHint": "在线模型与 Key 在设置 → 语音识别 → 在线语音服务中配置"
 }

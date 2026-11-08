@@ -270,6 +270,10 @@ void main() {
     expect(find.text('Not verified'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox());
+    await pumpWith(PracticeOnlineAccessDenial.missingApiKey);
+    expect(find.text('API key missing'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
     await pumpWith(PracticeOnlineAccessDenial.capabilityNotSuitable);
     expect(find.text('Unavailable'), findsOneWidget);
   });
@@ -311,7 +315,9 @@ void main() {
     expect(find.text('Whisper Tiny (English)'), findsOneWidget);
     // 在线模型与 Key 去哪里配：面板里直接说明，不再让人去管理字幕弹窗选。
     expect(
-      find.text('Configure the online model and key under Online speech below'),
+      find.text(
+        'Configure the online model and key under Settings → Speech recognition → Online speech service',
+      ),
       findsOneWidget,
     );
   });
@@ -531,7 +537,7 @@ void main() {
     expect(find.text('Online speech'), findsOneWidget);
     expect(
       find.text(
-        'Set the service address and key under Online speech below first',
+        'Set the service address under Settings → Speech recognition → Online speech service first',
       ),
       findsOneWidget,
     );
@@ -540,6 +546,29 @@ void main() {
     );
     expect(onlineTile.enabled, isFalse);
     expect(find.text('System speech'), findsOneWidget);
+  });
+
+  testWidgets('在线缺 Key 时说明要补 Key，不再要求填服务地址', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        onlineBlockReason: PracticeOnlineAccessDenial.missingApiKey,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Shadowing'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Save an API key under Settings → Speech recognition → Online speech service first',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Set the service address'), findsNothing);
   });
 
   testWidgets('在线缺少上传告知时，提示直接指向「验证模型」按钮', (tester) async {
@@ -559,7 +588,7 @@ void main() {
     // 告知在「验证模型」弹窗里完成，提示必须指向那个按钮，而不是一个不存在的入口。
     expect(
       find.text(
-        'Tap Verify model under Online speech below; the first time explains the upload target and possible charges',
+        'Tap Verify model under Settings → Speech recognition → Online speech service; the first time explains the upload target and possible charges',
       ),
       findsOneWidget,
     );
@@ -578,7 +607,7 @@ void main() {
     expect(find.text('Online speech'), findsOneWidget);
     expect(
       find.text(
-        'Set the service address and key under Online speech below first',
+        'Set the service address under Settings → Speech recognition → Online speech service first',
       ),
       findsNothing,
     );

@@ -5901,6 +5901,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localModelLibraryTitle => 'On-device models';
 
   @override
+  String get onlineServiceSectionTitle => 'Online service';
+
+  @override
   String localModelLibraryTotal(String size) {
     return 'Downloaded $size';
   }
@@ -5970,15 +5973,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recognitionOnlineNeedsConfiguration =>
-      'Set the service address and key under Online speech below first';
+      'Set the service address under Settings → Speech recognition → Online speech service first';
+
+  @override
+  String get recognitionOnlineNeedsApiKey =>
+      'Save an API key under Settings → Speech recognition → Online speech service first';
 
   @override
   String get recognitionOnlineNeedsUploadNotice =>
-      'Tap Verify model under Online speech below; the first time explains the upload target and possible charges';
+      'Tap Verify model under Settings → Speech recognition → Online speech service; the first time explains the upload target and possible charges';
 
   @override
   String get recognitionOnlineNeedsVerification =>
-      'Tap Verify model under Online speech below to verify this purpose\'s online model';
+      'Tap Verify model under Settings → Speech recognition → Online speech service to verify this purpose\'s online model';
 
   @override
   String shadowingOnlineProgress(String service, String model, int percent) {
@@ -6202,5 +6209,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subtitleOnlineModelSettingsHint =>
-      'Configure the online model and key under Online speech below';
+      'Configure the online model and key under Settings → Speech recognition → Online speech service';
 }
