@@ -2,7 +2,8 @@
 ///
 /// 界面只列出当前平台与用途真正可执行的方式：在线方式要等对应业务切片完成，
 /// 系统识别只在支持的平台与用途出现。修改选择前若存在受影响的在途任务，先告知
-/// 用户；拒绝则保留原配置与任务，接受才取消这些任务并应用变更。
+/// 用户；拒绝则保留原配置与任务，接受才取消这些任务并应用变更。语音服务配置的
+/// 保存复用同一套告知（[confirmCancelInFlightTasks]）。
 library;
 
 import 'package:flutter/material.dart';
@@ -32,6 +33,23 @@ Future<bool> applyRecognitionSelectionChange(
     return first.applied;
   }
   if (!context.mounted) return false;
+  if (!await confirmCancelInFlightTasks(context, affected)) return false;
+  final second = await notifier.change(
+    purpose: purpose,
+    selection: selection,
+    cancelInFlight: true,
+  );
+  return second.applied;
+}
+
+/// 变更前告知：有受影响的在途任务时询问是否取消它们。
+///
+/// 识别设置与语音服务配置共用这一处提示，拒绝返回 false，调用方保持原配置与
+/// 任务不动。
+Future<bool> confirmCancelInFlightTasks(
+  BuildContext context,
+  List<RecognitionInFlightTask> affected,
+) async {
   final l10n = AppLocalizations.of(context)!;
   final confirmed = await showDialog<bool>(
     context: context,
@@ -50,13 +68,7 @@ Future<bool> applyRecognitionSelectionChange(
       ],
     ),
   );
-  if (confirmed != true) return false;
-  final second = await notifier.change(
-    purpose: purpose,
-    selection: selection,
-    cancelInFlight: true,
-  );
-  return second.applied;
+  return confirmed ?? false;
 }
 
 /// 用途名称。

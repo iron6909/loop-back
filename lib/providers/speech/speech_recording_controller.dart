@@ -321,12 +321,13 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
 
   // ========== 配置方法 ==========
 
-  /// 登记本回合为跟读用途的在途任务，供识别设置变更告知与取消。
+  /// 登记本回合为跟读用途的在途任务，供识别设置与语音配置变更告知与取消。
   void _registerInFlight(String promptId) {
     _unregisterInFlight();
     final task = RecognitionInFlightTask(
       purpose: RecognitionPurpose.shadowing,
       label: promptId,
+      usesOnlineSpeech: _roundUsesOnline,
       onCancel: cancelActiveRecording,
     );
     _inFlightTask = task;

@@ -117,12 +117,13 @@ class RecognitionChangeResult {
 /// 一条正在使用识别结果的在途任务。
 ///
 /// 业务入口（字幕转录、跟读录音、复述录音）在真正开始识别时登记、结束时注销；
-/// 识别设置据此在变更前告知并取消受影响任务。
+/// 识别设置与语音服务配置据此在变更前告知并取消受影响任务。
 class RecognitionInFlightTask {
   RecognitionInFlightTask({
     required this.purpose,
     required this.label,
     required this.onCancel,
+    this.usesOnlineSpeech = false,
   });
 
   final RecognitionPurpose purpose;
@@ -132,6 +133,12 @@ class RecognitionInFlightTask {
 
   /// 取消该任务：停止后续识别并清理临时结果。
   final Future<void> Function() onCancel;
+
+  /// 本次识别是否使用在线语音服务（地址、Key 与该用途的在线模型）。
+  ///
+  /// 改这些配置只会让在线任务的结果失效；本机与系统方式的任务不受影响，
+  /// 不能在保存语音配置时被一起取消。
+  final bool usesOnlineSpeech;
 
   bool _cancelled = false;
 
@@ -159,6 +166,31 @@ class RecognitionInFlightRegistry {
     for (final task in _tasks)
       if (task.purpose == purpose && !task.isCancelled) task,
   ];
+
+  /// 指定用途范围内绑定在线语音配置的仍在进行的任务。
+  ///
+  /// 保存语音服务配置前用它判断是否需要告知用户：改服务类型、地址或 Key 时传入
+  /// 全部用途，只改某个用途的在线模型时只传该用途。
+  List<RecognitionInFlightTask> pendingOnline(
+    Set<RecognitionPurpose> purposes,
+  ) => [
+    for (final task in _tasks)
+      if (task.usesOnlineSpeech &&
+          !task.isCancelled &&
+          purposes.contains(task.purpose))
+        task,
+  ];
+
+  /// 取消给定任务：标记取消、执行任务自己的取消入口，并从登记处移除。
+  ///
+  /// 只有用户确认接受变更后才调用；识别设置与语音服务配置共用这一个入口。
+  Future<void> cancel(Iterable<RecognitionInFlightTask> tasks) async {
+    for (final task in tasks) {
+      task._cancel();
+      await task.onCancel();
+      unregister(task);
+    }
+  }
 }
 
 /// 在途识别任务登记处（进程内单例）。
@@ -321,11 +353,7 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
     if (affected.isNotEmpty && !cancelInFlight) {
       return RecognitionChangeResult.needsConfirmation(affected);
     }
-    for (final task in affected) {
-      task._cancel();
-      await task.onCancel();
-      registry.unregister(task);
-    }
+    await registry.cancel(affected);
 
     switch (purpose) {
       case RecognitionPurpose.subtitle:

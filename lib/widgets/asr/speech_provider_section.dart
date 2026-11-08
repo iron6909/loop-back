@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/provider_settings/widgets/provider_input_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/recognition_selection.dart';
+import '../../providers/recognition_settings_provider.dart';
 import '../../providers/speech_capability_provider.dart';
 import '../../providers/speech_configuration_provider.dart';
 import '../../services/provider/provider_config.dart' show baseUrlError;
@@ -18,7 +19,8 @@ import '../../services/speech/speech_capability.dart';
 import '../../services/speech/speech_config.dart';
 import '../../services/speech/speech_error_text.dart';
 import '../../theme/app_theme.dart';
-import 'recognition_purpose_section.dart' show recognitionPurposeLabel;
+import 'recognition_purpose_section.dart'
+    show confirmCancelInFlightTasks, recognitionPurposeLabel;
 
 /// 在线语音服务配置卡片。
 class SpeechProviderSection extends ConsumerStatefulWidget {
@@ -424,8 +426,22 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
     ),
   );
 
-  /// 保存失败时保留原配置，只在卡片内提示原因。
+  /// 保存配置。
+  ///
+  /// 服务类型、地址、Key 或某个用途的在线模型变化后，旧配置的在途在线任务结果
+  /// 不再可用：先告知用户，拒绝则不改配置也不动任务，接受才取消这些任务。
+  /// 本机/系统方式的任务与其它用途的无关任务不受影响。
   Future<void> _save(SpeechConfig config, {String? apiKey}) async {
+    final registry = ref.read(recognitionInFlightTasksProvider);
+    final affected = registry.pendingOnline(
+      _affectedPurposes(config, credentialChanged: apiKey != null),
+    );
+    if (affected.isNotEmpty) {
+      if (!mounted) return;
+      if (!await confirmCancelInFlightTasks(context, affected)) return;
+      await registry.cancel(affected);
+      if (!mounted) return;
+    }
     final failureText = AppLocalizations.of(context)!.speechProviderSaveFailed;
     setState(() {
       _saving = true;
@@ -440,5 +456,27 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  /// 本次保存会影响的用途范围。
+  ///
+  /// 服务类型与根地址全用途共用，[credentialChanged] 时 Key 也变：这两种情况影响
+  /// 全部用途；否则只有在线模型真的变了的用途受影响。
+  Set<RecognitionPurpose> _affectedPurposes(
+    SpeechConfig next, {
+    required bool credentialChanged,
+  }) {
+    final current = ref.read(speechConfigurationProvider).valueOrNull?.config;
+    if (current == null ||
+        credentialChanged ||
+        current.kind != next.kind ||
+        current.baseUrl != next.baseUrl) {
+      return RecognitionPurpose.values.toSet();
+    }
+    return {
+      for (final purpose in RecognitionPurpose.values)
+        if (current.onlineModelFor(purpose) != next.onlineModelFor(purpose))
+          purpose,
+    };
   }
 }

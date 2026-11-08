@@ -265,10 +265,13 @@ class SpeechTranscriptionClient {
   Map<String, Object?>? _asMap(Object? data) {
     if (data is Map<String, Object?>) return data;
     if (data is Map) {
-      return {
-        for (final entry in data.entries)
-          if (entry.key is String) entry.key as String: entry.value,
-      };
+      // 非字符串键无法进入 Object? 键表，逐项判断并让类型提升生效。
+      final entries = <String, Object?>{};
+      for (final entry in data.entries) {
+        final key = entry.key;
+        if (key is String) entries[key] = entry.value;
+      }
+      return entries;
     }
     if (data is String) {
       try {

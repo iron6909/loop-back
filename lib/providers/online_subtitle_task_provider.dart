@@ -228,6 +228,7 @@ class OnlineSubtitleTaskManager
     final inFlightTask = RecognitionInFlightTask(
       purpose: RecognitionPurpose.subtitle,
       label: audioId,
+      usesOnlineSpeech: true,
       onCancel: () async => cancelTranscription(audioId),
     );
     registry.register(inFlightTask);
