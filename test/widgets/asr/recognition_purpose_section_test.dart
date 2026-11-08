@@ -86,6 +86,7 @@ Widget _buildHarness(
   _RecordingRecognitionSettings notifier, {
   required bool systemSupported,
   bool onlineAvailable = false,
+  bool? subtitleOnlineAvailable,
   bool? retellOnlineAvailable,
   PracticeOnlineAccessDenial onlineBlockReason =
       PracticeOnlineAccessDenial.missingConfiguration,
@@ -109,6 +110,9 @@ Widget _buildHarness(
         RecognitionPurpose.shadowing,
       ).overrideWith((ref) async => onlineAvailable),
       onlinePracticeAvailabilityProvider(
+        RecognitionPurpose.subtitle,
+      ).overrideWith((ref) async => subtitleOnlineAvailable ?? onlineAvailable),
+      onlinePracticeAvailabilityProvider(
         RecognitionPurpose.retell,
       ).overrideWith((ref) async => retellOnlineAvailable ?? onlineAvailable),
       // 在线不可选时界面仍展示该方式并说明原因，故需要明确的阻断原因。
@@ -121,7 +125,10 @@ Widget _buildHarness(
               (retellOnlineAvailable ?? onlineAvailable)
                   ? null
                   : onlineBlockReason,
-            RecognitionPurpose.subtitle => onlineBlockReason,
+            RecognitionPurpose.subtitle =>
+              (subtitleOnlineAvailable ?? onlineAvailable)
+                  ? null
+                  : onlineBlockReason,
           },
         ),
     ],
@@ -278,22 +285,66 @@ void main() {
     expect(find.text('Changes here only affect this purpose'), findsOneWidget);
   });
 
-  testWidgets('字幕用途只选本机档位，方式在管理字幕弹窗里并列选择', (tester) async {
+  testWidgets('字幕用途提供本机与在线，不提供系统识别', (tester) async {
     final notifier = _RecordingRecognitionSettings(const []);
-    await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        subtitleOnlineAvailable: false,
+        onlineBlockReason: PracticeOnlineAccessDenial.capabilityNotSuitable,
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Subtitles'));
     await tester.pumpAndSettle();
 
-    // 字幕不提供系统识别，也不在用途面板选方式（本地/在线为弹窗里的并列入口）。
+    // 字幕永远不出现系统识别；在线列出但说明片段时间戳不满足。
     expect(find.text('System speech'), findsNothing);
-    expect(find.text('Online speech'), findsNothing);
+    expect(find.text('Online speech'), findsOneWidget);
+    final onlineTile = tester.widget<RadioListTile<RecognitionMode>>(
+      find.widgetWithText(RadioListTile<RecognitionMode>, 'Online speech'),
+    );
+    expect(onlineTile.enabled, isFalse);
+    expect(find.textContaining('no segment timestamps'), findsOneWidget);
     expect(find.text('Whisper Tiny (English)'), findsOneWidget);
-    // 在线模型去哪里配：面板里直接说明。
+    // 在线模型与 Key 去哪里配：面板里直接说明，不再让人去管理字幕弹窗选。
     expect(
-      find.textContaining('Configure the online model and key under Online speech'),
+      find.text('Configure the online model and key under Online speech below'),
       findsOneWidget,
+    );
+  });
+
+  testWidgets('字幕在线通过片段时间戳验证后可选用，并保存字幕自己的在线方式', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        subtitleOnlineAvailable: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Subtitles'));
+    await tester.pumpAndSettle();
+    expect(find.text('System speech'), findsNothing);
+    final onlineTile = tester.widget<RadioListTile<RecognitionMode>>(
+      find.widgetWithText(RadioListTile<RecognitionMode>, 'Online speech'),
+    );
+    expect(onlineTile.enabled, isNot(false));
+
+    await tester.tap(find.text('Online speech'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.calls, hasLength(1));
+    expect(notifier.calls.single.purpose, RecognitionPurpose.subtitle);
+    expect(notifier.calls.single.selection.mode, RecognitionMode.online);
+    expect(
+      notifier.calls.single.selection.localModelId,
+      'whisper-small-en-int8',
+      reason: '切到在线后仍保留字幕自己的本机档位',
     );
   });
 
