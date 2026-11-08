@@ -158,9 +158,11 @@ class RecognitionPurposeSection extends ConsumerWidget {
           final selection = innerRef
               .watch(recognitionSettingsProvider)
               .forPurpose(purpose);
-          // 在线是否可选取决于 Key、上传告知与该用途的文本能力验证是否就绪。
+          // 在线是否可选取决于 Key、上传告知与该用途自己的文本能力验证。
           final onlineAvailable =
-              innerRef.watch(shadowingOnlineAvailabilityProvider).valueOrNull ??
+              innerRef
+                  .watch(onlinePracticeAvailabilityProvider(purpose))
+                  .valueOrNull ??
               false;
           final modes = availableRecognitionModes(
             purpose,

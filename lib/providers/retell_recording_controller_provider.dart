@@ -21,6 +21,7 @@ library;
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/recognition_selection.dart';
@@ -182,6 +183,8 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
   /// 原句音频时长（用于有声时长比例兜底）
   Duration? _referenceDuration;
 
+  /// 当前在途的在线转写请求；取消、换段或销毁时停止并丢弃旧回调。
+  CancelToken? _onlineCancelToken;
   /// 累计有声时长（silenceMs == 0 区间的加总）
   Duration _voicedDuration = Duration.zero;
 
@@ -208,6 +211,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     ref.onDispose(() {
       _cancelAllTimers();
       _eventSub?.cancel();
+      _cancelOnlineTranscription();
       _recordingCompletionHandler = null;
       _unregisterInFlight();
       _recordingService.dispose();
@@ -291,6 +295,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     }
 
     final generation = ++_roundGeneration;
+    _cancelOnlineTranscription();
 
     // 清理上一次录音的临时文件（避免重录时旧文件泄漏）
     final oldFilePath = state.currentAttempt?.filePath;
@@ -416,6 +421,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
 
     final generation = ++_roundGeneration;
     _unregisterInFlight();
+    _cancelOnlineTranscription();
 
     _cancelAllTimers();
     _speechStartTime = null;
@@ -443,6 +449,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     AppLogger.log('RetellRec', '● clearRecording → idle');
     ++_roundGeneration;
     _unregisterInFlight();
+    _cancelOnlineTranscription();
     _cancelAllTimers();
     _isStopping = false;
     _hasDetectedSpeech = false;
@@ -564,14 +571,26 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
         : null;
     final selection = ref.read(recognitionSettingsProvider).retell;
     String? transcript;
+    // 实际识别身份：本机/系统就是选择本身，在线要记实际服务与模型。
+    String? recognitionIdentity = selection.recognitionIdentity;
     String? recognitionErrorCode;
     String? recognitionErrorMessage;
+    Object? onlineError;
     if (selection.usesLocalModel) {
       // 本机方式：平台实时识别未开启，停录后用复述自己的模型转写录音文件，
       // 不让同一录音被两个后端重复识别。
       await _recordingService.shutdown();
       if (generation != _roundGeneration) return;
       transcript = await _transcribeWithRetellModel(filePath);
+    } else if (selection.usesOnlineModel) {
+      // 在线方式：停录后只上传一次，模型来自复述自己的在线配置。
+      await _recordingService.shutdown();
+      if (generation != _roundGeneration) return;
+      final online = await _transcribeOnline(filePath, generation);
+      if (online == null) return;
+      transcript = online.text;
+      recognitionIdentity = online.identity;
+      onlineError = online.error;
     } else {
       final result = await _recordingService.waitForTranscript(
         filePath: filePath,
@@ -597,10 +616,16 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     AppLogger.log('RetellRec', '📋 final: "${transcript ?? '(null)'}"');
 
     if (transcript == null || transcript.isEmpty) {
-      final status = recognitionErrorCode != null
+      final status = onlineError != null
+          ? SpeechPracticeAttemptStatus.error
+          : recognitionErrorCode != null
           ? _statusFromError(recognitionErrorCode)
           : SpeechPracticeAttemptStatus.unavailable;
-      AppLogger.log('RetellRec', '✗ 无转录结果，保留录音: status=${status.name}');
+      AppLogger.log(
+        'RetellRec',
+        '✗ 无转录结果，保留录音: status=${status.name} '
+            'onlineError=${onlineError?.runtimeType ?? '(none)'}',
+      );
       state = state.copyWith(
         phase: RetellRecordingPhase.idle,
         currentAttempt: SpeechPracticeAttempt(promptId: promptId).copyWith(
@@ -643,7 +668,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
       status: effectiveStatus,
       finalTranscript: matchResult.finalTranscript,
       // 记录实际识别身份，复述评估据此判断能否复用。
-      recognitionIdentity: selection.recognitionIdentity,
+      recognitionIdentity: recognitionIdentity,
       score: effectiveScore,
       matchedTokenCount: matchResult.matchedTokenCount,
       totalTargetTokenCount: matchResult.totalTargetTokenCount,
@@ -1069,6 +1094,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     final recordingOperationWasActive =
         state.isActive || _startingGeneration != null;
     ++_roundGeneration;
+    _cancelOnlineTranscription();
     _cancelAllTimers();
     _isStopping = false;
     _hasDetectedSpeech = false;
@@ -1147,6 +1173,47 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     }
   }
 
+  /// 停录后的在线转写：只请求一次，失败保留源录音并回写原因。
+  ///
+  /// 返回 null 表示本回合已过期（取消、换段或配置变更），调用方不再写状态；
+  /// 失败时不改成本机、不自动重试，也不把技术失败送进评分。
+  Future<_RetellOnlineResult?> _transcribeOnline(
+    String filePath,
+    int generation,
+  ) async {
+    final token = CancelToken();
+    _onlineCancelToken = token;
+    try {
+      final online = await ref.read(retellOnlineTranscriptProvider)(
+        filePath,
+        cancelToken: token,
+      );
+      if (generation != _roundGeneration || !identical(_onlineCancelToken, token)) {
+        return null;
+      }
+      AppLogger.log(
+        'RetellRec',
+        '✓ 在线转写完成: textLen=${online.text.length} '
+            'model=${online.modelId} cost=${online.reportedCost ?? 'unknown'}',
+      );
+      return _RetellOnlineResult(text: online.text, identity: online.identity);
+    } on Object catch (error) {
+      if (generation != _roundGeneration || !identical(_onlineCancelToken, token)) {
+        return null;
+      }
+      AppLogger.log('RetellRec', '✗ 在线转写失败，未进入评分: ${error.runtimeType}');
+      return _RetellOnlineResult(error: error);
+    } finally {
+      if (identical(_onlineCancelToken, token)) _onlineCancelToken = null;
+    }
+  }
+
+  /// 取消在途的在线转写；之后的旧回调不会再写状态。
+  void _cancelOnlineTranscription() {
+    _onlineCancelToken?.cancel('round changed');
+    _onlineCancelToken = null;
+  }
+
   Future<double> _bestScore({
     required double coverageScore,
     required String referenceText,
@@ -1196,6 +1263,18 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
       _ => SpeechPracticeAttemptStatus.error,
     };
   }
+}
+
+/// 一次在线复述转写的结果。
+///
+/// 成功时带文本与实际上报的识别身份（评估复用比对用），失败时带原因；两者互斥，
+/// [error] 非空就说明本回合没有可用文本，不进入评分。
+class _RetellOnlineResult {
+  const _RetellOnlineResult({this.text, this.identity, this.error});
+
+  final String? text;
+  final String? identity;
+  final Object? error;
 }
 
 /// 评分级别，index 越大越好，与 UI 中 _ratingLabel 阈值一致。

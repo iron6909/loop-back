@@ -119,3 +119,11 @@ class SpeechConfig {
   @override
   String toString() => 'SpeechConfig(${kind.name}, $baseUrl)';
 }
+
+/// 某用途在线方式的实际识别身份：服务类型、服务根地址与该用途的在线模型。
+///
+/// 识别选择只到「在线」这一级，实际模型要读语音配置才知道。复用已有转写时
+/// 必须比对这三项，否则换了在线模型也会被当成同一次结果；同理，仅换 Key 不
+/// 改变身份，已经拿到的文本仍然有效。
+String onlineRecognitionIdentity(SpeechConfig config, String modelId) =>
+    'online|${config.kind.name}|${config.baseRoot}|${modelId.trim()}';

@@ -17,7 +17,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/speech_practice_models.dart';
 import '../../services/audio_preview_controller.dart';
-import '../../services/speech/shadowing_online_transcriber.dart';
+import '../../services/speech/practice_online_transcriber.dart';
 import '../../services/speech/speech_error_text.dart';
 import '../../theme/app_theme.dart';
 import 'playback_controls.dart' show PlaybackControls;
@@ -64,7 +64,7 @@ class RepeatPracticePanel extends StatelessWidget {
   final SpeechPracticeAttempt? currentAttempt;
 
   /// 在线跟读的转写状态；非在线方式或未开始时为 null。
-  final ShadowingOnlineState? onlineStatus;
+  final PracticeOnlineState? onlineStatus;
 
   /// 本地化
   final AppLocalizations l10n;

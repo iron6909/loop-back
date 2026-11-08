@@ -178,8 +178,9 @@ final systemRecognitionPlatformProvider = Provider<bool>(
 /// 某用途当前可选的识别方式。
 ///
 /// 字幕需要片段时间戳：系统识别不提供，只有当前配置通过字幕能力验证后
-/// （[onlineSubtitleAvailable]）才出现在线方式。跟读与复述在受支持的平台
-/// 同时开放系统识别；跟读的在线方式另需文本能力验证（[onlineAvailable]）。
+/// （[onlineSubtitleAvailable]）才出现在线方式。跟读与复述在受支持的平台同时
+/// 开放系统识别；两者的在线方式各自需要自己用途的文本能力验证
+/// （[onlineAvailable]），互不借用。
 List<RecognitionMode> availableRecognitionModes(
   RecognitionPurpose purpose, {
   required bool systemSupported,
@@ -195,8 +196,7 @@ List<RecognitionMode> availableRecognitionModes(
   return [
     RecognitionMode.local,
     if (systemSupported) RecognitionMode.system,
-    if (purpose == RecognitionPurpose.shadowing && onlineAvailable)
-      RecognitionMode.online,
+    if (onlineAvailable) RecognitionMode.online,
   ];
 }
 
@@ -294,10 +294,12 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
     return subtitleModelId;
   }
 
-  static RecognitionMode _modeFromPrefs(String? raw) =>
-      raw == RecognitionMode.system.name
-      ? RecognitionMode.system
-      : RecognitionMode.local;
+  /// 重启后恢复复述方式；未知值回退到本机，不把旧偏好当成在线。
+  static RecognitionMode _modeFromPrefs(String? raw) => switch (raw) {
+    'system' => RecognitionMode.system,
+    'online' => RecognitionMode.online,
+    _ => RecognitionMode.local,
+  };
 
   /// 修改某用途的识别选择。
   ///

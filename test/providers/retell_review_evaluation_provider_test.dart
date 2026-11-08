@@ -1,16 +1,183 @@
 /// 复述入口：无登录、按复述自己的识别身份复用转写、识别失败短路及 attempt 竞态。
+///
+/// 在线分支的可控边界只有网络客户端：录音文件是真实临时 WAV，准入、单块边界、
+/// 身份比对与状态流转都走真实代码，测试不发付费请求、不读取真实 Key。
 library;
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/models/retell_review_evaluation.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
+import 'package:echo_loop/providers/speech_capability_provider.dart';
+import 'package:echo_loop/providers/speech_configuration_provider.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
+import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
+import 'package:echo_loop/services/speech/speech_capability.dart';
+import 'package:echo_loop/services/speech/speech_config.dart';
+import 'package:echo_loop/services/speech/speech_config_store.dart';
+import 'package:echo_loop/services/speech/speech_transcription_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 class _Api extends Mock implements SentenceAiApiClient {}
+
+const _baseUrl = 'https://openrouter.ai/api/v1';
+const _retellOnlineModel = 'openai/whisper-retell';
+const _apiKey = 'sk-shadowing-online-test';
+const _onlineText = 'My online retelling';
+
+/// 记录请求参数并返回预设结果的语音客户端替身。
+///
+/// 只替换网络边界：请求次数、实际模型与上传内容都可断言，用来验证真实模型
+/// 选择与「语音、文字两类请求各发一次」的隔离。
+class _SpeechClient extends SpeechTranscriptionClient {
+  _SpeechClient({this.error, this.gated = false});
+
+  /// 非空时本次请求失败，用来验证识别失败不进入评估。
+  final Object? error;
+
+  /// 供应商报告的费用；null 表示供应商没给，界面必须显示为未知。
+  double? reportedCost = 0.0002;
+
+  /// 为真时请求挂起，直到 [release] 放行，用来观察取消与旧结果。
+  final bool gated;
+
+  /// 返回的文本；真实客户端对空文本会直接报错，这里模拟通道给了空串。
+  String text = _onlineText;
+
+  final List<String> models = [];
+  final List<String> apiKeys = [];
+  final List<Duration> durations = [];
+  final Completer<void> _started = Completer<void>();
+  Completer<void>? _gate;
+
+  int get calls => models.length;
+
+  /// 请求已进入客户端（此时 [release] 一定有效），用来观察在途状态。
+  Future<void> get started => _started.future;
+
+  void release() {
+    final gate = _gate;
+    if (gate != null && !gate.isCompleted) gate.complete();
+  }
+
+  @override
+  Future<SpeechTranscriptionResult> transcribe({
+    required SpeechConfig config,
+    required String apiKey,
+    required String modelId,
+    required Uint8List audio,
+    required String fileName,
+    required Duration audioDuration,
+    SpeechResponseFormat format = SpeechResponseFormat.verboseJson,
+    bool requestWordTimestamps = false,
+    String fileContentType = 'audio/wav',
+    void Function(int sent, int total)? onSendProgress,
+    CancelToken? cancelToken,
+  }) async {
+    models.add(modelId);
+    apiKeys.add(apiKey);
+    durations.add(audioDuration);
+    if (gated) _gate = Completer<void>();
+    if (!_started.isCompleted) _started.complete();
+    if (gated) await _gate!.future;
+    final failure = error;
+    if (failure != null) throw failure;
+    return SpeechTranscriptionResult(
+      text: text,
+      reportedCost: reportedCost,
+    );
+  }
+}
+
+/// 内置一份齐备在线语音配置的存储替身（Key 与凭据版本也在内存中）。
+class _InMemorySpeechConfigStore extends SpeechConfigStore {
+  SpeechConfig? config = const SpeechConfig(
+    kind: SpeechProviderKind.openrouter,
+    baseUrl: _baseUrl,
+    onlineModels: {
+      RecognitionPurpose.retell: _retellOnlineModel,
+      RecognitionPurpose.subtitle: 'openai/whisper-subtitle',
+      RecognitionPurpose.shadowing: 'openai/whisper-shadowing',
+    },
+  );
+  String? apiKey = _apiKey;
+
+  @override
+  Future<SpeechConfig?> read() async => config;
+
+  @override
+  Future<String?> readApiKey() async => apiKey;
+
+  @override
+  Future<String?> readCredentialVersion() async => 'credential-a';
+}
+
+/// 能力结论与上传告知的内存替身，只覆盖复述用途。
+class _InMemoryCapabilityStore extends SpeechCapabilityStore {
+  _InMemoryCapabilityStore({this.textVerified = true, this.noticeDone = true});
+
+  final bool textVerified;
+  final bool noticeDone;
+
+  SpeechCapability _capability() => SpeechCapability(
+    identity: SpeechCapability.identityFor(
+      kind: SpeechProviderKind.openrouter,
+      baseUrl: _baseUrl,
+      modelId: _retellOnlineModel,
+      credentialVersion: 'credential-a',
+    ),
+    text: textVerified,
+    segments: false,
+    wordTimestamps: false,
+    validatedAt: DateTime(2026, 11, 8),
+  );
+
+  @override
+  Future<Map<String, SpeechCapability>> readAll() async =>
+      textVerified ? {_capability().identity: _capability()} : const {};
+
+  @override
+  Future<SpeechCapability?> read(String identity) async {
+    final capability = _capability();
+    return textVerified && capability.identity == identity ? capability : null;
+  }
+
+  @override
+  Future<bool> hasUploadNotice(String baseUrl) async => noticeDone;
+}
+
+/// 生成指定时长、16 kHz 单声道 PCM16 WAV，用来覆盖单块边界。
+Uint8List _wavBytes(Duration duration) {
+  const sampleRate = 16000;
+  final dataSize = sampleRate * duration.inMilliseconds ~/ 1000 * 2;
+  final bytes = ByteData(44 + dataSize);
+  void ascii(int offset, String value) {
+    for (var i = 0; i < value.length; i++) {
+      bytes.setUint8(offset + i, value.codeUnitAt(i));
+    }
+  }
+
+  ascii(0, 'RIFF');
+  bytes.setUint32(4, 36 + dataSize, Endian.little);
+  ascii(8, 'WAVE');
+  ascii(12, 'fmt ');
+  bytes.setUint32(16, 16, Endian.little);
+  bytes.setUint16(20, 1, Endian.little);
+  bytes.setUint16(22, 1, Endian.little);
+  bytes.setUint32(24, sampleRate, Endian.little);
+  bytes.setUint32(28, sampleRate * 2, Endian.little);
+  bytes.setUint16(32, 2, Endian.little);
+  bytes.setUint16(34, 16, Endian.little);
+  ascii(36, 'data');
+  bytes.setUint32(40, dataSize, Endian.little);
+  return bytes.buffer.asUint8List();
+}
 
 /// 固定复述选择，避免测试依赖偏好读写。
 class _FixedRecognitionSettings extends RecognitionSettingsNotifier {
@@ -34,6 +201,12 @@ RecognitionSettings _retellSystem() => const RecognitionSettings(
   subtitle: RecognitionSelection.local('subtitle-model'),
   shadowing: RecognitionSelection.local('shadowing-model'),
   retell: RecognitionSelection.system(),
+);
+
+RecognitionSettings _retellOnline() => const RecognitionSettings(
+  subtitle: RecognitionSelection.local('subtitle-model'),
+  shadowing: RecognitionSelection.local('shadowing-model'),
+  retell: RecognitionSelection.online(),
 );
 
 void main() {
@@ -138,5 +311,331 @@ void main() {
     verifyNever(() => api.evaluateTranscriptStream(
       transcript: any(named: 'transcript'), originalText: any(named: 'originalText'),
       targetLanguage: any(named: 'targetLanguage'), cancelToken: any(named: 'cancelToken')));
+  });
+
+  group('在线转写与文字评估分离', () {
+    late Directory tempDir;
+    late String recordingPath;
+    late _SpeechClient speech;
+    late _InMemorySpeechConfigStore configStore;
+
+    /// 组装一个在线复述环境：默认条件齐备，按需关掉某一项模拟准入失败。
+    ProviderContainer buildOnline({
+      _SpeechClient? client,
+      String? onlineModel = _retellOnlineModel,
+      bool textVerified = true,
+      bool noticeDone = true,
+    }) {
+      speech = client ?? _SpeechClient();
+      configStore = _InMemorySpeechConfigStore();
+      if (onlineModel == null) {
+        configStore.config = const SpeechConfig(
+          kind: SpeechProviderKind.openrouter,
+          baseUrl: _baseUrl,
+        );
+      }
+      return ProviderContainer(overrides: [
+        sentenceAiApiClientProvider.overrideWithValue(api),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_retellOnline()),
+        ),
+        speechConfigStoreProvider.overrideWithValue(configStore),
+        speechCapabilityStoreProvider.overrideWithValue(
+          _InMemoryCapabilityStore(
+            textVerified: textVerified,
+            noticeDone: noticeDone,
+          ),
+        ),
+        speechTranscriptionClientProvider.overrideWithValue(speech),
+        retellTranscriptProvider.overrideWithValue(
+          (_) async => throw StateError('在线方式不得借用本机转写'),
+        ),
+      ]);
+    }
+
+    /// 重新指向在线环境的容器：每个用例自带一份，避免状态串场。
+    ProviderContainer switchToOnline({
+      _SpeechClient? client,
+      String? onlineModel = _retellOnlineModel,
+      bool textVerified = true,
+      bool noticeDone = true,
+    }) {
+      container.dispose();
+      container = buildOnline(
+        client: client,
+        onlineModel: onlineModel,
+        textVerified: textVerified,
+        noticeDone: noticeDone,
+      );
+      return container;
+    }
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('retell_online_eval');
+      final file = File('${tempDir.path}/recording.wav');
+      await file.writeAsBytes(_wavBytes(const Duration(seconds: 3)));
+      recordingPath = file.path;
+    });
+
+    tearDown(() async {
+      if (await tempDir.exists()) await tempDir.delete(recursive: true);
+    });
+
+    /// 在线方式的实际识别身份：服务类型、根地址与复述自己的在线模型。
+    String identityOf({String model = _retellOnlineModel}) =>
+        onlineRecognitionIdentity(
+          const SpeechConfig(
+            kind: SpeechProviderKind.openrouter,
+            baseUrl: _baseUrl,
+          ),
+          model,
+        );
+
+    Future<void> evaluateOnline({
+      String key = 'attempt',
+      String? reused,
+      String? reusedIdentity,
+      String? path,
+    }) => container
+        .read(retellReviewEvaluationProvider.notifier)
+        .evaluate(
+          attemptKey: key,
+          recordingPath: path ?? recordingPath,
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          localTranscript: reused,
+          localTranscriptIdentity: reusedIdentity,
+        );
+
+    test('用复述自己的在线模型转写一次，评估只请求文字服务一次', () async {
+      switchToOnline();
+      await evaluateOnline();
+
+      expect(speech.calls, 1, reason: '转写只上传一次');
+      expect(
+        speech.models,
+        [_retellOnlineModel],
+        reason: '实际模型来自复述用途，不借用字幕或跟读的在线模型',
+      );
+      expect(speech.apiKeys, [_apiKey]);
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: _onlineText,
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.completed);
+      expect(state.onlineSpeech?.reportedCost, 0.0002);
+    });
+
+    test('供应商没有报告费用时保持未知，不按免费处理', () async {
+      switchToOnline(client: _SpeechClient()..reportedCost = null);
+      await evaluateOnline();
+
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.completed);
+      expect(state.onlineSpeech, isNotNull, reason: '本次评估确实经过在线语音');
+      expect(state.onlineSpeech?.reportedCost, isNull);
+    });
+
+    test('同一次尝试且在线身份匹配时复用转写，不再上传', () async {
+      switchToOnline();
+      await evaluateOnline(reused: 'Already recognized', reusedIdentity: identityOf());
+
+      expect(speech.calls, 0, reason: '同一段在线转写不重复计费');
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: 'Already recognized',
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+      expect(
+        container.read(retellReviewEvaluationProvider).onlineSpeech,
+        isNotNull,
+        reason: '复用的是在线结果，费用未知也要如实标记',
+      );
+    });
+
+    test('换了在线模型后不复用旧文本，按本次操作重新识别', () async {
+      switchToOnline();
+      await evaluateOnline(
+        reused: 'From another model',
+        reusedIdentity: identityOf(model: 'openai/previous-retell'),
+      );
+
+      expect(speech.calls, 1, reason: '身份不匹配时必须按当前配置识别');
+      expect(speech.models, [_retellOnlineModel]);
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: _onlineText,
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+    });
+
+    test('在线转写失败时不调用文字服务，错误归为语音错误', () async {
+      switchToOnline(
+        client: _SpeechClient(
+          error: const SpeechTranscriptionException(
+            SpeechTranscriptionErrorKind.unauthorized,
+            statusCode: 401,
+          ),
+        ),
+      );
+      await evaluateOnline();
+
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.failed);
+      expect(
+        state.speechError,
+        isA<SpeechTranscriptionException>().having(
+          (error) => error.kind,
+          'kind',
+          SpeechTranscriptionErrorKind.unauthorized,
+        ),
+        reason: '语音失败要能按鉴权错误呈现',
+      );
+      expect(state.errorCode, isNull, reason: '语音错误不是文字 AI 错误');
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+    });
+
+    test('在线返回空文本时按语音错误呈现，不评估', () async {
+      switchToOnline(client: _SpeechClient()..text = '   ');
+      await evaluateOnline();
+
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.failed);
+      expect(
+        state.speechError,
+        isA<SpeechTranscriptionException>().having(
+          (error) => error.kind,
+          'kind',
+          SpeechTranscriptionErrorKind.emptyResult,
+        ),
+        reason: '在线没给文本属于语音侧失败，不能显示成本机模型问题',
+      );
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+    });
+
+    test('在线准入未就绪时不上传也不评估', () async {
+      switchToOnline(textVerified: false);
+      await evaluateOnline();
+
+      expect(speech.calls, 0);
+      expect(
+        container.read(retellReviewEvaluationProvider).speechError,
+        isA<PracticeOnlineAccessDenied>(),
+      );
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+    });
+
+    test('切换 attempt 后旧在线结果不覆盖新尝试，也不评估', () async {
+      final gated = _SpeechClient(gated: true);
+      switchToOnline(client: gated);
+
+      final pending = evaluateOnline();
+      // 请求已发出并挂起，此时用户切到另一段录音。
+      await gated.started;
+      container.read(retellReviewEvaluationProvider.notifier).syncAttempt('next');
+      gated.release();
+      await pending;
+
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.attemptKey, 'next');
+      expect(state.evaluation, isNull);
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+    });
+
+    test('超出单块范围的录音明确失败，不上传也不评估', () async {
+      switchToOnline();
+      final longFile = File('${tempDir.path}/long.wav');
+      await longFile.writeAsBytes(_wavBytes(const Duration(minutes: 3)));
+
+      await evaluateOnline(path: longFile.path);
+
+      expect(speech.calls, 0, reason: '超出单块不得上传，也不能只传开头');
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.failed);
+      expect(
+        state.speechError,
+        isA<PracticeRecordingRejected>().having(
+          (error) => error.rejection,
+          'rejection',
+          PracticeRecordingRejection.tooLong,
+        ),
+        reason: '长录音未接入分块前按语音错误明确失败',
+      );
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+    });
+
+    test('转写期间复述在线模型被改时丢弃本次文本，不评估', () async {
+      final gated = _SpeechClient(gated: true);
+      switchToOnline(client: gated);
+
+      final pending = evaluateOnline();
+      await gated.started;
+      // 用户在转写未完成时换掉复述的在线模型：旧文本不再代表当前选择。
+      configStore.config = const SpeechConfig(
+        kind: SpeechProviderKind.openrouter,
+        baseUrl: _baseUrl,
+        onlineModels: {RecognitionPurpose.retell: 'openai/whisper-next'},
+      );
+      gated.release();
+      await pending;
+
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.idle);
+      expect(state.evaluation, isNull);
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+    });
   });
 }

@@ -8,7 +8,7 @@ import 'package:flutter/widgets.dart';
 
 import '../provider/provider_error_text.dart';
 import 'practice_chunk_transcriber.dart';
-import 'shadowing_online_transcriber.dart';
+import 'practice_online_transcriber.dart';
 import 'speech_transcription_client.dart';
 
 String speechErrorText(BuildContext context, Object error) {
@@ -29,29 +29,37 @@ String speechErrorText(BuildContext context, Object error) {
             : speechErrorText(context, error.cause!),
     };
   }
-  if (error is ShadowingRecordingRejected) {
+  if (error is PracticeRecordingRejected) {
     return switch (error.rejection) {
-      ShadowingRecordingRejection.fileMissing =>
+      PracticeRecordingRejection.fileMissing =>
         zh ? '没有找到可上传的录音文件' : 'The recording file was not found',
-      ShadowingRecordingRejection.unsupportedFormat =>
+      PracticeRecordingRejection.unsupportedFormat =>
         zh
             ? '录音格式不受支持，无法上传'
             : 'The recording format is not supported for upload',
-      ShadowingRecordingRejection.emptyAudio =>
+      PracticeRecordingRejection.emptyAudio =>
         zh ? '录音没有可用的人声内容' : 'The recording contains no usable speech',
+      PracticeRecordingRejection.tooLong =>
+        zh
+            ? '录音超过单次在线转写时长上限，复述的长录音分块将在后续版本支持'
+            : 'The recording exceeds the single-request limit; chunked retelling comes later',
+      PracticeRecordingRejection.tooLarge =>
+        zh
+            ? '录音超过单次上传大小上限，复述的长录音分块将在后续版本支持'
+            : 'The recording exceeds the single-upload size limit; chunked retelling comes later',
     };
   }
-  if (error is ShadowingOnlineAccessDenied) {
+  if (error is PracticeOnlineAccessDenied) {
     return switch (error.reason) {
-      ShadowingOnlineAccessDenial.missingConfiguration =>
+      PracticeOnlineAccessDenial.missingConfiguration =>
         zh
             ? '在线语音未配置服务地址或 Key，请前往设置 → 语音识别'
             : 'Online speech has no service address or key. Open Settings → Speech recognition',
-      ShadowingOnlineAccessDenial.uploadNoticeMissing =>
+      PracticeOnlineAccessDenial.uploadNoticeMissing =>
         zh
             ? '首次上传录音前需先确认上传告知，请前往设置 → 在线语音服务'
             : 'Confirm the upload notice in Settings → Online speech before the first upload',
-      ShadowingOnlineAccessDenial.capabilityUnverified =>
+      PracticeOnlineAccessDenial.capabilityUnverified =>
         zh
             ? '跟读的在线模型尚未通过文本能力验证，请先在设置里验证'
             : 'Verify the shadowing online model in Settings before transcribing',
@@ -72,4 +80,17 @@ String speechErrorText(BuildContext context, Object error) {
       zh ? '服务没有返回可识别的语音文本' : 'The service returned no recognizable speech',
     _ => providerErrorCodeText(error.kind.name, zh),
   };
+}
+
+/// 在线语音的费用文案。
+///
+/// 只在供应商真的报告了本次费用时给出数字；[reportedCost] 为 null 表示未知，
+/// 不能显示成免费或 0。复述与跟读共用这套说法，避免同一件事两种表达。
+String speechCostText(bool zh, double? reportedCost) {
+  if (reportedCost == null) {
+    return zh ? '在线语音费用：未知' : 'Online speech cost: unknown';
+  }
+  return zh
+      ? '在线语音费用：$reportedCost'
+      : 'Online speech cost: $reportedCost';
 }
