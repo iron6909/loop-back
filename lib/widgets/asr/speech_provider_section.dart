@@ -1,5 +1,7 @@
 /// 在线语音服务配置区：一份服务类型、根地址与 Key，三个用途各自的在线模型。
 ///
+/// 这是「在线语音服务」页的正文卡片，不含页标题与整体状态行；语音识别页只保留
+/// 一行入口（[speechProviderStatusText] 同时供入口行与页首状态使用）。
 /// 保存与刷新只写本机配置或只读模型目录；测试按用户主动触发并先完成上传告知，
 /// 使用随包英语样本，不发用户录音。模型目录成功不等于能力验证，逐用途显示
 /// 文本可用 / 字幕可用 / 可选词时间戳。
@@ -22,7 +24,39 @@ import '../../theme/app_theme.dart';
 import 'recognition_purpose_section.dart'
     show confirmCancelInFlightTasks, recognitionPurposeLabel;
 
-/// 在线语音服务配置卡片。
+/// 在线语音服务的整体状态文案。
+///
+/// 语音识别页的入口行与在线语音服务页共用这一份推导，避免两处各写一套文案。
+String speechProviderStatusText(
+  AppLocalizations l10n,
+  SpeechConfigurationState state,
+  SpeechCapabilityState capabilities,
+) {
+  final config = state.config;
+  if (config == null) return l10n.speechProviderStatusUnconfigured;
+  if (!state.hasApiKey) return l10n.speechProviderStatusMissingKey;
+  final verified = RecognitionPurpose.values.any(
+    (purpose) =>
+        capabilities.capabilityFor(
+          config: config,
+          credentialVersion: state.credentialVersion,
+          purpose: purpose,
+        ) !=
+        null,
+  );
+  return verified
+      ? l10n.speechProviderStatusVerified
+      : l10n.speechProviderStatusUnverified;
+}
+
+/// 服务类型文案：OpenRouter 预设或自定义服务。
+String speechProviderKindText(AppLocalizations l10n, SpeechProviderKind kind) =>
+    switch (kind) {
+      SpeechProviderKind.openrouter => l10n.providerKindOpenRouter,
+      SpeechProviderKind.custom => l10n.providerKindCustom,
+    };
+
+/// 在线语音服务配置卡片（不含页标题与状态行）。
 class SpeechProviderSection extends ConsumerStatefulWidget {
   const SpeechProviderSection({super.key});
 
@@ -49,25 +83,9 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
     return Card(
       child: Column(
         children: [
-          ListTile(
-            leading: Icon(
-              Icons.cloud_outlined,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            title: Text(l10n.speechProviderTitle),
-            subtitle: Text(
-              _statusText(l10n, state, capabilities),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: state.isConfigured
-                    ? theme.colorScheme.onSurfaceVariant
-                    : theme.colorScheme.error,
-              ),
-            ),
-          ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
           _row(
             l10n.aiServiceProvider,
-            config == null ? null : _kindLabel(l10n, config.kind),
+            config == null ? null : speechProviderKindText(l10n, config.kind),
             () => _pickKind(config),
           ),
           _row(
@@ -109,37 +127,8 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
     onTap: _saving ? null : action,
   );
 
-  /// 已保存并已验证的能力摘要；有任一可用模型时不再显示为未验证。
-  String _statusText(
-    AppLocalizations l10n,
-    SpeechConfigurationState state,
-    SpeechCapabilityState capabilities,
-  ) {
-    final config = state.config;
-    if (config == null) return l10n.speechProviderStatusUnconfigured;
-    if (!state.hasApiKey) return l10n.speechProviderStatusMissingKey;
-    final verified = RecognitionPurpose.values.any(
-      (purpose) =>
-          capabilities.capabilityFor(
-            config: config,
-            credentialVersion: state.credentialVersion,
-            purpose: purpose,
-          ) !=
-          null,
-    );
-    return verified
-        ? l10n.speechProviderStatusVerified
-        : l10n.speechProviderStatusUnverified;
-  }
-
-  String _kindLabel(AppLocalizations l10n, SpeechProviderKind kind) =>
-      switch (kind) {
-        SpeechProviderKind.openrouter => l10n.providerKindOpenRouter,
-        SpeechProviderKind.custom => l10n.providerKindCustom,
-      };
-
   /// 一个用途的在线模型行：手填始终可用，OpenRouter 额外提供目录刷新，
-  /// 右侧按钮对已保存的模型做一次真实能力验证。
+  /// 行尾文字按钮对已保存的模型做一次真实能力验证。
   Widget _modelRow(
     AppLocalizations l10n,
     SpeechConfig? config,
@@ -194,10 +183,10 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
               ),
             )
           else
-            IconButton(
-              tooltip: l10n.speechCapabilityTest,
-              icon: const Icon(Icons.verified_outlined),
+            // 文字按钮比行尾图标更容易读，也保持不低于 44dp 的触控区域。
+            TextButton(
               onPressed: canTest ? () => _test(purpose) : null,
+              child: Text(l10n.speechCapabilityTest),
             ),
         ],
       ),
@@ -339,7 +328,7 @@ class _SpeechProviderSectionState extends ConsumerState<SpeechProviderSection> {
           for (final option in SpeechProviderKind.values)
             SimpleDialogOption(
               onPressed: () => Navigator.pop(dialogContext, option),
-              child: Text(_kindLabel(l10n, option)),
+              child: Text(speechProviderKindText(l10n, option)),
             ),
         ],
       ),

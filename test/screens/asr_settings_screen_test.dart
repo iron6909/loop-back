@@ -17,16 +17,21 @@ import 'package:echo_loop/services/asr/offline_asr_engine.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// 未配置的在线语音服务：本页测试只关心配置区不发起请求、不触发真实存储。
-class _EmptySpeechConfigStore extends SpeechConfigStore {
-  @override
-  Future<SpeechConfig?> read() async => null;
+/// 只保存在内存里的在线语音服务配置：本页测试只关心入口状态，不触发真实存储。
+class _StaticSpeechConfigStore extends SpeechConfigStore {
+  _StaticSpeechConfigStore({this.config, this.apiKey});
+
+  final SpeechConfig? config;
+  final String? apiKey;
 
   @override
-  Future<String?> readApiKey() async => null;
+  Future<SpeechConfig?> read() async => config;
 
   @override
-  Future<String?> readCredentialVersion() async => null;
+  Future<String?> readApiKey() async => apiKey;
+
+  @override
+  Future<String?> readCredentialVersion() async => 'test-credential-version';
 }
 
 class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
@@ -55,12 +60,17 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   }
 }
 
-Widget _buildTestWidget(_StaticOfflineAsrSettingsNotifier notifier) {
+Widget _buildTestWidget(
+  _StaticOfflineAsrSettingsNotifier notifier, {
+  SpeechConfigStore? speechStore,
+}) {
   return ProviderScope(
     overrides: [
       offlineAsrSettingsProvider.overrideWith(() => notifier),
       sharedPreferencesProvider.overrideWithValue(_prefs),
-      speechConfigStoreProvider.overrideWithValue(_EmptySpeechConfigStore()),
+      speechConfigStoreProvider.overrideWithValue(
+        speechStore ?? _StaticSpeechConfigStore(),
+      ),
     ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
@@ -216,7 +226,7 @@ void main() {
       find.text('Whisper (on-device)'),
       findsNWidgets(expectedLocalLabels),
     );
-    // 用途选择卡片 + 在线语音服务卡片 + 引擎卡片 + 模型列表卡片 + 下载来源卡片。
+    // 用途选择卡片 + 在线服务入口卡片 + 引擎卡片 + 模型列表卡片 + 下载来源卡片。
     expect(find.byType(Card), findsNWidgets(5));
     expect(find.textContaining('~99 MB'), findsOneWidget);
     expect(find.textContaining('~153 MB'), findsOneWidget);
@@ -310,5 +320,100 @@ void main() {
     expect(notifier.downloadSourceChanges, [
       AsrDownloadSource.huggingFaceMirror,
     ]);
+  });
+
+  group('在线语音服务入口', () {
+    _StaticOfflineAsrSettingsNotifier notifier() =>
+        _StaticOfflineAsrSettingsNotifier(
+          OfflineAsrSettingsState(
+            enabled: true,
+            backend: AsrBackend.offline,
+            recommendedModel: recommendedModel,
+          ),
+        );
+
+    testWidgets('未配置时入口显示未配置状态，主页面不再内嵌配置表单', (tester) async {
+      _useTallViewport(tester);
+
+      await tester.pumpWidget(_buildTestWidget(notifier()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Online speech service'), findsOneWidget);
+      expect(find.text('Not configured'), findsOneWidget);
+      // 主页面只保留入口行：供应商、地址、Key 与逐用途在线模型都在独立页。
+      expect(find.text('Provider'), findsNothing);
+      expect(find.text('Base URL'), findsNothing);
+      expect(find.text('API key'), findsNothing);
+      expect(find.text('Subtitles online model'), findsNothing);
+      expect(find.text('Verify model'), findsNothing);
+    });
+
+    testWidgets('缺 Key 时入口显示缺少 Key 与服务类型', (tester) async {
+      _useTallViewport(tester);
+
+      await tester.pumpWidget(
+        _buildTestWidget(
+          notifier(),
+          speechStore: _StaticSpeechConfigStore(
+            config: const SpeechConfig(
+              kind: SpeechProviderKind.openrouter,
+              baseUrl: 'https://openrouter.ai/api/v1',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('API key missing'), findsOneWidget);
+      expect(find.text('OpenRouter'), findsOneWidget);
+    });
+
+    testWidgets('配置与 Key 齐备时入口显示已保存未验证', (tester) async {
+      _useTallViewport(tester);
+
+      await tester.pumpWidget(
+        _buildTestWidget(
+          notifier(),
+          speechStore: _StaticSpeechConfigStore(
+            config: const SpeechConfig(
+              kind: SpeechProviderKind.openrouter,
+              baseUrl: 'https://openrouter.ai/api/v1',
+            ),
+            apiKey: 'sk-speech-sentinel-4b7d',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Saved, not verified'), findsOneWidget);
+      expect(find.text('OpenRouter'), findsOneWidget);
+    });
+
+    testWidgets('点击入口进入在线语音服务页，返回后回到语音识别页', (tester) async {
+      _useTallViewport(tester);
+
+      await tester.pumpWidget(_buildTestWidget(notifier()));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Online speech service'));
+      await tester.pumpAndSettle();
+
+      // 独立页：标题、说明与连接配置都在这一页。
+      expect(find.text('Online speech service'), findsOneWidget);
+      expect(
+        find.textContaining('share one service address and key'),
+        findsOneWidget,
+      );
+      expect(find.text('Not configured'), findsOneWidget);
+      expect(find.text('Provider'), findsOneWidget);
+      expect(find.text('Base URL'), findsOneWidget);
+      expect(find.text('Subtitles online model'), findsOneWidget);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Recognition by purpose'), findsOneWidget);
+      expect(find.text('Provider'), findsNothing);
+    });
   });
 }
