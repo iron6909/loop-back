@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +32,7 @@ class _StaticSpeechConfigStore extends SpeechConfigStore {
   Future<String?> readCredentialVersion() async => 'test-credential-version';
 }
 
+/// 只记录调用的离线 ASR 设置：不下载、不初始化引擎，也不需要真实偏好写入。
 class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   _StaticOfflineAsrSettingsNotifier(this._initialState);
 
@@ -41,6 +40,12 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   bool deleteAllDownloadedModelsCalled = false;
   bool? deleteAllIncludeSelected;
   final downloadSourceChanges = <AsrDownloadSource>[];
+  final downloadedModelIds = <String>[];
+  final selectedModelIds = <String>[];
+  final backends = <AsrBackend>[];
+  final retriedModelIds = <String>[];
+  final cancelledModelIds = <String>[];
+  final deletedModelIds = <String>[];
 
   @override
   Future<void> setDownloadSource(AsrDownloadSource source) async {
@@ -51,7 +56,34 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   OfflineAsrSettingsState build() => _initialState;
 
   @override
-  Future<void> retryDownload([String? modelId]) async {}
+  Future<void> downloadModel(String modelId) async {
+    downloadedModelIds.add(modelId);
+  }
+
+  @override
+  Future<void> selectModel(AsrModelInfo model) async {
+    selectedModelIds.add(model.id);
+  }
+
+  @override
+  Future<void> setBackend(AsrBackend backend) async {
+    backends.add(backend);
+  }
+
+  @override
+  Future<void> retryDownload([String? modelId]) async {
+    retriedModelIds.add(modelId ?? state.selectedModel.id);
+  }
+
+  @override
+  Future<void> cancelDownload([String? modelId]) async {
+    cancelledModelIds.add(modelId ?? state.selectedModel.id);
+  }
+
+  @override
+  Future<void> deleteModel([String? modelId]) async {
+    deletedModelIds.add(modelId ?? state.selectedModel.id);
+  }
 
   @override
   Future<void> deleteDownloadedModels({required bool includeSelected}) async {
@@ -89,8 +121,14 @@ Widget _buildTestWidget(
 /// 识别设置页读取的偏好（每个用例在 setUp 里重置）。
 late SharedPreferences _prefs;
 
-/// 用途卡片与在线语音服务卡片加入后整页超过默认 800 高视口，需要断言整页卡片与
-/// 底部来源选项的用例改用更高的视口，避免只挂载视口内的组件。
+/// 改写识别偏好；必须在创建测试组件前调用，页面首个 provider 读取就确定选择。
+Future<void> _usePrefs(Map<String, Object> values) async {
+  SharedPreferences.setMockInitialValues(values);
+  _prefs = await SharedPreferences.getInstance();
+}
+
+/// 资源库行与底部来源选项会撑高整页，断言整页内容的用例改用更高的视口，
+/// 避免只挂载视口内的组件。
 void _useTallViewport(WidgetTester tester) {
   tester.view.physicalSize = const Size(1200, 2400);
   tester.view.devicePixelRatio = 1;
@@ -109,6 +147,16 @@ void main() {
     id: 'whisper-base-en-int8',
     displayName: 'Whisper Base.en',
     type: AsrModelType.whisper,
+  );
+
+  OfflineAsrSettingsState stateWith({
+    AsrBackend backend = AsrBackend.platform,
+    Map<String, AsrModelState> modelStates = const {},
+  }) => OfflineAsrSettingsState(
+    enabled: true,
+    backend: backend,
+    recommendedModel: recommendedModel,
+    modelStates: modelStates,
   );
 
   testWidgets('残缺模型显示失败状态与修复动作', (tester) async {
@@ -156,12 +204,14 @@ void main() {
   testWidgets('已下载模型显示 Ready 和大小', (tester) async {
     _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
-      OfflineAsrSettingsState(
-        enabled: true,
+      stateWith(
         backend: AsrBackend.offline,
-        downloadStatus: AsrModelDownloadStatus.downloaded,
-        localSizeBytes: 153 * 1024 * 1024,
-        recommendedModel: recommendedModel,
+        modelStates: const {
+          'whisper-base-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloaded,
+            localSizeBytes: 153 * 1024 * 1024,
+          ),
+        },
       ),
     );
 
@@ -204,16 +254,17 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Cancel'), findsOneWidget);
+
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.cancelledModelIds, [otherId]);
   });
 
   testWidgets('识别方式分组列出三个用途与各自状态，说明文字只有一条', (tester) async {
     _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
-      OfflineAsrSettingsState(
-        enabled: true,
-        backend: AsrBackend.offline,
-        recommendedModel: recommendedModel,
-      ),
+      stateWith(backend: AsrBackend.offline),
     );
 
     await tester.pumpWidget(_buildTestWidget(notifier));
@@ -235,63 +286,62 @@ void main() {
     );
   });
 
-  testWidgets('本机 Whisper 模型列表单独成组并显示预估大小', (tester) async {
+  testWidgets('页面不再出现语音引擎卡片与后端单选，分组顺序为识别方式、本机模型、在线服务', (
+    tester,
+  ) async {
     _useTallViewport(tester);
-    final notifier = _StaticOfflineAsrSettingsNotifier(
-      OfflineAsrSettingsState(
-        enabled: true,
-        backend: AsrBackend.offline,
-        recommendedModel: recommendedModel,
-      ),
-    );
+    final notifier = _StaticOfflineAsrSettingsNotifier(stateWith());
 
     await tester.pumpWidget(_buildTestWidget(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.text('Speech Engine'), findsOneWidget);
-    // iOS/macOS 额外显示后端选择器中的本机 Whisper；Linux CI 不显示平台后端选择器。
-    final expectedLocalLabels = Platform.isIOS || Platform.isMacOS ? 2 : 1;
-    expect(
-      find.text('Whisper (on-device)'),
-      findsNWidgets(expectedLocalLabels),
-    );
-    // 用途选择卡片 + 在线服务入口卡片 + 引擎卡片 + 模型列表卡片 + 下载来源卡片。
-    expect(find.byType(Card), findsNWidgets(5));
-    expect(find.textContaining('~99 MB'), findsOneWidget);
-    expect(find.textContaining('~153 MB'), findsOneWidget);
-    expect(find.textContaining('~358 MB'), findsOneWidget);
+    expect(find.text('Speech Engine'), findsNothing);
+    expect(find.text('Apple AI'), findsNothing);
+    expect(find.byType(RadioListTile<AsrBackend>), findsNothing);
+
+    final recognitionTop = tester.getTopLeft(find.text('Recognition modes')).dy;
+    final libraryTop = tester.getTopLeft(find.text('On-device models')).dy;
+    final onlineTop = tester.getTopLeft(find.text('Online speech service')).dy;
+    expect(recognitionTop, lessThan(libraryTop));
+    expect(libraryTop, lessThan(onlineTop));
   });
 
-  testWidgets('Apple Speech 后端不平铺模型列表', (tester) async {
+  testWidgets('跟读使用系统识别时本机模型资源库仍可见，下载只装模型不改跟读选择', (tester) async {
     _useTallViewport(tester);
-    final notifier = _StaticOfflineAsrSettingsNotifier(
-      OfflineAsrSettingsState(
-        enabled: true,
-        backend: AsrBackend.platform,
-        recommendedModel: recommendedModel,
-      ),
-    );
+    final notifier = _StaticOfflineAsrSettingsNotifier(stateWith());
 
     await tester.pumpWidget(_buildTestWidget(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.text('Speech Engine'), findsOneWidget);
-    expect(find.text('Whisper Tiny (English)'), findsNothing);
-    expect(find.text('Whisper Base (English)'), findsNothing);
-    expect(find.text('Whisper Small (English)'), findsNothing);
+    expect(find.text('On-device models'), findsOneWidget);
+    expect(find.text('Whisper Tiny (English)'), findsOneWidget);
+    expect(find.text('Whisper Base (English)'), findsOneWidget);
+    expect(find.text('Whisper Small (English)'), findsOneWidget);
+    // 三档都未安装：各有一行下载入口。
+    expect(find.text('Download'), findsNWidgets(3));
+
+    await tester.tap(find.text('Download').first);
+    await tester.pumpAndSettle();
+
+    expect(notifier.downloadedModelIds, ['whisper-tiny-en-int8']);
+    expect(notifier.selectedModelIds, isEmpty, reason: '资源库不是模型选择入口');
+    expect(notifier.backends, isEmpty, reason: '下载不改写跟读后端');
   });
 
-  testWidgets('Apple Speech 后端允许删除所有已下载 Whisper 模型', (tester) async {
+  testWidgets('每行显示推荐标记、大小、下载状态与用途标签，标签只标记本机用途', (tester) async {
     _useTallViewport(tester);
+    // 字幕与复述都用本机 Small；跟读沿用系统识别，不占用本机模型。
+    await _usePrefs({
+      'local_transcription_model_id': 'whisper-small-en-int8',
+      'recognition_retell_model_id': 'whisper-small-en-int8',
+      'offline_asr_backend': AsrBackend.platform.name,
+    });
     final notifier = _StaticOfflineAsrSettingsNotifier(
-      OfflineAsrSettingsState(
-        enabled: true,
-        backend: AsrBackend.platform,
-        recommendedModel: recommendedModel,
+      stateWith(
         modelStates: const {
-          'whisper-base-en-int8': AsrModelState(
+          'whisper-small-en-int8': AsrModelState(
             downloadStatus: AsrModelDownloadStatus.downloaded,
-            localSizeBytes: 153 * 1024 * 1024,
+            localSizeBytes: 358 * 1024 * 1024,
           ),
         },
       ),
@@ -300,15 +350,76 @@ void main() {
     await tester.pumpWidget(_buildTestWidget(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.text('Downloaded speech recognition models'), findsOneWidget);
-    expect(find.textContaining('153 MB'), findsOneWidget);
+    expect(find.text('Recommended'), findsOneWidget);
+    expect(find.text('Ready · 358 MB'), findsOneWidget);
+    expect(find.text('Subtitles in use'), findsOneWidget);
+    expect(find.text('Retelling in use'), findsOneWidget);
+    expect(find.text('Shadowing in use'), findsNothing);
+    expect(find.textContaining('~99 MB'), findsOneWidget);
+    expect(find.textContaining('~153 MB'), findsOneWidget);
+  });
+
+  testWidgets('已下载模型可删除，跟读当前档位不提供删除入口', (tester) async {
+    _useTallViewport(tester);
+    final notifier = _StaticOfflineAsrSettingsNotifier(
+      stateWith(
+        backend: AsrBackend.offline,
+        modelStates: const {
+          'whisper-base-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloaded,
+            localSizeBytes: 153 * 1024 * 1024,
+          ),
+          'whisper-small-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloaded,
+            localSizeBytes: 358 * 1024 * 1024,
+          ),
+        },
+      ),
+    );
+
+    await tester.pumpWidget(_buildTestWidget(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byTooltip('Delete Model'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Delete Model'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete Model').last);
+    await tester.pumpAndSettle();
+
+    expect(notifier.deletedModelIds, ['whisper-small-en-int8']);
+  });
+
+  testWidgets('分组标题显示已下载总占用，清理沿用现有确认与保护规则', (tester) async {
+    _useTallViewport(tester);
+    final notifier = _StaticOfflineAsrSettingsNotifier(
+      stateWith(
+        backend: AsrBackend.offline,
+        modelStates: const {
+          'whisper-base-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloaded,
+            localSizeBytes: 153 * 1024 * 1024,
+          ),
+          'whisper-small-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloaded,
+            localSizeBytes: 358 * 1024 * 1024,
+          ),
+        },
+      ),
+    );
+
+    await tester.pumpWidget(_buildTestWidget(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Downloaded 511 MB'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Delete all downloaded models'));
     await tester.pumpAndSettle();
 
     expect(
       find.text(
-        'Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.',
+        'Delete all downloaded Echo Loop speech recognition models? You can '
+        're-download them anytime.',
       ),
       findsOneWidget,
     );
@@ -317,18 +428,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(notifier.deleteAllDownloadedModelsCalled, isTrue);
-    expect(notifier.deleteAllIncludeSelected, isTrue);
+    expect(
+      notifier.deleteAllIncludeSelected,
+      isTrue,
+      reason: '当前使用中的档位仍由删除规则保护',
+    );
   });
 
   testWidgets('已迁移模型显示真实名称、来源与许可，来源选项只影响未安装下载', (tester) async {
     _useTallViewport(tester);
-    final notifier = _StaticOfflineAsrSettingsNotifier(
-      OfflineAsrSettingsState(
-        enabled: true,
-        backend: AsrBackend.offline,
-        recommendedModel: recommendedModel,
-      ),
-    );
+    final notifier = _StaticOfflineAsrSettingsNotifier(stateWith());
 
     await tester.pumpWidget(_buildTestWidget(notifier));
     await tester.pumpAndSettle();
@@ -340,9 +449,11 @@ void main() {
     // 三档都已迁移到固定公开来源，都展示来源与许可。
     expect(find.textContaining('Source: Hugging Face'), findsNWidgets(3));
     expect(find.textContaining('License: MIT'), findsNWidgets(3));
-    // 来源选项只出现在下载来源卡片中。
-    expect(find.text('hf-mirror.com (mirror)'), findsOneWidget);
+    // 来源选项收在卡片底部的来源入口里，展开后才出现。
+    expect(find.text('hf-mirror.com (mirror)'), findsNothing);
 
+    await tester.tap(find.text('Model Source'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('hf-mirror.com (mirror)'));
     await tester.pumpAndSettle();
 
@@ -353,13 +464,7 @@ void main() {
 
   group('在线语音服务入口', () {
     _StaticOfflineAsrSettingsNotifier notifier() =>
-        _StaticOfflineAsrSettingsNotifier(
-          OfflineAsrSettingsState(
-            enabled: true,
-            backend: AsrBackend.offline,
-            recommendedModel: recommendedModel,
-          ),
-        );
+        _StaticOfflineAsrSettingsNotifier(stateWith());
 
     testWidgets('未配置时入口显示未配置状态，主页面不再内嵌配置表单', (tester) async {
       _useTallViewport(tester);

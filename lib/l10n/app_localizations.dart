@@ -10394,6 +10394,36 @@ abstract class AppLocalizations {
   /// **'Recognition modes'**
   String get recognitionModeTitle;
 
+  /// No description provided for @localModelLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device models'**
+  String get localModelLibraryTitle;
+
+  /// No description provided for @localModelLibraryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded {size}'**
+  String localModelLibraryTotal(String size);
+
+  /// No description provided for @localModelLibraryDeleteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all downloaded models'**
+  String get localModelLibraryDeleteAll;
+
+  /// No description provided for @localModelDownloadAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get localModelDownloadAction;
+
+  /// No description provided for @localModelUsageTag.
+  ///
+  /// In en, this message translates to:
+  /// **'{purpose} in use'**
+  String localModelUsageTag(String purpose);
+
   /// No description provided for @recognitionPurposeDescription.
   ///
   /// In en, this message translates to:

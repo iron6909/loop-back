@@ -377,6 +377,47 @@ void main() {
     expect(restored.localModelId, _small);
   });
 
+  group('跟读方式驱动后端', () {
+    test('跟读选本机写本机后端，选系统写平台后端', () async {
+      final asr = _FakeOfflineAsrNotifier(
+        OfflineAsrSettingsState(
+          backend: AsrBackend.offline,
+          selectedModel: _model(_base),
+          recommendedModel: _model(_base),
+        ),
+      );
+      final container = await _container(asrNotifier: asr);
+      addTearDown(container.dispose);
+
+      await container
+          .read(recognitionSettingsProvider.notifier)
+          .change(
+            purpose: RecognitionPurpose.shadowing,
+            selection: const RecognitionSelection(
+              mode: RecognitionMode.system,
+              localModelId: _base,
+            ),
+          );
+      expect(asr.backends, [AsrBackend.platform]);
+      expect(
+        container.read(recognitionSettingsProvider).shadowing.mode,
+        RecognitionMode.system,
+      );
+
+      await container
+          .read(recognitionSettingsProvider.notifier)
+          .change(
+            purpose: RecognitionPurpose.shadowing,
+            selection: const RecognitionSelection.local(_base),
+          );
+      expect(asr.backends, [AsrBackend.platform, AsrBackend.offline]);
+      expect(
+        container.read(recognitionSettingsProvider).shadowing.mode,
+        RecognitionMode.local,
+      );
+    });
+  });
+
   group('影响在途任务的选择变更', () {
     RecognitionInFlightTask inFlightTask(
       RecognitionPurpose purpose,
