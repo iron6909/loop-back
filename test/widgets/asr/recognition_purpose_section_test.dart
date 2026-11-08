@@ -8,8 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
+import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/speech_capability_provider.dart';
+import 'package:echo_loop/services/asr/asr_model_manager.dart';
 import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/asr/recognition_purpose_section.dart';
@@ -19,6 +21,16 @@ const _initial = RecognitionSettings(
   shadowing: RecognitionSelection.local('whisper-base-en-int8'),
   retell: RecognitionSelection.local('whisper-tiny-en-int8'),
 );
+
+/// 只返回固定状态的离线 ASR 设置：伤害不到模型文件，也不需要 SharedPreferences。
+class _StaticOfflineAsrSettings extends OfflineAsrSettingsNotifier {
+  _StaticOfflineAsrSettings(this._state);
+
+  final OfflineAsrSettingsState _state;
+
+  @override
+  OfflineAsrSettingsState build() => _state;
+}
 
 class _ChangeCall {
   _ChangeCall(this.purpose, this.selection, this.cancelInFlight);
@@ -30,17 +42,24 @@ class _ChangeCall {
 
 /// 记录变更请求并可按脚本返回「需要确认」的用途选择 Notifier。
 class _RecordingRecognitionSettings extends RecognitionSettingsNotifier {
-  _RecordingRecognitionSettings(this._pendingTasks, {this.confirmOnce = false});
+  _RecordingRecognitionSettings(
+    this._pendingTasks, {
+    this.confirmOnce = false,
+    this.initial = _initial,
+  });
 
   final List<RecognitionInFlightTask> _pendingTasks;
 
   /// 只在首次变更时要求确认，用于验证「接受后二次应用」。
   final bool confirmOnce;
+
+  /// 初始选择；默认三用途都用本机档位。
+  final RecognitionSettings initial;
   final List<_ChangeCall> calls = [];
   final List<RecognitionInFlightTask> cancelledTasks = [];
 
   @override
-  RecognitionSettings build() => _initial;
+  RecognitionSettings build() => initial;
 
   @override
   Future<RecognitionChangeResult> change({
@@ -70,10 +89,21 @@ Widget _buildHarness(
   bool? retellOnlineAvailable,
   PracticeOnlineAccessDenial onlineBlockReason =
       PracticeOnlineAccessDenial.missingConfiguration,
+  Map<String, AsrModelState> modelStates = const {},
 }) {
   return ProviderScope(
     overrides: [
       recognitionSettingsProvider.overrideWith(() => notifier),
+      offlineAsrSettingsProvider.overrideWith(
+        () => _StaticOfflineAsrSettings(
+          OfflineAsrSettingsState(
+            enabled: true,
+            backend: AsrBackend.offline,
+            recommendedModel: availableModels.first,
+            modelStates: modelStates,
+          ),
+        ),
+      ),
       systemRecognitionPlatformProvider.overrideWithValue(systemSupported),
       onlinePracticeAvailabilityProvider(
         RecognitionPurpose.shadowing,
@@ -125,6 +155,127 @@ void main() {
     expect(find.text('On-device · Whisper Small (English)'), findsOneWidget);
     expect(find.text('On-device · Whisper Base (English)'), findsOneWidget);
     expect(find.text('On-device · Whisper Tiny (English)'), findsOneWidget);
+  });
+
+  testWidgets('本机方式按该用途自己的档位显示下载状态', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        modelStates: const {
+          'whisper-small-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloaded,
+            localSizeBytes: 358 * 1024 * 1024,
+          ),
+          'whisper-base-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.downloading,
+            downloadProgress: 0.4,
+          ),
+          'whisper-tiny-en-int8': AsrModelState(
+            downloadStatus: AsrModelDownloadStatus.failed,
+          ),
+        },
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 一行一个状态：字幕已下载、跟读下载中、复述下载失败。
+    expect(find.text('Downloaded'), findsOneWidget);
+    expect(find.text('Downloading'), findsOneWidget);
+    expect(find.text('Download failed'), findsOneWidget);
+  });
+
+  testWidgets('未下载的档位显示未下载', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Not downloaded'), findsNWidgets(3));
+  });
+
+  testWidgets('系统识别方式的行状态显示设备自带', (tester) async {
+    final notifier = _RecordingRecognitionSettings(
+      const [],
+      initial: const RecognitionSettings(
+        subtitle: RecognitionSelection.local('whisper-small-en-int8'),
+        shadowing: RecognitionSelection(
+          mode: RecognitionMode.system,
+          localModelId: 'whisper-base-en-int8',
+        ),
+        retell: RecognitionSelection.local('whisper-tiny-en-int8'),
+      ),
+    );
+    await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text('System speech'), findsOneWidget);
+    expect(find.text('Built into the device'), findsOneWidget);
+  });
+
+  testWidgets('在线已验证的用途行显示已验证', (tester) async {
+    final notifier = _RecordingRecognitionSettings(
+      const [],
+      initial: const RecognitionSettings(
+        subtitle: RecognitionSelection.local('whisper-small-en-int8'),
+        shadowing: RecognitionSelection.online(
+          localModelId: 'whisper-base-en-int8',
+        ),
+        retell: RecognitionSelection.local('whisper-tiny-en-int8'),
+      ),
+    );
+    await tester.pumpWidget(
+      _buildHarness(notifier, systemSupported: true, onlineAvailable: true),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Verified'), findsOneWidget);
+  });
+
+  testWidgets('在线不可用时行状态分别说明未配置、未验证与模型不适配', (tester) async {
+    Future<void> pumpWith(PracticeOnlineAccessDenial reason) async {
+      final notifier = _RecordingRecognitionSettings(
+        const [],
+        initial: const RecognitionSettings(
+          subtitle: RecognitionSelection.local('whisper-small-en-int8'),
+          shadowing: RecognitionSelection.online(
+            localModelId: 'whisper-base-en-int8',
+          ),
+          retell: RecognitionSelection.local('whisper-tiny-en-int8'),
+        ),
+      );
+      await tester.pumpWidget(
+        _buildHarness(
+          notifier,
+          systemSupported: true,
+          onlineBlockReason: reason,
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await pumpWith(PracticeOnlineAccessDenial.missingConfiguration);
+    expect(find.text('Not configured'), findsOneWidget);
+
+    // 先卸载旧树，避免复用旧的 ProviderScope；新覆盖才会生效。
+    await tester.pumpWidget(const SizedBox());
+    await pumpWith(PracticeOnlineAccessDenial.capabilityUnverified);
+    expect(find.text('Not verified'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox());
+    await pumpWith(PracticeOnlineAccessDenial.capabilityNotSuitable);
+    expect(find.text('Unavailable'), findsOneWidget);
+  });
+
+  testWidgets('用途详情说明只影响当前用途', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Shadowing'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Changes here only affect this purpose'), findsOneWidget);
   });
 
   testWidgets('字幕用途只选本机档位，方式在管理字幕弹窗里并列选择', (tester) async {
