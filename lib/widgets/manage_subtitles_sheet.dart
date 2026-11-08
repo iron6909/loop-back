@@ -502,24 +502,15 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     );
   }
 
-  /// 选中「在线转录」入口时的服务与模型说明。
+  /// 选中「在线转录」时的提示。
   ///
-  /// 弹窗不再按设置里的当前方式渲染，而是按用户点的入口：点在线才展示在线
-  /// 服务与模型，点本地就不展示。
+  /// 就绪后不再展示选中的在线模型（模型统一在设置里管理），只在未通过验证时
+  /// 说明原因，避免用户点了却不知道为什么不能用。
   Widget _subtitleModeNotice(AppLocalizations l10n) {
-    // watch 配置：配置异步加载完成或变更时，这里需要重建。
-    if (!ref.watch(onlineSubtitleAvailableProvider)) {
-      return _notice(l10n.onlineSubtitleNotVerified, Icons.error_outline);
+    if (ref.watch(onlineSubtitleAvailableProvider)) {
+      return const SizedBox.shrink();
     }
-    final config = ref.watch(speechConfigurationProvider).valueOrNull?.config;
-    final modelId = config?.onlineModelFor(RecognitionPurpose.subtitle) ?? '';
-    return _notice(
-      l10n.onlineSubtitleService(
-        _serviceLabel(l10n, _subtitleService),
-        modelId,
-      ),
-      Icons.cloud_outlined,
-    );
+    return _notice(l10n.onlineSubtitleNotVerified, Icons.error_outline);
   }
 
   /// 当前字幕的词时间戳来源提示；只展示实际标记，不因来源是在线就宣称逐词精确。

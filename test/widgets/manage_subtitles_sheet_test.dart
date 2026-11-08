@@ -586,7 +586,8 @@ void main() {
 
     await tester.tap(find.text('Online transcription'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('openai/whisper-large-v3'), findsOneWidget);
+    // 在线模型统一在设置里管理，弹窗内不再展示选中的在线模型。
+    expect(find.textContaining('openai/whisper-large-v3'), findsNothing);
   });
 
   testWidgets('在线分块任务进行中显示块进度与取消入口', (tester) async {
