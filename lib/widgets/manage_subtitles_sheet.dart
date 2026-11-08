@@ -286,36 +286,44 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     ),
   );
 
-  Widget _options(AudioItem item, AppLocalizations l10n) => Column(
-    children: [
-      if (_hasPodcast(item))
+  Widget _options(AudioItem item, AppLocalizations l10n) {
+    // 字幕用途选了在线时，不再展示本机模型与语言等本机选项。
+    final subtitleMode = ref
+        .watch(recognitionSettingsProvider)
+        .forPurpose(RecognitionPurpose.subtitle)
+        .mode;
+    final online = subtitleMode == RecognitionMode.online;
+    return Column(
+      children: [
+        if (_hasPodcast(item))
+          _option(
+            _SubtitleAction.podcastDownload,
+            l10n.downloadPodcastSubtitle,
+            Icons.closed_caption_outlined,
+            l10n.downloadPodcastSubtitleSubtitle,
+          ),
         _option(
-          _SubtitleAction.podcastDownload,
-          l10n.downloadPodcastSubtitle,
-          Icons.closed_caption_outlined,
-          l10n.downloadPodcastSubtitleSubtitle,
+          _SubtitleAction.transcription,
+          online ? l10n.onlineTranscription : l10n.offlineTranscription,
+          online ? Icons.cloud_outlined : Icons.offline_bolt_outlined,
+          online ? null : l10n.offlineTranscriptionSubtitle,
         ),
-      _option(
-        _SubtitleAction.transcription,
-        l10n.offlineTranscription,
-        Icons.offline_bolt_outlined,
-        l10n.offlineTranscriptionSubtitle,
-      ),
-      if (_selectedAction == _SubtitleAction.transcription) ...[
-        if (item.transcriptLanguage == 'auto')
-          _notice(l10n.legacyAutoTranscript, Icons.info_outline)
-        else ...[
-          const TranscriptionOptions(),
-          _subtitleModeNotice(l10n),
+        if (_selectedAction == _SubtitleAction.transcription) ...[
+          if (item.transcriptLanguage == 'auto')
+            _notice(l10n.legacyAutoTranscript, Icons.info_outline)
+          else ...[
+            if (!online) const TranscriptionOptions(),
+            _subtitleModeNotice(l10n),
+          ],
         ],
+        _option(
+          _SubtitleAction.localUpload,
+          l10n.localUpload,
+          Icons.folder_open_outlined,
+        ),
       ],
-      _option(
-        _SubtitleAction.localUpload,
-        l10n.localUpload,
-        Icons.folder_open_outlined,
-      ),
-    ],
-  );
+    );
+  }
 
   Widget _option(
     _SubtitleAction action,
@@ -463,8 +471,9 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
   /// 本机时也明说一句「当前用本机、去哪儿换成在线」，否则弹窗只列本机模型，
   /// 用户会以为应用根本不支持在线识别。
   Widget _subtitleModeNotice(AppLocalizations l10n) {
+    // watch 配置：配置异步加载完成或变更时，这里需要重建。
     final selection = ref
-        .read(recognitionSettingsProvider)
+        .watch(recognitionSettingsProvider)
         .forPurpose(RecognitionPurpose.subtitle);
     if (selection.mode != RecognitionMode.online) {
       return _notice(l10n.subtitleModeLocalHint, Icons.memory);
@@ -472,7 +481,7 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     if (!ref.watch(onlineSubtitleAvailableProvider)) {
       return _notice(l10n.onlineSubtitleNotVerified, Icons.error_outline);
     }
-    final config = ref.read(speechConfigurationProvider).valueOrNull?.config;
+    final config = ref.watch(speechConfigurationProvider).valueOrNull?.config;
     final modelId = config?.onlineModelFor(RecognitionPurpose.subtitle) ?? '';
     return _notice(
       l10n.onlineSubtitleService(_serviceLabel(l10n, _subtitleService), modelId),

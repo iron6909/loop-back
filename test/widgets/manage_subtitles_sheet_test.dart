@@ -558,6 +558,43 @@ void main() {
     expect(manager.calls, isEmpty, reason: '在线不走本机转录入口');
   });
 
+  testWidgets('选中在线时隐藏本机转录选项，改显示在线服务与模型', (tester) async {
+    manager = _RecordingManager();
+    final online = TestOnlineSubtitleTaskManager();
+    final item = createTestAudioItem(transcriptPath: null);
+    await tester.pumpWidget(
+      buildSheet(
+        item,
+        extra: [
+          onlineSubtitleTaskManagerProvider.overrideWith(() => online),
+          recognitionSettingsProvider.overrideWith(
+            _OnlineSubtitleSettings.new,
+          ),
+          onlineSubtitleAvailableProvider.overrideWithValue(true),
+          speechConfigStoreProvider.overrideWithValue(
+            _SpeechStore(
+              const SpeechConfig(
+                kind: SpeechProviderKind.openrouter,
+                baseUrl: 'https://openrouter.ai/api/v1',
+                onlineModels: {
+                  RecognitionPurpose.subtitle: 'openai/whisper-large-v3',
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+    await open(tester);
+
+    // 在线模式下不再出现本机模型/语言等本机选项，也不会误标成本地转录。
+    expect(find.text('Online transcription'), findsOneWidget);
+    expect(find.text('On-Device Transcription'), findsNothing);
+    expect(find.text('Select Language'), findsNothing);
+    expect(find.textContaining('openai/whisper-large-v3'), findsOneWidget);
+  });
+
   testWidgets('在线分块任务进行中显示块进度与取消入口', (tester) async {
     manager = _RecordingManager();
     final online = TestOnlineSubtitleTaskManager({

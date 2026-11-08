@@ -6141,4 +6141,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recognitionOnlineNeedsSuitableModel =>
       'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it';
+
+  @override
+  String get onlineTranscription => 'Online transcription';
 }

@@ -10783,6 +10783,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it'**
   String get recognitionOnlineNeedsSuitableModel;
+
+  /// No description provided for @onlineTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Online transcription'**
+  String get onlineTranscription;
 }
 
 class _AppLocalizationsDelegate
