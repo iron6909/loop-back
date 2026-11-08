@@ -5761,7 +5761,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speechCapabilityVerifiedCostUnknown => '验证完成。供应商未报告费用，实际花费未知';
 
   @override
-  String get speechModelRefresh => '刷新转写模型目录';
+  String get speechModelSectionTitle => '按用途在线模型';
+
+  @override
+  String get speechModelFetch => '获取转写模型';
+
+  @override
+  String get speechModelFetching => '正在获取转写模型…';
+
+  @override
+  String speechModelFetched(int count) {
+    return '已获取 $count 个模型';
+  }
+
+  @override
+  String get speechModelFetchNeedsConfig => '保存服务地址后可获取模型';
+
+  @override
+  String get speechModelFetchNeedsKey => '保存 API Key 后可获取模型';
+
+  @override
+  String get speechModelManualEntry => '手动输入模型 ID';
 
   @override
   String get speechModelRefreshEmpty => '服务没有返回转写模型，仍可手填模型 ID';
