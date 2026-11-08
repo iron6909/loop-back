@@ -334,7 +334,7 @@ void main() {
     expect(find.text('System speech'), findsOneWidget);
   });
 
-  testWidgets('在线已验证但未确认上传告知时给出对应原因', (tester) async {
+  testWidgets('在线缺少上传告知时，提示直接指向「验证模型」按钮', (tester) async {
     final notifier = _RecordingRecognitionSettings(const []);
     await tester.pumpWidget(
       _buildHarness(
@@ -348,8 +348,11 @@ void main() {
     await tester.tap(find.text('Shadowing'));
     await tester.pumpAndSettle();
 
+    // 告知在「验证模型」弹窗里完成，提示必须指向那个按钮，而不是一个不存在的入口。
     expect(
-      find.text('Confirm the first-upload notice under Online speech first'),
+      find.text(
+        'Tap Verify model under Online speech below; the first time explains the upload target and possible charges',
+      ),
       findsOneWidget,
     );
   });

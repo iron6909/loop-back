@@ -5933,11 +5933,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recognitionOnlineNeedsUploadNotice =>
-      'Confirm the first-upload notice under Online speech first';
+      'Tap Verify model under Online speech below; the first time explains the upload target and possible charges';
 
   @override
   String get recognitionOnlineNeedsVerification =>
-      'Verify this purpose\'s online model under Online speech first';
+      'Tap Verify model under Online speech below to verify this purpose\'s online model';
 
   @override
   String shadowingOnlineProgress(String service, String model, int percent) {

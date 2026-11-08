@@ -5663,10 +5663,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recognitionOnlineNeedsConfiguration => '需先在下方「在线语音服务」填写服务地址与 Key';
 
   @override
-  String get recognitionOnlineNeedsUploadNotice => '需先在「在线语音服务」确认首次上传告知';
+  String get recognitionOnlineNeedsUploadNotice =>
+      '需先在下方「在线语音服务」点「验证模型」；首次会告知上传目标与可能费用';
 
   @override
-  String get recognitionOnlineNeedsVerification => '需先在「在线语音服务」验证该用途的在线模型';
+  String get recognitionOnlineNeedsVerification =>
+      '需先在下方「在线语音服务」点「验证模型」，验证该用途的在线模型';
 
   @override
   String shadowingOnlineProgress(String service, String model, int percent) {

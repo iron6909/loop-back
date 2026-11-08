@@ -10457,13 +10457,13 @@ abstract class AppLocalizations {
   /// No description provided for @recognitionOnlineNeedsUploadNotice.
   ///
   /// In en, this message translates to:
-  /// **'Confirm the first-upload notice under Online speech first'**
+  /// **'Tap Verify model under Online speech below; the first time explains the upload target and possible charges'**
   String get recognitionOnlineNeedsUploadNotice;
 
   /// No description provided for @recognitionOnlineNeedsVerification.
   ///
   /// In en, this message translates to:
-  /// **'Verify this purpose\'s online model under Online speech first'**
+  /// **'Tap Verify model under Online speech below to verify this purpose\'s online model'**
   String get recognitionOnlineNeedsVerification;
 
   /// No description provided for @shadowingOnlineProgress.

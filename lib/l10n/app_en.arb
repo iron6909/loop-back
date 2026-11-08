@@ -13,7 +13,9 @@
   "aiQuotaExceededTitle": "This month's free {feature} quota is used up",
   "@aiQuotaExceededTitle": {
     "placeholders": {
-      "feature": { "type": "String" }
+      "feature": {
+        "type": "String"
+      }
     }
   },
   "aiQuotaFeatureTranslation": "AI translation",
@@ -28,7 +30,9 @@
   "aiQuotaUnsupportedTitle": "The free plan doesn't support {feature}",
   "@aiQuotaUnsupportedTitle": {
     "placeholders": {
-      "feature": { "type": "String" }
+      "feature": {
+        "type": "String"
+      }
     }
   },
   "aiQuotaUnsupportedMessage": "Upgrade to unlock this feature and more AI features.",
@@ -53,7 +57,9 @@
   "premiumStartTrial": "Start {days}-day free trial",
   "@premiumStartTrial": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "premiumRestore": "Restore Purchases",
@@ -71,19 +77,25 @@
   "premiumRenewsOn": "Renews on {date}",
   "@premiumRenewsOn": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "premiumExpiresOn": "Expires on {date}",
   "@premiumExpiresOn": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "premiumValidUntil": "Valid until {date}",
   "@premiumValidUntil": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "premiumLifetimeAccessNote": "Lifetime access, no renewal needed",
@@ -120,71 +132,101 @@
   "premiumSavePercent": "Save {percent}%",
   "@premiumSavePercent": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "premiumPerMonthEquivalent": "≈ {price}/mo",
   "@premiumPerMonthEquivalent": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumIntroFirstYear": "First year {price}",
   "@premiumIntroFirstYear": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumIntroFirstMonth": "First month {price}",
   "@premiumIntroFirstMonth": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumRenewalPricePerYear": "{price}/yr",
   "@premiumRenewalPricePerYear": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumRenewalPricePerMonth": "{price}/mo",
   "@premiumRenewalPricePerMonth": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumRenewalPricePerPeriod": "{price}",
   "@premiumRenewalPricePerPeriod": {
     "placeholders": {
-      "price": { "type": "String" }
+      "price": {
+        "type": "String"
+      }
     }
   },
   "premiumTryFreeThen": "Try free for {days} days, then {renewal}",
   "@premiumTryFreeThen": {
     "placeholders": {
-      "days": { "type": "int" },
-      "renewal": { "type": "String" }
+      "days": {
+        "type": "int"
+      },
+      "renewal": {
+        "type": "String"
+      }
     }
   },
   "premiumOfferThen": "{intro}, then {renewal}",
   "@premiumOfferThen": {
     "placeholders": {
-      "intro": { "type": "String" },
-      "renewal": { "type": "String" }
+      "intro": {
+        "type": "String"
+      },
+      "renewal": {
+        "type": "String"
+      }
     }
   },
   "premiumSpecialOfferPercent": "Early-bird offer: {percent}% off your first {period}",
   "@premiumSpecialOfferPercent": {
     "placeholders": {
-      "percent": { "type": "int" },
-      "period": { "type": "String" }
+      "percent": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
     }
   },
   "premiumSpecialOfferIntro": "Early-bird offer: {intro}, then {renewal}",
   "@premiumSpecialOfferIntro": {
     "placeholders": {
-      "intro": { "type": "String" },
-      "renewal": { "type": "String" }
+      "intro": {
+        "type": "String"
+      },
+      "renewal": {
+        "type": "String"
+      }
     }
   },
   "premiumOfferPeriodYear": "year",
@@ -254,7 +296,9 @@
   "addBookmark": "Add bookmark",
   "appearance": "Appearance",
   "readingTextSettings": "Font Size",
-  "@readingTextSettings": {"description": "Settings entry and page title for learning-content text size"},
+  "@readingTextSettings": {
+    "description": "Settings entry and page title for learning-content text size"
+  },
   "readingTextPreview": "Preview",
   "readingFontSize": "Text size",
   "readingFontSizeDecrease": "Smaller text",
@@ -292,20 +336,26 @@
   "loopCountValue": "{count}x",
   "@loopCountValue": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "loopIntervalValue": "{seconds}s",
   "@loopIntervalValue": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "sleepTimer": "Sleep timer",
   "sleepTimerMinutes": "{count} min",
   "@sleepTimerMinutes": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "sleepTimerRemaining": "Time remaining",
@@ -313,7 +363,9 @@
   "sleepTimerA11yActive": "Sleep timer, {time} remaining, tap to adjust",
   "@sleepTimerA11yActive": {
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "fullText": "full playback",
@@ -337,7 +389,7 @@
   "sentenceMenuActionFailed": "Couldn't complete this action. Please try again.",
   "hotkeyReplay": "R: Replay",
   "hotkeyPlayPause": "Space: Play/Pause",
-  "hotkeyToggleTranscript": "\u2191: Show/Hide Subtitles",
+  "hotkeyToggleTranscript": "↑: Show/Hide Subtitles",
   "hotkeyNavigation": "←/→: Previous/Next Sentence",
   "noAudioLoaded": "No audio loaded",
   "enableAutoScroll": "Enable auto-scroll",
@@ -449,7 +501,9 @@
   "publishedOn": "Released {date}",
   "@publishedOn": {
     "placeholders": {
-      "date": {"type": "String"}
+      "date": {
+        "type": "String"
+      }
     }
   },
   "discoverEntryTitleA": "Discover Resources",
@@ -458,14 +512,18 @@
   "communityCollectionAuthor": "By {nickname}",
   "@communityCollectionAuthor": {
     "placeholders": {
-      "nickname": {"type": "String"}
+      "nickname": {
+        "type": "String"
+      }
     }
   },
   "communityCollectionUnknownAuthor": "Unknown author",
   "communityCollectionUploader": "Uploaded by {nickname}",
   "@communityCollectionUploader": {
     "placeholders": {
-      "nickname": {"type": "String"}
+      "nickname": {
+        "type": "String"
+      }
     }
   },
   "communityCollectionUnknownUploader": "Unknown uploader",
@@ -473,7 +531,9 @@
   "communityCollectionCover": "{name} cover",
   "@communityCollectionCover": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "communityCollectionShowMore": "More",
@@ -511,7 +571,7 @@
       }
     }
   },
-  "audioNotInOtherCollections": "Not in any other collection \u2014 safe to delete.",
+  "audioNotInOtherCollections": "Not in any other collection — safe to delete.",
   "selectedCount": "{count} selected",
   "@selectedCount": {
     "placeholders": {
@@ -573,14 +633,18 @@
   "stepProgress": "{completed}/{total}",
   "@stepProgress": {
     "placeholders": {
-      "completed": { "type": "int" },
-      "total": { "type": "int" }
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "stepBlindListening": "Listen without subtitles",
   "stepBlindListeningDesc": "Listen to the entire audio/video without subtitles.Get the gist.",
   "stepIntensiveListening": "Listen sentence by sentence",
-  "stepIntensiveListeningDesc": "Listen sentence by sentence with automatic pauses.For challenging sentences, tap \u201cUnclear\u201d to save them and view AI analysis.",
+  "stepIntensiveListeningDesc": "Listen sentence by sentence with automatic pauses.For challenging sentences, tap “Unclear” to save them and view AI analysis.",
   "stepShadowing": "Listen & Repeat",
   "stepShadowingDesc": "Repeat your saved sentences.By default, each sentence is played three times.",
   "stepRetelling": "Listen & Retell",
@@ -608,13 +672,17 @@
   "reviewUnlockIn": "Unlocks in {days} days",
   "@reviewUnlockIn": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "reviewUnlockInHours": "Unlocks in {hours} hours",
   "@reviewUnlockInHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "reviewUnlocked": "Unlocked",
@@ -630,13 +698,17 @@
   "reviewCountdown": "Unlocked in {days} days",
   "@reviewCountdown": {
     "placeholders": {
-      "days": { "type": "int" }
+      "days": {
+        "type": "int"
+      }
     }
   },
   "reviewCountdownHours": "Unlocked in {hours} hours",
   "@reviewCountdownHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "blindListenBriefingTitle": "Listen without subtitles",
@@ -644,7 +716,9 @@
   "blindListenBriefingReviewSubtitle": "Review {round} - Listen without subtitles",
   "@blindListenBriefingReviewSubtitle": {
     "placeholders": {
-      "round": { "type": "int" }
+      "round": {
+        "type": "int"
+      }
     }
   },
   "blindListenBriefingTip": "Challenge yourself: listen without subtitles and get the gist",
@@ -653,14 +727,18 @@
   "blindListenPassLabel": "Pass {count}",
   "@blindListenPassLabel": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "blindListenComplete": "Listening without subtitles Complete",
   "blindListenPassInfo": "Listened {count} time(s)",
   "@blindListenPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "selectDifficulty": "How difficult was this?",
@@ -678,13 +756,17 @@
   "audioDuration": "Duration: {duration}",
   "@audioDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "estimatedMinutes": "Est. {minutes} min",
   "@estimatedMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "estimatedLessThanOneMinute": "Est. < 1 min",
@@ -703,7 +785,9 @@
   "audioWillBeKept": "{count} audio files in this collection will be kept in the library",
   "@audioWillBeKept": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "done": "Done",
@@ -711,13 +795,17 @@
   "deleteAudioConfirm": "Permanently delete \"{name}\"?",
   "@deleteAudioConfirm": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "deleteAudioConfirmKeepFile": "Are you sure you want to delete \"{name}\"? The audio file is shared by other entries and will be kept.",
   "@deleteAudioConfirmKeepFile": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "uploadTranscript": "Upload Subtitles",
@@ -727,13 +815,17 @@
   "sentenceCountLabel": "{count} sentences",
   "@sentenceCountLabel": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "wordCountLabel": "{count} words",
   "@wordCountLabel": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "noTranscriptWarning": "This audio has no subtitles yet",
@@ -741,15 +833,23 @@
   "intensiveListenProgress": "Sentence {current}/{total}",
   "@intensiveListenProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPlayCount": "Round {current}/{total}",
   "@intensiveListenPlayCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPeek": "Peek at subtitles",
@@ -773,13 +873,17 @@
   "intensiveListenPauseBetweenPlays": "Next play in {seconds}s",
   "@intensiveListenPauseBetweenPlays": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPauseBetweenSentences": "Next sentence in {seconds}s",
   "@intensiveListenPauseBetweenSentences": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenCompleteTitle": "Listening sentence by sentence Complete",
@@ -795,7 +899,9 @@
   "intensiveListenBriefingSentenceCount": "{count} sentences",
   "@intensiveListenBriefingSentenceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenNoSubtitle": "No Subtitles Available",
@@ -806,7 +912,9 @@
   "intensiveListenRepeatCountValue": "{count} time(s)",
   "@intensiveListenRepeatCountValue": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPauseLabel": "Pause between sentences",
@@ -820,32 +928,42 @@
   "intensiveListenPauseFixedUnit": "{seconds}s",
   "@intensiveListenPauseFixedUnit": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPauseMultiplierValue": "{value}x",
   "@intensiveListenPauseMultiplierValue": {
     "placeholders": {
-      "value": { "type": "String" }
+      "value": {
+        "type": "String"
+      }
     }
   },
   "intensiveListenPauseMultiplierLabel": "Multiplier",
   "blindListenCountdown": "Next play in {seconds}s",
   "@blindListenCountdown": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "difficultyLabel": "Difficulty level: {difficulty}",
   "@difficultyLabel": {
     "placeholders": {
-      "difficulty": { "type": "String" }
+      "difficulty": {
+        "type": "String"
+      }
     }
   },
   "continueToStep": "Continue: {step}",
   "@continueToStep": {
     "placeholders": {
-      "step": { "type": "String" }
+      "step": {
+        "type": "String"
+      }
     }
   },
   "completeFirstStudy": "First Round Complete",
@@ -853,9 +971,15 @@
   "stepProgressLabel": "Stage {current}/{total} ({stage})",
   "@stepProgressLabel": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" },
-      "stage": { "type": "String" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "stage": {
+        "type": "String"
+      }
     }
   },
   "manageTags": "Manage Tags",
@@ -877,27 +1001,39 @@
   "listenAndRepeatProgress": "Sentence {current}/{total}",
   "@listenAndRepeatProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatPlayCount": "Round {current}/{total}",
   "@listenAndRepeatPlayCount": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatPauseBetweenPlays": "Repeat time {seconds}s",
   "@listenAndRepeatPauseBetweenPlays": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatPauseBetweenSentences": "Next sentence in {seconds}s",
   "@listenAndRepeatPauseBetweenSentences": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatListenHint": "Listen, then repeat",
@@ -920,13 +1056,17 @@
   "listenAndRepeatRecognitionPassed": "Matched {percent}% of the target words.",
   "@listenAndRepeatRecognitionPassed": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatRecognitionBelowThreshold": "Matched {percent}% of the target words.",
   "@listenAndRepeatRecognitionBelowThreshold": {
     "placeholders": {
-      "percent": { "type": "int" }
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatRecognitionNoEnglish": "No spoken English detected",
@@ -946,19 +1086,25 @@
   "listenAndRepeatBriefingSentenceCount": "{count} sentences",
   "@listenAndRepeatBriefingSentenceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatBriefingDifficultCount": "{count} saved sentences",
   "@listenAndRepeatBriefingDifficultCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatBriefingPlayCount": "{count} plays per sentence",
   "@listenAndRepeatBriefingPlayCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "listenAndRepeatRemoveDifficult": "Auto-saved, tap to undo",
@@ -973,70 +1119,92 @@
   "sentenceDuration": "{duration}s",
   "@sentenceDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "difficultSentenceCount": "{count} challenging sentences",
   "@difficultSentenceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "intensiveListenPassInfo": "Practiced {count}x",
   "@intensiveListenPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "shadowingPassInfo": "Practiced {count}x",
   "@shadowingPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "retellBriefingTitle": "Listen & Retell",
   "retellBriefingSubtitle": "Listen and retell segment by segment. Follow the original transcript or use your own words. Visible words help you recall what you heard.",
   "retellBriefingTargetDuration": "segment length",
   "retellBriefingParagraphCount": "Split into {count} segments",
   "@retellBriefingParagraphCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "retellBriefingSeconds": "{seconds}s",
   "@retellBriefingSeconds": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "retellBriefingSentenceLevel": "Per Sentence",
   "retellBriefingSentenceCount": "{count} sentences total",
   "@retellBriefingSentenceCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "retellTitle": "Listen & Retell",
   "retellParagraphProgress": "Segment {current}/{total}",
   "@retellParagraphProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "retellParagraphDuration": "{duration}s",
   "@retellParagraphDuration": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "durationMinutesSeconds": "{minutes}m {seconds}s",
   "@durationMinutesSeconds": {
     "placeholders": {
-      "minutes": { "type": "int" },
-      "seconds": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "retellPreListenHint": "Listen first, then retell",
@@ -1045,14 +1213,20 @@
   "retellRetellingCountdown": "Retell {seconds}s",
   "@retellRetellingCountdown": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "retellRepeatInfo": "Round {current}/{total}",
   "@retellRepeatInfo": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "retellCompleteFirstStudy": "First Round Complete",
@@ -1075,25 +1249,24 @@
   "retellPassInfo": "Practiced {count}x",
   "@retellPassInfo": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "retellNoDifficultSentences": "No sentences to retell. Listen sentence by sentence first.",
-
   "retellKeywordMethod": "Visible words",
   "retellKeywordMethodOff": "Off",
   "retellKeywordMethodRandom": "Random",
   "retellKeywordMethodAi": "AI",
   "retellKeywordMethodAiComingSoon": "Coming soon",
   "retellKeywordRatio": "Visible Words",
-
   "pauseModeSmart": "Auto",
   "pauseModeFixed": "Fixed",
   "pauseModeMultiplier": "Multiplier",
   "fixedPauseSeconds": "Fixed pause",
   "pauseMultiplier": "Multiplier",
   "settingsSessionOnly": "Settings apply to current session only",
-
   "reviewDifficultPracticeTitle": "Practice saved sentences",
   "reviewBlindListenDesc": "Listen again to feel how your comprehension has improved",
   "reviewDifficultPracticeDesc": "Relisten to saved sentences and repeat the ones you still struggle with",
@@ -1104,8 +1277,12 @@
   "reviewDifficultPracticeProgress": "Sentence {current}/{total}",
   "@reviewDifficultPracticeProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "reviewDifficultPracticeBlindListen": "Listening...",
@@ -1117,10 +1294,11 @@
   "reviewDifficultPracticeAdvancing": "Next sentence in {seconds}s",
   "@reviewDifficultPracticeAdvancing": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
-
   "aiSectionTitle": "AI",
   "speechRecognition": "Speech Recognition",
   "speechRecognitionNotConfigured": "Not configured",
@@ -1141,14 +1319,20 @@
   "asrModelSourceLine": "Source: {source} · License: {license}",
   "@asrModelSourceLine": {
     "placeholders": {
-      "source": { "type": "String" },
-      "license": { "type": "String" }
+      "source": {
+        "type": "String"
+      },
+      "license": {
+        "type": "String"
+      }
     }
   },
   "asrModelTier": "Model: {tier} (auto-selected for your device)",
   "@asrModelTier": {
     "placeholders": {
-      "tier": { "type": "String" }
+      "tier": {
+        "type": "String"
+      }
     }
   },
   "asrModelFastDescription": "Fastest. Best for low-end devices.",
@@ -1158,19 +1342,25 @@
   "speechModelSize": "Model size: ~{size}",
   "@speechModelSize": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "speechModelApproxSize": "~{size}",
   "@speechModelApproxSize": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "speechModelReady": "Ready · {size}",
   "@speechModelReady": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "speechModelStatusReady": "Ready",
@@ -1178,7 +1368,9 @@
   "speechModelDownloading": "Downloading... {progress}",
   "@speechModelDownloading": {
     "placeholders": {
-      "progress": { "type": "String" }
+      "progress": {
+        "type": "String"
+      }
     }
   },
   "speechModelDownloadFailed": "Download failed. Tap to retry.",
@@ -1187,14 +1379,18 @@
   "downloadErrorPodcastHost": "Cannot reach {host}. Try a network that can access this podcast source.",
   "@downloadErrorPodcastHost": {
     "placeholders": {
-      "host": { "type": "String" }
+      "host": {
+        "type": "String"
+      }
     }
   },
   "downloadErrorCorrupted": "Downloaded file verification failed. Please retry.",
   "deleteModel": "Delete Model ({size})",
   "@deleteModel": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "deleteModelAction": "Delete Model",
@@ -1202,7 +1398,9 @@
   "deleteModelConfirmMessage": "This will free up {size} of storage space.",
   "@deleteModelConfirmMessage": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "disableSpeechRecognitionTitle": "Disable Speech Recognition?",
@@ -1214,7 +1412,9 @@
   "asrModelDownloadEstimate": "Estimated download: ~{size}",
   "@asrModelDownloadEstimate": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "asrModelDownloadSettingsHint": "You can also choose another speech recognition model in Settings.",
@@ -1222,20 +1422,26 @@
   "asrModelDownloadingMessage": "Estimated download: ~{size}",
   "@asrModelDownloadingMessage": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "asrModelDownloadProgress": "{progress} complete",
   "@asrModelDownloadProgress": {
     "placeholders": {
-      "progress": { "type": "String" }
+      "progress": {
+        "type": "String"
+      }
     }
   },
   "asrModelDownloadFailedTitle": "Speech Recognition Model Download Failed",
   "asrModelDownloadFailedMessage": "The download did not finish. Estimated download: ~{size}",
   "@asrModelDownloadFailedMessage": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "asrDownloadModel": "Download model",
@@ -1243,7 +1449,6 @@
   "later": "Later",
   "speechRecognitionNotEnabled": "Voice recognition not enabled. Enable in Settings.",
   "retryDownload": "Retry",
-
   "developer": "Developer",
   "developerOptionsEnabled": "Developer options enabled",
   "developerOptionsDisable": "Disable developer options",
@@ -1253,7 +1458,6 @@
   "timeMachineSelectDate": "Select date",
   "timeMachineSelectTime": "Select time",
   "timeMachineReset": "Use system time",
-
   "manageSubtitles": "Manage Subtitles",
   "localUpload": "Local Upload",
   "aiTranscription": "Cloud Transcription",
@@ -1265,12 +1469,20 @@
   "localTranscriptionForegroundHint": "Keep the app open and on-screen until it finishes — transcription pauses if you switch apps or lock the screen.",
   "localTranscriptionProgressPercent": "{percent}% done",
   "@localTranscriptionProgressPercent": {
-    "placeholders": { "percent": { "type": "int" } }
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
   },
   "localTranscriptionModelRequiredTitle": "Speech model needed",
   "localTranscriptionModelRequiredMessage": "On-device transcription requires downloading the {modelName} speech model once (offline afterwards).",
   "@localTranscriptionModelRequiredMessage": {
-    "placeholders": { "modelName": { "type": "String" } }
+    "placeholders": {
+      "modelName": {
+        "type": "String"
+      }
+    }
   },
   "deleteSubtitle": "Delete Subtitles",
   "startTranscription": "Start Transcription",
@@ -1295,11 +1507,19 @@
   "transcriptionEmptyResultHint": "The audio may contain too much background noise.",
   "transcriptionErrorFileTooLarge": "File too large (max {maxMb}MB)",
   "@transcriptionErrorFileTooLarge": {
-    "placeholders": { "maxMb": { "type": "int" } }
+    "placeholders": {
+      "maxMb": {
+        "type": "int"
+      }
+    }
   },
   "transcriptionErrorTooLong": "Audio too long (max {maxMin} minutes)",
   "@transcriptionErrorTooLong": {
-    "placeholders": { "maxMin": { "type": "int" } }
+    "placeholders": {
+      "maxMin": {
+        "type": "int"
+      }
+    }
   },
   "deleteSubtitleConfirm": "Are you sure you want to delete the subtitles?",
   "deleteSubtitleWarning": "Deleting the subtitles will also clear all saved sentences and learning progress of this audio.",
@@ -1341,7 +1561,9 @@
   "currentSubtitleAi": "Current: AI ({language})",
   "@currentSubtitleAi": {
     "placeholders": {
-      "language": { "type": "String" }
+      "language": {
+        "type": "String"
+      }
     }
   },
   "noSubtitleYet": "No subtitle yet",
@@ -1354,59 +1576,87 @@
   "transcriptionFailedMessage": "Error: {message}",
   "@transcriptionFailedMessage": {
     "placeholders": {
-      "message": { "type": "String" }
+      "message": {
+        "type": "String"
+      }
     }
   },
-
   "todayStudyTime": "Today: {time}",
   "@todayStudyTime": {
     "description": "Today's study time label",
     "placeholders": {
-      "time": { "type": "String" }
+      "time": {
+        "type": "String"
+      }
     }
   },
   "studyTimeMinutes": "{minutes} min",
   "@studyTimeMinutes": {
     "description": "Study time in minutes",
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "studyTimeHoursMinutes": "{hours}h {minutes}m",
   "@studyTimeHoursMinutes": {
     "description": "Study time in hours and minutes",
     "placeholders": {
-      "hours": { "type": "int" },
-      "minutes": { "type": "int" }
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
     }
   },
-
   "studyTasks": "Study Tasks",
   "continueLearningHero": "Continue Learning",
   "startButton": "Start",
   "continueButton": "Continue",
   "streakDays": "{count}d streak",
   "@streakDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "todayStudyTimeShort": "Today",
   "weekStudyTimeShort": "This Week",
   "readyToReview": "Ready to Review ({count})",
   "@readyToReview": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "upcomingReviews": "Upcoming Reviews ({count})",
   "@upcomingReviews": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "upcomingReviewsSummary": "{count} review tasks will unlock later",
   "@upcomingReviewsSummary": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "recommendedForYou": "Recommended for you",
   "completedSection": "Completed Materials ({count})",
   "@completedSection": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "noStudyTasks": "No study tasks yet",
   "noStudyTasksHint": "Import audio files to start practicing.",
@@ -1415,33 +1665,56 @@
   "allDoneHint": "Well Done! Come back later for reviews.",
   "overdueDays": "Due {count}d ago",
   "@overdueDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "overdueHours": "Due {count}h ago",
   "@overdueHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "reviewDue": "Review due",
   "availableInDays": "in {count}d",
   "@availableInDays": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "availableInHours": "in {count}h",
   "@availableInHours": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "subStageLabelFirstLearn": "First Round - {subStage}",
   "@subStageLabelFirstLearn": {
-    "placeholders": { "subStage": { "type": "String" } }
+    "placeholders": {
+      "subStage": {
+        "type": "String"
+      }
+    }
   },
   "subStageLabelReview": "{reviewName} - {subStage}",
   "@subStageLabelReview": {
     "placeholders": {
-      "reviewName": { "type": "String" },
-      "subStage": { "type": "String" }
+      "reviewName": {
+        "type": "String"
+      },
+      "subStage": {
+        "type": "String"
+      }
     }
   },
-
   "favoritesSentences": "Sentences",
   "favoritesVocabulary": "Vocabulary",
   "favoritesNoSentences": "No saved sentences yet",
@@ -1450,7 +1723,11 @@
   "favoritesNoVocabularyHint": "Tap a word to look it up and save it",
   "favoritesBookmarkCount": "{count} sentences",
   "@favoritesBookmarkCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "favoritesVocabularySaved": "Saved",
   "favoritesVocabularyRemoved": "Removed",
@@ -1458,21 +1735,32 @@
   "undo": "Undo",
   "favoritesSaveVocabulary": "Save",
   "favoritesUnsaveVocabulary": "Unsave",
-
   "bookmarkReviewTitle": "Review Saved Sentences",
   "bookmarkReviewStart": "Start Review",
   "bookmarkReviewStartCount": "Start Review ({count})",
   "@bookmarkReviewStartCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bookmarkReviewDueCount": "{count} due for review",
   "@bookmarkReviewDueCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "bookmarkReviewNothingToReview": "All Done!",
   "favoriteVocabularyReviewDueCount": "{count} due for review",
   "@favoriteVocabularyReviewDueCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "favoriteReviewNothingToReview": "All Done!",
   "bookmarkReviewComplete": "Review Complete",
@@ -1480,7 +1768,11 @@
   "bookmarkReviewAudioSkipped": "Audio unavailable, skip this sentence",
   "bookmarkReviewFromAudio": "From: {name}",
   "@bookmarkReviewFromAudio": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "favoriteSourceMaterialNotFound": "Source material not found",
   "bookmarkReviewUnsave": "Unsave",
@@ -1513,7 +1805,6 @@
   "bookmarkReviewOrderRandom": "Random",
   "bookmarkReviewRatingAgain": "Missed",
   "bookmarkReviewRatingGood": "Got it",
-
   "favoriteVocabularyReviewTitle": "Review Saved Vocabulary",
   "favoriteVocabularyReviewCompleted": "All Done!",
   "favoriteVocabularyReviewTapReplay": "Tap to replay",
@@ -1529,21 +1820,28 @@
   "difficultPracticeSettingsHint": "Settings apply to this session only",
   "difficultPracticeBlindListenRepeat": "Times to Listen without subtitles",
   "difficultPracticeShadowReadingRepeat": "Times to Listen and Repeat",
-
   "inputWordsShort": "Input",
   "outputWordsShort": "Output",
   "listenTimeWords": "Listen: {time} · {words}",
   "@listenTimeWords": {
     "placeholders": {
-      "time": { "type": "String" },
-      "words": { "type": "String" }
+      "time": {
+        "type": "String"
+      },
+      "words": {
+        "type": "String"
+      }
     }
   },
   "speakTimeWords": "Speak: {time} · {words}",
   "@speakTimeWords": {
     "placeholders": {
-      "time": { "type": "String" },
-      "words": { "type": "String" }
+      "time": {
+        "type": "String"
+      },
+      "words": {
+        "type": "String"
+      }
     }
   },
   "learnedWordFormsShort": "Vocab",
@@ -1551,15 +1849,17 @@
   "learnedWordsEmptyHint": "No words learned yet. Complete a listening session first.",
   "learnedWordsSortTimeAsc": "Oldest Learned",
   "learnedWordsSortTimeDesc": "Recently Learned",
-
   "bookmarkReviewProgress": "Sentence {current}/{total}",
   "@bookmarkReviewProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
-
   "flashcardTitle": "Flashcards",
   "flashcardViewAnswer": "Ready? View answer",
   "flashcardTapToFlip": "Tap to flip back",
@@ -1567,18 +1867,30 @@
   "flashcardProgress": "{current}/{total}",
   "@flashcardProgress": {
     "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "flashcardComplete": "Review Complete",
   "flashcardWordsReviewed": "Reviewed {count} words",
   "@flashcardWordsReviewed": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "flashcardWordsRemoved": "Unsaved {count} words",
   "@flashcardWordsRemoved": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "flashcardPracticeAgain": "Practice Again",
   "flashcardFinish": "Done",
@@ -1644,11 +1956,12 @@
   "joinCommunityInviteSubtitle": "Learn, ask, and share",
   "networkError": "Unable to connect. Please check your network and try again.",
   "viewSourceCode": "Open Source Project",
-
   "updateAvailable": "New Version v{version}",
   "@updateAvailable": {
     "placeholders": {
-      "version": { "type": "String" }
+      "version": {
+        "type": "String"
+      }
     }
   },
   "updateNow": "Update Now",
@@ -1665,18 +1978,23 @@
   "demoModeSubtitle": "Use demo data for screenshots",
   "practiceRemoveMark": "Unmark",
   "practiceAddMark": "Re-mark",
-
   "blindListenSegmentProgress": "Segment {current}/{total}",
   "@blindListenSegmentProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "blindListenSegmentDuration": "{duration}s",
   "@blindListenSegmentDuration": {
     "placeholders": {
-      "duration": {"type": "int"}
+      "duration": {
+        "type": "int"
+      }
     }
   },
   "blindListenListeningHint": "Listen closely...",
@@ -1684,8 +2002,12 @@
   "blindListenRepeatInfo": "Round {current}/{total}",
   "@blindListenRepeatInfo": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "blindListenSettingsTitle": "Listening Settings",
@@ -1700,34 +2022,38 @@
   "blindListenParagraphCount": "{count} segment",
   "@blindListenParagraphCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
-
   "resetLearningProgress": "Reset Progress",
   "resetLearningProgressConfirmTitle": "Reset Learning Progress?",
   "resetLearningProgressConfirmMessage": "This will clear all learning progress for \"{name}\". This action cannot be undone.",
   "@resetLearningProgressConfirmMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "resetLearningProgressDone": "Learning progress has been reset",
-
   "pauseLearning": "Pause",
   "resumeLearning": "Resume Learning",
   "pausedChipLabel": "Paused",
   "pauseLearningConfirmTitle": "Pause Learning?",
   "pauseLearningConfirmMessage": "Review scheduling for this audio will stop. You can resume anytime.",
-
   "reviewReminderBody": "{audioName} · Review round {round} is ready",
   "@reviewReminderBody": {
     "placeholders": {
-      "audioName": { "type": "String" },
-      "round": { "type": "int" }
+      "audioName": {
+        "type": "String"
+      },
+      "round": {
+        "type": "int"
+      }
     }
   },
-
   "stageBlindListen": "Listen without subtitles",
   "stageIntensiveListen": "Listen sentence by sentence",
   "stageListenAndRepeat": "Listen & Repeat",
@@ -1735,11 +2061,12 @@
   "stageReviewDifficultPractice": "Practice saved sentences",
   "stageBookmarkReview": "Sentence Review",
   "stageFlashcard": "Vocabulary Review",
-
   "stageBreakdownTitle": "{date}",
   "@stageBreakdownTitle": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "stageBreakdownToday": " (Today)",
@@ -1753,17 +2080,15 @@
   "chartLegendSpeaking": "Speaking",
   "chartLegendOther": "Other",
   "chartLegendOtherHint": "Thinking, pauses, etc.",
-
   "reminderSectionTitle": "Reminders",
   "reminderSettings": "Review Reminder",
-  "savedReviewReminderSection": "\u2018Saved\u2019 Review Reminder",
+  "savedReviewReminderSection": "‘Saved’ Review Reminder",
   "savedReviewReminderToggle": "Saved Content Reminder",
   "savedReviewReminderTime": "Daily Reminder Time",
   "savedReviewReminderDescription": "Review saved content during commute or before bed for best results",
   "audioReviewReminderSection": "Audio Review Reminder",
   "audioReviewReminderToggle": "Audio Due Reminder",
   "audioReviewReminderDescription": "Get notified when it's time to review, helping you stay on track",
-
   "notificationPromptTitle": "Lock in what you've learned",
   "notificationPromptBody": "Memory sticks when you review at the right moments. We'll nudge you only when it matters.",
   "notificationPromptTitleLearning": "Review while it's fresh",
@@ -1776,11 +2101,12 @@
   "notificationDisabledBannerCta": "Open Settings",
   "notificationNotGrantedBanner": "Allow notifications to receive daily review reminders.",
   "notificationNotGrantedBannerCta": "Turn on",
-
   "recentCompletions": "Recently Completed Tasks ({count})",
   "@recentCompletions": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recentCompletionsSummary": "Past 24 hours",
@@ -1788,22 +2114,27 @@
   "timeAgoMinutes": "{minutes}m ago",
   "@timeAgoMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "timeAgoHours": "{hours}h ago",
   "@timeAgoHours": {
     "placeholders": {
-      "hours": { "type": "int" }
+      "hours": {
+        "type": "int"
+      }
     }
   },
   "timeFromNowSeconds": "in {seconds} seconds",
   "@timeFromNowSeconds": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
-
   "exportAudio": "Export Audio",
   "exportAudioFile": "Audio",
   "exportVideo": "Export Video",
@@ -1815,28 +2146,36 @@
   "pdfExportFailed": "Failed to export PDF: {error}",
   "@pdfExportFailed": {
     "placeholders": {
-      "error": {"type": "String"}
+      "error": {
+        "type": "String"
+      }
     }
   },
   "pdfMetaDuration": "Duration {duration}",
   "@pdfMetaDuration": {
     "description": "PDF title meta line: audio duration (duration is preformated mm:ss)",
     "placeholders": {
-      "duration": {"type": "String"}
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "pdfMetaSentences": "{count, plural, =1{1 sentence} other{{count} sentences}}",
   "@pdfMetaSentences": {
     "description": "PDF title meta line: sentence count",
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "pdfMetaWords": "{count, plural, =1{1 word} other{{count} words}}",
   "@pdfMetaWords": {
     "description": "PDF title meta line: word count",
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "pdfAppendixTitle": "Appendix · Sentence Analysis",
@@ -1872,7 +2211,6 @@
   "@pdfExportReminderConfirm": {
     "description": "Dismiss button for the first-time PDF export reminder"
   },
-
   "exportData": "Export Data",
   "exportDataSubtitle": "Export all data to a ZIP file",
   "importData": "Import Data",
@@ -1912,17 +2250,30 @@
   "exportingResources": "Backing up offline dictionaries...",
   "importingResources": "Restoring offline dictionaries...",
   "backupFailed": "Backup failed: {error}",
-  "@backupFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@backupFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "restoreFailed": "Restore failed: {error}",
-  "@restoreFailed": {"placeholders": {"error": {"type": "String"}}},
-
+  "@restoreFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "activityCalendar": "Activity Calendar",
   "noActivityThisMonth": "No learning activity this month",
   "studyDurationNoRecords": "No study records",
   "monthlySummaryTitle": "{month} Statistics",
   "@monthlySummaryTitle": {
     "placeholders": {
-      "month": { "type": "String" }
+      "month": {
+        "type": "String"
+      }
     }
   },
   "monthlyTotal": "Total",
@@ -1967,7 +2318,6 @@
   "transcriptionSignInRequiredMessage": "AI transcription uses the cloud transcription service. Sign in to transcribe audio with AI.",
   "senseGroupNotAvailable": "Sense group playback is not available for this audio yet",
   "wordTimestampsNotFound": "Word-level timestamps not found. Please restart the app to retry.",
-
   "recycleBinTitle": "Recycle Bin",
   "reviewStatisticsTitle": "Review statistics",
   "reviewStatisticsAll": "All",
@@ -1982,14 +2332,22 @@
   "reviewStatisticsDue": "Ready now",
   "reviewStatisticsCurrentDue": "{count} ready to review",
   "@reviewStatisticsCurrentDue": {
-    "placeholders": {"count": {"type": "String"}}
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
   },
   "reviewStatisticsCurrentDueExplanation": "Already due and ready to start",
   "reviewStatisticsCurrentDueBreakdown": "{overdue} overdue, {today} due today",
   "reviewStatisticsStreak": "Review streak",
   "reviewStatisticsStreakExplanation": "Reviewed on {count} consecutive days",
   "@reviewStatisticsStreakExplanation": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "reviewStatisticsLearningRhythm": "Learning rhythm",
   "reviewStatisticsTrend": "Last 30 days",
@@ -2008,7 +2366,11 @@
   "reviewStatisticsHistory": "History",
   "reviewStatisticsItemCount": "{count} items",
   "@reviewStatisticsItemCount": {
-    "placeholders": {"count": {"type": "int"}}
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "reviewStatisticsLoadError": "Could not load statistics",
   "recycleBinEmpty": "No removed items",
@@ -2016,7 +2378,9 @@
   "recycleBinClearAllConfirm": "Permanently delete all {count} items? This cannot be undone.",
   "@recycleBinClearAllConfirm": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "recycleBinRestore": "Restore",
@@ -2026,72 +2390,100 @@
   "recycleBinItemCount": "{count} items",
   "@recycleBinItemCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "importList": "Import List",
   "filesSelected": "{count} files selected",
   "@filesSelected": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "processingFileOf": "Processing {current} of {total}...",
   "@processingFileOf": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "importingFileProgress": "Importing {current}/{total}: {name}",
   "@importingFileProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"},
-      "name": {"type": "String"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
     }
   },
   "multipleAudioAdded": "{count} items added",
   "@multipleAudioAdded": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "audioImportedCount": "{count} items imported",
   "@audioImportedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "audioImportedWithSubtitleCount": "{count} with subtitles",
   "@audioImportedWithSubtitleCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "duplicatesSkipped": "Skipped {count} duplicates",
   "@duplicatesSkipped": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "importFailedCount": "{count} failed",
   "@importFailedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "duplicatesSkippedDetail": "The following files have identical content to items already in this collection and were skipped:",
   "duplicateExistingFileName": "Duplicate file name: {name}",
   "@duplicateExistingFileName": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "duplicateOfExisting": "Same content as \"{name}\"",
   "@duplicateOfExisting": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "removeFile": "Remove",
@@ -2145,7 +2537,6 @@
   "resetNewUserGuideDone": "New user guide has been reset",
   "resetOnboarding": "Reset Onboarding Survey",
   "resetOnboardingDone": "Onboarding reset; please restart the app to retake the survey",
-
   "discoverCommunityCollections": "Discover Resources",
   "discoverEmpty": "No curated collections yet",
   "discoverLoadFailed": "Failed to load, tap to retry",
@@ -2154,7 +2545,9 @@
   "discoverPodcastEntrySubtitle": "{count} podcasts. Subscribe to keep new episodes in your library.",
   "@discoverPodcastEntrySubtitle": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "discoverPodcastTitle": "Curated Podcasts",
@@ -2185,7 +2578,9 @@
   "removeCommunityConfirmTitle": "Remove \"{name}\"?",
   "@removeCommunityConfirmTitle": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "removeCommunityConfirmMessage": "All media files, their subtitles, and learning records in this collection will be deleted. This cannot be undone.",
@@ -2200,7 +2595,9 @@
   "communityFilesRemoved": "{count} files were removed from shared collections",
   "@communityFilesRemoved": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "downloadCancel": "Cancel Download",
@@ -2208,13 +2605,17 @@
   "downloadCompleted": "{name} downloaded",
   "@downloadCompleted": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "downloadFailed": "{name} download failed, please retry",
   "@downloadFailed": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "updateCommunitySubtitle": "Update Subtitles",
@@ -2225,7 +2626,9 @@
   "downloadInProgressSnackbar": "Downloading {name}, please wait",
   "@downloadInProgressSnackbar": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "downloadLoading": "Loading",
@@ -2248,8 +2651,12 @@
   "onboardingProgress": "{current} of {total}",
   "@onboardingProgress": {
     "placeholders": {
-      "current": {"type": "int"},
-      "total": {"type": "int"}
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "onboardingNext": "Next",
@@ -2299,10 +2706,8 @@
   "onboardingPermissionsMicrophone": "Microphone",
   "onboardingPermissionsSpeech": "Speech recognition",
   "playbackSection": "Playback",
-  "playbackSettings": "Playback Settings",
   "learningSection": "Learning",
   "learningSettings": "Learning Settings",
-  "displaySettings": "Display Settings",
   "showRecommendationToggle": "Show recommendation card",
   "showRecommendationSubtitle": "Show the \"Recommended for you\" card on the Study page",
   "hideRecommendationTooltip": "Hide recommendation",
@@ -2342,13 +2747,17 @@
   "silenceThresholdValue": "{seconds}s",
   "@silenceThresholdValue": {
     "placeholders": {
-      "seconds": {"type": "int"}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "silenceSkipped": "Skipped {seconds}s of silence",
   "@silenceSkipped": {
     "placeholders": {
-      "seconds": {"type": "int"}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "speechPermDialogTitleRequest": "Permissions Required",
@@ -2393,7 +2802,9 @@
   "authResendOtpCountdown": "{seconds}s until resend",
   "@authResendOtpCountdown": {
     "placeholders": {
-      "seconds": {"type": "int"}
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "authOtpResent": "A new code has been sent.",
@@ -2421,7 +2832,9 @@
   "authCheckEmailMessage": "We sent a 6-digit code to {email}.",
   "@authCheckEmailMessage": {
     "placeholders": {
-      "email": {"type": "String"}
+      "email": {
+        "type": "String"
+      }
     }
   },
   "authResetEmailSent": "If an account exists, a reset link has been sent.",
@@ -2502,34 +2915,48 @@
   "importAudioSelectedCount": "Import {count}",
   "@importAudioSelectedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "importAudioAndSubtitleCount": "Import ({audioCount, plural, =0{} =1{1 item} other{{audioCount} items}}{subtitleCount, plural, =0{} =1{, 1 subtitle} other{, {subtitleCount} subtitles}})",
   "@importAudioAndSubtitleCount": {
     "placeholders": {
-      "audioCount": {"type": "int"},
-      "subtitleCount": {"type": "int"}
+      "audioCount": {
+        "type": "int"
+      },
+      "subtitleCount": {
+        "type": "int"
+      }
     }
   },
   "baiduNetdiskImporting": "Importing...",
   "baiduNetdiskImportingFile": "Importing {name}...",
   "@baiduNetdiskImportingFile": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "baiduNetdiskImportedCount": "Imported {count} from Baidu Netdisk",
   "@baiduNetdiskImportedCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "baiduNetdiskSkippedSummary": "Skipped duplicates: {duplicates} · Failed: {failures}",
   "@baiduNetdiskSkippedSummary": {
     "placeholders": {
-      "duplicates": {"type": "int"},
-      "failures": {"type": "int"}
+      "duplicates": {
+        "type": "int"
+      },
+      "failures": {
+        "type": "int"
+      }
     }
   },
   "audioUrlLabel": "Audio link",
@@ -2546,7 +2973,6 @@
   "audioImportComplete": "Import complete",
   "audioImportCanceled": "Audio import canceled",
   "cancelDownload": "Cancel Download",
-
   "subscribePodcast": "Subscribe Podcast",
   "subscribePodcastOptionDescription": "Add with Apple Podcasts or RSS",
   "podcastUrlLabel": "Apple Podcasts or RSS URL",
@@ -2558,21 +2984,37 @@
   "podcastSubscribing": "Fetching podcast feed…",
   "podcastSubscribeFailed": "Failed to subscribe: {error}",
   "@podcastSubscribeFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "podcastRefreshFailed": "Failed to refresh: {error}",
   "@podcastRefreshFailed": {
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
-  "podcastAlreadySubscribed": "Already subscribed \u2014 see Collection \"{name}\"",
+  "podcastAlreadySubscribed": "Already subscribed — see Collection \"{name}\"",
   "@podcastAlreadySubscribed": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "podcastRefreshFeed": "Refresh Feed",
   "podcastUnsubscribe": "Unsubscribe",
   "podcastUnsubscribeConfirmTitle": "Unsubscribe from {name}?",
   "@podcastUnsubscribeConfirmTitle": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "podcastUnsubscribeConfirmMessage": "All episodes and downloaded audio files in this collection will be deleted.",
   "podcastFeedInfo": "Feed Info",
@@ -2590,7 +3032,11 @@
   "podcastOpenLinkFailed": "Could not open link",
   "podcastLastRefreshed": "Last refreshed: {time}",
   "@podcastLastRefreshed": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "podcastEpisodeGuid": "GUID",
   "podcastEnclosureUrl": "Audio URL",
@@ -2636,7 +3082,9 @@
   "ttsDownloadedModelsDesc": "Not in use · {size}",
   "@ttsDownloadedModelsDesc": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "asrDeleteAllModelsConfirm": "Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.",
@@ -2644,7 +3092,9 @@
   "asrDownloadedModelsDesc": "Not in use · {size}",
   "@asrDownloadedModelsDesc": {
     "placeholders": {
-      "size": { "type": "String" }
+      "size": {
+        "type": "String"
+      }
     }
   },
   "dictionarySettings": "Dictionary Settings",
@@ -2660,12 +3110,20 @@
   "dictSourceAlwaysOn": "Always on",
   "dictSourceCannotDisable": "{name} is a base source and can't be disabled",
   "@dictSourceCannotDisable": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "dictDefaultBadge": "Default",
   "dictSwitcherSemantics": "Switch dictionary, currently {name}",
   "@dictSwitcherSemantics": {
-    "placeholders": { "name": { "type": "String" } }
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   },
   "cambridgeNotFound": "Not found in Cambridge",
   "dictTryOtherSource": "Try another dictionary",
@@ -2785,9 +3243,21 @@
   "usageRefresh": "Refresh",
   "usageRetry": "Retry",
   "usageUpdatedAt": "Updated {time}",
-  "@usageUpdatedAt": { "placeholders": { "time": { "type": "String" } } },
-  "usageUpdateFailed": "Update failed \u00b7 last {time}",
-  "@usageUpdateFailed": { "placeholders": { "time": { "type": "String" } } },
+  "@usageUpdatedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "usageUpdateFailed": "Update failed · last {time}",
+  "@usageUpdateFailed": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "usageUnavailable": "Currently unavailable",
   "usageUnsupported": "This address does not support usage queries",
   "usageRateLimited": "Rate limited",
@@ -2798,12 +3268,30 @@
   "usageWindowWeekly": "Weekly",
   "usageWindowMonthly": "Monthly",
   "usageGranted": "Granted {amount}",
-  "@usageGranted": { "placeholders": { "amount": { "type": "String" } } },
+  "@usageGranted": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "usageToppedUp": "Topped up {amount}",
-  "@usageToppedUp": { "placeholders": { "amount": { "type": "String" } } },
+  "@usageToppedUp": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "usageEffectiveBudget": "Effective budget applied",
   "usageResetsAt": "Resets {time}",
-  "@usageResetsAt": { "placeholders": { "time": { "type": "String" } } },
+  "@usageResetsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "aiServiceTitle": "AI service",
   "aiServiceProvider": "Provider",
   "aiServiceBaseUrl": "Base URL",
@@ -2813,7 +3301,7 @@
   "aiServiceKeyNotSet": "Not set",
   "aiServiceConnectionTest": "Connection test",
   "aiServiceTest": "Test",
-  "aiServiceTesting": "Testing\u2026",
+  "aiServiceTesting": "Testing…",
   "aiServiceTestSuccess": "Connection OK",
   "aiServiceTestUnauthorized": "Authentication failed: check the API key",
   "aiServiceTestNotFound": "Address or model not found",
@@ -2837,9 +3325,21 @@
   "folderEmptyNoAudio": "This folder has no importable audio",
   "folderAllDuplicates": "All files are duplicates; existing audio added to the new collection",
   "folderIgnoredSubdirectories": "Subfolders skipped: {count}",
-  "@folderIgnoredSubdirectories": { "placeholders": { "count": { "type": "int" } } },
+  "@folderIgnoredSubdirectories": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "folderUnsupportedFiles": "Unsupported files ignored: {count}",
-  "@folderUnsupportedFiles": { "placeholders": { "count": { "type": "int" } } },
+  "@folderUnsupportedFiles": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "recognitionPurposeTitle": "Recognition by purpose",
   "recognitionPurposeDescription": "Subtitles, shadowing, and retelling each keep their own recognition mode and model.",
   "recognitionPurposeSubtitle": "Subtitles",
@@ -2850,39 +3350,63 @@
   "recognitionModeOnline": "Online speech",
   "recognitionOnlineModelSummary": "Online speech · {model}",
   "@recognitionOnlineModelSummary": {
-    "placeholders": { "model": { "type": "String" } }
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
   },
   "recognitionOnlineNeedsConfiguration": "Set the service address and key under Online speech below first",
-  "recognitionOnlineNeedsUploadNotice": "Confirm the first-upload notice under Online speech first",
-  "recognitionOnlineNeedsVerification": "Verify this purpose's online model under Online speech first",
+  "recognitionOnlineNeedsUploadNotice": "Tap Verify model under Online speech below; the first time explains the upload target and possible charges",
+  "recognitionOnlineNeedsVerification": "Tap Verify model under Online speech below to verify this purpose's online model",
   "shadowingOnlineProgress": "Online · {service} · {model} · {percent}%",
   "@shadowingOnlineProgress": {
     "placeholders": {
-      "service": { "type": "String" },
-      "model": { "type": "String" },
-      "percent": { "type": "int" }
+      "service": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
     }
   },
   "shadowingOnlineCost": "Online · {service} · {model} · cost {cost}",
   "@shadowingOnlineCost": {
     "placeholders": {
-      "service": { "type": "String" },
-      "model": { "type": "String" },
-      "cost": { "type": "String" }
+      "service": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      },
+      "cost": {
+        "type": "String"
+      }
     }
   },
   "shadowingOnlineCostUnknown": "Online · {service} · {model} · cost unknown",
   "@shadowingOnlineCostUnknown": {
     "placeholders": {
-      "service": { "type": "String" },
-      "model": { "type": "String" }
+      "service": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      }
     }
   },
   "shadowingOnlineChunkProgress": "{completed}/{total} parts done",
   "@shadowingOnlineChunkProgress": {
     "placeholders": {
-      "completed": { "type": "int" },
-      "total": { "type": "int" }
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "shadowingOnlineChargeWarning": "the failed part may already be billed",
@@ -2890,7 +3414,11 @@
   "recognitionChangeTitle": "Change recognition settings?",
   "recognitionChangeMessage": "Running recognition tasks affected: {count}. Continuing cancels them and discards unfinished results.",
   "@recognitionChangeMessage": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "recognitionChangeConfirm": "Cancel tasks and change",
   "speechProviderTitle": "Online speech service",
@@ -2902,7 +3430,11 @@
   "speechProviderSaveFailed": "Could not save the online speech settings",
   "speechProviderOnlineModel": "{purpose} online model",
   "@speechProviderOnlineModel": {
-    "placeholders": { "purpose": { "type": "String" } }
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
   },
   "speechCapabilityTest": "Verify model",
   "speechCapabilityTesting": "Verifying…",
@@ -2912,7 +3444,11 @@
   "speechCapabilityWords": "Word timestamps available",
   "speechCapabilityVerifiedCost": "Verified. Provider-reported cost: {cost}",
   "@speechCapabilityVerifiedCost": {
-    "placeholders": { "cost": { "type": "String" } }
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
   },
   "speechCapabilityVerifiedCostUnknown": "Verified. The provider reported no cost, so the charge is unknown",
   "speechModelRefresh": "Refresh transcription models",
@@ -2922,8 +3458,12 @@
   "speechUploadNoticeBody": "Echo Loop will upload the bundled 4-second English sample to {host}. Downstream inference provider: {provider}. The service may charge your account for this request. Your own recordings are not used.",
   "@speechUploadNoticeBody": {
     "placeholders": {
-      "host": { "type": "String" },
-      "provider": { "type": "String" }
+      "host": {
+        "type": "String"
+      },
+      "provider": {
+        "type": "String"
+      }
     }
   },
   "speechUploadProviderOpenRouter": "OpenRouter and the downstream providers it routes to",
@@ -2932,13 +3472,21 @@
   "onlineSubtitleService": "Online subtitles: {service} · {model}",
   "@onlineSubtitleService": {
     "placeholders": {
-      "service": { "type": "String" },
-      "model": { "type": "String" }
+      "service": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      }
     }
   },
   "onlineSubtitleCost": "Cost reported by the provider: {cost}",
   "@onlineSubtitleCost": {
-    "placeholders": { "cost": { "type": "String" } }
+    "placeholders": {
+      "cost": {
+        "type": "String"
+      }
+    }
   },
   "onlineSubtitleCostUnknown": "The provider reported no cost, so the actual charge is unknown",
   "subtitleModeLocalHint": "Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose",
@@ -2947,15 +3495,23 @@
   "onlineSubtitleChunkProgress": "Chunks done: {completed}/{total}",
   "@onlineSubtitleChunkProgress": {
     "placeholders": {
-      "completed": { "type": "int" },
-      "total": { "type": "int" }
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "onlineSubtitleFailedChunk": "Failed at chunk {chunk}/{total}",
   "@onlineSubtitleFailedChunk": {
     "placeholders": {
-      "chunk": { "type": "int" },
-      "total": { "type": "int" }
+      "chunk": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
     }
   },
   "onlineSubtitleRetryUnfinished": "Continue unfinished chunks",
@@ -2966,7 +3522,11 @@
   "onlineSubtitleConfigChanged": "The speech configuration changed, so this result was discarded",
   "wordTimingSourceLabel": "Word timing source: {source}",
   "@wordTimingSourceLabel": {
-    "placeholders": { "source": { "type": "String" } }
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
   },
   "wordTimingSourceModel": "model-provided",
   "wordTimingSourceEstimated": "estimated",
