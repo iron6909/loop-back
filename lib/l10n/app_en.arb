@@ -3451,7 +3451,20 @@
     }
   },
   "speechCapabilityVerifiedCostUnknown": "Verified. The provider reported no cost, so the charge is unknown",
-  "speechModelRefresh": "Refresh transcription models",
+  "speechModelSectionTitle": "Online models by purpose",
+  "speechModelFetch": "Get transcription models",
+  "speechModelFetching": "Getting transcription models…",
+  "speechModelFetched": "{count} transcription models retrieved",
+  "@speechModelFetched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechModelFetchNeedsConfig": "Save a service address to get models",
+  "speechModelFetchNeedsKey": "Save an API key to get models",
+  "speechModelManualEntry": "Enter a model ID",
   "speechModelRefreshEmpty": "The service returned no transcription models; you can still enter a model ID",
   "speechModelRefreshFailed": "Could not load the model list; you can still enter a model ID",
   "speechUploadNoticeTitle": "Send a test sample?",
