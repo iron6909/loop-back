@@ -49,8 +49,12 @@ String speechErrorText(BuildContext context, Object error) {
     return switch (error.reason) {
       PracticeOnlineAccessDenial.missingConfiguration =>
         zh
-            ? '在线语音未配置服务地址或 Key，请前往设置 → 语音识别'
-            : 'Online speech has no service address or key. Open Settings → Speech recognition',
+            ? '在线语音未配置服务地址，请前往设置 → 语音识别 → 在线语音服务'
+            : 'Online speech has no service address. Open Settings → Speech recognition → Online speech service',
+      PracticeOnlineAccessDenial.missingApiKey =>
+        zh
+            ? '在线语音缺少 API Key，请前往设置 → 语音识别 → 在线语音服务'
+            : 'Online speech has no API key. Open Settings → Speech recognition → Online speech service',
       PracticeOnlineAccessDenial.uploadNoticeMissing =>
         zh
             ? '首次上传录音前需先确认上传告知，请前往设置 → 在线语音服务'

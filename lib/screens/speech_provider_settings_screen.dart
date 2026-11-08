@@ -58,9 +58,7 @@ class SpeechProviderSettingsScreen extends ConsumerWidget {
             child: Text(
               speechProviderStatusText(l10n, state, capabilities),
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: state.isConfigured
-                    ? theme.colorScheme.onSurfaceVariant
-                    : theme.colorScheme.error,
+                color: speechProviderStatusColor(theme, state),
                 fontWeight: FontWeight.w500,
               ),
             ),

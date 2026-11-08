@@ -5633,6 +5633,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localModelLibraryTitle => '本机模型';
 
   @override
+  String get onlineServiceSectionTitle => '在线服务';
+
+  @override
   String localModelLibraryTotal(String size) {
     return '已下载 $size';
   }
@@ -5699,15 +5702,19 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recognitionOnlineNeedsConfiguration => '需先在下方「在线语音服务」填写服务地址与 Key';
+  String get recognitionOnlineNeedsConfiguration =>
+      '需先在设置 → 语音识别 → 在线语音服务填写服务地址';
+
+  @override
+  String get recognitionOnlineNeedsApiKey => '需先在设置 → 语音识别 → 在线语音服务保存 API Key';
 
   @override
   String get recognitionOnlineNeedsUploadNotice =>
-      '需先在下方「在线语音服务」点「验证模型」；首次会告知上传目标与可能费用';
+      '需先在设置 → 语音识别 → 在线语音服务点「验证模型」；首次会告知上传目标与可能费用';
 
   @override
   String get recognitionOnlineNeedsVerification =>
-      '需先在下方「在线语音服务」点「验证模型」，验证该用途的在线模型';
+      '需先在设置 → 语音识别 → 在线语音服务点「验证模型」，验证该用途的在线模型';
 
   @override
   String shadowingOnlineProgress(String service, String model, int percent) {
@@ -5914,5 +5921,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证';
 
   @override
-  String get subtitleOnlineModelSettingsHint => '在线模型与 Key 在下方「在线语音服务」中配置';
+  String get subtitleOnlineModelSettingsHint =>
+      '在线模型与 Key 在设置 → 语音识别 → 在线语音服务中配置';
 }

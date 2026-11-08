@@ -30,6 +30,10 @@ class _InMemorySpeechConfigStore extends SpeechConfigStore {
   String? apiKey;
   bool failSave;
 
+  /// 与真实存储一致：Key 一变就换凭据版本，旧能力验证随之失效。
+  String? credentialVersion = 'test-credential-version';
+  int _credentialUpdates = 0;
+
   @override
   Future<SpeechConfig?> read() async => config;
 
@@ -37,7 +41,7 @@ class _InMemorySpeechConfigStore extends SpeechConfigStore {
   Future<String?> readApiKey() async => apiKey;
 
   @override
-  Future<String?> readCredentialVersion() async => 'test-credential-version';
+  Future<String?> readCredentialVersion() async => credentialVersion;
 
   @override
   Future<void> save(SpeechConfig value, {String? apiKey}) async {
@@ -45,7 +49,11 @@ class _InMemorySpeechConfigStore extends SpeechConfigStore {
     config = value;
     if (apiKey != null) {
       final next = apiKey.trim();
+      final keyChanged = (next.isEmpty ? null : next) != this.apiKey;
       this.apiKey = next.isEmpty ? null : next;
+      if (keyChanged) {
+        credentialVersion = 'test-credential-version-${++_credentialUpdates}';
+      }
     }
   }
 }
@@ -364,6 +372,73 @@ void main() {
 
     expect(find.text('1 transcription models retrieved'), findsOneWidget);
     expect(find.text('Getting transcription models…'), findsNothing);
+  });
+
+  testWidgets('未保存配置时获取按钮禁用并说明先补服务地址', (tester) async {
+    final catalog = _FakeCatalog();
+    await tester.pumpWidget(
+      app(_InMemorySpeechConfigStore(), catalog: catalog),
+    );
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<TextButton>(
+      find.widgetWithText(TextButton, 'Get transcription models'),
+    );
+    expect(button.onPressed, isNull);
+    expect(find.text('Save a service address to get models'), findsOneWidget);
+
+    await tester.tap(find.text('Get transcription models'));
+    await tester.pumpAndSettle();
+    expect(catalog.callCount, 0);
+  });
+
+  testWidgets('自定义服务隐藏获取按钮，也不显示获取前的状态原因', (tester) async {
+    await tester.pumpWidget(
+      app(
+        _InMemorySpeechConfigStore(
+          config: const SpeechConfig(
+            kind: SpeechProviderKind.custom,
+            baseUrl: 'https://speech.example.com/stt',
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Get transcription models'), findsNothing);
+    expect(find.text('Save an API key to get models'), findsNothing);
+    expect(find.text('Save a service address to get models'), findsNothing);
+  });
+
+  testWidgets('获取成功后可以重新获取并更新列表', (tester) async {
+    final catalog = _FakeCatalog()
+      ..models = const ['openai/whisper-large-v3'];
+    await tester.pumpWidget(
+      app(
+        _InMemorySpeechConfigStore(
+          config: _openRouterConfig,
+          apiKey: 'sk-speech-sentinel-4b7d',
+        ),
+        catalog: catalog,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Get transcription models'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 transcription models retrieved'), findsOneWidget);
+
+    catalog.models = const ['openai/whisper-large-v3', 'openai/whisper-small'];
+    await tester.tap(find.text('Get transcription models'));
+    await tester.pumpAndSettle();
+
+    expect(catalog.callCount, 2);
+    expect(find.text('2 transcription models retrieved'), findsOneWidget);
+
+    await tester.tap(find.text('Subtitles online model'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('openai/whisper-small'), findsOneWidget);
   });
 
   testWidgets('缺 API Key 时获取按钮禁用并说明原因', (tester) async {

@@ -10400,6 +10400,12 @@ abstract class AppLocalizations {
   /// **'On-device models'**
   String get localModelLibraryTitle;
 
+  /// No description provided for @onlineServiceSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online service'**
+  String get onlineServiceSectionTitle;
+
   /// No description provided for @localModelLibraryTotal.
   ///
   /// In en, this message translates to:
@@ -10523,19 +10529,25 @@ abstract class AppLocalizations {
   /// No description provided for @recognitionOnlineNeedsConfiguration.
   ///
   /// In en, this message translates to:
-  /// **'Set the service address and key under Online speech below first'**
+  /// **'Set the service address under Settings → Speech recognition → Online speech service first'**
   String get recognitionOnlineNeedsConfiguration;
+
+  /// No description provided for @recognitionOnlineNeedsApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Save an API key under Settings → Speech recognition → Online speech service first'**
+  String get recognitionOnlineNeedsApiKey;
 
   /// No description provided for @recognitionOnlineNeedsUploadNotice.
   ///
   /// In en, this message translates to:
-  /// **'Tap Verify model under Online speech below; the first time explains the upload target and possible charges'**
+  /// **'Tap Verify model under Settings → Speech recognition → Online speech service; the first time explains the upload target and possible charges'**
   String get recognitionOnlineNeedsUploadNotice;
 
   /// No description provided for @recognitionOnlineNeedsVerification.
   ///
   /// In en, this message translates to:
-  /// **'Tap Verify model under Online speech below to verify this purpose\'s online model'**
+  /// **'Tap Verify model under Settings → Speech recognition → Online speech service to verify this purpose\'s online model'**
   String get recognitionOnlineNeedsVerification;
 
   /// No description provided for @shadowingOnlineProgress.
@@ -10889,7 +10901,7 @@ abstract class AppLocalizations {
   /// No description provided for @subtitleOnlineModelSettingsHint.
   ///
   /// In en, this message translates to:
-  /// **'Configure the online model and key under Online speech below'**
+  /// **'Configure the online model and key under Settings → Speech recognition → Online speech service'**
   String get subtitleOnlineModelSettingsHint;
 }
 
