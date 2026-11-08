@@ -3340,6 +3340,25 @@
     }
   },
   "recognitionModeTitle": "Recognition modes",
+  "localModelLibraryTitle": "On-device models",
+  "localModelLibraryTotal": "Downloaded {size}",
+  "@localModelLibraryTotal": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localModelLibraryDeleteAll": "Delete all downloaded models",
+  "localModelDownloadAction": "Download",
+  "localModelUsageTag": "{purpose} in use",
+  "@localModelUsageTag": {
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
+  },
   "recognitionPurposeDescription": "Subtitles, shadowing, and retelling each keep their own recognition mode and model.",
   "recognitionPurposeScopeNote": "Changes here only affect this purpose",
   "recognitionPurposeSubtitle": "Subtitles",

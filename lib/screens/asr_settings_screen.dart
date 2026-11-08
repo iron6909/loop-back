@@ -1,17 +1,18 @@
 /// 语音识别设置页。
 ///
-/// iOS/macOS：后端选择（系统识别 / 本机 Whisper）+ 离线模型状态。
-/// Android：离线模型状态（固定本机 Whisper）。
+/// 按「识别方式 → 本机模型 → 在线服务」三层组织：用途决定方式，本机模型只是
+/// 资源库（下载、占用与用途标签），在线服务只保留一条入口。页面级后端单选已
+/// 删除：[AsrBackend] 由跟读用途的本机 / 系统选择驱动，Android 固定本机。
 library;
-
-import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/recognition_selection.dart';
 import '../providers/offline_asr_settings_provider.dart';
 import '../providers/asr_model_installation_provider.dart';
+import '../providers/recognition_settings_provider.dart';
 import '../providers/speech_capability_provider.dart';
 import '../providers/speech_configuration_provider.dart';
 import '../services/asr/asr_model_manager.dart';
@@ -59,7 +60,6 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
         ref.watch(speechCapabilityProvider).valueOrNull ??
         const SpeechCapabilityState();
     final theme = Theme.of(context);
-    final showBackendSelector = Platform.isIOS || Platform.isMacOS;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.speechRecognition)),
@@ -85,41 +85,29 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
           _SectionLabel(text: l10n.recognitionModeTitle),
           const RecognitionPurposeSection(),
 
-          // 在线服务分组只有一行入口，卡片标题即分组标题，不再重复分组小标题。
+          // 本机模型是资源库：跟读使用系统识别时仍可下载、删除模型。
+          _SectionLabel(
+            text: l10n.localModelLibraryTitle,
+            trailing: _buildLibraryHeader(l10n, state, theme),
+          ),
+          Card(
+            child: Column(
+              children: [
+                _buildModelList(l10n, state, theme),
+                const Divider(height: 1),
+                _buildDownloadSourceTile(l10n, state, theme),
+              ],
+            ),
+          ),
+
+          // 在线服务分组只有一行入口，卡片标题即分组标题。
+          const SizedBox(height: AppSpacing.m),
           _buildOnlineServiceEntry(
             l10n,
             theme,
             speechState,
             speechCapabilities,
           ),
-
-          _SectionLabel(text: l10n.asrEngine),
-          Card(
-            child: Column(
-              children: [
-                if (showBackendSelector) ...[
-                  _buildBackendSelector(l10n, state, theme),
-                ] else ...[
-                  ListTile(
-                    title: Text(l10n.localSpeechRecognition),
-                    subtitle: Text(l10n.asrBackendLocalWhisperDescription),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          if (state.backend == AsrBackend.offline) ...[
-            const SizedBox(height: AppSpacing.m),
-            _SectionLabel(text: l10n.asrBackendLocalWhisper),
-            Card(child: _buildModelList(l10n, state, theme)),
-            const SizedBox(height: AppSpacing.m),
-            _SectionLabel(text: l10n.asrDownloadSourceTitle),
-            Card(child: _buildDownloadSourceSelector(l10n, state, theme)),
-          ] else if (state.totalDownloadedModelBytes > 0) ...[
-            const SizedBox(height: AppSpacing.m),
-            Card(child: _buildDownloadedModelsStorageRow(l10n, state, theme)),
-          ],
         ],
       ),
     );
@@ -173,105 +161,51 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
     );
   }
 
-  // ========== 后端选择器（iOS/macOS）==========
+  // ========== 本机模型资源库 ==========
 
-  Widget _buildBackendSelector(
+  /// 资源库标题右侧：已下载总占用与清理所有已下载模型的次要操作。
+  ///
+  /// 清理沿用既有确认文案与删除规则：跟读当前档位在本机后端下仍由
+  /// [OfflineAsrSettingsNotifier.deleteModel] 保护。
+  Widget _buildLibraryHeader(
     AppLocalizations l10n,
     OfflineAsrSettingsState state,
     ThemeData theme,
   ) {
-    return RadioGroup<AsrBackend>(
-      groupValue: state.backend,
-      onChanged: (value) {
-        if (value != null) {
-          ref.read(offlineAsrSettingsProvider.notifier).setBackend(value);
-        }
-      },
-      child: Column(
-        children: [
-          RadioListTile<AsrBackend>(
-            title: Text(l10n.asrBackendPlatform),
-            subtitle: Text(
-              l10n.asrBackendPlatformDescription,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.6,
-                ),
-              ),
-            ),
-            value: AsrBackend.platform,
+    final totalBytes = state.totalDownloadedModelBytes;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          l10n.localModelLibraryTotal(_formatBytes(totalBytes)),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
-          const Divider(height: 1, indent: 16, endIndent: 16),
-          RadioListTile<AsrBackend>(
-            title: Text(l10n.asrBackendLocalWhisper),
-            subtitle: Text(
-              l10n.asrBackendLocalWhisperDescription,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.6,
-                ),
-              ),
-            ),
-            value: AsrBackend.offline,
-          ),
-        ],
-      ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.delete_sweep_outlined),
+          tooltip: l10n.localModelLibraryDeleteAll,
+          onPressed: totalBytes > 0
+              ? () => _confirmDeleteAllModels(context, l10n)
+              : null,
+        ),
+      ],
     );
   }
-
-  // ========== 下载来源 ==========
-
-  Widget _buildDownloadSourceSelector(
-    AppLocalizations l10n,
-    OfflineAsrSettingsState state,
-    ThemeData theme,
-  ) {
-    return RadioGroup<AsrDownloadSource>(
-      groupValue: state.downloadSource,
-      onChanged: (value) {
-        if (value == null) return;
-        ref.read(offlineAsrSettingsProvider.notifier).setDownloadSource(value);
-      },
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.m,
-              AppSpacing.m,
-              AppSpacing.m,
-              AppSpacing.s,
-            ),
-            child: Text(
-              l10n.asrDownloadSourceDescription,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          for (final source in AsrDownloadSource.values)
-            RadioListTile<AsrDownloadSource>(
-              title: Text(_sourceLabel(l10n, source)),
-              value: source,
-            ),
-        ],
-      ),
-    );
-  }
-
-  // ========== 离线模型信息 ==========
 
   Widget _buildModelList(
     AppLocalizations l10n,
     OfflineAsrSettingsState state,
     ThemeData theme,
   ) {
+    final settings = ref.watch(recognitionSettingsProvider);
     final rows = <Widget>[];
     for (var i = 0; i < availableModels.length; i++) {
       final model = availableModels[i];
       if (i > 0) {
         rows.add(const Divider(height: 1, indent: 16, endIndent: 16));
       }
-      rows.add(_buildModelRow(l10n, theme, state, model));
+      rows.add(_buildModelRow(l10n, theme, state, settings, model));
     }
     return Column(children: rows);
   }
@@ -280,20 +214,20 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
     AppLocalizations l10n,
     ThemeData theme,
     OfflineAsrSettingsState state,
+    RecognitionSettings settings,
     AsrModelInfo model,
   ) {
     final modelState = state.modelStateOf(model.id);
     final isSelected = state.selectedModel.id == model.id;
     final isRecommended = state.recommendedModel.id == model.id;
+    // 用途标签只标记「方式为本机且档位匹配」的用途，系统与在线不占用本机模型。
+    final usedBy = [
+      for (final purpose in RecognitionPurpose.values)
+        if (settings.forPurpose(purpose).usesLocalModel &&
+            settings.forPurpose(purpose).localModelId == model.id)
+          purpose,
+    ];
     return ListTile(
-      leading: Radio<String>(
-        value: model.id,
-        // ignore: deprecated_member_use
-        groupValue: state.selectedModel.id,
-        // ignore: deprecated_member_use
-        onChanged: (_) =>
-            ref.read(offlineAsrSettingsProvider.notifier).selectModel(model),
-      ),
       title: Row(
         children: [
           Flexible(child: Text(model.displayName)),
@@ -303,16 +237,35 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
           ],
         ],
       ),
-      subtitle: _modelSubtitle(
-        l10n,
-        theme,
-        model.id,
-        modelState,
-        state.downloadSource,
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _modelSubtitle(
+            l10n,
+            theme,
+            model.id,
+            modelState,
+            state.downloadSource,
+          ),
+          if (usedBy.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                for (final purpose in usedBy)
+                  _UsageTag(
+                    text: l10n.localModelUsageTag(
+                      recognitionPurposeLabel(l10n, purpose),
+                    ),
+                    theme: theme,
+                  ),
+              ],
+            ),
+          ],
+        ],
       ),
       trailing: _modelTrailing(context, l10n, model.id, modelState, isSelected),
-      onTap: () =>
-          ref.read(offlineAsrSettingsProvider.notifier).selectModel(model),
     );
   }
 
@@ -383,6 +336,9 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
     );
   }
 
+  /// 每行只保留与安装状态对应的动作：未下载下载、下载中取消、失败重试、已下载删除。
+  ///
+  /// 跟读当前档位在下载中与已下载时不给取消 / 删除入口，与既有删除保护一致。
   Widget? _modelTrailing(
     BuildContext context,
     AppLocalizations l10n,
@@ -390,7 +346,8 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
     AsrModelState state,
     bool isSelected,
   ) {
-    if (state.isDownloading && !isSelected) {
+    if (state.isDownloading) {
+      if (isSelected) return null;
       return TextButton(
         onPressed: () => ref
             .read(offlineAsrSettingsProvider.notifier)
@@ -406,7 +363,8 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
         child: Text(l10n.retryDownload),
       );
     }
-    if (state.isReady && !isSelected) {
+    if (state.isReady) {
+      if (isSelected) return null;
       return IconButton(
         icon: const Icon(Icons.delete_outline),
         tooltip: l10n.deleteModelAction,
@@ -414,32 +372,71 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
             _confirmDeleteModel(context, l10n, modelId, state.localSizeBytes),
       );
     }
-    return null;
+    return TextButton(
+      onPressed: () => ref
+          .read(offlineAsrSettingsProvider.notifier)
+          .downloadModel(modelId),
+      child: Text(l10n.localModelDownloadAction),
+    );
   }
 
-  Widget _buildDownloadedModelsStorageRow(
+  // ========== 模型来源 ==========
+
+  /// 卡片底部的模型来源入口：展开后用现有两个来源选项与说明。
+  ///
+  /// 来源只影响后续安装，已下载资源不重下。
+  Widget _buildDownloadSourceTile(
     AppLocalizations l10n,
     OfflineAsrSettingsState state,
     ThemeData theme,
   ) {
-    return ListTile(
+    return ExpansionTile(
       leading: Icon(
-        Icons.sd_storage_outlined,
+        Icons.cloud_download_outlined,
         color: theme.colorScheme.onSurfaceVariant,
       ),
-      title: Text(l10n.asrDownloadedModelsTitle),
-      subtitle: Text(
-        l10n.asrDownloadedModelsDesc(
-          _formatBytes(state.totalDownloadedModelBytes),
+      title: Text(l10n.asrDownloadSourceTitle),
+      subtitle: Text(_sourceLabel(l10n, state.downloadSource)),
+      shape: const Border(),
+      collapsedShape: const Border(),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.m,
+            0,
+            AppSpacing.m,
+            AppSpacing.s,
+          ),
+          child: Text(
+            l10n.asrDownloadSourceDescription,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
-      ),
-      trailing: IconButton(
-        icon: const Icon(Icons.delete_outline),
-        tooltip: l10n.deleteModelAction,
-        onPressed: () => _confirmDeleteAllModels(context, l10n),
-      ),
+        RadioGroup<AsrDownloadSource>(
+          groupValue: state.downloadSource,
+          onChanged: (value) {
+            if (value == null) return;
+            ref
+                .read(offlineAsrSettingsProvider.notifier)
+                .setDownloadSource(value);
+          },
+          child: Column(
+            children: [
+              for (final source in AsrDownloadSource.values)
+                RadioListTile<AsrDownloadSource>(
+                  title: Text(_sourceLabel(l10n, source)),
+                  value: source,
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
+
+  // ========== 确认与删除 ==========
 
   void _confirmDeleteModel(
     BuildContext context,
@@ -538,9 +535,10 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
 
 /// 分组小标题，与语音合成设置页保持一致。
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.text});
+  const _SectionLabel({required this.text, this.trailing});
 
   final String text;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -549,15 +547,22 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.m,
         AppSpacing.s,
-        AppSpacing.m,
+        AppSpacing.s,
         AppSpacing.s,
       ),
-      child: Text(
-        text,
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
       ),
     );
   }
@@ -582,6 +587,31 @@ class _RecommendedBadge extends StatelessWidget {
         style: theme.textTheme.labelSmall?.copyWith(
           color: theme.colorScheme.onPrimaryContainer,
           fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// 用途标签：哪个用途当前正以本机方式使用这个档位。
+class _UsageTag extends StatelessWidget {
+  const _UsageTag({required this.text, required this.theme});
+
+  final String text;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        text,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
         ),
       ),
     );

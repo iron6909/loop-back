@@ -391,6 +391,16 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
     }
   }
 
+  /// 从本机模型资源库安装模型：只更新安装状态，不改变跟读档位与后端。
+  ///
+  /// 与 [selectModel] 的区别：这里不是「为跟读选一个档位」，所以不能回写跟读的
+  /// 选择；跟读使用系统识别时，字幕或复述仍可从资源库下载模型。
+  Future<void> downloadModel(String modelId) async {
+    final modelState = state.modelStateOf(modelId);
+    if (modelState.isReady || modelState.isDownloading) return;
+    await _downloadAndInitialize(modelId);
+  }
+
   /// 删除本地模型。Echo Loop AI 当前使用的模型不可删除；Apple Speech 下可删任意模型。
   Future<void> deleteModel([String? modelId]) async {
     final targetId = modelId ?? state.selectedModel.id;
@@ -630,6 +640,9 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
   }
 
   Future<void> _initializeEngine(String modelId) async {
+    // 只有离线引擎真正承载跟读录音时才加载：后端为系统识别或该档位不是跟读当前
+    // 档位（仅为字幕、复述下载）时加载引擎只会白占内存。
+    if (state.backend != AsrBackend.offline) return;
     if (modelId != state.selectedModel.id) return;
     await _reportPreviousAsrCrashIfAny();
     final engine = ref.read(offlineAsrEngineProvider);

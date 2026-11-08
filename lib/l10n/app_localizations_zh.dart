@@ -5630,6 +5630,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recognitionModeTitle => '识别方式';
 
   @override
+  String get localModelLibraryTitle => '本机模型';
+
+  @override
+  String localModelLibraryTotal(String size) {
+    return '已下载 $size';
+  }
+
+  @override
+  String get localModelLibraryDeleteAll => '删除所有已下载模型';
+
+  @override
+  String get localModelDownloadAction => '下载';
+
+  @override
+  String localModelUsageTag(String purpose) {
+    return '$purpose在用';
+  }
+
+  @override
   String get recognitionPurposeDescription => '字幕、跟读、复述各自选择识别方式与模型，互不影响。';
 
   @override

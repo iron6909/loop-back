@@ -5898,6 +5898,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recognitionModeTitle => 'Recognition modes';
 
   @override
+  String get localModelLibraryTitle => 'On-device models';
+
+  @override
+  String localModelLibraryTotal(String size) {
+    return 'Downloaded $size';
+  }
+
+  @override
+  String get localModelLibraryDeleteAll => 'Delete all downloaded models';
+
+  @override
+  String get localModelDownloadAction => 'Download';
+
+  @override
+  String localModelUsageTag(String purpose) {
+    return '$purpose in use';
+  }
+
+  @override
   String get recognitionPurposeDescription =>
       'Subtitles, shadowing, and retelling each keep their own recognition mode and model.';
 

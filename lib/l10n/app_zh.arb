@@ -2610,6 +2610,25 @@
     }
   },
   "recognitionModeTitle": "识别方式",
+  "localModelLibraryTitle": "本机模型",
+  "localModelLibraryTotal": "已下载 {size}",
+  "@localModelLibraryTotal": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localModelLibraryDeleteAll": "删除所有已下载模型",
+  "localModelDownloadAction": "下载",
+  "localModelUsageTag": "{purpose}在用",
+  "@localModelUsageTag": {
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
+  },
   "recognitionPurposeDescription": "字幕、跟读、复述各自选择识别方式与模型，互不影响。",
   "recognitionPurposeScopeNote": "这里的修改只影响当前用途，不影响其他用途。",
   "recognitionPurposeSubtitle": "字幕转录",
