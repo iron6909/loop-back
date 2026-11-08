@@ -297,6 +297,9 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
     final generation = ++_roundGeneration;
     _cancelOnlineTranscription();
 
+    // 新一次录音不复用上一回合的分块进度与临时音频。
+    unawaited(ref.read(retellOnlineTranscriptProvider).discard());
+
     // 清理上一次录音的临时文件（避免重录时旧文件泄漏）
     final oldFilePath = state.currentAttempt?.filePath;
     if (oldFilePath != null && oldFilePath.isNotEmpty) {

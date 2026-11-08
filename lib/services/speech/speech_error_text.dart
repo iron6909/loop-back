@@ -39,14 +39,6 @@ String speechErrorText(BuildContext context, Object error) {
             : 'The recording format is not supported for upload',
       PracticeRecordingRejection.emptyAudio =>
         zh ? '录音没有可用的人声内容' : 'The recording contains no usable speech',
-      PracticeRecordingRejection.tooLong =>
-        zh
-            ? '录音超过单次在线转写时长上限，复述的长录音分块将在后续版本支持'
-            : 'The recording exceeds the single-request limit; chunked retelling comes later',
-      PracticeRecordingRejection.tooLarge =>
-        zh
-            ? '录音超过单次上传大小上限，复述的长录音分块将在后续版本支持'
-            : 'The recording exceeds the single-upload size limit; chunked retelling comes later',
     };
   }
   if (error is PracticeOnlineAccessDenied) {

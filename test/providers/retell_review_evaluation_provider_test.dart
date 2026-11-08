@@ -8,13 +8,16 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/models/retell_review_evaluation.dart';
+import 'package:echo_loop/providers/local_transcription_task_provider.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
 import 'package:echo_loop/providers/speech_capability_provider.dart';
 import 'package:echo_loop/providers/speech_configuration_provider.dart';
 import 'package:echo_loop/services/sentence_ai_api_client.dart';
+import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
 import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
 import 'package:echo_loop/services/speech/speech_capability.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
@@ -33,28 +36,36 @@ const _onlineText = 'My online retelling';
 
 /// 记录请求参数并返回预设结果的语音客户端替身。
 ///
-/// 只替换网络边界：请求次数、实际模型与上传内容都可断言，用来验证真实模型
-/// 选择与「语音、文字两类请求各发一次」的隔离。
+/// 只替换网络边界：请求次数、实际模型、输出格式与上传时长都可断言，用来验证
+/// 真实模型选择、「语音、文字两类请求各发一次」的隔离，以及分块的顺序与续试。
 class _SpeechClient extends SpeechTranscriptionClient {
-  _SpeechClient({this.error, this.gated = false});
+  _SpeechClient({this.error, this.gated = false, this.gatedCalls = const {}});
 
-  /// 非空时本次请求失败，用来验证识别失败不进入评估。
+  /// 非空时每次请求都失败，用来验证识别失败不进入评估。
   final Object? error;
 
   /// 供应商报告的费用；null 表示供应商没给，界面必须显示为未知。
   double? reportedCost = 0.0002;
 
-  /// 为真时请求挂起，直到 [release] 放行，用来观察取消与旧结果。
+  /// 为真时首块请求挂起，直到 [release] 放行，用来观察取消与旧结果。
   final bool gated;
+
+  /// 只挂起这些调用序号（从 0 开始），用来观察分块中途的取消与配置变化。
+  final Set<int> gatedCalls;
 
   /// 返回的文本；真实客户端对空文本会直接报错，这里模拟通道给了空串。
   String text = _onlineText;
 
+  /// 按调用序号返回文本或失败；为空时用 [text] / [error]。
+  Future<SpeechTranscriptionResult> Function(int index)? onCall;
+
   final List<String> models = [];
   final List<String> apiKeys = [];
   final List<Duration> durations = [];
+  final List<SpeechResponseFormat> formats = [];
+  final List<bool> wordRequests = [];
   final Completer<void> _started = Completer<void>();
-  Completer<void>? _gate;
+  final List<Completer<void>> _gates = [];
 
   int get calls => models.length;
 
@@ -62,8 +73,9 @@ class _SpeechClient extends SpeechTranscriptionClient {
   Future<void> get started => _started.future;
 
   void release() {
-    final gate = _gate;
-    if (gate != null && !gate.isCompleted) gate.complete();
+    for (final gate in _gates) {
+      if (!gate.isCompleted) gate.complete();
+    }
   }
 
   @override
@@ -80,12 +92,21 @@ class _SpeechClient extends SpeechTranscriptionClient {
     void Function(int sent, int total)? onSendProgress,
     CancelToken? cancelToken,
   }) async {
+    final index = calls;
     models.add(modelId);
     apiKeys.add(apiKey);
     durations.add(audioDuration);
-    if (gated) _gate = Completer<void>();
+    formats.add(format);
+    wordRequests.add(requestWordTimestamps);
+    if (gated || gatedCalls.contains(index)) {
+      final gate = Completer<void>();
+      _gates.add(gate);
+      if (!_started.isCompleted) _started.complete();
+      await gate.future;
+    }
     if (!_started.isCompleted) _started.complete();
-    if (gated) await _gate!.future;
+    final handler = onCall;
+    if (handler != null) return handler(index);
     final failure = error;
     if (failure != null) throw failure;
     return SpeechTranscriptionResult(
@@ -187,6 +208,53 @@ class _FixedRecognitionSettings extends RecognitionSettingsNotifier {
 
   @override
   RecognitionSettings build() => _fixed;
+}
+
+/// 生成指定时长、16 kHz 单声道 PCM16 的字节，供分块探测与上传。
+///
+/// [silent] 为真时写成确认无声的块，用来验证不浪费请求。
+Uint8List _pcmBytes(Duration duration, {bool silent = false}) {
+  final samples = duration.inMicroseconds * 16000 ~/ 1000000;
+  final bytes = Uint8List(samples * 2);
+  for (var i = 0; i < samples; i++) {
+    if (silent) continue;
+    final value = i.isEven ? 8000 : -8000;
+    bytes[i * 2] = value & 0xff;
+    bytes[i * 2 + 1] = (value >> 8) & 0xff;
+  }
+  return bytes;
+}
+
+/// 假转码：按请求区间写出对应时长的 PCM，并记录每次提取范围。
+///
+/// 分块规划与合并走真实代码，只把不可控的 ffmpeg 边界换成受控写入。
+class _FakeTranscode extends AudioTranscodeService {
+  _FakeTranscode({this.silence = false});
+
+  /// 为真时所有提取结果都是确认无声，用来验证整份无语音。
+  final bool silence;
+
+  final List<({Duration start, Duration? duration})> ranges = [];
+
+  @override
+  Future<bool> transcodeRangeToPcmWav16k({
+    required File source,
+    required File output,
+    required Duration start,
+    Duration? duration,
+    void Function(int sessionId)? onSessionStarted,
+  }) async {
+    ranges.add((start: start, duration: duration));
+    onSessionStarted?.call(ranges.length);
+    await output.parent.create(recursive: true);
+    await output.writeAsBytes(
+      _pcmBytes(duration ?? const Duration(seconds: 1), silent: silence),
+    );
+    return true;
+  }
+
+  @override
+  void cancelSession(int sessionId) {}
 }
 
 const _retellModelId = 'retell-model';
@@ -322,6 +390,7 @@ void main() {
     /// 组装一个在线复述环境：默认条件齐备，按需关掉某一项模拟准入失败。
     ProviderContainer buildOnline({
       _SpeechClient? client,
+      AudioTranscodeService? transcode,
       String? onlineModel = _retellOnlineModel,
       bool textVerified = true,
       bool noticeDone = true,
@@ -347,6 +416,10 @@ void main() {
           ),
         ),
         speechTranscriptionClientProvider.overrideWithValue(speech),
+        // 分块要切真实录音，只替换不可控的转码边界。
+        localTranscriptionTranscodeServiceProvider.overrideWithValue(
+          transcode ?? _FakeTranscode(),
+        ),
         retellTranscriptProvider.overrideWithValue(
           (_) async => throw StateError('在线方式不得借用本机转写'),
         ),
@@ -356,6 +429,7 @@ void main() {
     /// 重新指向在线环境的容器：每个用例自带一份，避免状态串场。
     ProviderContainer switchToOnline({
       _SpeechClient? client,
+      AudioTranscodeService? transcode,
       String? onlineModel = _retellOnlineModel,
       bool textVerified = true,
       bool noticeDone = true,
@@ -363,6 +437,7 @@ void main() {
       container.dispose();
       container = buildOnline(
         client: client,
+        transcode: transcode,
         onlineModel: onlineModel,
         textVerified: textVerified,
         noticeDone: noticeDone,
@@ -581,25 +656,275 @@ void main() {
       );
     });
 
-    test('超出单块范围的录音明确失败，不上传也不评估', () async {
-      switchToOnline();
-      final longFile = File('${tempDir.path}/long.wav');
-      await longFile.writeAsBytes(_wavBytes(const Duration(minutes: 3)));
+    /// 写出一段超过单块范围的真实录音，返回它的路径。
+    Future<String> writeLongRecording(String name) async {
+      final file = File('${tempDir.path}/$name');
+      await file.writeAsBytes(_wavBytes(const Duration(minutes: 5)));
+      return file.path;
+    }
 
-      await evaluateOnline(path: longFile.path);
+    test('超出单块范围时顺序分块，评估只用合并后的完整文本', () async {
+      final client = _SpeechClient()
+        ..onCall = (index) async => SpeechTranscriptionResult(
+          text: ['first part', 'second part', 'third part'][index],
+          reportedCost: 0.0002,
+        );
+      switchToOnline(client: client);
+      final longPath = await writeLongRecording('long.wav');
 
-      expect(speech.calls, 0, reason: '超出单块不得上传，也不能只传开头');
+      await evaluateOnline(path: longPath);
+
+      expect(client.calls, 3, reason: '五分钟录音按有界分块顺序上传三块');
+      expect(
+        client.models,
+        everyElement(_retellOnlineModel),
+        reason: '分块继续用复述自己的在线模型',
+      );
+      expect(
+        client.formats,
+        everyElement(SpeechResponseFormat.json),
+        reason: '纯文本用途不请求片段时间戳',
+      );
+      expect(
+        client.wordRequests,
+        everyElement(isFalse),
+        reason: '纯文本用途不请求词时间戳',
+      );
+      final uploaded = client.durations.fold(
+        Duration.zero,
+        (sum, each) => sum + each,
+      );
+      expect(
+        uploaded,
+        greaterThanOrEqualTo(const Duration(minutes: 5)),
+        reason: '整段录音都进了转写，不截取开头也不均分时长伪造',
+      );
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: 'first part second part third part',
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.completed);
+      expect(
+        state.onlineSpeech?.reportedCost,
+        closeTo(0.0006, 1e-9),
+        reason: '费用按块累加',
+      );
+    });
+
+    test('真实重复的话语跨块保留，不去重成一句', () async {
+      final client = _SpeechClient()
+        ..onCall = (index) async => SpeechTranscriptionResult(
+          text: index == 0 ? 'I asked him twice' : 'He said no. He said no.',
+        );
+      switchToOnline(client: client);
+
+      await evaluateOnline(path: await writeLongRecording('repeat.wav'));
+
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: 'I asked him twice He said no. He said no.',
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+    });
+
+    test('分块失败停在失败块，评估不调用；手动续试只重发未完成部分', () async {
+      final client = _SpeechClient();
+      final texts = ['first part', 'second part', 'third part'];
+      client.onCall = (index) async {
+        if (index == 1) {
+          throw const SpeechTranscriptionException(
+            SpeechTranscriptionErrorKind.timeout,
+          );
+        }
+        // 首次只有第 0 块成功；续试从第 2 次调用起依次发出未完成的块。
+        return SpeechTranscriptionResult(
+          text: index == 0 ? texts[0] : texts[index - 1],
+          reportedCost: 0.0002,
+        );
+      };
+      switchToOnline(client: client);
+      final longPath = await writeLongRecording('retry.wav');
+
+      await evaluateOnline(path: longPath);
+
       final state = container.read(retellReviewEvaluationProvider);
       expect(state.phase, RetellReviewEvaluationPhase.failed);
       expect(
         state.speechError,
-        isA<PracticeRecordingRejected>().having(
-          (error) => error.rejection,
-          'rejection',
-          PracticeRecordingRejection.tooLong,
-        ),
-        reason: '长录音未接入分块前按语音错误明确失败',
+        isA<PracticeChunkFailure>()
+            .having(
+              (error) => error.reason,
+              'reason',
+              PracticeChunkFailureReason.requestFailed,
+            )
+            .having((error) => error.failedChunk?.index, 'failedChunk', 1)
+            .having(
+              (error) => error.mayHaveBeenCharged,
+              'mayHaveBeenCharged',
+              isTrue,
+            ),
+        reason: '超时块可能已计费，续试要让用户知道会再发一次',
       );
+      expect(client.calls, 2, reason: '失败后不再请求后续块');
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+
+      // 用户手动续试：只补失败块与后面未完成的块，已成功块不再上传。
+      await evaluateOnline(path: longPath);
+
+      expect(client.calls, 4, reason: '续试只重发未成功的两块');
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: 'first part second part third part',
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+      expect(
+        container.read(retellReviewEvaluationProvider).phase,
+        RetellReviewEvaluationPhase.completed,
+      );
+    });
+
+    test('换了录音不复用旧块，从第一块重新转写', () async {
+      final client = _SpeechClient();
+      client.onCall = (index) async {
+        if (index == 1) {
+          throw const SpeechTranscriptionException(
+            SpeechTranscriptionErrorKind.serverError,
+          );
+        }
+        return SpeechTranscriptionResult(text: 'part ${index + 1}');
+      };
+      switchToOnline(client: client);
+      final firstPath = await writeLongRecording('first.wav');
+      final secondPath = await writeLongRecording('second.wav');
+
+      await evaluateOnline(path: firstPath);
+      expect(client.calls, 2, reason: '第一段在第二块失败');
+
+      await evaluateOnline(key: 'second', path: secondPath);
+
+      expect(client.calls, 5, reason: '新录音重新规划三块，不接着旧进度');
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: 'part 3 part 4 part 5',
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+    });
+
+    test('取消后不再发后续块，临时分块不留给下一次转写', () async {
+      final client = _SpeechClient(gatedCalls: {0})
+        ..onCall = (index) async =>
+            SpeechTranscriptionResult(text: 'part ${index + 1}');
+      switchToOnline(client: client);
+      final longPath = await writeLongRecording('cancel.wav');
+
+      final pending = evaluateOnline(path: longPath);
+      // 第一块已发出并挂起，此时用户切到另一段。
+      await client.started;
+      container.read(retellReviewEvaluationProvider.notifier).syncAttempt('next');
+      client.release();
+      await pending;
+
+      expect(client.calls, 1, reason: '取消后不再开始下一块');
+      expect(container.read(retellReviewEvaluationProvider).attemptKey, 'next');
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+
+      // 回到同一段录音：取消时已丢掉临时结果，从第一块重新转写。
+      await evaluateOnline(key: 'attempt', path: longPath);
+      expect(client.calls, 4, reason: '重新规划三块，不接着已取消的进度');
+      verify(
+        () => api.evaluateTranscriptStream(
+          transcript: 'part 2 part 3 part 4',
+          originalText: 'Original',
+          targetLanguage: 'zh-CN',
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      ).called(1);
+    });
+
+    test('分块期间复述在线身份变化时停发后续块，不评估', () async {
+      final client = _SpeechClient(gatedCalls: {0})
+        ..onCall = (index) async =>
+            SpeechTranscriptionResult(text: 'part ${index + 1}');
+      switchToOnline(client: client);
+      final longPath = await writeLongRecording('identity.wav');
+
+      final pending = evaluateOnline(path: longPath);
+      await client.started;
+      // 用户在分块转写未完成时换掉复述的在线模型：旧块不属于新配置。
+      configStore.config = const SpeechConfig(
+        kind: SpeechProviderKind.openrouter,
+        baseUrl: _baseUrl,
+        onlineModels: {RecognitionPurpose.retell: 'openai/whisper-next'},
+      );
+      client.release();
+      await pending;
+
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.failed);
+      expect(
+        state.speechError,
+        isA<PracticeChunkFailure>().having(
+          (error) => error.reason,
+          'reason',
+          PracticeChunkFailureReason.configChanged,
+        ),
+      );
+      expect(client.calls, 1, reason: '配置变了就不再上传后续块');
+      verifyNever(
+        () => api.evaluateTranscriptStream(
+          transcript: any(named: 'transcript'),
+          originalText: any(named: 'originalText'),
+          targetLanguage: any(named: 'targetLanguage'),
+          cancelToken: any(named: 'cancelToken'),
+        ),
+      );
+    });
+
+    test('整份录音都没有语音时不上传，按没有可识别语音失败', () async {
+      final client = _SpeechClient();
+      switchToOnline(client: client, transcode: _FakeTranscode(silence: true));
+
+      await evaluateOnline(path: await writeLongRecording('silent.wav'));
+
+      final state = container.read(retellReviewEvaluationProvider);
+      expect(state.phase, RetellReviewEvaluationPhase.failed);
+      expect(
+        state.speechError,
+        isA<PracticeChunkFailure>().having(
+          (error) => error.reason,
+          'reason',
+          PracticeChunkFailureReason.noSpeech,
+        ),
+      );
+      expect(client.calls, 0, reason: '确认无声的块不上传也不计费');
       verifyNever(
         () => api.evaluateTranscriptStream(
           transcript: any(named: 'transcript'),
