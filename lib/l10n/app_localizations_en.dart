@@ -2017,10 +2017,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speechRecognitionDisabled => 'Disabled';
 
   @override
-  String get speechRecognitionDescription =>
-      'Speech recognition powers practice ratings and future local transcription. Choose the model that fits your device.';
-
-  @override
   String get asrEngine => 'Speech Engine';
 
   @override
@@ -5898,11 +5894,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recognitionPurposeTitle => 'Recognition by purpose';
+  String get recognitionModeTitle => 'Recognition modes';
 
   @override
   String get recognitionPurposeDescription =>
       'Subtitles, shadowing, and retelling each keep their own recognition mode and model.';
+
+  @override
+  String get recognitionPurposeScopeNote =>
+      'Changes here only affect this purpose';
 
   @override
   String get recognitionPurposeSubtitle => 'Subtitles';
@@ -5921,6 +5921,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recognitionModeOnline => 'Online speech';
+
+  @override
+  String get recognitionStatusLocalDownloaded => 'Downloaded';
+
+  @override
+  String get recognitionStatusLocalNotDownloaded => 'Not downloaded';
+
+  @override
+  String get recognitionStatusLocalDownloading => 'Downloading';
+
+  @override
+  String get recognitionStatusLocalDownloadFailed => 'Download failed';
+
+  @override
+  String get recognitionStatusSystemBuiltIn => 'Built into the device';
+
+  @override
+  String get recognitionStatusOnlineVerified => 'Verified';
+
+  @override
+  String get recognitionStatusOnlineUnavailable => 'Unavailable';
 
   @override
   String recognitionOnlineModelSummary(String model) {
@@ -6078,7 +6099,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subtitleModeLocalHint =>
-      'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose';
+      'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition modes';
 
   @override
   String get onlineSubtitleNotConfigured =>

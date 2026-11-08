@@ -66,7 +66,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.m),
         children: [
-          // 说明文字（轻量，无背景）
+          // 全页只保留一条说明文字，放在「识别方式」分组之前。
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.s,
@@ -75,28 +75,14 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
               AppSpacing.m,
             ),
             child: Text(
-              l10n.speechRecognitionDescription,
+              l10n.recognitionPurposeDescription,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ),
 
-          _SectionLabel(text: l10n.recognitionPurposeTitle),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.s,
-              0,
-              AppSpacing.s,
-              AppSpacing.s,
-            ),
-            child: Text(
-              l10n.recognitionPurposeDescription,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
+          _SectionLabel(text: l10n.recognitionModeTitle),
           const RecognitionPurposeSection(),
 
           // 在线服务分组只有一行入口，卡片标题即分组标题，不再重复分组小标题。

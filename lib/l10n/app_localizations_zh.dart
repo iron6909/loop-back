@@ -1940,10 +1940,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speechRecognitionDisabled => '已关闭';
 
   @override
-  String get speechRecognitionDescription =>
-      '语音识别用于练习评分和后续本地转录。你可以选择适合当前设备的模型。';
-
-  @override
   String get asrEngine => '语音引擎';
 
   @override
@@ -5631,10 +5627,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recognitionPurposeTitle => '按用途识别';
+  String get recognitionModeTitle => '识别方式';
 
   @override
   String get recognitionPurposeDescription => '字幕、跟读、复述各自选择识别方式与模型，互不影响。';
+
+  @override
+  String get recognitionPurposeScopeNote => '这里的修改只影响当前用途，不影响其他用途。';
 
   @override
   String get recognitionPurposeSubtitle => '字幕转录';
@@ -5653,6 +5652,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recognitionModeOnline => '在线识别';
+
+  @override
+  String get recognitionStatusLocalDownloaded => '已下载';
+
+  @override
+  String get recognitionStatusLocalNotDownloaded => '未下载';
+
+  @override
+  String get recognitionStatusLocalDownloading => '下载中';
+
+  @override
+  String get recognitionStatusLocalDownloadFailed => '下载失败';
+
+  @override
+  String get recognitionStatusSystemBuiltIn => '设备自带';
+
+  @override
+  String get recognitionStatusOnlineVerified => '已验证';
+
+  @override
+  String get recognitionStatusOnlineUnavailable => '不可用';
 
   @override
   String recognitionOnlineModelSummary(String model) {
@@ -5800,7 +5820,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineSubtitleCostUnknown => '供应商未报告费用，实际花费未知';
 
   @override
-  String get subtitleModeLocalHint => '当前用本机模型转录；可在 设置 → 语音识别 → 按用途识别 切换为在线';
+  String get subtitleModeLocalHint => '当前用本机模型转录；可在 设置 → 语音识别 → 识别方式 切换为在线';
 
   @override
   String get onlineSubtitleNotConfigured => '尚未配置在线语音服务或 Key';

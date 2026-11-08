@@ -3572,12 +3572,6 @@ abstract class AppLocalizations {
   /// **'Disabled'**
   String get speechRecognitionDisabled;
 
-  /// No description provided for @speechRecognitionDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Speech recognition powers practice ratings and future local transcription. Choose the model that fits your device.'**
-  String get speechRecognitionDescription;
-
   /// No description provided for @asrEngine.
   ///
   /// In en, this message translates to:
@@ -10394,17 +10388,23 @@ abstract class AppLocalizations {
   /// **'Unsupported files ignored: {count}'**
   String folderUnsupportedFiles(int count);
 
-  /// No description provided for @recognitionPurposeTitle.
+  /// No description provided for @recognitionModeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recognition by purpose'**
-  String get recognitionPurposeTitle;
+  /// **'Recognition modes'**
+  String get recognitionModeTitle;
 
   /// No description provided for @recognitionPurposeDescription.
   ///
   /// In en, this message translates to:
   /// **'Subtitles, shadowing, and retelling each keep their own recognition mode and model.'**
   String get recognitionPurposeDescription;
+
+  /// No description provided for @recognitionPurposeScopeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes here only affect this purpose'**
+  String get recognitionPurposeScopeNote;
 
   /// No description provided for @recognitionPurposeSubtitle.
   ///
@@ -10441,6 +10441,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Online speech'**
   String get recognitionModeOnline;
+
+  /// No description provided for @recognitionStatusLocalDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get recognitionStatusLocalDownloaded;
+
+  /// No description provided for @recognitionStatusLocalNotDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded'**
+  String get recognitionStatusLocalNotDownloaded;
+
+  /// No description provided for @recognitionStatusLocalDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading'**
+  String get recognitionStatusLocalDownloading;
+
+  /// No description provided for @recognitionStatusLocalDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get recognitionStatusLocalDownloadFailed;
+
+  /// No description provided for @recognitionStatusSystemBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Built into the device'**
+  String get recognitionStatusSystemBuiltIn;
+
+  /// No description provided for @recognitionStatusOnlineVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get recognitionStatusOnlineVerified;
+
+  /// No description provided for @recognitionStatusOnlineUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get recognitionStatusOnlineUnavailable;
 
   /// No description provided for @recognitionOnlineModelSummary.
   ///
@@ -10685,7 +10727,7 @@ abstract class AppLocalizations {
   /// No description provided for @subtitleModeLocalHint.
   ///
   /// In en, this message translates to:
-  /// **'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose'**
+  /// **'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition modes'**
   String get subtitleModeLocalHint;
 
   /// No description provided for @onlineSubtitleNotConfigured.

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/recognition_selection.dart';
+import '../../providers/offline_asr_settings_provider.dart';
 import '../../providers/recognition_settings_provider.dart';
 import '../../providers/speech_capability_provider.dart';
 import '../../providers/speech_configuration_provider.dart';
@@ -128,6 +129,165 @@ String recognitionSelectionSummary(
       '${model?.displayName ?? selection.localModelId}';
 }
 
+/// 用途行状态的语气：只决定状态点的颜色，文案本身由 [recognitionPurposeStatus] 给出。
+enum RecognitionStatusTone {
+  /// 现在就能用。
+  ready,
+
+  /// 还缺一步（未下载、下载中、尚未验证）。
+  pending,
+
+  /// 当前不可用（下载失败、未配置、模型不适配）。
+  blocked,
+}
+
+/// 用途行的状态：本机看该用途自己档位的安装状态，系统看平台自带能力，在线看该用途
+/// 自己的能力验证结论（字幕要片段时间戳，跟读与复述要文本）。
+({RecognitionStatusTone tone, String text}) recognitionPurposeStatus(
+  AppLocalizations l10n,
+  RecognitionSelection selection, {
+  required AsrModelState localModelState,
+  required PracticeOnlineAccessDenial? onlineBlockReason,
+}) {
+  switch (selection.mode) {
+    case RecognitionMode.system:
+      return (
+        tone: RecognitionStatusTone.ready,
+        text: l10n.recognitionStatusSystemBuiltIn,
+      );
+    case RecognitionMode.online:
+      return switch (onlineBlockReason) {
+        null => (
+          tone: RecognitionStatusTone.ready,
+          text: l10n.recognitionStatusOnlineVerified,
+        ),
+        PracticeOnlineAccessDenial.missingConfiguration => (
+          tone: RecognitionStatusTone.blocked,
+          text: l10n.speechProviderStatusUnconfigured,
+        ),
+        PracticeOnlineAccessDenial.capabilityNotSuitable => (
+          tone: RecognitionStatusTone.blocked,
+          text: l10n.recognitionStatusOnlineUnavailable,
+        ),
+        // 尚未验证与未告知都还没有该用途的能力结论。
+        PracticeOnlineAccessDenial.capabilityUnverified ||
+        PracticeOnlineAccessDenial.uploadNoticeMissing => (
+          tone: RecognitionStatusTone.pending,
+          text: l10n.speechCapabilityUnverified,
+        ),
+      };
+    case RecognitionMode.local:
+      return switch (localModelState.downloadStatus) {
+        AsrModelDownloadStatus.downloaded => (
+          tone: RecognitionStatusTone.ready,
+          text: l10n.recognitionStatusLocalDownloaded,
+        ),
+        AsrModelDownloadStatus.downloading => (
+          tone: RecognitionStatusTone.pending,
+          text: l10n.recognitionStatusLocalDownloading,
+        ),
+        AsrModelDownloadStatus.failed => (
+          tone: RecognitionStatusTone.blocked,
+          text: l10n.recognitionStatusLocalDownloadFailed,
+        ),
+        AsrModelDownloadStatus.notDownloaded => (
+          tone: RecognitionStatusTone.pending,
+          text: l10n.recognitionStatusLocalNotDownloaded,
+        ),
+      };
+  }
+}
+
+/// 一个用途行：用途名、方式与模型摘要、当前状态，点开只改该用途。
+class _PurposeRow extends StatelessWidget {
+  const _PurposeRow({
+    required this.l10n,
+    required this.theme,
+    required this.purpose,
+    required this.selection,
+    required this.onlineModelId,
+    required this.localModelState,
+    required this.onlineBlockReason,
+    required this.onTap,
+  });
+
+  final AppLocalizations l10n;
+  final ThemeData theme;
+  final RecognitionPurpose purpose;
+  final RecognitionSelection selection;
+  final String onlineModelId;
+  final AsrModelState localModelState;
+  final PracticeOnlineAccessDenial? onlineBlockReason;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final status = recognitionPurposeStatus(
+      l10n,
+      selection,
+      localModelState: localModelState,
+      onlineBlockReason: onlineBlockReason,
+    );
+    return ListTile(
+      title: Text(recognitionPurposeLabel(l10n, purpose)),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            recognitionSelectionSummary(
+              l10n,
+              selection,
+              onlineModelId: onlineModelId,
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 2),
+          _PurposeStatusLabel(status: status),
+        ],
+      ),
+      isThreeLine: true,
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+}
+
+/// 状态文字加点状标记，不只靠颜色区分。
+class _PurposeStatusLabel extends StatelessWidget {
+  const _PurposeStatusLabel({required this.status});
+
+  final ({RecognitionStatusTone tone, String text}) status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final dotColor = switch (status.tone) {
+      RecognitionStatusTone.ready => AppTheme.successColor,
+      RecognitionStatusTone.pending => theme.colorScheme.onSurfaceVariant,
+      RecognitionStatusTone.blocked => theme.colorScheme.error,
+    };
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          status.text,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// 三个用途的识别选择列表。
 class RecognitionPurposeSection extends ConsumerWidget {
   const RecognitionPurposeSection({super.key});
@@ -136,6 +296,7 @@ class RecognitionPurposeSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final settings = ref.watch(recognitionSettingsProvider);
+    final asrState = ref.watch(offlineAsrSettingsProvider);
     final speechConfig = ref
         .watch(speechConfigurationProvider)
         .valueOrNull
@@ -147,19 +308,18 @@ class RecognitionPurposeSection extends ConsumerWidget {
           for (final purpose in RecognitionPurpose.values) ...[
             if (purpose != RecognitionPurpose.values.first)
               const Divider(height: 1, indent: 16, endIndent: 16),
-            ListTile(
-              title: Text(recognitionPurposeLabel(l10n, purpose)),
-              subtitle: Text(
-                recognitionSelectionSummary(
-                  l10n,
-                  settings.forPurpose(purpose),
-                  onlineModelId: speechConfig?.onlineModelFor(purpose) ?? '',
-                ),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+            _PurposeRow(
+              l10n: l10n,
+              theme: theme,
+              purpose: purpose,
+              selection: settings.forPurpose(purpose),
+              onlineModelId: speechConfig?.onlineModelFor(purpose) ?? '',
+              localModelState: asrState.modelStateOf(
+                settings.forPurpose(purpose).localModelId,
               ),
-              trailing: const Icon(Icons.chevron_right),
+              onlineBlockReason: ref.watch(
+                onlineModeBlockReasonProvider(purpose),
+              ),
               onTap: () => _openPurposeSheet(context, ref, purpose),
             ),
           ],
@@ -217,9 +377,21 @@ class RecognitionPurposeSection extends ConsumerWidget {
                       AppSpacing.m,
                       AppSpacing.s,
                     ),
-                    child: Text(
-                      recognitionPurposeLabel(l10n, purpose),
-                      style: theme.textTheme.titleMedium,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recognitionPurposeLabel(l10n, purpose),
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.recognitionPurposeScopeNote,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   if (showOnlineRow)

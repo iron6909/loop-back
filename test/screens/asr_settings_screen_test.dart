@@ -206,6 +206,35 @@ void main() {
     expect(find.text('Cancel'), findsOneWidget);
   });
 
+  testWidgets('识别方式分组列出三个用途与各自状态，说明文字只有一条', (tester) async {
+    _useTallViewport(tester);
+    final notifier = _StaticOfflineAsrSettingsNotifier(
+      OfflineAsrSettingsState(
+        enabled: true,
+        backend: AsrBackend.offline,
+        recommendedModel: recommendedModel,
+      ),
+    );
+
+    await tester.pumpWidget(_buildTestWidget(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recognition modes'), findsOneWidget);
+    expect(find.text('Subtitles'), findsOneWidget);
+    expect(find.text('Shadowing'), findsOneWidget);
+    expect(find.text('Retelling'), findsOneWidget);
+    // 三档都未安装：本机状态直接说明缺什么。
+    expect(find.text('Not downloaded'), findsNWidgets(3));
+    // 说明文字只保留一条，位于「识别方式」之前。
+    expect(
+      find.text(
+        'Subtitles, shadowing, and retelling each keep their own recognition '
+        'mode and model.',
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('本机 Whisper 模型列表单独成组并显示预估大小', (tester) async {
     _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(
@@ -412,7 +441,7 @@ void main() {
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
 
-      expect(find.text('Recognition by purpose'), findsOneWidget);
+      expect(find.text('Recognition modes'), findsOneWidget);
       expect(find.text('Provider'), findsNothing);
     });
   });

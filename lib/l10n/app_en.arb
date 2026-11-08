@@ -1304,7 +1304,6 @@
   "speechRecognitionNotConfigured": "Not configured",
   "speechRecognitionEnabled": "Enabled",
   "speechRecognitionDisabled": "Disabled",
-  "speechRecognitionDescription": "Speech recognition powers practice ratings and future local transcription. Choose the model that fits your device.",
   "asrEngine": "Speech Engine",
   "asrBackendPlatform": "Apple AI",
   "asrBackendPlatformDescription": "Use the built-in system speech recognition.No download needed",
@@ -3340,14 +3339,22 @@
       }
     }
   },
-  "recognitionPurposeTitle": "Recognition by purpose",
+  "recognitionModeTitle": "Recognition modes",
   "recognitionPurposeDescription": "Subtitles, shadowing, and retelling each keep their own recognition mode and model.",
+  "recognitionPurposeScopeNote": "Changes here only affect this purpose",
   "recognitionPurposeSubtitle": "Subtitles",
   "recognitionPurposeShadowing": "Shadowing",
   "recognitionPurposeRetell": "Retelling",
   "recognitionModeLocal": "On-device",
   "recognitionModeSystem": "System speech",
   "recognitionModeOnline": "Online speech",
+  "recognitionStatusLocalDownloaded": "Downloaded",
+  "recognitionStatusLocalNotDownloaded": "Not downloaded",
+  "recognitionStatusLocalDownloading": "Downloading",
+  "recognitionStatusLocalDownloadFailed": "Download failed",
+  "recognitionStatusSystemBuiltIn": "Built into the device",
+  "recognitionStatusOnlineVerified": "Verified",
+  "recognitionStatusOnlineUnavailable": "Unavailable",
   "recognitionOnlineModelSummary": "Online speech · {model}",
   "@recognitionOnlineModelSummary": {
     "placeholders": {
@@ -3489,7 +3496,7 @@
     }
   },
   "onlineSubtitleCostUnknown": "The provider reported no cost, so the actual charge is unknown",
-  "subtitleModeLocalHint": "Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose",
+  "subtitleModeLocalHint": "Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition modes",
   "onlineSubtitleNotConfigured": "No online speech service or API key configured",
   "onlineSubtitleNotVerified": "The current speech configuration has not passed subtitle capability verification",
   "onlineSubtitleChunkProgress": "Chunks done: {completed}/{total}",
