@@ -131,16 +131,6 @@ class _SpeechStore extends SpeechConfigStore {
   Future<String?> readCredentialVersion() async => 'credential-a';
 }
 
-/// 字幕用途固定为在线方式的识别选择。
-class _OnlineSubtitleSettings extends RecognitionSettingsNotifier {
-  @override
-  RecognitionSettings build() => const RecognitionSettings(
-    subtitle: RecognitionSelection.online(),
-    shadowing: RecognitionSelection.local('test-model'),
-    retell: RecognitionSelection.local('test-model'),
-  );
-}
-
 void main() {
   late _RecordingManager manager;
   late SharedPreferences prefs;
@@ -202,18 +192,14 @@ void main() {
     await open(tester);
 
     expect(find.text('On-Device Transcription'), findsOneWidget);
-    expect(find.text('Cloud Transcription'), findsNothing);
     expect(find.text('Auto Detect'), findsNothing);
-    expect(find.text('English'), findsOneWidget);
     expect(
       find.widgetWithText(FilledButton, 'Start Transcription'),
       findsOneWidget,
     );
-    // 本机模式也要明说当前方式与切换入口，避免误以为只支持本机。
-    expect(
-      find.textContaining('Switch to online in Settings'),
-      findsOneWidget,
-    );
+    // 模型与语言选择不在弹窗内：改由语音识别设置统一管理。
+    expect(find.text('Select Language'), findsNothing);
+    expect(find.text('Whisper Small (English)'), findsNothing);
   });
 
   testWidgets('提交时发现字幕已被用户替换：提示冲突并保留转录入口', (tester) async {
@@ -226,10 +212,7 @@ void main() {
     manager.emit(item.id, const LocalTranscriptionConflict());
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('replaced by another action'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('replaced by another action'), findsOneWidget);
     expect(
       tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
       isNotNull,
@@ -275,7 +258,7 @@ void main() {
     expect(manager.calls, [('test-model', false)]);
   });
 
-  testWidgets('字幕入口与设置页共用同一份用途选择', (tester) async {
+  testWidgets('字幕弹窗不再提供模型与语言选择，改用设置里的配置', (tester) async {
     manager = _RecordingManager();
     await tester.pumpWidget(
       buildSheet(
@@ -296,11 +279,17 @@ void main() {
     await tester.pumpAndSettle();
     await open(tester);
 
-    // 字幕入口直接展示共享状态里的字幕档位，不维护弹窗镜像。
-    expect(find.text('Whisper Small (English)'), findsOneWidget);
+    // 三个并列入口：本地转录、在线转录、本地上传。
+    expect(find.text('On-Device Transcription'), findsOneWidget);
+    expect(find.text('Online transcription'), findsOneWidget);
+    expect(find.text('Local Upload'), findsOneWidget);
+    // 模型与语言选择已移至语音识别设置。
+    expect(find.text('Whisper Small (English)'), findsNothing);
+    expect(find.text('Select Language'), findsNothing);
   });
 
-  testWidgets('已有字幕时取消覆盖确认则不启动转录', (tester) async {    manager = _RecordingManager();
+  testWidgets('已有字幕时取消覆盖确认则不启动转录', (tester) async {
+    manager = _RecordingManager();
     await tester.pumpWidget(buildSheet(createTestAudioItem()));
     await tester.pumpAndSettle();
     await open(tester);
@@ -525,7 +514,7 @@ void main() {
     });
   });
 
-  testWidgets('字幕用途选择在线时启动在线任务，不要求本机模型就绪', (tester) async {
+  testWidgets('选在线转录入口就启动在线任务，不要求本机模型就绪', (tester) async {
     manager = _RecordingManager();
     final online = TestOnlineSubtitleTaskManager();
     final item = createTestAudioItem(transcriptPath: null);
@@ -534,7 +523,6 @@ void main() {
         item,
         extra: [
           onlineSubtitleTaskManagerProvider.overrideWith(() => online),
-          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
           onlineSubtitleAvailableProvider.overrideWithValue(true),
           speechConfigStoreProvider.overrideWithValue(
             _SpeechStore(
@@ -552,13 +540,16 @@ void main() {
     );
     await tester.pumpAndSettle();
     await open(tester);
+    // 三入口并列：显式选中在线转录入口再开始。
+    await tester.tap(find.text('Online transcription'));
+    await tester.pumpAndSettle();
     await pressPrimary(tester);
 
     expect(online.calls, [(item.id, true)]);
     expect(manager.calls, isEmpty, reason: '在线不走本机转录入口');
   });
 
-  testWidgets('选中在线时隐藏本机转录选项，改显示在线服务与模型', (tester) async {
+  testWidgets('三个入口并列；选在线时只补充在线服务信息，不再出现模型/语言选择', (tester) async {
     manager = _RecordingManager();
     final online = TestOnlineSubtitleTaskManager();
     final item = createTestAudioItem(transcriptPath: null);
@@ -567,9 +558,6 @@ void main() {
         item,
         extra: [
           onlineSubtitleTaskManagerProvider.overrideWith(() => online),
-          recognitionSettingsProvider.overrideWith(
-            _OnlineSubtitleSettings.new,
-          ),
           onlineSubtitleAvailableProvider.overrideWithValue(true),
           speechConfigStoreProvider.overrideWithValue(
             _SpeechStore(
@@ -588,10 +576,16 @@ void main() {
     await tester.pumpAndSettle();
     await open(tester);
 
-    // 在线模式下不再出现本机模型/语言等本机选项，也不会误标成本地转录。
+    // 三个并列入口同时存在。
+    expect(find.text('On-Device Transcription'), findsOneWidget);
     expect(find.text('Online transcription'), findsOneWidget);
-    expect(find.text('On-Device Transcription'), findsNothing);
+    expect(find.text('Local Upload'), findsOneWidget);
+    // 模型与语言选择不在弹窗内。
+    expect(find.text('Whisper Small (English)'), findsNothing);
     expect(find.text('Select Language'), findsNothing);
+
+    await tester.tap(find.text('Online transcription'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('openai/whisper-large-v3'), findsOneWidget);
   });
 
@@ -611,7 +605,6 @@ void main() {
         item,
         extra: [
           onlineSubtitleTaskManagerProvider.overrideWith(() => online),
-          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
           onlineSubtitleAvailableProvider.overrideWithValue(true),
         ],
       ),
@@ -641,7 +634,6 @@ void main() {
         item,
         extra: [
           onlineSubtitleTaskManagerProvider.overrideWith(() => online),
-          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
           onlineSubtitleAvailableProvider.overrideWithValue(true),
           speechConfigStoreProvider.overrideWithValue(
             _SpeechStore(
@@ -659,6 +651,9 @@ void main() {
     );
     await tester.pumpAndSettle();
     await open(tester);
+    // 失败态挂在在线入口上：先显式选中在线转录。
+    await tester.tap(find.text('Online transcription'));
+    await tester.pumpAndSettle();
 
     // 失败位置与“可能重复计费”都要如实说明，且失败态不随弹窗重开被清掉。
     expect(find.textContaining('Failed at chunk 3/3'), findsOneWidget);
@@ -685,7 +680,7 @@ void main() {
     expect(find.textContaining('Word timing source: mixed'), findsOneWidget);
   });
 
-  testWidgets('在线字幕未通过能力验证时明确不可用', (tester) async {
+  testWidgets('在线字幕未通过能力验证时入口置灰并说明原因', (tester) async {
     manager = _RecordingManager();
     await tester.pumpWidget(
       buildSheet(
@@ -694,7 +689,6 @@ void main() {
           onlineSubtitleTaskManagerProvider.overrideWith(
             TestOnlineSubtitleTaskManager.new,
           ),
-          recognitionSettingsProvider.overrideWith(_OnlineSubtitleSettings.new),
           onlineSubtitleAvailableProvider.overrideWithValue(false),
         ],
       ),
@@ -702,8 +696,13 @@ void main() {
     await tester.pumpAndSettle();
     await open(tester);
 
+    // 入口仍列出，但不可点，并直接说缺哪一步。
+    final tile = tester.widget<ListTile>(
+      find.widgetWithText(ListTile, 'Online transcription'),
+    );
+    expect(tile.enabled, isFalse);
     expect(
-      find.textContaining('has not passed subtitle capability verification'),
+      find.textContaining('Set the service address and key'),
       findsOneWidget,
     );
   });

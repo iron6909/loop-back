@@ -10789,6 +10789,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Online transcription'**
   String get onlineTranscription;
+
+  /// No description provided for @onlineTranscriptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe with the configured online speech service'**
+  String get onlineTranscriptionSubtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -6144,4 +6144,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onlineTranscription => 'Online transcription';
+
+  @override
+  String get onlineTranscriptionSubtitle =>
+      'Transcribe with the configured online speech service';
 }

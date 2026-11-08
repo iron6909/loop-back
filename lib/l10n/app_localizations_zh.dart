@@ -5859,4 +5859,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onlineTranscription => '在线转录';
+
+  @override
+  String get onlineTranscriptionSubtitle => '用已配置的在线语音服务转写';
 }
