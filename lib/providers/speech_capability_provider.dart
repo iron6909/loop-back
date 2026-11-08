@@ -65,13 +65,20 @@ final speechTranscriptionClientProvider = Provider<SpeechTranscriptionClient>(
   (ref) => SpeechTranscriptionClient(),
 );
 
-/// 某用途能否选用在线：需要 Key、上传告知与该用途的有效文本能力验证。
+/// 某用途能否选用在线：需要 Key、上传告知与该用途自己的能力验证。
 ///
-/// 界面据此决定是否把在线列为可选方式；跟读与复述的录音入口在发请求前用
+/// 字幕要求片段时间戳，跟读与复述只需文本；纯文本能力不能把字幕在线列为可选。
+/// 界面据此决定是否把在线列为可选方式；三条业务入口在发请求前用
 /// [resolvePracticeOnlineAccess] 再确认一次，避免配置已变时静默上传。
 final onlinePracticeAvailabilityProvider =
     FutureProvider.family<bool, RecognitionPurpose>((ref, purpose) async {
-      final access = await resolvePracticeOnlineAccess(ref, purpose);
+      final access = await resolvePracticeOnlineAccess(
+        ref,
+        purpose,
+        requiredCapability: purpose == RecognitionPurpose.subtitle
+            ? OnlineCapabilityRequirement.segments
+            : OnlineCapabilityRequirement.text,
+      );
       return access is PracticeOnlineAccessGranted;
     });
 
@@ -111,9 +118,7 @@ final onlineModeBlockReasonProvider =
       final suitable = purpose == RecognitionPurpose.subtitle
           ? capability.segments
           : capability.text;
-      return suitable
-          ? null
-          : PracticeOnlineAccessDenial.capabilityNotSuitable;
+      return suitable ? null : PracticeOnlineAccessDenial.capabilityNotSuitable;
     });
 
 /// 在线方式需要的能力等级：练习只需文本，字幕必须有片段时间戳。

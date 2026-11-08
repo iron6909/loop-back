@@ -2240,17 +2240,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localUpload => 'Local Upload';
 
   @override
+  String get subtitleModelTranscription => 'Model transcription';
+
+  @override
+  String get subtitleModeSettingsHint =>
+      'Change the subtitle mode and model in Settings → Speech recognition → Recognition modes';
+
+  @override
   String get aiTranscription => 'Cloud Transcription';
 
   @override
   String get aiTranscriptionSubtitle =>
       'Higher accuracy, needs network + sign-in';
-
-  @override
-  String get offlineTranscription => 'On-Device Transcription';
-
-  @override
-  String get offlineTranscriptionSubtitle => 'Offline, private, no sign-in';
 
   @override
   String get transcriptionModelTier => 'Recognition model';
@@ -6138,10 +6139,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'The provider reported no cost, so the actual charge is unknown';
 
   @override
-  String get subtitleModeLocalHint =>
-      'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition modes';
-
-  @override
   String get onlineSubtitleNotConfigured =>
       'No online speech service or API key configured';
 
@@ -6204,13 +6201,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it';
 
   @override
-  String get onlineTranscription => 'Online transcription';
-
-  @override
-  String get onlineTranscriptionSubtitle =>
-      'Transcribe with the configured online speech service';
-
-  @override
-  String get subtitleOnlineModelHint =>
-      'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it';
+  String get subtitleOnlineModelSettingsHint =>
+      'Configure the online model and key under Online speech below';
 }

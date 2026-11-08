@@ -3938,6 +3938,18 @@ abstract class AppLocalizations {
   /// **'Local Upload'**
   String get localUpload;
 
+  /// No description provided for @subtitleModelTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Model transcription'**
+  String get subtitleModelTranscription;
+
+  /// No description provided for @subtitleModeSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the subtitle mode and model in Settings → Speech recognition → Recognition modes'**
+  String get subtitleModeSettingsHint;
+
   /// No description provided for @aiTranscription.
   ///
   /// In en, this message translates to:
@@ -3949,18 +3961,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Higher accuracy, needs network + sign-in'**
   String get aiTranscriptionSubtitle;
-
-  /// No description provided for @offlineTranscription.
-  ///
-  /// In en, this message translates to:
-  /// **'On-Device Transcription'**
-  String get offlineTranscription;
-
-  /// No description provided for @offlineTranscriptionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline, private, no sign-in'**
-  String get offlineTranscriptionSubtitle;
 
   /// No description provided for @transcriptionModelTier.
   ///
@@ -10790,12 +10790,6 @@ abstract class AppLocalizations {
   /// **'The provider reported no cost, so the actual charge is unknown'**
   String get onlineSubtitleCostUnknown;
 
-  /// No description provided for @subtitleModeLocalHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition modes'**
-  String get subtitleModeLocalHint;
-
   /// No description provided for @onlineSubtitleNotConfigured.
   ///
   /// In en, this message translates to:
@@ -10892,23 +10886,11 @@ abstract class AppLocalizations {
   /// **'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it'**
   String get recognitionOnlineNeedsSuitableModel;
 
-  /// No description provided for @onlineTranscription.
+  /// No description provided for @subtitleOnlineModelSettingsHint.
   ///
   /// In en, this message translates to:
-  /// **'Online transcription'**
-  String get onlineTranscription;
-
-  /// No description provided for @onlineTranscriptionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Transcribe with the configured online speech service'**
-  String get onlineTranscriptionSubtitle;
-
-  /// No description provided for @subtitleOnlineModelHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it'**
-  String get subtitleOnlineModelHint;
+  /// **'Configure the online model and key under Online speech below'**
+  String get subtitleOnlineModelSettingsHint;
 }
 
 class _AppLocalizationsDelegate

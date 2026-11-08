@@ -2150,16 +2150,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localUpload => '本地上传';
 
   @override
+  String get subtitleModelTranscription => '模型转录';
+
+  @override
+  String get subtitleModeSettingsHint => '字幕方式与模型在 设置 → 语音识别 → 识别方式 中修改';
+
+  @override
   String get aiTranscription => '云端转录';
 
   @override
   String get aiTranscriptionSubtitle => '精度高，速度快，需联网登录';
-
-  @override
-  String get offlineTranscription => '本地转录';
-
-  @override
-  String get offlineTranscriptionSubtitle => '离线、隐私，无需登录';
 
   @override
   String get transcriptionModelTier => '识别模型';
@@ -5859,9 +5859,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onlineSubtitleCostUnknown => '供应商未报告费用，实际花费未知';
 
   @override
-  String get subtitleModeLocalHint => '当前用本机模型转录；可在 设置 → 语音识别 → 识别方式 切换为在线';
-
-  @override
   String get onlineSubtitleNotConfigured => '尚未配置在线语音服务或 Key';
 
   @override
@@ -5917,12 +5914,5 @@ class AppLocalizationsZh extends AppLocalizations {
       '该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证';
 
   @override
-  String get onlineTranscription => '在线转录';
-
-  @override
-  String get onlineTranscriptionSubtitle => '用已配置的在线语音服务转写';
-
-  @override
-  String get subtitleOnlineModelHint =>
-      '在线模型与 Key 在下方「在线语音服务」中配置；管理字幕弹窗里可直接选「在线转录」';
+  String get subtitleOnlineModelSettingsHint => '在线模型与 Key 在下方「在线语音服务」中配置';
 }
