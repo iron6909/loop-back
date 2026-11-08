@@ -14,7 +14,7 @@ import 'package:echo_loop/services/speech/speech_config_store.dart';
 import 'package:echo_loop/services/speech/speech_model_catalog.dart';
 import 'package:echo_loop/services/speech/speech_transcription_client.dart';
 import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/asr/speech_provider_section.dart';
+import 'package:echo_loop/screens/speech_provider_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -178,9 +178,7 @@ void main() {
         GlobalCupertinoLocalizations.delegate,
       ],
       theme: AppTheme.light(),
-      home: const Scaffold(
-        body: SingleChildScrollView(child: SpeechProviderSection()),
-      ),
+      home: const SpeechProviderSettingsScreen(),
     ),
   );
 
@@ -284,8 +282,7 @@ void main() {
       config: _openRouterConfig,
       apiKey: 'sk-speech-sentinel-4b7d',
     );
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
 
@@ -342,7 +339,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Could not load the model list; you can still enter a model ID'),
+      find.text(
+        'Could not load the model list; you can still enter a model ID',
+      ),
       findsOneWidget,
     );
 
@@ -386,7 +385,10 @@ void main() {
 
       await tester.tap(find.text('Subtitles online model'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'openai/whisper-large-v3-new');
+      await tester.enterText(
+        find.byType(TextField),
+        'openai/whisper-large-v3-new',
+      );
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
 
@@ -427,7 +429,10 @@ void main() {
 
       await tester.tap(find.text('Subtitles online model'));
       await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'openai/whisper-large-v3-new');
+      await tester.enterText(
+        find.byType(TextField),
+        'openai/whisper-large-v3-new',
+      );
       await tester.tap(find.text('Save'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel tasks and change'));
@@ -444,13 +449,18 @@ void main() {
       );
       expect(cancelled, [RecognitionPurpose.subtitle]);
       expect(shadowingTask.isCancelled, isFalse);
-      expect(registry.pendingFor(RecognitionPurpose.shadowing), [shadowingTask]);
+      expect(registry.pendingFor(RecognitionPurpose.shadowing), [
+        shadowingTask,
+      ]);
     });
 
     testWidgets('改服务地址影响全部在线任务，本机任务不受影响', (tester) async {
       final cancelled = <RecognitionPurpose>[];
       final registry = RecognitionInFlightRegistry();
-      final retellOnlineTask = inFlightTask(RecognitionPurpose.retell, cancelled);
+      final retellOnlineTask = inFlightTask(
+        RecognitionPurpose.retell,
+        cancelled,
+      );
       final localSubtitleTask = inFlightTask(
         RecognitionPurpose.subtitle,
         cancelled,
@@ -507,7 +517,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.tap(find.text('Verify model').first);
     await tester.pumpAndSettle();
 
     expect(find.text('Send a test sample?'), findsOneWidget);
@@ -545,7 +555,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.tap(find.text('Verify model').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Send test'));
     await tester.pumpAndSettle();
@@ -561,7 +571,7 @@ void main() {
     );
 
     // 同一服务已确认：再验证时不重复告知，但仍可手动重测。
-    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.tap(find.text('Verify model').first);
     await tester.pumpAndSettle();
 
     expect(find.text('Send a test sample?'), findsNothing);
@@ -611,7 +621,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.tap(find.text('Verify model').first);
     await tester.pumpAndSettle();
 
     expect(
@@ -641,7 +651,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Verify model').first);
+    await tester.tap(find.text('Verify model').first);
     await tester.pumpAndSettle();
 
     expect(

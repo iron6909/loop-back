@@ -12,12 +12,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../providers/offline_asr_settings_provider.dart';
 import '../providers/asr_model_installation_provider.dart';
+import '../providers/speech_capability_provider.dart';
+import '../providers/speech_configuration_provider.dart';
 import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
 import '../theme/app_theme.dart';
 import '../utils/download_failure_message.dart';
 import '../widgets/asr/recognition_purpose_section.dart';
 import '../widgets/asr/speech_provider_section.dart';
+import 'speech_provider_settings_screen.dart';
 
 /// 语音识别设置页。
 class AsrSettingsScreen extends ConsumerStatefulWidget {
@@ -49,6 +52,12 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(offlineAsrSettingsProvider);
+    final speechState =
+        ref.watch(speechConfigurationProvider).valueOrNull ??
+        const SpeechConfigurationState();
+    final speechCapabilities =
+        ref.watch(speechCapabilityProvider).valueOrNull ??
+        const SpeechCapabilityState();
     final theme = Theme.of(context);
     final showBackendSelector = Platform.isIOS || Platform.isMacOS;
 
@@ -90,22 +99,13 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
           ),
           const RecognitionPurposeSection(),
 
-          _SectionLabel(text: l10n.speechProviderTitle),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.s,
-              0,
-              AppSpacing.s,
-              AppSpacing.s,
-            ),
-            child: Text(
-              l10n.speechProviderDescription,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+          // 在线服务分组只有一行入口，卡片标题即分组标题，不再重复分组小标题。
+          _buildOnlineServiceEntry(
+            l10n,
+            theme,
+            speechState,
+            speechCapabilities,
           ),
-          const SpeechProviderSection(),
 
           _SectionLabel(text: l10n.asrEngine),
           Card(
@@ -135,6 +135,54 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
             Card(child: _buildDownloadedModelsStorageRow(l10n, state, theme)),
           ],
         ],
+      ),
+    );
+  }
+
+  // ========== 在线语音服务入口 ==========
+
+  /// 在线服务入口行：只显示服务类型与整体状态，具体配置在独立页。
+  ///
+  /// 状态文案与独立页共用 [speechProviderStatusText]；主页面不发任何网络请求。
+  Widget _buildOnlineServiceEntry(
+    AppLocalizations l10n,
+    ThemeData theme,
+    SpeechConfigurationState speechState,
+    SpeechCapabilityState speechCapabilities,
+  ) {
+    final config = speechState.config;
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          Icons.cloud_outlined,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+        title: Text(l10n.speechProviderTitle),
+        subtitle: Text(
+          speechProviderStatusText(l10n, speechState, speechCapabilities),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: speechState.isConfigured
+                ? theme.colorScheme.onSurfaceVariant
+                : theme.colorScheme.error,
+          ),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (config != null)
+              Text(
+                speechProviderKindText(l10n, config.kind),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            const SizedBox(width: AppSpacing.xs),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const SpeechProviderSettingsScreen(),
+          ),
+        ),
       ),
     );
   }
