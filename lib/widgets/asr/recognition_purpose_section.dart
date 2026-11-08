@@ -15,6 +15,7 @@ import '../../providers/recognition_settings_provider.dart';
 import '../../providers/speech_capability_provider.dart';
 import '../../providers/speech_configuration_provider.dart';
 import '../../services/asr/asr_model_manager.dart';
+import '../../services/speech/practice_online_transcriber.dart';
 import '../../theme/app_theme.dart';
 
 /// 应用某用途的识别选择变更。
@@ -88,6 +89,19 @@ String recognitionModeLabel(AppLocalizations l10n, RecognitionMode mode) =>
       RecognitionMode.system => l10n.recognitionModeSystem,
       RecognitionMode.online => l10n.recognitionModeOnline,
     };
+
+/// 在线方式不可选的原因说明；直接回答「还缺哪一步」。
+String practiceOnlineBlockReasonText(
+  AppLocalizations l10n,
+  PracticeOnlineAccessDenial denial,
+) => switch (denial) {
+  PracticeOnlineAccessDenial.missingConfiguration =>
+    l10n.recognitionOnlineNeedsConfiguration,
+  PracticeOnlineAccessDenial.uploadNoticeMissing =>
+    l10n.recognitionOnlineNeedsUploadNotice,
+  PracticeOnlineAccessDenial.capabilityUnverified =>
+    l10n.recognitionOnlineNeedsVerification,
+};
 
 /// 当前选择的一行摘要：方式（本机带本地模型名，在线带在线模型 id）。
 String recognitionSelectionSummary(
@@ -182,6 +196,13 @@ class RecognitionPurposeSection extends ConsumerWidget {
             onlineSubtitleAvailable: onlineSubtitleAvailable,
             onlineAvailable: onlineAvailable,
           );
+          // 在线不可选时仍展示该方式并说明缺什么，避免用户以为只能本机识别。
+          final onlineBlocked = !modes.contains(RecognitionMode.online)
+              ? innerRef
+                    .watch(onlineModeBlockReasonProvider(purpose))
+                    .valueOrNull
+              : null;
+          final showOnlineRow = modes.length > 1 || onlineBlocked != null;
           final theme = Theme.of(innerContext);
           return SafeArea(
             child: SingleChildScrollView(
@@ -201,7 +222,7 @@ class RecognitionPurposeSection extends ConsumerWidget {
                       style: theme.textTheme.titleMedium,
                     ),
                   ),
-                  if (modes.length > 1)
+                  if (showOnlineRow)
                     RadioGroup<RecognitionMode>(
                       groupValue: selection.mode,
                       onChanged: (mode) {
@@ -230,9 +251,28 @@ class RecognitionPurposeSection extends ConsumerWidget {
                       child: Column(
                         children: [
                           for (final mode in modes)
+                            if (mode != RecognitionMode.online)
+                              RadioListTile<RecognitionMode>(
+                                value: mode,
+                                title: Text(recognitionModeLabel(l10n, mode)),
+                              ),
+                          if (onlineBlocked != null)
                             RadioListTile<RecognitionMode>(
-                              value: mode,
-                              title: Text(recognitionModeLabel(l10n, mode)),
+                              value: RecognitionMode.online,
+                              enabled: false,
+                              title: Text(
+                                recognitionModeLabel(l10n, RecognitionMode.online),
+                              ),
+                              subtitle: Text(
+                                practiceOnlineBlockReasonText(l10n, onlineBlocked),
+                              ),
+                            )
+                          else
+                            RadioListTile<RecognitionMode>(
+                              value: RecognitionMode.online,
+                              title: Text(
+                                recognitionModeLabel(l10n, RecognitionMode.online),
+                              ),
                             ),
                         ],
                       ),

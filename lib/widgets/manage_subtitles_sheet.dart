@@ -458,12 +458,17 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     );
   }
 
-  /// 字幕用途选了在线时的说明：展示当前服务与模型；未通过验证则明确不能用。
+  /// 字幕用途当前识别方式说明。
+  ///
+  /// 本机时也明说一句「当前用本机、去哪儿换成在线」，否则弹窗只列本机模型，
+  /// 用户会以为应用根本不支持在线识别。
   Widget _subtitleModeNotice(AppLocalizations l10n) {
     final selection = ref
         .read(recognitionSettingsProvider)
         .forPurpose(RecognitionPurpose.subtitle);
-    if (selection.mode != RecognitionMode.online) return const SizedBox.shrink();
+    if (selection.mode != RecognitionMode.online) {
+      return _notice(l10n.subtitleModeLocalHint, Icons.memory);
+    }
     if (!ref.watch(onlineSubtitleAvailableProvider)) {
       return _notice(l10n.onlineSubtitleNotVerified, Icons.error_outline);
     }

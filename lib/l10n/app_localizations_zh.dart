@@ -5660,6 +5660,15 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get recognitionOnlineNeedsConfiguration => '需先在下方「在线语音服务」填写服务地址与 Key';
+
+  @override
+  String get recognitionOnlineNeedsUploadNotice => '需先在「在线语音服务」确认首次上传告知';
+
+  @override
+  String get recognitionOnlineNeedsVerification => '需先在「在线语音服务」验证该用途的在线模型';
+
+  @override
   String shadowingOnlineProgress(String service, String model, int percent) {
     return '在线 · $service · $model · $percent%';
   }
@@ -5787,6 +5796,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onlineSubtitleCostUnknown => '供应商未报告费用，实际花费未知';
+
+  @override
+  String get subtitleModeLocalHint => '当前用本机模型转录；可在 设置 → 语音识别 → 按用途识别 切换为在线';
 
   @override
   String get onlineSubtitleNotConfigured => '尚未配置在线语音服务或 Key';

@@ -209,6 +209,11 @@ void main() {
       find.widgetWithText(FilledButton, 'Start Transcription'),
       findsOneWidget,
     );
+    // 本机模式也要明说当前方式与切换入口，避免误以为只支持本机。
+    expect(
+      find.textContaining('Switch to online in Settings'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('提交时发现字幕已被用户替换：提示冲突并保留转录入口', (tester) async {

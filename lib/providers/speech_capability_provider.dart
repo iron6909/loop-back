@@ -75,14 +75,41 @@ final onlinePracticeAvailabilityProvider =
       return access is PracticeOnlineAccessGranted;
     });
 
+/// 在线方式当前不可选的原因；可选用时为 null。
+///
+/// 界面用它在在线选项上直接说明「还缺什么」，而不是把该方式整个隐藏——
+/// 隐藏会让用户以为应用只能本机识别。字幕额外要求片段时间戳能力。
+final onlineModeBlockReasonProvider =
+    FutureProvider.family<PracticeOnlineAccessDenial?, RecognitionPurpose>((
+      ref,
+      purpose,
+    ) async {
+      final access = await resolvePracticeOnlineAccess(
+        ref,
+        purpose,
+        requiredCapability: purpose == RecognitionPurpose.subtitle
+            ? OnlineCapabilityRequirement.segments
+            : OnlineCapabilityRequirement.text,
+      );
+      return switch (access) {
+        PracticeOnlineAccessDenied(reason: final reason) => reason,
+        PracticeOnlineAccessGranted() => null,
+      };
+    });
+
+/// 在线方式需要的能力等级：练习只需文本，字幕必须有片段时间戳。
+enum OnlineCapabilityRequirement { text, segments }
+
 /// 解析某用途在线的准入结果：不具备条件时返回拒绝原因，不发任何请求。
 ///
 /// 三个用途共用一份服务与 Key，但模型与能力验证按用途各自绑定：复述不会因为
 /// 跟读或字幕验证过就获得上传许可。
 Future<PracticeOnlineAccess> resolvePracticeOnlineAccess(
   Ref ref,
-  RecognitionPurpose purpose,
-) async {
+  RecognitionPurpose purpose, {
+  OnlineCapabilityRequirement requiredCapability =
+      OnlineCapabilityRequirement.text,
+}) async {
   final configStore = ref.read(speechConfigStoreProvider);
   final config = await configStore.read();
   final apiKey = await configStore.readApiKey();
@@ -108,7 +135,10 @@ Future<PracticeOnlineAccess> resolvePracticeOnlineAccess(
         credentialVersion: credentialVersion,
         purpose: purpose,
       );
-  if (capability == null || !capability.text) {
+  if (capability == null ||
+      (requiredCapability == OnlineCapabilityRequirement.text
+          ? !capability.text
+          : !capability.segments)) {
     return const PracticeOnlineAccessDenied(
       PracticeOnlineAccessDenial.capabilityUnverified,
     );

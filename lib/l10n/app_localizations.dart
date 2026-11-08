@@ -10448,6 +10448,24 @@ abstract class AppLocalizations {
   /// **'Online speech · {model}'**
   String recognitionOnlineModelSummary(String model);
 
+  /// No description provided for @recognitionOnlineNeedsConfiguration.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the service address and key under Online speech below first'**
+  String get recognitionOnlineNeedsConfiguration;
+
+  /// No description provided for @recognitionOnlineNeedsUploadNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the first-upload notice under Online speech first'**
+  String get recognitionOnlineNeedsUploadNotice;
+
+  /// No description provided for @recognitionOnlineNeedsVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify this purpose\'s online model under Online speech first'**
+  String get recognitionOnlineNeedsVerification;
+
   /// No description provided for @shadowingOnlineProgress.
   ///
   /// In en, this message translates to:
@@ -10663,6 +10681,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The provider reported no cost, so the actual charge is unknown'**
   String get onlineSubtitleCostUnknown;
+
+  /// No description provided for @subtitleModeLocalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose'**
+  String get subtitleModeLocalHint;
 
   /// No description provided for @onlineSubtitleNotConfigured.
   ///

@@ -10,6 +10,7 @@ import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/speech_capability_provider.dart';
+import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/asr/recognition_purpose_section.dart';
 
@@ -67,6 +68,8 @@ Widget _buildHarness(
   required bool systemSupported,
   bool onlineAvailable = false,
   bool? retellOnlineAvailable,
+  PracticeOnlineAccessDenial onlineBlockReason =
+      PracticeOnlineAccessDenial.missingConfiguration,
 }) {
   return ProviderScope(
     overrides: [
@@ -78,6 +81,18 @@ Widget _buildHarness(
           .overrideWith(
             (ref) async => retellOnlineAvailable ?? onlineAvailable,
           ),
+      // 在线不可选时界面仍展示该方式并说明原因，故需要明确的阻断原因。
+      for (final purpose in RecognitionPurpose.values)
+        onlineModeBlockReasonProvider(purpose).overrideWith(
+          (ref) async => switch (purpose) {
+            RecognitionPurpose.shadowing => onlineAvailable
+                ? null
+                : onlineBlockReason,
+            RecognitionPurpose.retell =>
+              (retellOnlineAvailable ?? onlineAvailable) ? null : onlineBlockReason,
+            RecognitionPurpose.subtitle => onlineBlockReason,
+          },
+        ),
     ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
@@ -111,7 +126,7 @@ void main() {
     expect(find.text('On-device · Whisper Tiny (English)'), findsOneWidget);
   });
 
-  testWidgets('字幕用途只提供本机方式：系统识别不进入字幕面板', (tester) async {
+  testWidgets('字幕用途不提供系统识别，只列出本机与（不可用时的）在线说明', (tester) async {
     final notifier = _RecordingRecognitionSettings(const []);
     await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
     await tester.pumpAndSettle();
@@ -119,8 +134,9 @@ void main() {
     await tester.tap(find.text('Subtitles'));
     await tester.pumpAndSettle();
 
-    expect(find.text('On-device'), findsNothing, reason: '只有一种方式时不显示方式选择');
+    // 字幕不能用系统识别；在线方式可见但被阻断时仍说明原因。
     expect(find.text('System speech'), findsNothing);
+    expect(find.text('Online speech'), findsOneWidget);
     expect(find.text('Whisper Tiny (English)'), findsOneWidget);
   });
 
@@ -265,7 +281,7 @@ void main() {
     expect(notifier.calls.single.selection.mode, RecognitionMode.online);
   });
 
-  testWidgets('跟读通过验证不等于复述可在线', (tester) async {
+  testWidgets('跟读通过验证不等于复述可在线：复述的在线仍不可选', (tester) async {
     final notifier = _RecordingRecognitionSettings(const []);
     await tester.pumpWidget(
       _buildHarness(
@@ -280,19 +296,80 @@ void main() {
     await tester.tap(find.text('Retelling'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Online speech'), findsNothing);
+    // 复述的在线仍依赖自己的验证：列出但不可选。
+    final onlineTile = tester.widget<RadioListTile<RecognitionMode>>(
+      find.widgetWithText(RadioListTile<RecognitionMode>, 'Online speech'),
+    );
+    expect(onlineTile.enabled, isFalse);
+    expect(onlineTile.value, RecognitionMode.online);
     expect(find.text('System speech'), findsOneWidget);
   });
 
-  testWidgets('条件不齐时在线不作为可选方式出现', (tester) async {
+  testWidgets('在线未配置时仍列出该方式，并说明缺配置而不是隐藏', (tester) async {
     final notifier = _RecordingRecognitionSettings(const []);
-    await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        onlineBlockReason: PracticeOnlineAccessDenial.missingConfiguration,
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Shadowing'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Online speech'), findsNothing);
+    // 方式仍可见，但不可选，并直接说明还缺哪一步。
+    expect(find.text('Online speech'), findsOneWidget);
+    expect(
+      find.text(
+        'Set the service address and key under Online speech below first',
+      ),
+      findsOneWidget,
+    );
+    final onlineTile = tester.widget<RadioListTile<RecognitionMode>>(
+      find.widgetWithText(RadioListTile<RecognitionMode>, 'Online speech'),
+    );
+    expect(onlineTile.enabled, isFalse);
     expect(find.text('System speech'), findsOneWidget);
+  });
+
+  testWidgets('在线已验证但未确认上传告知时给出对应原因', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        onlineBlockReason: PracticeOnlineAccessDenial.uploadNoticeMissing,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Shadowing'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Confirm the first-upload notice under Online speech first'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('在线可用时不再展示阻断原因', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(notifier, systemSupported: true, onlineAvailable: true),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Shadowing'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Online speech'), findsOneWidget);
+    expect(
+      find.text(
+        'Set the service address and key under Online speech below first',
+      ),
+      findsNothing,
+    );
   });
 }

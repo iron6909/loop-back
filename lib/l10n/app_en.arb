@@ -2852,6 +2852,9 @@
   "@recognitionOnlineModelSummary": {
     "placeholders": { "model": { "type": "String" } }
   },
+  "recognitionOnlineNeedsConfiguration": "Set the service address and key under Online speech below first",
+  "recognitionOnlineNeedsUploadNotice": "Confirm the first-upload notice under Online speech first",
+  "recognitionOnlineNeedsVerification": "Verify this purpose's online model under Online speech first",
   "shadowingOnlineProgress": "Online · {service} · {model} · {percent}%",
   "@shadowingOnlineProgress": {
     "placeholders": {
@@ -2938,6 +2941,7 @@
     "placeholders": { "cost": { "type": "String" } }
   },
   "onlineSubtitleCostUnknown": "The provider reported no cost, so the actual charge is unknown",
+  "subtitleModeLocalHint": "Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose",
   "onlineSubtitleNotConfigured": "No online speech service or API key configured",
   "onlineSubtitleNotVerified": "The current speech configuration has not passed subtitle capability verification",
   "onlineSubtitleChunkProgress": "Chunks done: {completed}/{total}",

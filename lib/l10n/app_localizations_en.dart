@@ -5928,6 +5928,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get recognitionOnlineNeedsConfiguration =>
+      'Set the service address and key under Online speech below first';
+
+  @override
+  String get recognitionOnlineNeedsUploadNotice =>
+      'Confirm the first-upload notice under Online speech first';
+
+  @override
+  String get recognitionOnlineNeedsVerification =>
+      'Verify this purpose\'s online model under Online speech first';
+
+  @override
   String shadowingOnlineProgress(String service, String model, int percent) {
     return 'Online · $service · $model · $percent%';
   }
@@ -6063,6 +6075,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onlineSubtitleCostUnknown =>
       'The provider reported no cost, so the actual charge is unknown';
+
+  @override
+  String get subtitleModeLocalHint =>
+      'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose';
 
   @override
   String get onlineSubtitleNotConfigured =>
