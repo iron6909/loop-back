@@ -2728,7 +2728,20 @@
     }
   },
   "speechCapabilityVerifiedCostUnknown": "验证完成。供应商未报告费用，实际花费未知",
-  "speechModelRefresh": "刷新转写模型目录",
+  "speechModelSectionTitle": "按用途在线模型",
+  "speechModelFetch": "获取转写模型",
+  "speechModelFetching": "正在获取转写模型…",
+  "speechModelFetched": "已获取 {count} 个模型",
+  "@speechModelFetched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechModelFetchNeedsConfig": "保存服务地址后可获取模型",
+  "speechModelFetchNeedsKey": "保存 API Key 后可获取模型",
+  "speechModelManualEntry": "手动输入模型 ID",
   "speechModelRefreshEmpty": "服务没有返回转写模型，仍可手填模型 ID",
   "speechModelRefreshFailed": "无法获取模型目录，仍可手填模型 ID",
   "speechUploadNoticeTitle": "发送测试音频？",

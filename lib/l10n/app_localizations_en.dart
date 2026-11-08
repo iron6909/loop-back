@@ -6054,7 +6054,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verified. The provider reported no cost, so the charge is unknown';
 
   @override
-  String get speechModelRefresh => 'Refresh transcription models';
+  String get speechModelSectionTitle => 'Online models by purpose';
+
+  @override
+  String get speechModelFetch => 'Get transcription models';
+
+  @override
+  String get speechModelFetching => 'Getting transcription models…';
+
+  @override
+  String speechModelFetched(int count) {
+    return '$count transcription models retrieved';
+  }
+
+  @override
+  String get speechModelFetchNeedsConfig =>
+      'Save a service address to get models';
+
+  @override
+  String get speechModelFetchNeedsKey => 'Save an API key to get models';
+
+  @override
+  String get speechModelManualEntry => 'Enter a model ID';
 
   @override
   String get speechModelRefreshEmpty =>

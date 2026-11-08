@@ -10658,11 +10658,47 @@ abstract class AppLocalizations {
   /// **'Verified. The provider reported no cost, so the charge is unknown'**
   String get speechCapabilityVerifiedCostUnknown;
 
-  /// No description provided for @speechModelRefresh.
+  /// No description provided for @speechModelSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Refresh transcription models'**
-  String get speechModelRefresh;
+  /// **'Online models by purpose'**
+  String get speechModelSectionTitle;
+
+  /// No description provided for @speechModelFetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Get transcription models'**
+  String get speechModelFetch;
+
+  /// No description provided for @speechModelFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting transcription models…'**
+  String get speechModelFetching;
+
+  /// No description provided for @speechModelFetched.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} transcription models retrieved'**
+  String speechModelFetched(int count);
+
+  /// No description provided for @speechModelFetchNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a service address to get models'**
+  String get speechModelFetchNeedsConfig;
+
+  /// No description provided for @speechModelFetchNeedsKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Save an API key to get models'**
+  String get speechModelFetchNeedsKey;
+
+  /// No description provided for @speechModelManualEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a model ID'**
+  String get speechModelManualEntry;
 
   /// No description provided for @speechModelRefreshEmpty.
   ///
