@@ -77,24 +77,43 @@ final onlinePracticeAvailabilityProvider =
 
 /// 在线方式当前不可选的原因；可选用时为 null。
 ///
-/// 界面用它在在线选项上直接说明「还缺什么」，而不是把该方式整个隐藏——
-/// 隐藏会让用户以为应用只能本机识别。字幕额外要求片段时间戳能力。
+/// 同步读取已 watch 的配置与能力状态：验证或配置一变就重算，不另发异步请求，
+/// 也不会因自依赖挂起。界面用它直接说明「还缺什么」，而不是把该方式隐藏。
+/// 字幕额外要求片段时间戳能力，纯文本模型属于 [PracticeOnlineAccessDenial.capabilityNotSuitable]。
 final onlineModeBlockReasonProvider =
-    FutureProvider.family<PracticeOnlineAccessDenial?, RecognitionPurpose>((
+    Provider.family<PracticeOnlineAccessDenial?, RecognitionPurpose>((
       ref,
       purpose,
-    ) async {
-      final access = await resolvePracticeOnlineAccess(
-        ref,
-        purpose,
-        requiredCapability: purpose == RecognitionPurpose.subtitle
-            ? OnlineCapabilityRequirement.segments
-            : OnlineCapabilityRequirement.text,
+    ) {
+      final configuration = ref.watch(speechConfigurationProvider).valueOrNull;
+      final config = configuration?.config;
+      if (configuration == null ||
+          !configuration.isConfigured ||
+          config == null) {
+        return PracticeOnlineAccessDenial.missingConfiguration;
+      }
+      final modelId = config.onlineModelFor(purpose);
+      if (modelId.isEmpty) {
+        return PracticeOnlineAccessDenial.missingConfiguration;
+      }
+      final capabilities = ref.watch(speechCapabilityProvider).valueOrNull;
+      if (capabilities == null) {
+        return PracticeOnlineAccessDenial.capabilityUnverified;
+      }
+      final capability = capabilities.capabilityFor(
+        config: config,
+        credentialVersion: configuration.credentialVersion,
+        purpose: purpose,
       );
-      return switch (access) {
-        PracticeOnlineAccessDenied(reason: final reason) => reason,
-        PracticeOnlineAccessGranted() => null,
-      };
+      if (capability == null) {
+        return PracticeOnlineAccessDenial.capabilityUnverified;
+      }
+      final suitable = purpose == RecognitionPurpose.subtitle
+          ? capability.segments
+          : capability.text;
+      return suitable
+          ? null
+          : PracticeOnlineAccessDenial.capabilityNotSuitable;
     });
 
 /// 在线方式需要的能力等级：练习只需文本，字幕必须有片段时间戳。
@@ -135,12 +154,21 @@ Future<PracticeOnlineAccess> resolvePracticeOnlineAccess(
         credentialVersion: credentialVersion,
         purpose: purpose,
       );
-  if (capability == null ||
-      (requiredCapability == OnlineCapabilityRequirement.text
-          ? !capability.text
-          : !capability.segments)) {
+  if (capability == null) {
     return const PracticeOnlineAccessDenied(
       PracticeOnlineAccessDenial.capabilityUnverified,
+    );
+  }
+  // 已验证但能力不满足该用途：字幕必须有片段时间戳，不能反复叫人去验证。
+  if (requiredCapability == OnlineCapabilityRequirement.text) {
+    if (!capability.text) {
+      return const PracticeOnlineAccessDenied(
+        PracticeOnlineAccessDenial.capabilityNotSuitable,
+      );
+    }
+  } else if (!capability.segments) {
+    return const PracticeOnlineAccessDenied(
+      PracticeOnlineAccessDenial.capabilityNotSuitable,
     );
   }
   return PracticeOnlineAccessGranted(

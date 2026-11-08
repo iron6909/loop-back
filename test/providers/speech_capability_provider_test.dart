@@ -10,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/speech_capability_provider.dart';
 import 'package:echo_loop/providers/speech_configuration_provider.dart';
+import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
 import 'package:echo_loop/services/speech/speech_capability.dart';
 import 'package:echo_loop/services/speech/speech_capability_probe.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
@@ -310,5 +311,70 @@ void main() {
       throwsA(isA<SpeechTranscriptionException>()),
     );
     expect(catalog.callCount, 2);
+  });
+
+  test('验证成功后在线可用性立即重算，不需要重启', () async {
+    final container = createContainer();
+    await container.read(speechCapabilityProvider.future);
+    await container.read(speechConfigurationProvider.future);
+
+    // 验证前：跟读与字幕都因未验证被阻断。
+    expect(
+      container.read(
+        onlineModeBlockReasonProvider(RecognitionPurpose.shadowing),
+      ),
+      PracticeOnlineAccessDenial.capabilityUnverified,
+    );
+
+    // 验证时用户已确认告知（与真实流程一致：告知记录在验证里）。
+    final notifier = container.read(speechCapabilityProvider.notifier);
+    final pending = notifier.test(RecognitionPurpose.shadowing);
+    await Future<void>.delayed(Duration.zero);
+    probe.calls.single.complete(capability(credentialVersion: 'credential-a'));
+    await pending;
+
+    // 验证结论一变，可用性与原因必须重算，否则用户验证完仍是灰的。
+    expect(
+      container.read(
+        onlineModeBlockReasonProvider(RecognitionPurpose.shadowing),
+      ),
+      isNull,
+    );
+    expect(
+      await container.read(
+        onlinePracticeAvailabilityProvider(RecognitionPurpose.shadowing).future,
+      ),
+      isTrue,
+    );
+  });
+
+  test('已验证但只返回文本的模型不能用于字幕，原因不是「去验证」', () async {
+    final container = createContainer();
+    final textOnly = SpeechCapability(
+      identity: capability(credentialVersion: 'credential-a').identity,
+      text: true,
+      segments: false,
+      wordTimestamps: false,
+      validatedAt: DateTime.utc(2026, 11, 7, 12),
+    );
+    // 让能力状态读到这条记录（与真实界面一致：配置先加载完成）。
+    await container.read(speechConfigurationProvider.future);
+    capabilityStore.records[textOnly.identity] = textOnly;
+    container.invalidate(speechCapabilityProvider);
+    await container.read(speechCapabilityProvider.future);
+
+    expect(
+      container.read(
+        onlineModeBlockReasonProvider(RecognitionPurpose.subtitle),
+      ),
+      PracticeOnlineAccessDenial.capabilityNotSuitable,
+    );
+    // 练习只需要文本，同一结论下跟读仍可用。
+    expect(
+      container.read(
+        onlineModeBlockReasonProvider(RecognitionPurpose.shadowing),
+      ),
+      isNull,
+    );
   });
 }

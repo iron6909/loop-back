@@ -3531,5 +3531,6 @@
   "wordTimingSourceModel": "model-provided",
   "wordTimingSourceEstimated": "estimated",
   "wordTimingSourceMixed": "mixed",
-  "wordTimingSourceUnknown": "unknown"
+  "wordTimingSourceUnknown": "unknown",
+  "recognitionOnlineNeedsSuitableModel": "This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it"
 }

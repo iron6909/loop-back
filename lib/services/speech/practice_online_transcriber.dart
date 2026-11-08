@@ -108,6 +108,9 @@ enum PracticeOnlineAccessDenial {
 
   /// 该用途的模型没有通过有效文本能力验证（或配置已变化使验证失效）。
   capabilityUnverified,
+
+  /// 已通过验证，但结论不满足该用途：字幕要求片段时间戳，纯文本模型不能用于字幕。
+  capabilityNotSuitable,
 }
 
 /// 不具备在线转写条件；此时不得上传任何音频。

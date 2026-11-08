@@ -60,7 +60,9 @@ Future<bool> confirmCancelInFlightTasks(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: Text(MaterialLocalizations.of(dialogContext).cancelButtonLabel),
+          child: Text(
+            MaterialLocalizations.of(dialogContext).cancelButtonLabel,
+          ),
         ),
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -101,6 +103,8 @@ String practiceOnlineBlockReasonText(
     l10n.recognitionOnlineNeedsUploadNotice,
   PracticeOnlineAccessDenial.capabilityUnverified =>
     l10n.recognitionOnlineNeedsVerification,
+  PracticeOnlineAccessDenial.capabilityNotSuitable =>
+    l10n.recognitionOnlineNeedsSuitableModel,
 };
 
 /// 当前选择的一行摘要：方式（本机带本地模型名，在线带在线模型 id）。
@@ -149,8 +153,7 @@ class RecognitionPurposeSection extends ConsumerWidget {
                 recognitionSelectionSummary(
                   l10n,
                   settings.forPurpose(purpose),
-                  onlineModelId:
-                      speechConfig?.onlineModelFor(purpose) ?? '',
+                  onlineModelId: speechConfig?.onlineModelFor(purpose) ?? '',
                 ),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
@@ -172,9 +175,7 @@ class RecognitionPurposeSection extends ConsumerWidget {
     RecognitionPurpose purpose,
   ) {
     final systemSupported = ref.read(systemRecognitionPlatformProvider);
-    final onlineSubtitleAvailable = ref.read(
-      onlineSubtitleAvailableProvider,
-    );
+    final onlineSubtitleAvailable = ref.read(onlineSubtitleAvailableProvider);
     return showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -198,9 +199,7 @@ class RecognitionPurposeSection extends ConsumerWidget {
           );
           // 在线不可选时仍展示该方式并说明缺什么，避免用户以为只能本机识别。
           final onlineBlocked = !modes.contains(RecognitionMode.online)
-              ? innerRef
-                    .watch(onlineModeBlockReasonProvider(purpose))
-                    .valueOrNull
+              ? innerRef.watch(onlineModeBlockReasonProvider(purpose))
               : null;
           final showOnlineRow = modes.length > 1 || onlineBlocked != null;
           final theme = Theme.of(innerContext);
@@ -232,19 +231,17 @@ class RecognitionPurposeSection extends ConsumerWidget {
                           innerRef,
                           purpose: purpose,
                           selection: switch (mode) {
-                            RecognitionMode.system =>
-                              RecognitionSelection(
-                                mode: RecognitionMode.system,
-                                localModelId: selection.localModelId,
-                              ),
+                            RecognitionMode.system => RecognitionSelection(
+                              mode: RecognitionMode.system,
+                              localModelId: selection.localModelId,
+                            ),
                             RecognitionMode.online =>
                               RecognitionSelection.online(
                                 localModelId: selection.localModelId,
                               ),
-                            RecognitionMode.local =>
-                              RecognitionSelection.local(
-                                selection.localModelId,
-                              ),
+                            RecognitionMode.local => RecognitionSelection.local(
+                              selection.localModelId,
+                            ),
                           },
                         );
                       },
@@ -261,17 +258,26 @@ class RecognitionPurposeSection extends ConsumerWidget {
                               value: RecognitionMode.online,
                               enabled: false,
                               title: Text(
-                                recognitionModeLabel(l10n, RecognitionMode.online),
+                                recognitionModeLabel(
+                                  l10n,
+                                  RecognitionMode.online,
+                                ),
                               ),
                               subtitle: Text(
-                                practiceOnlineBlockReasonText(l10n, onlineBlocked),
+                                practiceOnlineBlockReasonText(
+                                  l10n,
+                                  onlineBlocked,
+                                ),
                               ),
                             )
                           else
                             RadioListTile<RecognitionMode>(
                               value: RecognitionMode.online,
                               title: Text(
-                                recognitionModeLabel(l10n, RecognitionMode.online),
+                                recognitionModeLabel(
+                                  l10n,
+                                  RecognitionMode.online,
+                                ),
                               ),
                             ),
                         ],
@@ -282,7 +288,8 @@ class RecognitionPurposeSection extends ConsumerWidget {
                     RadioGroup<String>(
                       groupValue: selection.localModelId,
                       onChanged: (modelId) {
-                        if (modelId == null || modelId == selection.localModelId) {
+                        if (modelId == null ||
+                            modelId == selection.localModelId) {
                           return;
                         }
                         applyRecognitionSelectionChange(

@@ -5852,4 +5852,8 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get wordTimingSourceUnknown => '未知';
+
+  @override
+  String get recognitionOnlineNeedsSuitableModel =>
+      '该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证';
 }

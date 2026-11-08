@@ -10777,6 +10777,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'unknown'**
   String get wordTimingSourceUnknown;
+
+  /// No description provided for @recognitionOnlineNeedsSuitableModel.
+  ///
+  /// In en, this message translates to:
+  /// **'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it'**
+  String get recognitionOnlineNeedsSuitableModel;
 }
 
 class _AppLocalizationsDelegate

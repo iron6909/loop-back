@@ -59,6 +59,10 @@ String speechErrorText(BuildContext context, Object error) {
         zh
             ? '跟读的在线模型尚未通过文本能力验证，请先在设置里验证'
             : 'Verify the shadowing online model in Settings before transcribing',
+      PracticeOnlineAccessDenial.capabilityNotSuitable =>
+        zh
+            ? '该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证'
+            : 'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it',
     };
   }
   if (error is! SpeechTranscriptionException) {

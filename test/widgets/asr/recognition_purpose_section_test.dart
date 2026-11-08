@@ -75,21 +75,22 @@ Widget _buildHarness(
     overrides: [
       recognitionSettingsProvider.overrideWith(() => notifier),
       systemRecognitionPlatformProvider.overrideWithValue(systemSupported),
-      onlinePracticeAvailabilityProvider(RecognitionPurpose.shadowing)
-          .overrideWith((ref) async => onlineAvailable),
-      onlinePracticeAvailabilityProvider(RecognitionPurpose.retell)
-          .overrideWith(
-            (ref) async => retellOnlineAvailable ?? onlineAvailable,
-          ),
+      onlinePracticeAvailabilityProvider(
+        RecognitionPurpose.shadowing,
+      ).overrideWith((ref) async => onlineAvailable),
+      onlinePracticeAvailabilityProvider(
+        RecognitionPurpose.retell,
+      ).overrideWith((ref) async => retellOnlineAvailable ?? onlineAvailable),
       // 在线不可选时界面仍展示该方式并说明原因，故需要明确的阻断原因。
       for (final purpose in RecognitionPurpose.values)
         onlineModeBlockReasonProvider(purpose).overrideWith(
-          (ref) async => switch (purpose) {
-            RecognitionPurpose.shadowing => onlineAvailable
-                ? null
-                : onlineBlockReason,
+          (ref) => switch (purpose) {
+            RecognitionPurpose.shadowing =>
+              onlineAvailable ? null : onlineBlockReason,
             RecognitionPurpose.retell =>
-              (retellOnlineAvailable ?? onlineAvailable) ? null : onlineBlockReason,
+              (retellOnlineAvailable ?? onlineAvailable)
+                  ? null
+                  : onlineBlockReason,
             RecognitionPurpose.subtitle => onlineBlockReason,
           },
         ),
