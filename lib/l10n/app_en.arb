@@ -1459,10 +1459,10 @@
   "timeMachineReset": "Use system time",
   "manageSubtitles": "Manage Subtitles",
   "localUpload": "Local Upload",
+  "subtitleModelTranscription": "Model transcription",
+  "subtitleModeSettingsHint": "Change the subtitle mode and model in Settings → Speech recognition → Recognition modes",
   "aiTranscription": "Cloud Transcription",
   "aiTranscriptionSubtitle": "Higher accuracy, needs network + sign-in",
-  "offlineTranscription": "On-Device Transcription",
-  "offlineTranscriptionSubtitle": "Offline, private, no sign-in",
   "transcriptionModelTier": "Recognition model",
   "localTranscriptionDecoding": "Decoding audio...",
   "localTranscriptionForegroundHint": "Keep the app open and on-screen until it finishes — transcription pauses if you switch apps or lock the screen.",
@@ -3509,7 +3509,6 @@
     }
   },
   "onlineSubtitleCostUnknown": "The provider reported no cost, so the actual charge is unknown",
-  "subtitleModeLocalHint": "Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition modes",
   "onlineSubtitleNotConfigured": "No online speech service or API key configured",
   "onlineSubtitleNotVerified": "The current speech configuration has not passed subtitle capability verification",
   "onlineSubtitleChunkProgress": "Chunks done: {completed}/{total}",
@@ -3553,7 +3552,5 @@
   "wordTimingSourceMixed": "mixed",
   "wordTimingSourceUnknown": "unknown",
   "recognitionOnlineNeedsSuitableModel": "This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it",
-  "onlineTranscription": "Online transcription",
-  "onlineTranscriptionSubtitle": "Transcribe with the configured online speech service",
-  "subtitleOnlineModelHint": "Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it"
+  "subtitleOnlineModelSettingsHint": "Configure the online model and key under Online speech below"
 }
