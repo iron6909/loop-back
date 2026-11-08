@@ -257,7 +257,7 @@ void main() {
     await pumpWith(PracticeOnlineAccessDenial.missingConfiguration);
     expect(find.text('Not configured'), findsOneWidget);
 
-    // 先卸庶避免复用旧的 ProviderScope，新覆盖才会生效。
+    // 先卸载旧树，避免复用旧的 ProviderScope；新覆盖才会生效。
     await tester.pumpWidget(const SizedBox());
     await pumpWith(PracticeOnlineAccessDenial.capabilityUnverified);
     expect(find.text('Not verified'), findsOneWidget);
