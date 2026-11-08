@@ -11,6 +11,8 @@ import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/retell_recording_controller_provider.dart';
 import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
+import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
+import 'package:echo_loop/services/speech/speech_config.dart';
 import 'package:echo_loop/services/speech_practice_platform.dart';
 
 import '../helpers/mock_providers.dart';
@@ -54,6 +56,24 @@ const _localRecognition = RecognitionSettings(
   subtitle: RecognitionSelection.local('subtitle-model'),
   shadowing: RecognitionSelection.local('shadowing-model'),
   retell: RecognitionSelection.local('retell-model'),
+);
+
+/// 复述走在线方式；实际服务与模型由语音配置决定。
+const _onlineRecognition = RecognitionSettings(
+  subtitle: RecognitionSelection.local('subtitle-model'),
+  shadowing: RecognitionSelection.local('shadowing-model'),
+  retell: RecognitionSelection.online(),
+);
+
+const _onlineRetellModel = 'openai/whisper-retell';
+
+/// 复述在线转写后记录的实际识别身份：服务类型、根地址与复述自己的在线模型。
+final _onlineRetellIdentity = onlineRecognitionIdentity(
+  const SpeechConfig(
+    kind: SpeechProviderKind.openrouter,
+    baseUrl: 'https://openrouter.ai/api/v1',
+  ),
+  _onlineRetellModel,
 );
 
 class _FakeSpeechPracticeBackend implements SpeechPracticeBackend {
@@ -856,5 +876,118 @@ void main() {
     await controller.stopAndEvaluate(referenceText: 'ask your professor today');
 
     expect(controller.state.currentAttempt?.recognitionIdentity, 'system');
+  });
+
+  test('在线方式在停止录音后按复述自己的在线模型转写并记录实际识别身份', () async {
+    final backend = _FakeSpeechPracticeBackend();
+    final onlinePaths = <String>[];
+    final container = ProviderContainer(
+      overrides: [
+        analyticsOverride(),
+        initialLearningSettingsProvider.overrideWithValue(
+          const LearningSettings(),
+        ),
+        speechPracticeBackendProvider.overrideWithValue(backend),
+        recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
+        offlineAsrSettingsProvider.overrideWith(
+          () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_onlineRecognition),
+        ),
+        // 在线方式不得回退到本机转写。
+        retellTranscriptProvider.overrideWithValue(
+          (_) async => throw StateError('在线方式不得借用本机转写'),
+        ),
+        retellOnlineTranscriptProvider.overrideWithValue((
+          path, {
+          cancelToken,
+        }) async {
+          onlinePaths.add(path);
+          return RetellOnlineTranscript(
+            text: 'ask your professor today',
+            identity: _onlineRetellIdentity,
+            modelId: _onlineRetellModel,
+            serviceHost: 'openrouter.ai',
+            reportedCost: 0.0002,
+          );
+        }),
+      ],
+    );
+    final controller = container.read(
+      retellRecordingControllerProvider.notifier,
+    );
+    addTearDown(
+      () => disposeTestResources(
+        controller: controller,
+        container: container,
+        backend: backend,
+      ),
+    );
+
+    await controller.startRecording(
+      promptId: 'retell:a1:0',
+      referenceText: 'ask your professor today',
+    );
+    await controller.stopAndEvaluate(referenceText: 'ask your professor today');
+
+    final attempt = controller.state.currentAttempt;
+    expect(onlinePaths, hasLength(1), reason: '停录后只上传一次');
+    expect(
+      attempt?.recognitionIdentity,
+      _onlineRetellIdentity,
+      reason: '记录实际在线服务与模型，评估据此判断能否复用',
+    );
+    expect(attempt?.isRecognitionFailure, isFalse);
+  });
+
+  test('在线转写失败时不进入评分，保留录音并标记识别失败', () async {
+    final backend = _FakeSpeechPracticeBackend();
+    final container = ProviderContainer(
+      overrides: [
+        analyticsOverride(),
+        initialLearningSettingsProvider.overrideWithValue(
+          const LearningSettings(),
+        ),
+        speechPracticeBackendProvider.overrideWithValue(backend),
+        recommendedAsrModelProvider.overrideWithValue(_testAsrModel),
+        offlineAsrSettingsProvider.overrideWith(
+          () => _FakeOfflineAsrSettingsNotifier(),
+        ),
+        recognitionSettingsProvider.overrideWith(
+          () => _FixedRecognitionSettings(_onlineRecognition),
+        ),
+        retellTranscriptProvider.overrideWithValue(
+          (_) async => throw StateError('在线方式不得借用本机转写'),
+        ),
+        retellOnlineTranscriptProvider.overrideWithValue((
+          path, {
+          cancelToken,
+        }) async => throw const PracticeRecordingRejected(
+          PracticeRecordingRejection.tooLong,
+        )),
+      ],
+    );
+    final controller = container.read(
+      retellRecordingControllerProvider.notifier,
+    );
+    addTearDown(
+      () => disposeTestResources(
+        controller: controller,
+        container: container,
+        backend: backend,
+      ),
+    );
+
+    await controller.startRecording(
+      promptId: 'retell:a1:0',
+      referenceText: 'ask your professor today',
+    );
+    await controller.stopAndEvaluate(referenceText: 'ask your professor today');
+
+    final attempt = controller.state.currentAttempt;
+    expect(attempt?.filePath, isNotNull, reason: '失败也要保留源录音');
+    expect(attempt?.status, SpeechPracticeAttemptStatus.error);
+    expect(attempt?.finalTranscript, isNull, reason: '没有文本就不能给评分');
   });
 }

@@ -19,7 +19,7 @@ import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
 import 'package:echo_loop/providers/speech_capability_provider.dart';
 import 'package:echo_loop/providers/speech_configuration_provider.dart';
-import 'package:echo_loop/services/speech/shadowing_online_transcriber.dart';
+import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
 import 'package:echo_loop/services/speech/speech_capability.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
 import 'package:echo_loop/services/speech/speech_config_store.dart';
@@ -601,10 +601,10 @@ void main() {
     expect(state.currentAttempt?.status.isRecognitionFailure, isTrue);
     expect(
       state.onlineShadowing?.error,
-      isA<ShadowingOnlineAccessDenied>().having(
+      isA<PracticeOnlineAccessDenied>().having(
         (error) => error.reason,
         'reason',
-        ShadowingOnlineAccessDenial.capabilityUnverified,
+        PracticeOnlineAccessDenial.capabilityUnverified,
       ),
     );
   });
@@ -643,10 +643,10 @@ void main() {
           .read(speechRecordingControllerProvider)
           .onlineShadowing
           ?.error,
-      isA<ShadowingOnlineAccessDenied>().having(
+      isA<PracticeOnlineAccessDenied>().having(
         (error) => error.reason,
         'reason',
-        ShadowingOnlineAccessDenial.uploadNoticeMissing,
+        PracticeOnlineAccessDenial.uploadNoticeMissing,
       ),
     );
   });

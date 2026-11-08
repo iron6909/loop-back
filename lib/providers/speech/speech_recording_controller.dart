@@ -30,7 +30,7 @@ import '../../models/speech_practice_models.dart';
 import '../../services/app_logger.dart';
 import '../../services/recording_service.dart';
 import '../../services/speech/practice_chunk_transcriber.dart';
-import '../../services/speech/shadowing_online_transcriber.dart';
+import '../../services/speech/practice_online_transcriber.dart';
 import '../../services/speech/speech_capability.dart';
 import '../../services/speech_completion_detector.dart';
 import '../../services/speech_practice_matcher.dart';
@@ -71,7 +71,7 @@ class SpeechRecordingState {
   final SpeechPracticeAttempt? currentAttempt;
 
   /// 在线跟读的转写状态（服务、模型、进度、费用）；本机与系统方式为 null。
-  final ShadowingOnlineState? onlineShadowing;
+  final PracticeOnlineState? onlineShadowing;
 
   /// 实时转录
   final String? liveTranscript;
@@ -113,7 +113,7 @@ class SpeechRecordingState {
     bool clearReferenceText = false,
     SpeechPracticeAttempt? currentAttempt,
     bool clearCurrentAttempt = false,
-    ShadowingOnlineState? onlineShadowing,
+    PracticeOnlineState? onlineShadowing,
     bool clearOnlineShadowing = false,
     String? liveTranscript,
     bool clearLiveTranscript = false,
@@ -853,14 +853,17 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     await service.shutdown();
     if (!_isCurrentRound(generation, promptId)) return;
 
-    final access = await resolveShadowingOnlineAccess(ref);
+    final access = await resolvePracticeOnlineAccess(
+      ref,
+      RecognitionPurpose.shadowing,
+    );
     if (!_isCurrentRound(generation, promptId)) return;
-    final granted = access is ShadowingOnlineAccessGranted ? access : null;
+    final granted = access is PracticeOnlineAccessGranted ? access : null;
     // 准入失败也要留下可见状态：服务与模型取自已保存配置，缺失时为空。
-    final base = ShadowingOnlineState(
+    final base = PracticeOnlineState(
       serviceHost: Uri.tryParse(granted?.config.baseUrl ?? '')?.host ?? '',
       modelId: granted?.modelId ?? '',
-      phase: ShadowingOnlinePhase.preparing,
+      phase: PracticeOnlinePhase.preparing,
     );
     state = state.copyWith(onlineShadowing: base);
     if (granted == null) {
@@ -869,11 +872,11 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       return;
     }
 
-    final transcriber = ShadowingOnlineTranscriber(
+    final transcriber = PracticeOnlineTranscriber(
       client: ref.read(speechTranscriptionClientProvider),
     );
 
-    final ShadowingRecordingAccess recording;
+    final PracticeRecordingAccess recording;
     try {
       recording = await transcriber.prepare(filePath);
     } on Object catch (error) {
@@ -886,7 +889,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     if (!_isCurrentRound(generation, promptId)) return;
 
     switch (recording) {
-      case ShadowingRecordingUpload():
+      case PracticeRecordingUpload():
         await _transcribeSingleUpload(
           promptId: promptId,
           referenceText: referenceText,
@@ -897,7 +900,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
           transcriber: transcriber,
           upload: recording,
         );
-      case ShadowingRecordingNeedsChunking():
+      case PracticeRecordingNeedsChunking():
         // 超出单块范围：不截断也不只传开头，改走有界分块。
         await _transcribeChunked(
           promptId: promptId,
@@ -917,16 +920,16 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     required String referenceText,
     required String filePath,
     required int generation,
-    required ShadowingOnlineState base,
-    required ShadowingOnlineAccessGranted granted,
-    required ShadowingOnlineTranscriber transcriber,
-    required ShadowingRecordingUpload upload,
+    required PracticeOnlineState base,
+    required PracticeOnlineAccessGranted granted,
+    required PracticeOnlineTranscriber transcriber,
+    required PracticeRecordingUpload upload,
   }) async {
     final cancelToken = CancelToken();
     _onlineCancelToken = cancelToken;
     state = state.copyWith(
       onlineShadowing: base.copyWith(
-        phase: ShadowingOnlinePhase.uploading,
+        phase: PracticeOnlinePhase.uploading,
         progress: 0,
       ),
     );
@@ -957,7 +960,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       _onlineCancelToken = null;
       state = state.copyWith(
         onlineShadowing: base.copyWith(
-          phase: ShadowingOnlinePhase.completed,
+          phase: PracticeOnlinePhase.completed,
           progress: 1,
           reportedCost: result.reportedCost,
         ),
@@ -994,8 +997,8 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     required String referenceText,
     required String filePath,
     required int generation,
-    required ShadowingOnlineState base,
-    required ShadowingOnlineAccessGranted granted,
+    required PracticeOnlineState base,
+    required PracticeOnlineAccessGranted granted,
     Duration? knownDuration,
     bool resume = false,
   }) async {
@@ -1017,7 +1020,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
     _onlineCancelToken = cancelToken;
     state = state.copyWith(
       onlineShadowing: base.copyWith(
-        phase: ShadowingOnlinePhase.uploading,
+        phase: PracticeOnlinePhase.uploading,
         progress: 0,
         completedChunks: session?.completedCount ?? 0,
         totalChunks: session?.chunks.length ?? 0,
@@ -1052,7 +1055,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
           }
           state = state.copyWith(
             onlineShadowing: base.copyWith(
-              phase: ShadowingOnlinePhase.uploading,
+              phase: PracticeOnlinePhase.uploading,
               progress: total == 0 ? 0 : completed / total,
               completedChunks: completed,
               totalChunks: total,
@@ -1069,7 +1072,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       final text = session.text;
       state = state.copyWith(
         onlineShadowing: base.copyWith(
-          phase: ShadowingOnlinePhase.completed,
+          phase: PracticeOnlinePhase.completed,
           progress: 1,
           reportedCost: session.reportedCost,
           completedChunks: session.completedCount,
@@ -1149,13 +1152,16 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
       return;
     }
     final generation = _roundGeneration;
-    final access = await resolveShadowingOnlineAccess(ref);
+    final access = await resolvePracticeOnlineAccess(
+      ref,
+      RecognitionPurpose.shadowing,
+    );
     if (!_isCurrentRound(generation, promptId)) return;
-    final granted = access is ShadowingOnlineAccessGranted ? access : null;
-    final base = ShadowingOnlineState(
+    final granted = access is PracticeOnlineAccessGranted ? access : null;
+    final base = PracticeOnlineState(
       serviceHost: Uri.tryParse(granted?.config.baseUrl ?? '')?.host ?? '',
       modelId: granted?.modelId ?? '',
-      phase: ShadowingOnlinePhase.preparing,
+      phase: PracticeOnlinePhase.preparing,
     );
     if (granted == null) {
       await _discardChunkSession();
@@ -1203,7 +1209,7 @@ class SpeechRecordingController extends Notifier<SpeechRecordingState> {
             : SpeechPracticeAttemptStatus.error,
       ),
       onlineShadowing: state.onlineShadowing?.copyWith(
-        phase: ShadowingOnlinePhase.failed,
+        phase: PracticeOnlinePhase.failed,
         error: error,
         retryable: retryable,
         mayHaveBeenCharged: mayHaveBeenCharged,

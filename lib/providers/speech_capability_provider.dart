@@ -7,7 +7,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/recognition_selection.dart';
-import '../services/speech/shadowing_online_transcriber.dart';
+import '../services/speech/practice_online_transcriber.dart';
 import '../services/speech/speech_capability.dart';
 import '../services/speech/speech_capability_probe.dart';
 import '../services/speech/speech_config.dart';
@@ -65,24 +65,31 @@ final speechTranscriptionClientProvider = Provider<SpeechTranscriptionClient>(
   (ref) => SpeechTranscriptionClient(),
 );
 
-/// 跟读能否选用在线：需要 Key、上传告知与跟读用途的有效文本能力验证。
+/// 某用途能否选用在线：需要 Key、上传告知与该用途的有效文本能力验证。
 ///
-/// 界面据此决定是否把在线列为可选方式；录音入口在发请求前用
-/// [resolveShadowingOnlineAccess] 再确认一次，避免配置已变时静默上传。
-final shadowingOnlineAvailabilityProvider = FutureProvider<bool>((ref) async {
-  final access = await resolveShadowingOnlineAccess(ref);
-  return access is ShadowingOnlineAccessGranted;
-});
+/// 界面据此决定是否把在线列为可选方式；跟读与复述的录音入口在发请求前用
+/// [resolvePracticeOnlineAccess] 再确认一次，避免配置已变时静默上传。
+final onlinePracticeAvailabilityProvider =
+    FutureProvider.family<bool, RecognitionPurpose>((ref, purpose) async {
+      final access = await resolvePracticeOnlineAccess(ref, purpose);
+      return access is PracticeOnlineAccessGranted;
+    });
 
-/// 解析跟读在线的准入结果：不具备条件时返回拒绝原因，不发任何请求。
-Future<ShadowingOnlineAccess> resolveShadowingOnlineAccess(Ref ref) async {
+/// 解析某用途在线的准入结果：不具备条件时返回拒绝原因，不发任何请求。
+///
+/// 三个用途共用一份服务与 Key，但模型与能力验证按用途各自绑定：复述不会因为
+/// 跟读或字幕验证过就获得上传许可。
+Future<PracticeOnlineAccess> resolvePracticeOnlineAccess(
+  Ref ref,
+  RecognitionPurpose purpose,
+) async {
   final configStore = ref.read(speechConfigStoreProvider);
   final config = await configStore.read();
   final apiKey = await configStore.readApiKey();
-  final modelId = config?.onlineModelFor(RecognitionPurpose.shadowing) ?? '';
+  final modelId = config?.onlineModelFor(purpose) ?? '';
   if (config == null || apiKey == null || modelId.isEmpty) {
-    return const ShadowingOnlineAccessDenied(
-      ShadowingOnlineAccessDenial.missingConfiguration,
+    return const PracticeOnlineAccessDenied(
+      PracticeOnlineAccessDenial.missingConfiguration,
     );
   }
   // 首次向该服务上传用户录音前必须有告知；没有告知就不上传。
@@ -90,8 +97,8 @@ Future<ShadowingOnlineAccess> resolveShadowingOnlineAccess(Ref ref) async {
       .read(speechCapabilityStoreProvider)
       .hasUploadNotice(config.baseUrl);
   if (!noticeDone) {
-    return const ShadowingOnlineAccessDenied(
-      ShadowingOnlineAccessDenial.uploadNoticeMissing,
+    return const PracticeOnlineAccessDenied(
+      PracticeOnlineAccessDenial.uploadNoticeMissing,
     );
   }
   final credentialVersion = await configStore.readCredentialVersion();
@@ -99,14 +106,14 @@ Future<ShadowingOnlineAccess> resolveShadowingOnlineAccess(Ref ref) async {
       .capabilityFor(
         config: config,
         credentialVersion: credentialVersion,
-        purpose: RecognitionPurpose.shadowing,
+        purpose: purpose,
       );
   if (capability == null || !capability.text) {
-    return const ShadowingOnlineAccessDenied(
-      ShadowingOnlineAccessDenial.capabilityUnverified,
+    return const PracticeOnlineAccessDenied(
+      PracticeOnlineAccessDenial.capabilityUnverified,
     );
   }
-  return ShadowingOnlineAccessGranted(
+  return PracticeOnlineAccessGranted(
     config: config,
     apiKey: apiKey,
     modelId: modelId,

@@ -1,4 +1,4 @@
-/// 复述评估弹窗：本机转写与供应商请求的加载、结果和失败状态。
+/// 复述评估弹窗：转写与供应商请求的加载、结果和失败状态。
 library;
 
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ import '../../features/subscription/models/ai_quota_rejection.dart';
 import '../../providers/retell_review_evaluation_provider.dart';
 import '../../services/audio_preview_controller.dart';
 import '../../services/provider/provider_error_text.dart';
+import '../../services/speech/speech_error_text.dart';
 import '../../theme/app_theme.dart';
 import 'retell_review_report.dart';
 
@@ -15,6 +16,22 @@ import 'retell_review_report.dart';
 String retellReviewErrorMessage(AppLocalizations l10n, String? errorCode, {
   AiQuotaRejectionReason quotaReason = AiQuotaRejectionReason.exhausted,
 }) => providerErrorCodeText(errorCode, l10n.localeName.startsWith('zh'));
+
+/// 复述评估的失败文案。
+///
+/// 转写阶段失败（语音配置、录音边界或转写本身）用在线语音的分类说明，文字 AI
+/// 的失败仍用供应商分类：两类错误分开呈现，不把技术失败当成表达错误。
+String retellReviewErrorText(
+  BuildContext context,
+  RetellReviewEvaluationState state,
+) {
+  final speechError = state.speechError;
+  if (speechError != null) return speechErrorText(context, speechError);
+  return retellReviewErrorMessage(
+    AppLocalizations.of(context)!,
+    state.errorCode,
+  );
+}
 
 Future<void> showRetellReviewSheet(BuildContext context, {
   required String recordingPath, required AudioPreviewController preview,
@@ -53,11 +70,19 @@ class _RetellReviewSheet extends ConsumerWidget {
             style: Theme.of(context).textTheme.titleLarge)),
             IconButton(tooltip: MaterialLocalizations.of(context).closeButtonTooltip, onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.close_rounded))]),
+          // 在线转写只在供应商真报了费用时给数字，缺失就写未知。
+          if (state.onlineSpeech case final onlineSpeech?)
+            Align(alignment: Alignment.centerLeft, child: Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                speechCostText(l10n.localeName.startsWith('zh'),
+                  onlineSpeech.reportedCost),
+                style: Theme.of(context).textTheme.bodySmall))),
           if (pending) const LinearProgressIndicator(),
           Expanded(child: state.phase == RetellReviewEvaluationPhase.failed
             ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.error_outline),
-                Text(retellReviewErrorMessage(l10n, state.errorCode)),
+                Text(retellReviewErrorText(context, state)),
                 FilledButton.tonalIcon(onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded), label: Text(l10n.retellAiReviewRetry)),
               ]))

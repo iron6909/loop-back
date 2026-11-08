@@ -66,14 +66,18 @@ Widget _buildHarness(
   _RecordingRecognitionSettings notifier, {
   required bool systemSupported,
   bool onlineAvailable = false,
+  bool? retellOnlineAvailable,
 }) {
   return ProviderScope(
     overrides: [
       recognitionSettingsProvider.overrideWith(() => notifier),
       systemRecognitionPlatformProvider.overrideWithValue(systemSupported),
-      shadowingOnlineAvailabilityProvider.overrideWith(
-        (ref) async => onlineAvailable,
-      ),
+      onlinePracticeAvailabilityProvider(RecognitionPurpose.shadowing)
+          .overrideWith((ref) async => onlineAvailable),
+      onlinePracticeAvailabilityProvider(RecognitionPurpose.retell)
+          .overrideWith(
+            (ref) async => retellOnlineAvailable ?? onlineAvailable,
+          ),
     ],
     child: MaterialApp(
       supportedLocales: const [Locale('en'), Locale('zh')],
@@ -240,6 +244,44 @@ void main() {
       'whisper-base-en-int8',
       reason: '切到在线后仍保留本机档位，切回时不用重选',
     );
+  });
+
+  testWidgets('复述通过自己的文本验证后可选在线，保存为复述自己的在线方式', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(notifier, systemSupported: true, onlineAvailable: true),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Retelling'));
+    await tester.pumpAndSettle();
+    expect(find.text('Online speech'), findsOneWidget);
+
+    await tester.tap(find.text('Online speech'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.calls, hasLength(1));
+    expect(notifier.calls.single.purpose, RecognitionPurpose.retell);
+    expect(notifier.calls.single.selection.mode, RecognitionMode.online);
+  });
+
+  testWidgets('跟读通过验证不等于复述可在线', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        onlineAvailable: true,
+        retellOnlineAvailable: false,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Retelling'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Online speech'), findsNothing);
+    expect(find.text('System speech'), findsOneWidget);
   });
 
   testWidgets('条件不齐时在线不作为可选方式出现', (tester) async {

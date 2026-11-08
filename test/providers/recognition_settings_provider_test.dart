@@ -270,8 +270,20 @@ void main() {
           systemSupported: true,
           onlineAvailable: true,
         ),
+        [
+          RecognitionMode.local,
+          RecognitionMode.system,
+          RecognitionMode.online,
+        ],
+        reason: '复述自己的在线方式通过文本能力验证后才出现',
+      );
+      expect(
+        availableRecognitionModes(
+          RecognitionPurpose.retell,
+          systemSupported: true,
+        ),
         [RecognitionMode.local, RecognitionMode.system],
-        reason: '复述的在线分支由它自己的切片接通',
+        reason: '未就绪时不出现在线方式',
       );
       expect(RecognitionMode.values, hasLength(3));
     });

@@ -1,8 +1,11 @@
-/// 跟读录音的在线转写入口：文件准备、请求边界判定与单块上传。
+/// 练习录音（跟读、复述）的在线转写入口：文件准备、请求边界判定与单块上传。
 ///
 /// 录音停止后先判定格式与大小：单块范围内直接上传原始录音；超出单块范围时
-/// 返回 [ShadowingRecordingNeedsChunking]，交给练习录音的分块转写按有界分块
+/// 返回 [PracticeRecordingNeedsChunking]，交给练习录音的分块转写按有界分块
 /// 顺序上传。本类不截断录音、不改成本机、不自动重试，也不保留半成品。
+///
+/// 分块编排属于跟读的 #12；复述首期只支持单块，收到
+/// [PracticeRecordingNeedsChunking] 时由调用方明确失败，不只上传开头。
 library;
 
 import 'dart:io';
@@ -15,13 +18,13 @@ import 'speech_config.dart';
 import 'speech_transcription_client.dart';
 
 /// 单块录音的时长上限；超出即改走有界分块，不截断录音。
-const shadowingOnlineMaxDuration = Duration(minutes: 2);
+const practiceOnlineMaxDuration = Duration(minutes: 2);
 
 /// 单块上传的字节上限：既限制内存中的 multipart 体积，也避免触发服务端 413。
-const shadowingOnlineMaxBytes = 20 * 1024 * 1024;
+const practiceOnlineMaxBytes = 20 * 1024 * 1024;
 
 /// 请求前就能判定的拒绝原因；这些情况不发请求，录音文件原样保留。
-enum ShadowingRecordingRejection {
+enum PracticeRecordingRejection {
   /// 录音文件不存在或为空。
   fileMissing,
 
@@ -30,34 +33,40 @@ enum ShadowingRecordingRejection {
 
   /// 文件可读但没有可上传的音频样本。
   emptyAudio,
+
+  /// 时长超出单块上限；只有尚未接入分块的复述会用到。
+  tooLong,
+
+  /// 字节数超出单块上限；只有尚未接入分块的复述会用到。
+  tooLarge,
 }
 
 /// 录音不满足单块请求条件；[rejection] 供界面给出可操作原因。
-class ShadowingRecordingRejected implements Exception {
-  const ShadowingRecordingRejected(this.rejection);
+class PracticeRecordingRejected implements Exception {
+  const PracticeRecordingRejected(this.rejection);
 
-  final ShadowingRecordingRejection rejection;
+  final PracticeRecordingRejection rejection;
 
   @override
-  String toString() => 'ShadowingRecordingRejected(${rejection.name})';
+  String toString() => 'PracticeRecordingRejected(${rejection.name})';
 }
 
 /// 请求前的录音判定结果：单块内直接上传，或超出单块范围需要分块。
-sealed class ShadowingRecordingAccess {
-  const ShadowingRecordingAccess();
+sealed class PracticeRecordingAccess {
+  const PracticeRecordingAccess();
 }
 
 /// 超出单块请求范围：由练习录音的分块转写顺序上传，不截断也不只传开头。
-class ShadowingRecordingNeedsChunking extends ShadowingRecordingAccess {
-  const ShadowingRecordingNeedsChunking({this.duration});
+class PracticeRecordingNeedsChunking extends PracticeRecordingAccess {
+  const PracticeRecordingNeedsChunking({this.duration});
 
   /// 已从音频头解析出的真实时长；文件大到无法整份读入时为 null，由分块转写测长。
   final Duration? duration;
 }
 
 /// 通过格式与边界检查、可直接上传的录音。
-class ShadowingRecordingUpload extends ShadowingRecordingAccess {
-  const ShadowingRecordingUpload({
+class PracticeRecordingUpload extends PracticeRecordingAccess {
+  const PracticeRecordingUpload({
     required this.bytes,
     required this.fileName,
     required this.contentType,
@@ -74,14 +83,14 @@ class ShadowingRecordingUpload extends ShadowingRecordingAccess {
   final Duration duration;
 }
 
-/// 跟读在线的准入结果：要么可以发请求，要么给出拒绝原因。
-sealed class ShadowingOnlineAccess {
-  const ShadowingOnlineAccess();
+/// 练习录音在线的准入结果：要么可以发请求，要么给出拒绝原因。
+sealed class PracticeOnlineAccess {
+  const PracticeOnlineAccess();
 }
 
-/// 已具备 Key、上传告知与跟读用途的文本能力验证。
-class ShadowingOnlineAccessGranted extends ShadowingOnlineAccess {
-  const ShadowingOnlineAccessGranted({
+/// 已具备 Key、上传告知与该用途（跟读或复述）自己的文本能力验证。
+class PracticeOnlineAccessGranted extends PracticeOnlineAccess {
+  const PracticeOnlineAccessGranted({
     required this.config,
     required this.apiKey,
     required this.modelId,
@@ -91,7 +100,7 @@ class ShadowingOnlineAccessGranted extends ShadowingOnlineAccess {
   final SpeechConfig config;
   final String apiKey;
 
-  /// 跟读用途自己的在线模型，不借用字幕或复述的选择。
+  /// 该用途自己的在线模型，不借用字幕或其它用途的选择。
   final String modelId;
 
   /// 非秘密配置身份：分块进度只在同一身份下可以续试。
@@ -99,7 +108,7 @@ class ShadowingOnlineAccessGranted extends ShadowingOnlineAccess {
 }
 
 /// 拒绝发请求的原因；界面据此引导用户补配置或补验证。
-enum ShadowingOnlineAccessDenial {
+enum PracticeOnlineAccessDenial {
   /// 没有保存服务地址或 Key。
   missingConfiguration,
 
@@ -111,22 +120,22 @@ enum ShadowingOnlineAccessDenial {
 }
 
 /// 不具备在线转写条件；此时不得上传任何音频。
-class ShadowingOnlineAccessDenied extends ShadowingOnlineAccess
+class PracticeOnlineAccessDenied extends PracticeOnlineAccess
     implements Exception {
-  const ShadowingOnlineAccessDenied(this.reason);
+  const PracticeOnlineAccessDenied(this.reason);
 
-  final ShadowingOnlineAccessDenial reason;
+  final PracticeOnlineAccessDenial reason;
 
   @override
-  String toString() => 'ShadowingOnlineAccessDenied(${reason.name})';
+  String toString() => 'PracticeOnlineAccessDenied(${reason.name})';
 }
 
-/// 跟读在线转写的阶段，界面用它显示进度。
-enum ShadowingOnlinePhase { preparing, uploading, completed, failed }
+/// 练习录音在线转写的阶段，界面用它显示进度。
+enum PracticeOnlinePhase { preparing, uploading, completed, failed }
 
-/// 一次在线跟读转写的界面状态：服务、模型、进度与费用。
-class ShadowingOnlineState {
-  const ShadowingOnlineState({
+/// 一次在线转写的界面状态：服务、模型、进度与费用。
+class PracticeOnlineState {
+  const PracticeOnlineState({
     required this.serviceHost,
     required this.modelId,
     required this.phase,
@@ -143,7 +152,7 @@ class ShadowingOnlineState {
   final String serviceHost;
 
   final String modelId;
-  final ShadowingOnlinePhase phase;
+  final PracticeOnlinePhase phase;
 
   /// 上传进度 0~1；供应商未提供总量时为 null。
   final double? progress;
@@ -151,8 +160,8 @@ class ShadowingOnlineState {
   /// 供应商报告的本次费用；null 表示未知，界面不能显示为免费。
   final double? reportedCost;
 
-  /// 失败原因（[SpeechTranscriptionException] / [ShadowingRecordingRejected] /
-  /// [ShadowingOnlineAccessDenied] / [PracticeChunkFailure]），交给
+  /// 失败原因（[SpeechTranscriptionException] / [PracticeRecordingRejected] /
+  /// [PracticeOnlineAccessDenied] / [PracticeChunkFailure]），交给
   /// [speechErrorText] 显示。
   final Object? error;
 
@@ -168,14 +177,14 @@ class ShadowingOnlineState {
   /// 失败块可能已被供应商计费；续试会重新上传这一块。
   final bool mayHaveBeenCharged;
 
-  bool get isCompleted => phase == ShadowingOnlinePhase.completed;
-  bool get isFailed => phase == ShadowingOnlinePhase.failed;
+  bool get isCompleted => phase == PracticeOnlinePhase.completed;
+  bool get isFailed => phase == PracticeOnlinePhase.failed;
 
   /// 是否按多块顺序上传。
   bool get isChunked => totalChunks > 1;
 
-  ShadowingOnlineState copyWith({
-    ShadowingOnlinePhase? phase,
+  PracticeOnlineState copyWith({
+    PracticeOnlinePhase? phase,
     double? progress,
     double? reportedCost,
     Object? error,
@@ -183,7 +192,7 @@ class ShadowingOnlineState {
     int? totalChunks,
     bool? retryable,
     bool? mayHaveBeenCharged,
-  }) => ShadowingOnlineState(
+  }) => PracticeOnlineState(
     serviceHost: serviceHost,
     modelId: modelId,
     phase: phase ?? this.phase,
@@ -197,50 +206,50 @@ class ShadowingOnlineState {
   );
 }
 
-/// 跟读录音的单块在线转写。
+/// 练习录音的在线转写：单块直接上传，超出单块范围交由分块编排。
 ///
 /// [client] 复用 #7 落地的 [SpeechTranscriptionClient]，测试注入假 transport；
 /// 本类不另建 HTTP 客户端，也不重试或换供应商。
-class ShadowingOnlineTranscriber {
-  ShadowingOnlineTranscriber({SpeechTranscriptionClient? client})
+class PracticeOnlineTranscriber {
+  PracticeOnlineTranscriber({SpeechTranscriptionClient? client})
     : _client = client ?? SpeechTranscriptionClient();
 
   final SpeechTranscriptionClient _client;
 
   /// 判定录音怎么上传：单块内直接返回可上传字节，超出单块范围返回需要分块。
   ///
-  /// 格式不可识别或没有音频样本时抛 [ShadowingRecordingRejected]；这些情况不发
+  /// 格式不可识别或没有音频样本时抛 [PracticeRecordingRejected]；这些情况不发
   /// 请求，源录音原样保留。
-  Future<ShadowingRecordingAccess> prepare(String filePath) async {
+  Future<PracticeRecordingAccess> prepare(String filePath) async {
     final file = File(filePath);
     if (!await file.exists()) {
-      throw const ShadowingRecordingRejected(
-        ShadowingRecordingRejection.fileMissing,
+      throw const PracticeRecordingRejected(
+        PracticeRecordingRejection.fileMissing,
       );
     }
     final byteLength = await file.length();
     if (byteLength == 0) {
-      throw const ShadowingRecordingRejected(
-        ShadowingRecordingRejection.fileMissing,
+      throw const PracticeRecordingRejected(
+        PracticeRecordingRejection.fileMissing,
       );
     }
     // 超出单块字节上限时不必整份读入：先按文件头确认格式，再交给分块转写测长。
-    if (byteLength > shadowingOnlineMaxBytes) {
+    if (byteLength > practiceOnlineMaxBytes) {
       _formatOf(await file.openRead(0, 12).first);
-      return const ShadowingRecordingNeedsChunking();
+      return const PracticeRecordingNeedsChunking();
     }
     final bytes = await file.readAsBytes();
     final format = _formatOf(bytes);
     final duration = _durationOf(bytes, format);
     if (duration <= Duration.zero) {
-      throw const ShadowingRecordingRejected(
-        ShadowingRecordingRejection.emptyAudio,
+      throw const PracticeRecordingRejected(
+        PracticeRecordingRejection.emptyAudio,
       );
     }
-    if (duration > shadowingOnlineMaxDuration) {
-      return ShadowingRecordingNeedsChunking(duration: duration);
+    if (duration > practiceOnlineMaxDuration) {
+      return PracticeRecordingNeedsChunking(duration: duration);
     }
-    return ShadowingRecordingUpload(
+    return PracticeRecordingUpload(
       bytes: bytes,
       fileName: _fileNameOf(filePath, format),
       contentType: format.contentType,
@@ -253,7 +262,7 @@ class ShadowingOnlineTranscriber {
     required SpeechConfig config,
     required String apiKey,
     required String modelId,
-    required ShadowingRecordingUpload recording,
+    required PracticeRecordingUpload recording,
     void Function(double progress)? onProgress,
     CancelToken? cancelToken,
   }) => _client.transcribe(
@@ -263,7 +272,7 @@ class ShadowingOnlineTranscriber {
     audio: recording.bytes,
     fileName: recording.fileName,
     audioDuration: recording.duration,
-    // 跟读只需要文本：不请求片段时间戳，也不请求词时间戳参数。
+    // 练习录音只需要文本：不请求片段时间戳，也不请求词时间戳参数。
     format: SpeechResponseFormat.json,
     fileContentType: recording.contentType,
     onSendProgress: onProgress == null
@@ -278,16 +287,16 @@ class ShadowingOnlineTranscriber {
   /// 由文件头判断录音格式；跟读后端只产出 WAV 与 CAF。
   _RecordingFormat _formatOf(List<int> bytes) {
     if (bytes.length < 12) {
-      throw const ShadowingRecordingRejected(
-        ShadowingRecordingRejection.emptyAudio,
+      throw const PracticeRecordingRejected(
+        PracticeRecordingRejection.emptyAudio,
       );
     }
     final magic = String.fromCharCodes(bytes.sublist(0, 4));
     return switch (magic) {
       'RIFF' => _RecordingFormat.wav,
       'caff' => _RecordingFormat.caf,
-      _ => throw const ShadowingRecordingRejected(
-        ShadowingRecordingRejection.unsupportedFormat,
+      _ => throw const PracticeRecordingRejected(
+        PracticeRecordingRejection.unsupportedFormat,
       ),
     };
   }

@@ -10,7 +10,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/speech/shadowing_online_transcriber.dart';
+import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
 import 'package:echo_loop/services/speech/speech_transcription_client.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -119,29 +119,29 @@ void main() {
     return file.path;
   }
 
-  Future<ShadowingRecordingUpload> prepareUpload(
-    ShadowingOnlineTranscriber transcriber,
+  Future<PracticeRecordingUpload> prepareUpload(
+    PracticeOnlineTranscriber transcriber,
     String path,
   ) async {
     final access = await transcriber.prepare(path);
     return switch (access) {
-      ShadowingRecordingUpload() => access,
-      ShadowingRecordingNeedsChunking() => fail('应可直接上传'),
+      PracticeRecordingUpload() => access,
+      PracticeRecordingNeedsChunking() => fail('应可直接上传'),
     };
   }
 
   group('请求前检查', () {
     test('缺失文件明确拒绝', () async {
-      final transcriber = ShadowingOnlineTranscriber(
+      final transcriber = PracticeOnlineTranscriber(
         client: SpeechTranscriptionClient(dio: Dio()),
       );
       await expectLater(
         transcriber.prepare('${tempDir.path}/missing.wav'),
         throwsA(
-          isA<ShadowingRecordingRejected>().having(
+          isA<PracticeRecordingRejected>().having(
             (error) => error.rejection,
             'rejection',
-            ShadowingRecordingRejection.fileMissing,
+            PracticeRecordingRejection.fileMissing,
           ),
         ),
       );
@@ -149,16 +149,16 @@ void main() {
 
     test('不认识的容器明确拒绝，不当作音频上传', () async {
       final path = await writeRecording('note.txt', Uint8List(2048));
-      final transcriber = ShadowingOnlineTranscriber(
+      final transcriber = PracticeOnlineTranscriber(
         client: SpeechTranscriptionClient(dio: Dio()),
       );
       await expectLater(
         transcriber.prepare(path),
         throwsA(
-          isA<ShadowingRecordingRejected>().having(
+          isA<PracticeRecordingRejected>().having(
             (error) => error.rejection,
             'rejection',
-            ShadowingRecordingRejection.unsupportedFormat,
+            PracticeRecordingRejection.unsupportedFormat,
           ),
         ),
       );
@@ -169,35 +169,34 @@ void main() {
         'long.wav',
         _wav(const Duration(minutes: 3)),
       );
-      final transcriber = ShadowingOnlineTranscriber(
+      final transcriber = PracticeOnlineTranscriber(
         client: SpeechTranscriptionClient(dio: Dio()),
       );
-
       final access = await transcriber.prepare(path);
 
-      expect(access, isA<ShadowingRecordingNeedsChunking>());
+      expect(access, isA<PracticeRecordingNeedsChunking>());
       expect(switch (access) {
-        ShadowingRecordingNeedsChunking() => access.duration,
-        ShadowingRecordingUpload() => fail('超出单块时不应直接上传'),
+        PracticeRecordingNeedsChunking() => access.duration,
+        PracticeRecordingUpload() => fail('超出单块时不应直接上传'),
       }, const Duration(minutes: 3));
     });
 
     test('超出单块字节上限时交给分块转写，不整份读入内存', () async {
-      final big = Uint8List(shadowingOnlineMaxBytes + 1);
+      final big = Uint8List(practiceOnlineMaxBytes + 1);
       // 文件头保持合法容器，只有大小超出单块上限。
       big.setAll(0, _wav(Duration.zero).sublist(0, 12));
       final path = await writeRecording('huge.wav', big);
-      final transcriber = ShadowingOnlineTranscriber(
+      final transcriber = PracticeOnlineTranscriber(
         client: SpeechTranscriptionClient(dio: Dio()),
       );
 
       final access = await transcriber.prepare(path);
 
-      expect(access, isA<ShadowingRecordingNeedsChunking>());
+      expect(access, isA<PracticeRecordingNeedsChunking>());
       expect(
         switch (access) {
-          ShadowingRecordingNeedsChunking() => access.duration,
-          ShadowingRecordingUpload() => fail('超出单块时不应直接上传'),
+          PracticeRecordingNeedsChunking() => access.duration,
+          PracticeRecordingUpload() => fail('超出单块时不应直接上传'),
         },
         isNull,
         reason: '时长交给分块转写测长',
@@ -209,7 +208,7 @@ void main() {
         'take.wav',
         _wav(const Duration(seconds: 3)),
       );
-      final transcriber = ShadowingOnlineTranscriber(
+      final transcriber = PracticeOnlineTranscriber(
         client: SpeechTranscriptionClient(dio: Dio()),
       );
 
@@ -228,7 +227,7 @@ void main() {
       final client = SpeechTranscriptionClient(
         dio: Dio()..httpClientAdapter = adapter,
       );
-      final transcriber = ShadowingOnlineTranscriber(client: client);
+      final transcriber = PracticeOnlineTranscriber(client: client);
       final path = await writeRecording(
         'take.wav',
         _wav(const Duration(seconds: 2)),
@@ -268,7 +267,7 @@ void main() {
       final client = SpeechTranscriptionClient(
         dio: Dio()..httpClientAdapter = adapter,
       );
-      final transcriber = ShadowingOnlineTranscriber(client: client);
+      final transcriber = PracticeOnlineTranscriber(client: client);
       final upload = await prepareUpload(
         transcriber,
         await writeRecording('take.wav', _wav(const Duration(seconds: 1))),
