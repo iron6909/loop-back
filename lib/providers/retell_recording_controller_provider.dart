@@ -221,12 +221,16 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
 
   // ========== 配置方法 ==========
 
-  /// 登记本回合为复述用途的在途任务，供识别设置变更告知与取消。
+  /// 登记本回合为复述用途的在途任务，供识别设置与语音配置变更告知与取消。
   void _registerInFlight(String promptId) {
     _unregisterInFlight();
     final task = RecognitionInFlightTask(
       purpose: RecognitionPurpose.retell,
       label: promptId,
+      usesOnlineSpeech: ref
+          .read(recognitionSettingsProvider)
+          .retell
+          .usesOnlineModel,
       onCancel: cancelActiveRecording,
     );
     _inFlightTask = task;

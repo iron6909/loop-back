@@ -2,6 +2,10 @@
 ///
 /// 与文字 AI 共享同一套既有分类文案（鉴权、余额、地址/模型、限流、超时、服务、
 /// 网络），只额外补充语音特有的分类，避免两套说法不一致。
+///
+/// 这些文案按当前语言分支就地维护、不迁 ARB：整套分类的唯一来源是
+/// `providerErrorCodeText(code, zh)`，它不依赖 BuildContext（[speechCostText]
+/// 同样只收 bool）；只把语音这一半迁走会让同一分类在 ARB 与代码里各存一份。
 library;
 
 import 'package:flutter/widgets.dart';
@@ -23,10 +27,10 @@ String speechErrorText(BuildContext context, Object error) {
         zh ? '语音配置已变化，请重新转写' : 'Speech settings changed; transcribe again',
       PracticeChunkFailureReason.cancelled => zh ? '已取消' : 'Cancelled',
       // 供应商失败按既有分类显示具体原因（超时、网络、鉴权……）。
-      PracticeChunkFailureReason.requestFailed =>
-        error.cause == null
-            ? providerErrorCodeText('invalidResponse', zh)
-            : speechErrorText(context, error.cause!),
+      PracticeChunkFailureReason.requestFailed => switch (error.cause) {
+        final cause? => speechErrorText(context, cause),
+        null => providerErrorCodeText('invalidResponse', zh),
+      },
     };
   }
   if (error is PracticeRecordingRejected) {

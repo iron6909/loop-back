@@ -4,6 +4,7 @@ library;
 import 'package:dio/dio.dart';
 import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/recognition_selection.dart';
+import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/speech_capability_provider.dart';
 import 'package:echo_loop/providers/speech_configuration_provider.dart';
 import 'package:echo_loop/services/speech/speech_capability.dart';
@@ -155,6 +156,7 @@ void main() {
     SpeechCapabilityStore? capabilityStore,
     SpeechCapabilityProbe? probe,
     SpeechModelCatalogClient? catalog,
+    RecognitionInFlightRegistry? inFlightRegistry,
   }) => ProviderScope(
     overrides: [
       speechConfigStoreProvider.overrideWithValue(speechStore),
@@ -163,6 +165,8 @@ void main() {
       if (probe != null) speechCapabilityProbeProvider.overrideWithValue(probe),
       if (catalog != null)
         speechModelCatalogClientProvider.overrideWithValue(catalog),
+      if (inFlightRegistry != null)
+        recognitionInFlightTasksProvider.overrideWithValue(inFlightRegistry),
     ],
     child: MaterialApp(
       locale: const Locale('en'),
@@ -353,6 +357,135 @@ void main() {
       store.config?.onlineModelFor(RecognitionPurpose.subtitle),
       'openai/whisper-large-v3',
     );
+  });
+
+  group('改语音服务配置时处理在途任务', () {
+    /// 记录取消动作的在途任务；[usesOnlineSpeech] 表示是否绑定语音服务配置。
+    RecognitionInFlightTask inFlightTask(
+      RecognitionPurpose purpose,
+      List<RecognitionPurpose> cancelled, {
+      bool usesOnlineSpeech = true,
+    }) => RecognitionInFlightTask(
+      purpose: purpose,
+      label: purpose.name,
+      usesOnlineSpeech: usesOnlineSpeech,
+      onCancel: () async => cancelled.add(purpose),
+    );
+
+    testWidgets('改某用途在线模型时告知，拒绝则保留配置与在途任务', (tester) async {
+      final cancelled = <RecognitionPurpose>[];
+      final registry = RecognitionInFlightRegistry();
+      final task = inFlightTask(RecognitionPurpose.subtitle, cancelled);
+      registry.register(task);
+      final store = _InMemorySpeechConfigStore(
+        config: _openRouterConfigWithModels,
+        apiKey: 'sk-speech-sentinel-4b7d',
+      );
+      await tester.pumpWidget(app(store, inFlightRegistry: registry));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Subtitles online model'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'openai/whisper-large-v3-new');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Change recognition settings?'), findsOneWidget);
+      expect(
+        find.textContaining('Running recognition tasks affected: 1'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(
+        store.config?.onlineModelFor(RecognitionPurpose.subtitle),
+        'openai/whisper-large-v3',
+      );
+      expect(cancelled, isEmpty);
+      expect(task.isCancelled, isFalse);
+      expect(registry.pendingFor(RecognitionPurpose.subtitle), [task]);
+    });
+
+    testWidgets('接受后取消受影响任务并保存，无关用途不受影响', (tester) async {
+      final cancelled = <RecognitionPurpose>[];
+      final registry = RecognitionInFlightRegistry();
+      final subtitleTask = inFlightTask(RecognitionPurpose.subtitle, cancelled);
+      final shadowingTask = inFlightTask(
+        RecognitionPurpose.shadowing,
+        cancelled,
+      );
+      registry.register(subtitleTask);
+      registry.register(shadowingTask);
+      final store = _InMemorySpeechConfigStore(
+        config: _openRouterConfigWithModels,
+        apiKey: 'sk-speech-sentinel-4b7d',
+      );
+      await tester.pumpWidget(app(store, inFlightRegistry: registry));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Subtitles online model'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'openai/whisper-large-v3-new');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel tasks and change'));
+      await tester.pumpAndSettle();
+
+      expect(
+        store.config?.onlineModelFor(RecognitionPurpose.subtitle),
+        'openai/whisper-large-v3-new',
+      );
+      expect(
+        store.config?.onlineModelFor(RecognitionPurpose.shadowing),
+        'openai/whisper-large-v3',
+        reason: '只改字幕模型，其它用途的在线模型保持不变',
+      );
+      expect(cancelled, [RecognitionPurpose.subtitle]);
+      expect(shadowingTask.isCancelled, isFalse);
+      expect(registry.pendingFor(RecognitionPurpose.shadowing), [shadowingTask]);
+    });
+
+    testWidgets('改服务地址影响全部在线任务，本机任务不受影响', (tester) async {
+      final cancelled = <RecognitionPurpose>[];
+      final registry = RecognitionInFlightRegistry();
+      final retellOnlineTask = inFlightTask(RecognitionPurpose.retell, cancelled);
+      final localSubtitleTask = inFlightTask(
+        RecognitionPurpose.subtitle,
+        cancelled,
+        usesOnlineSpeech: false,
+      );
+      registry.register(retellOnlineTask);
+      registry.register(localSubtitleTask);
+      final store = _InMemorySpeechConfigStore(
+        config: _openRouterConfigWithModels,
+        apiKey: 'sk-speech-sentinel-4b7d',
+      );
+      await tester.pumpWidget(app(store, inFlightRegistry: registry));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Base URL'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byType(TextField),
+        'https://speech.example.com/v1',
+      );
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Running recognition tasks affected: 1'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Cancel tasks and change'));
+      await tester.pumpAndSettle();
+
+      expect(store.config?.baseUrl, 'https://speech.example.com/v1');
+      expect(cancelled, [RecognitionPurpose.retell]);
+      expect(localSubtitleTask.isCancelled, isFalse);
+    });
   });
 
   testWidgets('首次验证前告知上传目标、下游供应商与可能收费，取消则不发请求', (tester) async {

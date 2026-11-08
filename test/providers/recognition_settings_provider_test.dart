@@ -475,4 +475,76 @@ void main() {
       );
     });
   });
+
+  group('语音配置变更的在途任务', () {
+    RecognitionInFlightTask task(
+      String name,
+      RecognitionPurpose purpose,
+      List<String> cancelled, {
+      bool usesOnlineSpeech = true,
+    }) => RecognitionInFlightTask(
+      purpose: purpose,
+      label: name,
+      usesOnlineSpeech: usesOnlineSpeech,
+      onCancel: () async => cancelled.add(name),
+    );
+
+    test('只取指定用途内绑定在线配置的任务', () {
+      final cancelled = <String>[];
+      final registry = RecognitionInFlightRegistry();
+      final subtitleOnline = task(
+        'subtitle-online',
+        RecognitionPurpose.subtitle,
+        cancelled,
+      );
+      final retellOnline = task(
+        'retell-online',
+        RecognitionPurpose.retell,
+        cancelled,
+      );
+      final subtitleLocal = task(
+        'subtitle-local',
+        RecognitionPurpose.subtitle,
+        cancelled,
+        usesOnlineSpeech: false,
+      );
+      registry.register(subtitleOnline);
+      registry.register(retellOnline);
+      registry.register(subtitleLocal);
+
+      expect(
+        registry.pendingOnline({RecognitionPurpose.subtitle}),
+        [subtitleOnline],
+        reason: '只改字幕在线模型：复述与本机字幕任务都不受影响',
+      );
+      expect(registry.pendingOnline(RecognitionPurpose.values.toSet()), [
+        subtitleOnline,
+        retellOnline,
+      ]);
+    });
+
+    test('取消后执行任务自己的取消入口并移出登记处', () async {
+      final cancelled = <String>[];
+      final registry = RecognitionInFlightRegistry();
+      final subtitleOnline = task(
+        'subtitle-online',
+        RecognitionPurpose.subtitle,
+        cancelled,
+      );
+      final retellOnline = task(
+        'retell-online',
+        RecognitionPurpose.retell,
+        cancelled,
+      );
+      registry.register(subtitleOnline);
+      registry.register(retellOnline);
+
+      await registry.cancel([subtitleOnline]);
+
+      expect(cancelled, ['subtitle-online']);
+      expect(subtitleOnline.isCancelled, isTrue);
+      expect(registry.pendingFor(RecognitionPurpose.subtitle), isEmpty);
+      expect(registry.pendingFor(RecognitionPurpose.retell), [retellOnline]);
+    });
+  });
 }

@@ -60,9 +60,11 @@ class PracticeChunkFailure implements Exception {
   final bool mayHaveBeenCharged;
 
   @override
-  String toString() =>
-      'PracticeChunkFailure(${reason.name}'
-      '${failedChunk == null ? '' : ', chunk=${failedChunk!.index + 1}'})';
+  String toString() {
+    final chunk = failedChunk;
+    return 'PracticeChunkFailure(${reason.name}'
+        '${chunk == null ? '' : ', chunk=${chunk.index + 1}'})';
+  }
 }
 
 /// 一次练习录音分块转写的会话进度，由练习会话持有。
