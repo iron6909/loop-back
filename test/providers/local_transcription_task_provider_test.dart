@@ -10,13 +10,18 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:echo_loop/database/app_database.dart' as db;
+import 'package:echo_loop/database/daos/audio_item_dao.dart';
 import 'package:echo_loop/database/providers.dart';
 import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
+import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'package:echo_loop/models/audio_item.dart';
+import 'package:echo_loop/models/recognition_selection.dart';
 import 'package:echo_loop/providers/audio_library_provider.dart';
 import 'package:echo_loop/providers/local_transcription_task_provider.dart';
+import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
 import 'package:echo_loop/providers/asr_engine_provider.dart';
 import 'package:echo_loop/services/asr/offline_asr_engine.dart';
@@ -125,6 +130,92 @@ class _FakeTranscode extends AudioTranscodeService {
   }
 }
 
+/// 分段结果由测试控制的引擎：用于在识别期间插入用户操作。
+class _GatedEngine implements OfflineAsrEngine {
+  _GatedEngine(this.gate);
+
+  final Completer<List<AsrSegment>> gate;
+  int disposeCalls = 0;
+
+  @override
+  String get name => 'gated';
+  @override
+  bool get isReady => true;
+  @override
+  AsrModelInfo? get currentModel => null;
+
+  @override
+  Future<void> initialize(AsrModelConfig config) async {}
+
+  @override
+  Future<AsrResult> transcribe(String wavPath) async =>
+      const AsrResult(text: '', inferenceTime: Duration.zero);
+
+  @override
+  Future<List<AsrSegment>> transcribeSegments(
+    String wavPath, {
+    void Function(double progress)? onProgress,
+  }) => gate.future;
+
+  @override
+  Future<void> dispose() async {
+    disposeCalls++;
+  }
+}
+
+/// 可控提交时机的 DAO：只改写提交入口的时序，事务与写入仍走真实实现。
+///
+/// [writeBeforeGate] 为 true 时先在事务里写入再挂起，用于验证「提交已开始后
+/// 取消以事务结果为准」；否则先挂起，用于验证「提交前取消不写入」。
+class _CommitGateDao extends AudioItemDao {
+  _CommitGateDao(super.db, {this.writeBeforeGate = false});
+
+  final bool writeBeforeGate;
+
+  /// 流水线已到达提交入口。
+  final commitReached = Completer<void>();
+  final _release = Completer<void>();
+
+  /// 放行提交。
+  void release() => _release.complete();
+
+  @override
+  Future<TranscriptCommitResult> commitTranscription({
+    required String audioItemId,
+    required String srt,
+    required String? wordTimestampsJson,
+    required int transcriptSource,
+    required int? transcriptWordTimingSource,
+    required String? transcriptLanguage,
+    required int sentenceCount,
+    required int wordCount,
+    required String? expectedSrt,
+    required bool Function() isCancelled,
+  }) async {
+    if (!writeBeforeGate) {
+      commitReached.complete();
+      await _release.future;
+    }
+    final result = await super.commitTranscription(
+      audioItemId: audioItemId,
+      srt: srt,
+      wordTimestampsJson: wordTimestampsJson,
+      transcriptSource: transcriptSource,
+      transcriptWordTimingSource: transcriptWordTimingSource,
+      transcriptLanguage: transcriptLanguage,
+      sentenceCount: sentenceCount,
+      wordCount: wordCount,
+      expectedSrt: expectedSrt,
+      isCancelled: isCancelled,
+    );
+    if (writeBeforeGate) {
+      commitReached.complete();
+      await _release.future;
+    }
+    return result;
+  }
+}
+
 /// 假模型管理器：modelDir 返回临时目录，VAD 视为未下载（fake 引擎忽略 config）。
 class _FakeModelManager extends AsrModelManager {
   _FakeModelManager(this._dir);
@@ -165,10 +256,13 @@ Future<void> _seedRow(db.AppDatabase database, AudioItem item) async {
 void main() {
   late db.AppDatabase database;
   late Directory dataDir;
+  late SharedPreferences prefs;
 
   setUp(() async {
     database = db.AppDatabase(NativeDatabase.memory());
     dataDir = await Directory.systemTemp.createTemp('local_tx_');
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
   });
 
   tearDown(() async {
@@ -180,12 +274,15 @@ void main() {
     required OfflineAsrEngine engine,
     required _FakeTranscode transcode,
     List<AudioItem>? items,
+    AudioItemDao? dao,
   }) {
     final fileOps = MockTranscriptionFileOps();
     when(() => fileOps.getDataDir()).thenAnswer((_) async => dataDir);
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWithValue(database),
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        if (dao != null) audioItemDaoProvider.overrideWithValue(dao),
         audioLibraryProvider.overrideWith(TestAudioLibrary.new),
         transcriptionFileOpsProvider.overrideWithValue(fileOps),
         localTranscriptionEngineFactoryProvider.overrideWithValue(() => engine),
@@ -318,6 +415,262 @@ void main() {
       expect(
         container.read(audioLibraryProvider).audioItems.single.audioPath,
         item.audioPath,
+      );
+    });
+
+    test('提交成功：字幕、词时间戳、来源、语言与句词计数同事务落库，内存与数据库一致', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      final container = buildContainer(
+        engine: _FakeEngine(const [
+          AsrSegment(
+            text: 'Hello world.',
+            start: Duration(milliseconds: 200),
+            end: Duration(milliseconds: 900),
+          ),
+        ]),
+        transcode: _FakeTranscode(),
+        items: [item],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(localTranscriptionTaskManagerProvider.notifier)
+          .startLocalTranscription(
+            item,
+            model: model,
+            autoMergeShortSentences: false,
+          );
+
+      final row = await database.audioItemDao.getById(item.id);
+      expect(row, isNotNull);
+      expect(row!.transcriptSrt, contains('Hello world'));
+      expect(row.wordTimestampsJson, isNotNull);
+      expect(row.transcriptSource, TranscriptSource.device.index);
+      expect(row.transcriptLanguage, 'en');
+      expect(row.sentenceCount, 1);
+      expect(row.wordCount, 2);
+
+      // 事务提交后才刷新内存，两者描述同一次成功结果。
+      final memory = container.read(audioLibraryProvider).audioItems.single;
+      expect(memory.transcriptSource, TranscriptSource.device);
+      expect(memory.transcriptLanguage, 'en');
+      expect(memory.sentenceCount, row.sentenceCount);
+      expect(memory.wordCount, row.wordCount);
+    });
+
+    test('识别期间用户导入字幕：提交冲突，保留用户较新的字幕并提示冲突', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      final gate = Completer<List<AsrSegment>>();
+      final container = buildContainer(
+        engine: _GatedEngine(gate),
+        transcode: _FakeTranscode(),
+        items: [item],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        localTranscriptionTaskManagerProvider.notifier,
+      );
+
+      final future = notifier.startLocalTranscription(item, model: model);
+      for (
+        var i = 0;
+        i < 200 &&
+            notifier.getTaskState(item.id) is! LocalTranscriptionTranscribing;
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
+      expect(
+        notifier.getTaskState(item.id),
+        isA<LocalTranscriptionTranscribing>(),
+      );
+
+      // 用户在识别期间导入新字幕（与导入主干一样先写入字幕内容）。
+      await database.audioItemDao.saveTranscriptContent(
+        item.id,
+        srt: 'user imported subtitles',
+        wordTimestampsJson: 'user imported words',
+      );
+
+      gate.complete(const [
+        AsrSegment(
+          text: 'Model text.',
+          start: Duration(milliseconds: 200),
+          end: Duration(milliseconds: 900),
+        ),
+      ]);
+      await future;
+
+      expect(
+        await database.audioItemDao.getTranscriptSrt(item.id),
+        'user imported subtitles',
+      );
+      expect(
+        await database.audioItemDao.getWordTimestamps(item.id),
+        'user imported words',
+      );
+      expect(
+        notifier.getTaskState(item.id),
+        isA<LocalTranscriptionConflict>(),
+      );
+      // 内存条目未被本次识别结果覆盖。
+      final memory = container.read(audioLibraryProvider).audioItems.single;
+      expect(memory.sentenceCount, 0);
+      expect(memory.transcriptSource, isNull);
+    });
+
+    test('提交前取消：事务不写入，保持用户已有字幕与已取消状态', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      await database.audioItemDao.saveTranscriptContent(
+        item.id,
+        srt: 'original subtitles',
+        wordTimestampsJson: 'original timestamps',
+      );
+      final dao = _CommitGateDao(database);
+      final container = buildContainer(
+        engine: _FakeEngine(const [
+          AsrSegment(
+            text: 'Model text.',
+            start: Duration(milliseconds: 200),
+            end: Duration(milliseconds: 900),
+          ),
+        ]),
+        transcode: _FakeTranscode(),
+        items: [item],
+        dao: dao,
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        localTranscriptionTaskManagerProvider.notifier,
+      );
+
+      final future = notifier.startLocalTranscription(item, model: model);
+      await dao.commitReached.future;
+      // 事务尚未写入时用户取消。
+      notifier.cancelTranscription(item.id);
+      dao.release();
+      await future;
+
+      expect(
+        await database.audioItemDao.getTranscriptSrt(item.id),
+        'original subtitles',
+      );
+      expect(
+        await database.audioItemDao.getWordTimestamps(item.id),
+        'original timestamps',
+      );
+      expect(notifier.getTaskState(item.id), isA<LocalTranscriptionIdle>());
+    });
+
+    test('提交已开始后取消：以事务结果为准，不出现报取消但字幕被覆盖', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      final dao = _CommitGateDao(database, writeBeforeGate: true);
+      final container = buildContainer(
+        engine: _FakeEngine(const [
+          AsrSegment(
+            text: 'Model text.',
+            start: Duration(milliseconds: 200),
+            end: Duration(milliseconds: 900),
+          ),
+        ]),
+        transcode: _FakeTranscode(),
+        items: [item],
+        dao: dao,
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        localTranscriptionTaskManagerProvider.notifier,
+      );
+
+      final future = notifier.startLocalTranscription(item, model: model);
+      await dao.commitReached.future;
+      // 事务已写入，此时取消不能把界面留在「已取消」。
+      notifier.cancelTranscription(item.id);
+      dao.release();
+      await future;
+
+      expect(
+        await database.audioItemDao.getTranscriptSrt(item.id),
+        contains('Model text'),
+      );
+      expect(
+        notifier.getTaskState(item.id),
+        isA<LocalTranscriptionCompleted>(),
+      );
+    });
+
+    test('数据库写入失败：回滚字幕与元数据，保留原媒体与界面状态', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      await database.audioItemDao.saveTranscriptContent(
+        item.id,
+        srt: 'original subtitles',
+        wordTimestampsJson: 'original timestamps',
+      );
+      final source = File('${dataDir.path}/${item.audioPath}');
+      await source.parent.create(recursive: true);
+      await source.writeAsBytes([1, 2, 3, 4]);
+      await database.learningProgressDao.upsert(
+        db.LearningProgressesCompanion(
+          audioItemId: Value(item.id),
+          updatedAt: Value(DateTime(2026)),
+        ),
+      );
+      // 用真实 SQLite 触发器让提交事务内的写入失败（模拟磁盘/元数据写入错误）。
+      await database.customStatement(
+        'CREATE TRIGGER fail_device_transcript BEFORE UPDATE ON audio_items '
+        "WHEN NEW.transcript_source = ${TranscriptSource.device.index} "
+        "BEGIN SELECT RAISE(ABORT, 'write failed'); END",
+      );
+      final container = buildContainer(
+        engine: _FakeEngine(const [
+          AsrSegment(
+            text: 'Model text.',
+            start: Duration(milliseconds: 200),
+            end: Duration(milliseconds: 900),
+          ),
+        ]),
+        transcode: _FakeTranscode(),
+        items: [item],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        localTranscriptionTaskManagerProvider.notifier,
+      );
+
+      await runZoned<Future<void>>(
+        () => notifier.startLocalTranscription(item, model: model),
+        zoneSpecification: ZoneSpecification(print: (_, _, _, _) {}),
+      );
+
+      expect(notifier.getTaskState(item.id), isA<LocalTranscriptionFailed>());
+      expect(
+        await database.audioItemDao.getTranscriptSrt(item.id),
+        'original subtitles',
+      );
+      expect(
+        await database.audioItemDao.getWordTimestamps(item.id),
+        'original timestamps',
+      );
+      // 来源、语言与句词计数未随失败提交部分写入。
+      final row = await database.audioItemDao.getById(item.id);
+      expect(row!.transcriptSource, isNull);
+      expect(row.transcriptLanguage, isNull);
+      expect(row.sentenceCount, 0);
+      expect(row.wordCount, 0);
+      // 界面内存条目保持原样，学习记录与原始媒体未被删除。
+      final memory = container.read(audioLibraryProvider).audioItems.single;
+      expect(memory.transcriptSource, isNull);
+      expect(memory.sentenceCount, 0);
+      expect(memory.audioPath, item.audioPath);
+      expect(await source.readAsBytes(), [1, 2, 3, 4]);
+      expect(
+        await database.learningProgressDao.getByAudioId(item.id),
+        isNotNull,
       );
     });
 
@@ -697,6 +1050,81 @@ void main() {
         seg('tail', 4200, 4700), // 残余短段独立保留
       ]);
       expect(result.map((s) => s.text).toList(), ['a', 'tail']);
+    });
+  });
+
+  group('识别设置变更与在途字幕任务', () {
+    test('识别中先告知受影响任务，接受后才取消且旧结果不写库', () async {
+      final item = _testAudioItem();
+      await _seedRow(database, item);
+      final gate = Completer<List<AsrSegment>>();
+      final container = buildContainer(
+        engine: _GatedEngine(gate),
+        transcode: _FakeTranscode(),
+        items: [item],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(
+        localTranscriptionTaskManagerProvider.notifier,
+      );
+
+      final future = notifier.startLocalTranscription(
+        item,
+        model: availableModels.first,
+      );
+      for (
+        var i = 0;
+        i < 200 &&
+            notifier.getTaskState(item.id) is! LocalTranscriptionTranscribing;
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+      }
+      expect(
+        notifier.getTaskState(item.id),
+        isA<LocalTranscriptionTranscribing>(),
+      );
+
+      final settings = container.read(recognitionSettingsProvider.notifier);
+      final nextModel = availableModels[2];
+      final declined = await settings.change(
+        purpose: RecognitionPurpose.subtitle,
+        selection: RecognitionSelection.local(nextModel.id),
+      );
+      expect(declined.applied, isFalse);
+      expect(declined.affectedTasks, hasLength(1));
+      expect(
+        container.read(localTranscriptionTaskManagerProvider)[item.id],
+        isA<LocalTranscriptionTranscribing>(),
+        reason: '未确认前任务与配置都保持原样',
+      );
+
+      final accepted = await settings.change(
+        purpose: RecognitionPurpose.subtitle,
+        selection: RecognitionSelection.local(nextModel.id),
+        cancelInFlight: true,
+      );
+      expect(accepted.applied, isTrue);
+      expect(
+        container.read(recognitionSettingsProvider).subtitle.localModelId,
+        nextModel.id,
+      );
+
+      gate.complete(const [
+        AsrSegment(
+          text: 'Model text.',
+          start: Duration(milliseconds: 200),
+          end: Duration(milliseconds: 900),
+        ),
+      ]);
+      await future;
+
+      // 取消后迟到的识别结果不能写回字幕。
+      expect(await database.audioItemDao.getTranscriptSrt(item.id), isNull);
+      expect(
+        notifier.getTaskState(item.id),
+        isNot(isA<LocalTranscriptionCompleted>()),
+      );
     });
   });
 }

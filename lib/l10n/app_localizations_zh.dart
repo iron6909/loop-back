@@ -1959,6 +1959,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get asrBackendOfflineDescription => '使用应用自带的 AI 模型，支持离线使用，需下载';
 
   @override
+  String get asrBackendLocalWhisper => 'Whisper（本机）';
+
+  @override
+  String get asrBackendLocalWhisperDescription => '使用应用内置的 Whisper 模型，下载后可离线使用';
+
+  @override
+  String get asrDownloadSourceTitle => '模型来源';
+
+  @override
+  String get asrDownloadSourceDescription => '仅作用于已迁移的公开模型，两个来源使用相同版本与校验值。';
+
+  @override
+  String get asrDownloadSourceHuggingFace => 'Hugging Face';
+
+  @override
+  String get asrDownloadSourceHuggingFaceMirror => 'hf-mirror.com（镜像）';
+
+  @override
+  String asrModelSourceLine(String source, String license) {
+    return '来源：$source · 许可：$license';
+  }
+
+  @override
   String asrModelTier(String tier) {
     return '模型：$tier（根据设备性能自动选择）';
   }
@@ -2187,6 +2210,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get transcriptionFailed => '转录失败';
+
+  @override
+  String get transcriptionConflict => '字幕已被其他操作替换，保留了你较新的字幕';
 
   @override
   String get transcriptionErrorConnection => '无法连接服务器';
@@ -3476,7 +3502,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get senseGroupSyntheticTimingNoticeMessage =>
-      '这个意群播放时间是从你上传的字幕推测出来的，可能不准确。';
+      '这个意群播放时间由词长估算得出，可能与实际发音不完全一致。';
 
   @override
   String get transcriptionSignInRequiredTitle => '登录后使用 AI 转录';
@@ -5603,4 +5629,241 @@ class AppLocalizationsZh extends AppLocalizations {
   String folderUnsupportedFiles(int count) {
     return '已忽略不支持的文件 $count 个';
   }
+
+  @override
+  String get recognitionPurposeTitle => '按用途识别';
+
+  @override
+  String get recognitionPurposeDescription => '字幕、跟读、复述各自选择识别方式与模型，互不影响。';
+
+  @override
+  String get recognitionPurposeSubtitle => '字幕转录';
+
+  @override
+  String get recognitionPurposeShadowing => '跟读';
+
+  @override
+  String get recognitionPurposeRetell => '复述';
+
+  @override
+  String get recognitionModeLocal => '本机识别';
+
+  @override
+  String get recognitionModeSystem => '系统识别';
+
+  @override
+  String get recognitionModeOnline => '在线识别';
+
+  @override
+  String recognitionOnlineModelSummary(String model) {
+    return '在线识别 · $model';
+  }
+
+  @override
+  String get recognitionOnlineNeedsConfiguration => '需先在下方「在线语音服务」填写服务地址与 Key';
+
+  @override
+  String get recognitionOnlineNeedsUploadNotice =>
+      '需先在下方「在线语音服务」点「验证模型」；首次会告知上传目标与可能费用';
+
+  @override
+  String get recognitionOnlineNeedsVerification =>
+      '需先在下方「在线语音服务」点「验证模型」，验证该用途的在线模型';
+
+  @override
+  String shadowingOnlineProgress(String service, String model, int percent) {
+    return '在线 · $service · $model · $percent%';
+  }
+
+  @override
+  String shadowingOnlineCost(String service, String model, String cost) {
+    return '在线 · $service · $model · 费用 $cost';
+  }
+
+  @override
+  String shadowingOnlineCostUnknown(String service, String model) {
+    return '在线 · $service · $model · 费用未知';
+  }
+
+  @override
+  String shadowingOnlineChunkProgress(int completed, int total) {
+    return '$completed/$total 块已完成';
+  }
+
+  @override
+  String get shadowingOnlineChargeWarning => '失败块可能已计费';
+
+  @override
+  String get shadowingOnlineRetry => '重试未完成部分';
+
+  @override
+  String get recognitionChangeTitle => '修改识别设置？';
+
+  @override
+  String recognitionChangeMessage(int count) {
+    return '有 $count 个正在进行的识别任务会受影响。继续将取消这些任务，未完成的结果不会写回。';
+  }
+
+  @override
+  String get recognitionChangeConfirm => '取消任务并修改';
+
+  @override
+  String get speechProviderTitle => '在线语音服务';
+
+  @override
+  String get speechProviderDescription =>
+      '字幕、跟读与复述共用一份服务地址与 Key；根地址直接追加 /audio/transcriptions，不自动补 /v1。';
+
+  @override
+  String get speechProviderStatusUnconfigured => '未配置';
+
+  @override
+  String get speechProviderStatusMissingKey => '缺少 API Key';
+
+  @override
+  String get speechProviderStatusUnverified => '已保存，尚未验证';
+
+  @override
+  String get speechProviderStatusVerified => '已保存，已验证';
+
+  @override
+  String get speechProviderSaveFailed => '无法保存在线语音配置';
+
+  @override
+  String speechProviderOnlineModel(String purpose) {
+    return '$purpose在线模型';
+  }
+
+  @override
+  String get speechCapabilityTest => '验证模型';
+
+  @override
+  String get speechCapabilityTesting => '验证中…';
+
+  @override
+  String get speechCapabilityUnverified => '尚未验证';
+
+  @override
+  String get speechCapabilitySubtitles => '字幕可用';
+
+  @override
+  String get speechCapabilityTextOnly => '仅文本可用（无可用片段）';
+
+  @override
+  String get speechCapabilityWords => '词时间戳可用';
+
+  @override
+  String speechCapabilityVerifiedCost(String cost) {
+    return '验证完成。供应商报告的本次费用：$cost';
+  }
+
+  @override
+  String get speechCapabilityVerifiedCostUnknown => '验证完成。供应商未报告费用，实际花费未知';
+
+  @override
+  String get speechModelRefresh => '刷新转写模型目录';
+
+  @override
+  String get speechModelRefreshEmpty => '服务没有返回转写模型，仍可手填模型 ID';
+
+  @override
+  String get speechModelRefreshFailed => '无法获取模型目录，仍可手填模型 ID';
+
+  @override
+  String get speechUploadNoticeTitle => '发送测试音频？';
+
+  @override
+  String speechUploadNoticeBody(String host, String provider) {
+    return 'Echo Loop 会把随包的 4 秒英语样本上传到 $host，下游推理供应商为 $provider。该服务可能为此向你收费；测试不会使用你自己的录音。';
+  }
+
+  @override
+  String get speechUploadProviderOpenRouter => 'OpenRouter 及其路由到的下游供应商';
+
+  @override
+  String get speechUploadProviderCustom => '该服务的运营方（下游供应商未知）';
+
+  @override
+  String get speechUploadNoticeConfirm => '发送测试';
+
+  @override
+  String onlineSubtitleService(String service, String model) {
+    return '在线字幕：$service · $model';
+  }
+
+  @override
+  String onlineSubtitleCost(String cost) {
+    return '供应商报告的本次费用：$cost';
+  }
+
+  @override
+  String get onlineSubtitleCostUnknown => '供应商未报告费用，实际花费未知';
+
+  @override
+  String get subtitleModeLocalHint => '当前用本机模型转录；可在 设置 → 语音识别 → 按用途识别 切换为在线';
+
+  @override
+  String get onlineSubtitleNotConfigured => '尚未配置在线语音服务或 Key';
+
+  @override
+  String get onlineSubtitleNotVerified => '当前语音配置未通过字幕能力验证';
+
+  @override
+  String onlineSubtitleChunkProgress(int completed, int total) {
+    return '已完成 $completed/$total 块';
+  }
+
+  @override
+  String onlineSubtitleFailedChunk(int chunk, int total) {
+    return '第 $chunk/$total 块失败';
+  }
+
+  @override
+  String get onlineSubtitleRetryUnfinished => '继续未完成的块';
+
+  @override
+  String get onlineSubtitleRetryCostWarning => '失败的那一块请求已经发出，可能已经计费；继续可能重复计费';
+
+  @override
+  String get onlineSubtitleNoSpeech => '这份材料未识别到语音，字幕未改动';
+
+  @override
+  String get onlineSubtitleDecodeFailed => '无法解码音频，未上传';
+
+  @override
+  String get onlineSubtitleInvalidResult => '服务返回的时间戳无效，未保存字幕';
+
+  @override
+  String get onlineSubtitleConfigChanged => '语音配置已变化，已放弃本次结果';
+
+  @override
+  String wordTimingSourceLabel(String source) {
+    return '词时间戳来源：$source';
+  }
+
+  @override
+  String get wordTimingSourceModel => '模型提供';
+
+  @override
+  String get wordTimingSourceEstimated => '估算';
+
+  @override
+  String get wordTimingSourceMixed => '混合';
+
+  @override
+  String get wordTimingSourceUnknown => '未知';
+
+  @override
+  String get recognitionOnlineNeedsSuitableModel =>
+      '该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证';
+
+  @override
+  String get onlineTranscription => '在线转录';
+
+  @override
+  String get onlineTranscriptionSubtitle => '用已配置的在线语音服务转写';
+
+  @override
+  String get subtitleOnlineModelHint =>
+      '在线模型与 Key 在下方「在线语音服务」中配置；管理字幕弹窗里可直接选「在线转录」';
 }

@@ -119,6 +119,21 @@ bool _isShareExportTemp(String path) {
   return _shareExportTempPrefixes.any(name.startsWith);
 }
 
+/// 清理在线字幕分块遗留的临时音频（app data 目录下的 tmp/online_subtitle）。
+///
+/// 分块检查点只活在进程内，进程结束后遗留的块文件没有任何恢复价值；启动时
+/// 删除一次，避免异常退出后长期占空间。
+Future<void> cleanupOnlineSubtitleTmp() async {
+  try {
+    final dir = Directory(
+      p.join((await getAppDataDirectory()).path, 'tmp', 'online_subtitle'),
+    );
+    if (await dir.exists()) await dir.delete(recursive: true);
+  } catch (error) {
+    AppLogger.log('TempCleanup', 'online subtitle tmp cleanup failed: $error');
+  }
+}
+
 /// 清理已停用的社区媒体下载残留（app data 目录下的 tmp/community_media）。
 ///
 /// 历史版本可能留下半成品文件，启动时删除一次即可，文件语义可随时丢弃。

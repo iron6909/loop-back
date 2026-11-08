@@ -2038,6 +2038,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the app\'s AI model. It works offline after downloading';
 
   @override
+  String get asrBackendLocalWhisper => 'Whisper (on-device)';
+
+  @override
+  String get asrBackendLocalWhisperDescription =>
+      'Use the built-in Whisper model. It works offline after downloading';
+
+  @override
+  String get asrDownloadSourceTitle => 'Model Source';
+
+  @override
+  String get asrDownloadSourceDescription =>
+      'Applies to public models only. Both sources serve the same version and checksums.';
+
+  @override
+  String get asrDownloadSourceHuggingFace => 'Hugging Face';
+
+  @override
+  String get asrDownloadSourceHuggingFaceMirror => 'hf-mirror.com (mirror)';
+
+  @override
+  String asrModelSourceLine(String source, String license) {
+    return 'Source: $source · License: $license';
+  }
+
+  @override
   String asrModelTier(String tier) {
     return 'Model: $tier (auto-selected for your device)';
   }
@@ -2278,6 +2303,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get transcriptionFailed => 'Transcription failed';
+
+  @override
+  String get transcriptionConflict =>
+      'Subtitles were replaced by another action; your newer subtitles are kept';
 
   @override
   String get transcriptionErrorConnection => 'Unable to connect to server';
@@ -3630,7 +3659,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get senseGroupSyntheticTimingNoticeMessage =>
-      'This sense group playback timing is estimated from your uploaded subtitles and may be inaccurate.';
+      'This sense group playback timing is estimated from word lengths and may not match the actual speech.';
 
   @override
   String get transcriptionSignInRequiredTitle =>
@@ -5867,4 +5896,260 @@ class AppLocalizationsEn extends AppLocalizations {
   String folderUnsupportedFiles(int count) {
     return 'Unsupported files ignored: $count';
   }
+
+  @override
+  String get recognitionPurposeTitle => 'Recognition by purpose';
+
+  @override
+  String get recognitionPurposeDescription =>
+      'Subtitles, shadowing, and retelling each keep their own recognition mode and model.';
+
+  @override
+  String get recognitionPurposeSubtitle => 'Subtitles';
+
+  @override
+  String get recognitionPurposeShadowing => 'Shadowing';
+
+  @override
+  String get recognitionPurposeRetell => 'Retelling';
+
+  @override
+  String get recognitionModeLocal => 'On-device';
+
+  @override
+  String get recognitionModeSystem => 'System speech';
+
+  @override
+  String get recognitionModeOnline => 'Online speech';
+
+  @override
+  String recognitionOnlineModelSummary(String model) {
+    return 'Online speech · $model';
+  }
+
+  @override
+  String get recognitionOnlineNeedsConfiguration =>
+      'Set the service address and key under Online speech below first';
+
+  @override
+  String get recognitionOnlineNeedsUploadNotice =>
+      'Tap Verify model under Online speech below; the first time explains the upload target and possible charges';
+
+  @override
+  String get recognitionOnlineNeedsVerification =>
+      'Tap Verify model under Online speech below to verify this purpose\'s online model';
+
+  @override
+  String shadowingOnlineProgress(String service, String model, int percent) {
+    return 'Online · $service · $model · $percent%';
+  }
+
+  @override
+  String shadowingOnlineCost(String service, String model, String cost) {
+    return 'Online · $service · $model · cost $cost';
+  }
+
+  @override
+  String shadowingOnlineCostUnknown(String service, String model) {
+    return 'Online · $service · $model · cost unknown';
+  }
+
+  @override
+  String shadowingOnlineChunkProgress(int completed, int total) {
+    return '$completed/$total parts done';
+  }
+
+  @override
+  String get shadowingOnlineChargeWarning =>
+      'the failed part may already be billed';
+
+  @override
+  String get shadowingOnlineRetry => 'Retry unfinished parts';
+
+  @override
+  String get recognitionChangeTitle => 'Change recognition settings?';
+
+  @override
+  String recognitionChangeMessage(int count) {
+    return 'Running recognition tasks affected: $count. Continuing cancels them and discards unfinished results.';
+  }
+
+  @override
+  String get recognitionChangeConfirm => 'Cancel tasks and change';
+
+  @override
+  String get speechProviderTitle => 'Online speech service';
+
+  @override
+  String get speechProviderDescription =>
+      'Subtitles, shadowing, and retelling share one service address and key. The address is used as-is with /audio/transcriptions appended; /v1 is not added.';
+
+  @override
+  String get speechProviderStatusUnconfigured => 'Not configured';
+
+  @override
+  String get speechProviderStatusMissingKey => 'API key missing';
+
+  @override
+  String get speechProviderStatusUnverified => 'Saved, not verified';
+
+  @override
+  String get speechProviderStatusVerified => 'Saved and verified';
+
+  @override
+  String get speechProviderSaveFailed =>
+      'Could not save the online speech settings';
+
+  @override
+  String speechProviderOnlineModel(String purpose) {
+    return '$purpose online model';
+  }
+
+  @override
+  String get speechCapabilityTest => 'Verify model';
+
+  @override
+  String get speechCapabilityTesting => 'Verifying…';
+
+  @override
+  String get speechCapabilityUnverified => 'Not verified';
+
+  @override
+  String get speechCapabilitySubtitles => 'Subtitles available';
+
+  @override
+  String get speechCapabilityTextOnly => 'Text only, no usable segments';
+
+  @override
+  String get speechCapabilityWords => 'Word timestamps available';
+
+  @override
+  String speechCapabilityVerifiedCost(String cost) {
+    return 'Verified. Provider-reported cost: $cost';
+  }
+
+  @override
+  String get speechCapabilityVerifiedCostUnknown =>
+      'Verified. The provider reported no cost, so the charge is unknown';
+
+  @override
+  String get speechModelRefresh => 'Refresh transcription models';
+
+  @override
+  String get speechModelRefreshEmpty =>
+      'The service returned no transcription models; you can still enter a model ID';
+
+  @override
+  String get speechModelRefreshFailed =>
+      'Could not load the model list; you can still enter a model ID';
+
+  @override
+  String get speechUploadNoticeTitle => 'Send a test sample?';
+
+  @override
+  String speechUploadNoticeBody(String host, String provider) {
+    return 'Echo Loop will upload the bundled 4-second English sample to $host. Downstream inference provider: $provider. The service may charge your account for this request. Your own recordings are not used.';
+  }
+
+  @override
+  String get speechUploadProviderOpenRouter =>
+      'OpenRouter and the downstream providers it routes to';
+
+  @override
+  String get speechUploadProviderCustom =>
+      'the service operator (downstream provider unknown)';
+
+  @override
+  String get speechUploadNoticeConfirm => 'Send test';
+
+  @override
+  String onlineSubtitleService(String service, String model) {
+    return 'Online subtitles: $service · $model';
+  }
+
+  @override
+  String onlineSubtitleCost(String cost) {
+    return 'Cost reported by the provider: $cost';
+  }
+
+  @override
+  String get onlineSubtitleCostUnknown =>
+      'The provider reported no cost, so the actual charge is unknown';
+
+  @override
+  String get subtitleModeLocalHint =>
+      'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose';
+
+  @override
+  String get onlineSubtitleNotConfigured =>
+      'No online speech service or API key configured';
+
+  @override
+  String get onlineSubtitleNotVerified =>
+      'The current speech configuration has not passed subtitle capability verification';
+
+  @override
+  String onlineSubtitleChunkProgress(int completed, int total) {
+    return 'Chunks done: $completed/$total';
+  }
+
+  @override
+  String onlineSubtitleFailedChunk(int chunk, int total) {
+    return 'Failed at chunk $chunk/$total';
+  }
+
+  @override
+  String get onlineSubtitleRetryUnfinished => 'Continue unfinished chunks';
+
+  @override
+  String get onlineSubtitleRetryCostWarning =>
+      'The failed chunk was already sent, so it may have been charged; continuing can charge it again';
+
+  @override
+  String get onlineSubtitleNoSpeech =>
+      'No speech recognized in this material, so the subtitles were left unchanged';
+
+  @override
+  String get onlineSubtitleDecodeFailed =>
+      'The audio could not be decoded, so nothing was uploaded';
+
+  @override
+  String get onlineSubtitleInvalidResult =>
+      'The service returned unusable timestamps, so no subtitles were saved';
+
+  @override
+  String get onlineSubtitleConfigChanged =>
+      'The speech configuration changed, so this result was discarded';
+
+  @override
+  String wordTimingSourceLabel(String source) {
+    return 'Word timing source: $source';
+  }
+
+  @override
+  String get wordTimingSourceModel => 'model-provided';
+
+  @override
+  String get wordTimingSourceEstimated => 'estimated';
+
+  @override
+  String get wordTimingSourceMixed => 'mixed';
+
+  @override
+  String get wordTimingSourceUnknown => 'unknown';
+
+  @override
+  String get recognitionOnlineNeedsSuitableModel =>
+      'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it';
+
+  @override
+  String get onlineTranscription => 'Online transcription';
+
+  @override
+  String get onlineTranscriptionSubtitle =>
+      'Transcribe with the configured online speech service';
+
+  @override
+  String get subtitleOnlineModelHint =>
+      'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it';
 }

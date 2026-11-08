@@ -254,6 +254,9 @@ class ForegroundAudioEngine extends _$ForegroundAudioEngine {
     wordCount: row.wordCount,
     isPinned: row.isPinned,
     transcriptSource: model.TranscriptSource.fromIndex(row.transcriptSource),
+    transcriptWordTimingSource: model.TranscriptWordTimingSource.fromIndex(
+      row.transcriptWordTimingSource,
+    ),
     audioSha256: row.audioSha256,
     originalAudioSha256: row.originalAudioSha256,
     transcriptLanguage: row.transcriptLanguage,

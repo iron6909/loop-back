@@ -38,6 +38,9 @@ const _spPrefixBlacklist = [
   'user_preferences_sync_',
   // 评分请求冷却只属于本机，导入时也必须保留本机现值。
   'rating_prompt_',
+  // 在线语音能力验证与上传告知绑定本机配置与凭据，不跨设备恢复；
+  // 恢复成功后由恢复流程显式清理，不能靠黑名单自动保留的旧值。
+  'speech_capability_',
 ];
 
 const _dbFileName = 'echo_loop.db';

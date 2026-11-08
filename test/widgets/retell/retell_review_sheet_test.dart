@@ -10,6 +10,8 @@ import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/retell_review_evaluation.dart';
 import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
 import 'package:echo_loop/services/audio_playback_service.dart';
+import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
+import 'package:echo_loop/services/speech/speech_transcription_client.dart';
 import 'package:echo_loop/services/audio_preview_controller.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/retell/retell_review_corrections.dart';
@@ -568,6 +570,109 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
     expect(find.byIcon(Icons.stop_rounded), findsNothing);
+  });
+
+  testWidgets('转写失败时显示语音错误与真实费用，可手动重试', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () => showRetellReviewSheet(
+                context,
+                recordingPath: '/tmp/retell.m4a',
+                preview: preview,
+                onBeforePlayback: () async {},
+                onRetry: () async {},
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+        overrides: [
+          retellReviewEvaluationProvider.overrideWith(
+            () => _FixedReviewController(
+              const RetellReviewEvaluationState(
+                attemptKey: 'retell:a1:0',
+                phase: RetellReviewEvaluationPhase.failed,
+                speechError: PracticeChunkFailure(
+                  PracticeChunkFailureReason.requestFailed,
+                  cause: SpeechTranscriptionException(
+                    SpeechTranscriptionErrorKind.timeout,
+                  ),
+                  mayHaveBeenCharged: true,
+                ),
+                onlineSpeech: RetellOnlineSpeech(
+                  modelId: 'openai/whisper-retell',
+                  serviceHost: 'openrouter.ai',
+                  reportedCost: 0.0002,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Provider request timed out. Try again'),
+      findsOneWidget,
+      reason: '语音阶段的失败按语音分类显示，不冒充文字 AI 错误',
+    );
+    expect(
+      find.text('the failed part may already be billed'),
+      findsOneWidget,
+      reason: '失败块可能已计费，续试前要让用户知道会再发一次',
+    );
+    expect(find.text('Online speech cost: 0.0002'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets('文字 AI 失败仍用供应商文案，费用未知不显示为免费', (tester) async {
+    await tester.pumpWidget(
+      wrap(
+        Builder(
+          builder: (context) => Center(
+            child: TextButton(
+              onPressed: () => showRetellReviewSheet(
+                context,
+                recordingPath: '/tmp/retell.m4a',
+                preview: preview,
+                onBeforePlayback: () async {},
+                onRetry: () async {},
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+        overrides: [
+          retellReviewEvaluationProvider.overrideWith(
+            () => _FixedReviewController(
+              const RetellReviewEvaluationState(
+                attemptKey: 'retell:a1:0',
+                phase: RetellReviewEvaluationPhase.failed,
+                errorCode: 'unauthorized',
+                onlineSpeech: RetellOnlineSpeech(
+                  modelId: 'openai/whisper-retell',
+                  serviceHost: 'openrouter.ai',
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('API key is invalid or unauthorized'), findsOneWidget);
+    expect(
+      find.text('Online speech cost: unknown'),
+      findsOneWidget,
+      reason: '供应商没有报告费用时标为未知，不能显示为免费',
+    );
   });
 
   testWidgets('关闭评估弹窗后停止录音试听', (tester) async {

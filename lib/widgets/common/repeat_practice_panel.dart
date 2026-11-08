@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/speech_practice_models.dart';
 import '../../services/audio_preview_controller.dart';
+import '../../services/speech/practice_online_transcriber.dart';
+import '../../services/speech/speech_error_text.dart';
 import '../../theme/app_theme.dart';
 import 'playback_controls.dart' show PlaybackControls;
 import 'processing_indicator.dart';
@@ -61,6 +63,9 @@ class RepeatPracticePanel extends StatelessWidget {
   /// 当前评估结果
   final SpeechPracticeAttempt? currentAttempt;
 
+  /// 在线跟读的转写状态；非在线方式或未开始时为 null。
+  final PracticeOnlineState? onlineStatus;
+
   /// 本地化
   final AppLocalizations l10n;
 
@@ -90,6 +95,9 @@ class RepeatPracticePanel extends StatelessWidget {
 
   /// 快进回调（非 null 时显示快进按钮）
   final VoidCallback? onFastForward;
+
+  /// 在线分块转写失败后的手动续试；非 null 且仍有未完成块时显示重试入口。
+  final VoidCallback? onRetryOnline;
 
   /// badge 播放录音前的准备回调
   final FutureOr<void> Function()? onBeforePlayback;
@@ -124,6 +132,7 @@ class RepeatPracticePanel extends StatelessWidget {
     this.recordingMode = RecordingButtonMode.idle,
     this.isProcessing = false,
     this.currentAttempt,
+    this.onlineStatus,
     required this.l10n,
     required this.theme,
     this.hintText,
@@ -132,6 +141,7 @@ class RepeatPracticePanel extends StatelessWidget {
     this.countdownWidget,
     required this.onRecordTap,
     this.onFastForward,
+    this.onRetryOnline,
     this.onBeforePlayback,
     this.ratingBadgeController,
     this.ratingPreviewControllerFactory,
@@ -151,7 +161,7 @@ class RepeatPracticePanel extends StatelessWidget {
         child: SizedBox(
           height: kTurnAreaHeight,
           child: Center(
-            child: ProcessingIndicator(text: l10n.listenAndRepeatAnalyzing),
+            child: ProcessingIndicator(text: _processingText(context)),
           ),
         ),
       );
@@ -430,12 +440,99 @@ class RepeatPracticePanel extends StatelessWidget {
     return const SizedBox.shrink();
   }
 
-  /// 错误文案允许更高的状态槽位（避免英文提示在窄屏截断）。
-  bool get _usesExpandedStatusSlot => currentAttempt?.errorMessage != null;
+  /// 处理中提示：在线方式显示服务、模型与上传进度，其余沿用既有文案。
+  String _processingText(BuildContext context) {
+    final online = onlineStatus;
+    if (online == null || online.isFailed) return l10n.listenAndRepeatAnalyzing;
+    final percent = ((online.progress ?? 0) * 100).round();
+    return l10n.shadowingOnlineProgress(
+      online.serviceHost,
+      online.modelId,
+      percent,
+    );
+  }
 
-  /// 状态文字（录音提示 / 错误信息）
+  /// 在线转写在完成或失败后的状态行：费用、进度、可能计费与手动续试。
+  Widget? _onlineStatusText(BuildContext context) {
+    final online = onlineStatus;
+    if (online == null) return null;
+    final theme = Theme.of(context);
+    if (online.isFailed) {
+      final error = online.error;
+      if (error == null) return null;
+      final details = [
+        speechErrorText(context, error),
+        if (online.isChunked)
+          l10n.shadowingOnlineChunkProgress(
+            online.completedChunks,
+            online.totalChunks,
+          ),
+        // 请求已发出但失败：供应商可能已计费，不能按免费或未发生处理。
+        if (online.mayHaveBeenCharged) l10n.shadowingOnlineChargeWarning,
+      ];
+      final retry = online.retryable ? onRetryOnline : null;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                details.join(' · '),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.visible,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            if (retry != null)
+              // 图标按钮宽度固定，长错误文案在窄屏仍能换行显示。
+              IconButton(
+                key: const Key('shadowing_online_retry'),
+                onPressed: retry,
+                tooltip: l10n.shadowingOnlineRetry,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                style: IconButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  minimumSize: const Size(32, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+    if (!online.isCompleted) return null;
+    final cost = online.reportedCost;
+    return Text(
+      cost == null
+          ? l10n.shadowingOnlineCostUnknown(online.serviceHost, online.modelId)
+          : l10n.shadowingOnlineCost(
+              online.serviceHost,
+              online.modelId,
+              cost.toString(),
+            ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  /// 错误文案允许更高的状态槽位（避免英文提示在窄屏截断）。
+  bool get _usesExpandedStatusSlot =>
+      currentAttempt?.errorMessage != null || (onlineStatus?.isFailed ?? false);
+
+  /// 状态文字（在线转写结果 / 录音提示 / 错误信息）
   Widget? _buildStatusText(BuildContext context) {
     if (!isInPause || isProcessing) return null;
+
+    final onlineText = _onlineStatusText(context);
+    if (onlineText != null) return onlineText;
 
     final errorMessage = currentAttempt?.errorMessage;
     if (errorMessage != null) {

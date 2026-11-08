@@ -28,6 +28,10 @@ class FakeAudioItemDao implements AudioItemDao {
   /// 内存存储：audioItemId → 词级时间戳 JSON
   final Map<String, String?> wordTimestampsStore = {};
 
+  /// 内存存储：audioItemId → 字幕来源与词时间戳来源（提交时写入）。
+  final Map<String, int> transcriptSourceStore = {};
+  final Map<String, int?> wordTimingSourceStore = {};
+
   @override
   Future<AudioItem?> getById(String id) async => null;
 
@@ -54,9 +58,37 @@ class FakeAudioItemDao implements AudioItemDao {
     String audioItemId, {
     required String srt,
     required String? wordTimestampsJson,
+    int? transcriptWordTimingSource,
   }) async {
     transcriptSrtStore[audioItemId] = srt;
     wordTimestampsStore[audioItemId] = wordTimestampsJson;
+    if (transcriptWordTimingSource != null) {
+      wordTimingSourceStore[audioItemId] = transcriptWordTimingSource;
+    }
+  }
+
+  @override
+  Future<TranscriptCommitResult> commitTranscription({
+    required String audioItemId,
+    required String srt,
+    required String? wordTimestampsJson,
+    required int transcriptSource,
+    required int? transcriptWordTimingSource,
+    required String? transcriptLanguage,
+    required int sentenceCount,
+    required int wordCount,
+    required String? expectedSrt,
+    required bool Function() isCancelled,
+  }) async {
+    if (transcriptSrtStore[audioItemId] != expectedSrt) {
+      return TranscriptCommitResult.conflict;
+    }
+    if (isCancelled()) return TranscriptCommitResult.cancelled;
+    transcriptSrtStore[audioItemId] = srt;
+    wordTimestampsStore[audioItemId] = wordTimestampsJson;
+    transcriptSourceStore[audioItemId] = transcriptSource;
+    wordTimingSourceStore[audioItemId] = transcriptWordTimingSource;
+    return TranscriptCommitResult.committed;
   }
 
   @override

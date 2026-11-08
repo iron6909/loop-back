@@ -1,27 +1,32 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/config/regional_service_endpoints.dart';
 import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/runtime_endpoint_router.dart';
+import 'package:echo_loop/services/reliable_http_downloader.dart';
 
-class _Adapter implements HttpClientAdapter {
-  _Adapter(this.payload, {this.requestUris});
-  final List<int> payload;
-  final List<Uri>? requestUris;
+/// 按 URI 返回固定内容的假 HTTP adapter，用于构造公开资源安装流程。
+class _ServingAdapter implements HttpClientAdapter {
+  _ServingAdapter(this.payloads);
+
+  final Map<String, List<int>> payloads;
+  final List<Uri> requests = [];
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
     Stream<List<int>>? _,
     Future<void>? __,
   ) async {
-    requestUris?.add(options.uri);
+    requests.add(options.uri);
+    final payload = payloads[options.uri.toString()];
+    if (payload == null) {
+      return ResponseBody(Stream.value(Uint8List(0)), 404, headers: const {});
+    }
     return ResponseBody(
       Stream.value(Uint8List.fromList(payload)),
       200,
@@ -35,319 +40,198 @@ class _Adapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-Future<RuntimeEndpointRouter> _routerWithChinaCdn() async {
-  final router = RuntimeEndpointRouter(
-    endpoints: const RegionalServiceEndpoints(
-      globalApiBaseUrl: 'https://global-api.example',
-      chinaApiBaseUrl: 'https://china-api.example',
-      globalModelCdnBaseUrl: 'https://global-cdn.example',
-      chinaModelCdnBaseUrl: 'https://china-cdn.example',
-    ),
-  );
-  return router..updateFromUserRegion(isChinaUser: true);
+const _modelId = 'whisper-test-en-int8';
+
+final _encoderBytes = List<int>.generate(64, (index) => index);
+final _decoderBytes = List<int>.generate(48, (index) => 200 - index);
+final _tokensBytes = List<int>.generate(32, (index) => 255 - index);
+final _vadBytes = List<int>.generate(16, (index) => index * 3);
+
+AsrResourceFile _file(String name, List<int> payload) => AsrResourceFile(
+  name: name,
+  sha256: sha256.convert(payload).toString(),
+  sizeBytes: payload.length,
+);
+
+AsrPublicResourceSpec _modelSpec() => AsrPublicResourceSpec(
+  id: _modelId,
+  repository: 'example/sherpa-onnx-whisper-test.en',
+  revision: 'rev1',
+  layout: AsrPublicResourceLayout.huggingFaceResolve,
+  license: 'MIT',
+  files: [
+    _file('test.en-encoder.int8.onnx', _encoderBytes),
+    _file('test.en-decoder.int8.onnx', _decoderBytes),
+    _file('test.en-tokens.txt', _tokensBytes),
+  ],
+  dependencies: const [vadModelId],
+);
+
+AsrPublicResourceSpec _vadSpec() => AsrPublicResourceSpec(
+  id: vadModelId,
+  repository: 'example/sherpa-onnx',
+  revision: 'asr-models',
+  layout: AsrPublicResourceLayout.githubReleaseAsset,
+  license: 'MIT',
+  files: [_file('silero_vad.onnx', _vadBytes)],
+);
+
+class _Harness {
+  _Harness({
+    required this.root,
+    required this.modelSpec,
+    required this.vadSpec,
+    required this.adapter,
+    required this.manager,
+  });
+
+  final Directory root;
+  final AsrPublicResourceSpec modelSpec;
+  final AsrPublicResourceSpec vadSpec;
+  final _ServingAdapter adapter;
+  final AsrModelManager manager;
 }
 
-class _RangeAdapter implements HttpClientAdapter {
-  _RangeAdapter(this.payload);
-
-  final List<int> payload;
-  final requestHeaders = <Map<String, Object?>>[];
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<List<int>>? _,
-    Future<void>? __,
-  ) async {
-    requestHeaders.add(Map<String, Object?>.from(options.headers));
-    final range = options.headers['Range']?.toString();
-    if (range == null) {
-      return ResponseBody(
-        Stream.value(Uint8List.fromList(payload)),
-        200,
-        headers: {
-          'content-length': [payload.length.toString()],
-        },
-      );
-    }
-    final start = int.parse(range.substring('bytes='.length, range.length - 1));
-    final body = payload.sublist(start);
-    return ResponseBody(
-      Stream.value(Uint8List.fromList(body)),
-      206,
-      headers: {
-        'content-length': [body.length.toString()],
-        'content-range': [
-          'bytes $start-${payload.length - 1}/${payload.length}',
-        ],
-      },
-    );
-  }
-
-  @override
-  void close({bool force = false}) {}
+Future<_Harness> _createHarness() async {
+  final root = await Directory.systemTemp.createTemp('asr-manager-test');
+  addTearDown(() async {
+    if (root.existsSync()) await root.delete(recursive: true);
+  });
+  final modelSpec = _modelSpec();
+  final vadSpec = _vadSpec();
+  final modelPayloads = [_encoderBytes, _decoderBytes, _tokensBytes];
+  final adapter = _ServingAdapter({
+    for (final source in AsrDownloadSource.values) ...{
+      for (var i = 0; i < modelSpec.files.length; i++)
+        modelSpec
+            .fileUri(source, modelSpec.files[i])
+            .toString(): modelPayloads[i],
+      vadSpec
+          .fileUri(source, vadSpec.files.single)
+          .toString(): _vadBytes,
+    },
+  });
+  final dio = Dio()..httpClientAdapter = adapter;
+  final manager = AsrModelManager(
+    dio: dio,
+    modelsRootResolver: () async => p.join(root.path, 'models'),
+    downloader: DioReliableHttpDownloader(
+      dio: dio,
+      backoffDelay: (duration) async {},
+    ),
+    resourceRegistryOverride: {_modelId: modelSpec, vadModelId: vadSpec},
+  );
+  addTearDown(manager.dispose);
+  return _Harness(
+    root: root,
+    modelSpec: modelSpec,
+    vadSpec: vadSpec,
+    adapter: adapter,
+    manager: manager,
+  );
 }
 
 void main() {
-  test('发布目录使用 v1 归档及实测摘要', () {
-    expect(
-      asrModelResourceCatalog.values.every(
-        (spec) => spec.archivePath.endsWith('-v1.zip'),
-      ),
-      isTrue,
-    );
-    expect(
-      asrModelResourceCatalog['whisper-base-en-int8']!.sha256,
-      'ff8af5965f6d017ad317e9a7c023c3f457259cef3de33e543c2fa87338a32fbb',
-    );
-  });
-
-  test('归档安装写入清单并扁平化顶层目录', () async {
-    final root = await Directory.systemTemp.createTemp('asr-archive-test');
-    addTearDown(() => root.delete(recursive: true));
-    final source = Directory(p.join(root.path, 'source', 'test-model-v1'));
-    await source.create(recursive: true);
-    await File(p.join(source.path, 'encoder.onnx')).writeAsBytes([1, 2, 3]);
-    final archive = File(p.join(root.path, 'test-model.zip'));
-    final encoder = ZipFileEncoder();
-    encoder.create(archive.path);
-    await encoder.addFile(
-      File(p.join(source.path, 'encoder.onnx')),
-      'test-model-v1/encoder.onnx',
-    );
-    await encoder.close();
-    final payload = await archive.readAsBytes();
-    final requestedUris = <Uri>[];
-    final dio = Dio()
-      ..httpClientAdapter = _Adapter(payload, requestUris: requestedUris);
-    final progress = <double>[];
-    final manager = AsrModelManager(
-      dio: dio,
-      endpointRouter: await _routerWithChinaCdn(),
-      modelsRootResolver: () async => p.join(root.path, 'models'),
-      resourceRegistryOverride: {
-        'test-model': AsrModelResourceSpec(
-          id: 'test-model',
-          archivePath: 'asr/test-model.zip',
-          sha256: sha256.convert(payload).toString(),
-          estimatedDownloadBytes: payload.length,
-          requiredFiles: const ['encoder.onnx'],
-        ),
-      },
-    );
-    final staleStaging = Directory(
-      p.join(root.path, 'models', '_staging_test-model_old'),
-    );
-    await staleStaging.create(recursive: true);
-    await File(p.join(staleStaging.path, 'stale.tmp')).writeAsString('stale');
-    await manager.downloadModel(
-      'test-model',
-      onProgress: (value) => progress.add(value.progress),
-    );
-    expect(requestedUris.single.host, 'china-cdn.example');
-    expect(requestedUris.single.path, '/model/asr/test-model.zip');
-    final modelDir = await manager.modelDir('test-model');
-    expect(File(p.join(modelDir, 'encoder.onnx')).existsSync(), isTrue);
-    expect(
-      File(p.join(modelDir, 'test-model', 'encoder.onnx')).existsSync(),
-      isFalse,
-    );
-    expect(await manager.isModelDownloaded('test-model'), isTrue);
-    expect(progress, isNotEmpty);
-    expect(progress.last, 1);
-    for (var i = 1; i < progress.length; i++) {
-      expect(progress[i], greaterThanOrEqualTo(progress[i - 1]));
+  test('更早的逐文件安装按公开摘要识别，文件不符时不冒充已安装', () async {
+    final harness = await _createHarness();
+    final dir = Directory(await harness.manager.modelDir(_modelId));
+    await dir.create(recursive: true);
+    for (final file in harness.modelSpec.files) {
+      final payload = switch (file.name) {
+        'test.en-decoder.int8.onnx' => _decoderBytes,
+        'test.en-tokens.txt' => _tokensBytes,
+        _ => _encoderBytes,
+      };
+      await File(p.join(dir.path, file.name)).writeAsBytes(payload);
     }
-    expect(staleStaging.existsSync(), isFalse);
-    final remainingEntities = await Directory(
-      p.join(root.path, 'models'),
-    ).list().toList();
-    expect(
-      remainingEntities.where(
-        (entity) => p.basename(entity.path).startsWith('_staging_'),
-      ),
-      isEmpty,
-    );
-    expect(
-      (await manager.readInstallManifest('test-model'))!.resourceId,
-      'test-model',
-    );
-    manager.dispose();
+
+    expect(await harness.manager.validateLegacyModelFiles(_modelId), isTrue);
+
+    await File(
+      p.join(dir.path, 'test.en-decoder.int8.onnx'),
+    ).writeAsBytes(List<int>.filled(_decoderBytes.length, 7));
+    expect(await harness.manager.validateLegacyModelFiles(_modelId), isFalse);
   });
 
-  test('保留的归档 part 使用 Range 续传，并在安装后清理残留', () async {
-    final root = await Directory.systemTemp.createTemp('asr-resume-test');
-    addTearDown(() => root.delete(recursive: true));
-    final source = Directory(p.join(root.path, 'source', 'test-model-v1'));
-    await source.create(recursive: true);
-    await File(p.join(source.path, 'encoder.onnx')).writeAsBytes([1, 2, 3]);
-    final archive = File(p.join(root.path, 'test-model.zip'));
-    final encoder = ZipFileEncoder()..create(archive.path);
-    await encoder.addFile(
-      File(p.join(source.path, 'encoder.onnx')),
-      'test-model-v1/encoder.onnx',
+  test('安装清单存在但文件被截断时不视为已安装，重新下载即可修复', () async {
+    final harness = await _createHarness();
+    await harness.manager.downloadModel(_modelId);
+    final dir = Directory(await harness.manager.modelDir(_modelId));
+    final encoder = File(p.join(dir.path, 'test.en-encoder.int8.onnx'));
+    await encoder.writeAsBytes(_encoderBytes.sublist(0, 10));
+    expect(await harness.manager.isModelDownloaded(_modelId), isFalse);
+    harness.adapter.requests.clear();
+
+    await harness.manager.downloadModel(_modelId);
+
+    expect(await encoder.length(), _encoderBytes.length);
+    expect(await harness.manager.isModelDownloaded(_modelId), isTrue);
+    // 修复只补损坏的模型文件，已完整的共享 VAD 不重复安装。
+    expect(
+      harness.adapter.requests.map((uri) => uri.path),
+      isNot(contains('silero_vad.onnx')),
     );
-    await encoder.close();
-    final payload = await archive.readAsBytes();
-    final sha = sha256.convert(payload).toString();
-    final modelsRoot = Directory(p.join(root.path, 'models'));
-    await modelsRoot.create(recursive: true);
-    final partialLength = payload.length ~/ 2;
-    final partial = File(
-      p.join(modelsRoot.path, '_download_test-model.zip.part'),
+    // 修复后的安装清单可用，模型目录仍是同一个安装目录。
+    expect(
+      (await harness.manager.readInstallManifest(_modelId))?.resourceId,
+      _modelId,
     );
-    await partial.writeAsBytes(payload.sublist(0, partialLength));
-    await File(
-      '${partial.path}.meta.json',
-    ).writeAsString('{"identityKey":"$sha","downloadedBytes":$partialLength}');
-    final adapter = _RangeAdapter(payload);
-    final manager = AsrModelManager(
-      dio: Dio()..httpClientAdapter = adapter,
-      baseUrlOverride: 'http://mock.local',
-      modelsRootResolver: () async => modelsRoot.path,
-      resourceRegistryOverride: {
-        'test-model': AsrModelResourceSpec(
-          id: 'test-model',
-          archivePath: 'asr/test-model.zip',
-          sha256: sha,
-          estimatedDownloadBytes: payload.length,
-          requiredFiles: const ['encoder.onnx'],
-        ),
-      },
+  });
+
+  test('安装流程只访问公开来源，不请求 EchoLoop 资源服务', () async {
+    final harness = await _createHarness();
+
+    await harness.manager.downloadModel(
+      _modelId,
+      source: AsrDownloadSource.huggingFaceMirror,
     );
 
-    await manager.downloadModel('test-model');
-
-    expect(adapter.requestHeaders.single['Range'], 'bytes=$partialLength-');
-    expect(await manager.isModelDownloaded('test-model'), isTrue);
-    expect(partial.existsSync(), isFalse);
-    expect(File('${partial.path}.meta.json').existsSync(), isFalse);
-    manager.dispose();
+    expect(harness.adapter.requests, isNotEmpty);
+    expect(
+      harness.adapter.requests.map((uri) => uri.host),
+      everyElement(isIn(['hf-mirror.com', 'github.com'])),
+      reason: '三档模型与共享 VAD 都必须来自公开来源',
+    );
   });
 
   test('删除模型和 VAD 半成品会在用户取消后清理', () async {
-    final root = await Directory.systemTemp.createTemp('asr-cancel-test');
-    addTearDown(() => root.delete(recursive: true));
-    final manager = AsrModelManager(
-      modelsRootResolver: () async => root.path,
-      resourceRegistryOverride: const {},
+    final harness = await _createHarness();
+    final modelsRoot = p.join(harness.root.path, 'models');
+    final legacyArchivePartial = File(
+      p.join(modelsRoot, '_download_$_modelId.zip.part'),
     );
-    final partial = File(p.join(root.path, '_download_test-model.zip.part'));
     final vadPartial = File(
-      p.join(root.path, '_download_$vadModelId.zip.part'),
+      p.join(modelsRoot, '_download_$vadModelId.zip.part'),
     );
-    await partial.parent.create(recursive: true);
-    await partial.writeAsBytes([1, 2, 3]);
-    await File('${partial.path}.meta.json').writeAsString('{}');
+    final filePartial = File(
+      p.join(modelsRoot, '_download_$vadModelId', 'silero_vad.onnx.part'),
+    );
+    await vadPartial.parent.create(recursive: true);
+    await legacyArchivePartial.writeAsBytes([1, 2, 3]);
+    await File('${legacyArchivePartial.path}.meta.json').writeAsString('{}');
     await vadPartial.writeAsBytes([4, 5, 6]);
     await File('${vadPartial.path}.meta.json').writeAsString('{}');
+    await filePartial.parent.create(recursive: true);
+    await filePartial.writeAsBytes([7, 8, 9]);
 
-    await manager.deleteModel('test-model');
-    await manager.discardPartialDownload(vadModelId);
+    await harness.manager.discardPartialDownload(_modelId);
+    await harness.manager.discardPartialDownload(vadModelId);
 
-    expect(partial.existsSync(), isFalse);
-    expect(File('${partial.path}.meta.json').existsSync(), isFalse);
+    expect(legacyArchivePartial.existsSync(), isFalse);
+    expect(File('${legacyArchivePartial.path}.meta.json').existsSync(), isFalse);
     expect(vadPartial.existsSync(), isFalse);
     expect(File('${vadPartial.path}.meta.json').existsSync(), isFalse);
-    manager.dispose();
+    expect(filePartial.existsSync(), isFalse);
   });
 
-  test('缺少安装清单的旧目录不会被当作已安装', () async {
-    final root = await Directory.systemTemp.createTemp('asr-manifest-test');
-    addTearDown(() => root.delete(recursive: true));
-    final manager = AsrModelManager(
-      modelsRootResolver: () async => root.path,
-      resourceRegistryOverride: {
-        'test-model': const AsrModelResourceSpec(
-          id: 'test-model',
-          archivePath: 'asr/test-model.zip',
-          sha256: 'a',
-          estimatedDownloadBytes: 1,
-          requiredFiles: ['encoder.onnx'],
-        ),
-      },
-    );
-    final dir = Directory(await manager.modelDir('test-model'));
+  test('缺少安装清单且文件与公开摘要不符的旧目录不会被当作已安装', () async {
+    final harness = await _createHarness();
+    final dir = Directory(await harness.manager.modelDir(_modelId));
     await dir.create(recursive: true);
-    await File(p.join(dir.path, 'encoder.onnx')).writeAsBytes([1]);
-    expect(await manager.isModelDownloaded('test-model'), isFalse);
-    manager.dispose();
-  });
+    await File(p.join(dir.path, 'test.en-encoder.int8.onnx')).writeAsBytes([1]);
 
-  test('归档文件直接位于根目录时也能完成安装', () async {
-    final root = await Directory.systemTemp.createTemp('asr-root-archive-test');
-    addTearDown(() => root.delete(recursive: true));
-    final source = Directory(p.join(root.path, 'source'));
-    await source.create(recursive: true);
-    await File(p.join(source.path, 'encoder.onnx')).writeAsBytes([1, 2, 3]);
-    final archive = File(p.join(root.path, 'test-model.zip'));
-    final encoder = ZipFileEncoder()..create(archive.path);
-    await encoder.addFile(
-      File(p.join(source.path, 'encoder.onnx')),
-      'encoder.onnx',
-    );
-    await encoder.close();
-    final payload = await archive.readAsBytes();
-    final dio = Dio()..httpClientAdapter = _Adapter(payload);
-    final manager = AsrModelManager(
-      dio: dio,
-      baseUrlOverride: 'http://mock.local',
-      modelsRootResolver: () async => p.join(root.path, 'models'),
-      resourceRegistryOverride: {
-        'test-model': AsrModelResourceSpec(
-          id: 'test-model',
-          archivePath: 'asr/test-model.zip',
-          sha256: sha256.convert(payload).toString(),
-          estimatedDownloadBytes: payload.length,
-          requiredFiles: const ['encoder.onnx'],
-        ),
-      },
-    );
-    await manager.downloadModel('test-model');
-    expect(
-      File(
-        p.join(await manager.modelDir('test-model'), 'encoder.onnx'),
-      ).existsSync(),
-      isTrue,
-    );
-    manager.dispose();
-  });
-
-  test('归档顶层目录改为 v2 时无需修改资源配置', () async {
-    final root = await Directory.systemTemp.createTemp('asr-v2-archive-test');
-    addTearDown(() => root.delete(recursive: true));
-    final source = Directory(p.join(root.path, 'source', 'test-model-v2'));
-    await source.create(recursive: true);
-    await File(p.join(source.path, 'encoder.onnx')).writeAsBytes([4, 5, 6]);
-    final archive = File(p.join(root.path, 'test-model-v2.zip'));
-    final encoder = ZipFileEncoder()..create(archive.path);
-    await encoder.addFile(
-      File(p.join(source.path, 'encoder.onnx')),
-      'test-model-v2/encoder.onnx',
-    );
-    await encoder.close();
-    final payload = await archive.readAsBytes();
-    final manager = AsrModelManager(
-      dio: Dio()..httpClientAdapter = _Adapter(payload),
-      baseUrlOverride: 'http://mock.local',
-      modelsRootResolver: () async => p.join(root.path, 'models'),
-      resourceRegistryOverride: {
-        'test-model': AsrModelResourceSpec(
-          id: 'test-model',
-          archivePath: 'asr/test-model-v2.zip',
-          sha256: sha256.convert(payload).toString(),
-          estimatedDownloadBytes: payload.length,
-          requiredFiles: const ['encoder.onnx'],
-        ),
-      },
-    );
-    await manager.downloadModel('test-model');
-    expect(
-      File(
-        p.join(await manager.modelDir('test-model'), 'encoder.onnx'),
-      ).existsSync(),
-      isTrue,
-    );
-    manager.dispose();
+    expect(await harness.manager.readInstallManifest(_modelId), isNull);
+    expect(await harness.manager.isModelDownloaded(_modelId), isFalse);
+    expect(await harness.manager.validateLegacyModelFiles(_modelId), isFalse);
   });
 }

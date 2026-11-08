@@ -22,17 +22,30 @@ import '../utils/file_size.dart';
 import '../utils/media_duration.dart';
 import '../l10n/app_localizations.dart';
 import '../models/audio_item.dart';
+import '../models/recognition_selection.dart';
 import '../providers/audio_library_provider.dart';
-import '../providers/local_transcription_model_provider.dart';
 import '../providers/local_transcription_task_provider.dart';
+import '../providers/online_subtitle_task_provider.dart';
+import '../providers/recognition_settings_provider.dart';
+import '../providers/speech_capability_provider.dart';
+import '../providers/speech_configuration_provider.dart';
+import '../services/speech/speech_config.dart';
+import '../services/speech/speech_error_text.dart';
+import '../services/speech/speech_transcription_client.dart';
 import '../router/app_router.dart';
 import '../utils/transcript_picker.dart';
 import 'asr_download_prompt_dialog.dart';
 import 'transcription_options.dart';
+import 'asr/recognition_purpose_section.dart';
 
 part 'manage_subtitles_actions.dart';
 
-enum _SubtitleAction { podcastDownload, localUpload, transcription }
+enum _SubtitleAction {
+  podcastDownload,
+  localUpload,
+  localTranscription,
+  onlineTranscription,
+}
 
 class ManageSubtitlesSheet extends ConsumerStatefulWidget {
   const ManageSubtitlesSheet({
@@ -48,7 +61,7 @@ class ManageSubtitlesSheet extends ConsumerStatefulWidget {
 }
 
 class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
-  _SubtitleAction _selectedAction = _SubtitleAction.transcription;
+  _SubtitleAction _selectedAction = _SubtitleAction.localTranscription;
   bool _downloading = false;
   String? _error;
   Timer? _errorTimer;
@@ -63,11 +76,26 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
       localTranscriptionTaskManagerProvider,
     )[widget.audioItem.id];
     if (task is LocalTranscriptionFailed ||
-        task is LocalTranscriptionEmptyResult) {
+        task is LocalTranscriptionEmptyResult ||
+        task is LocalTranscriptionConflict) {
       Future(() {
         if (mounted) {
           ref
               .read(localTranscriptionTaskManagerProvider.notifier)
+              .clearState(widget.audioItem.id);
+        }
+      });
+    }
+    final onlineTask = ref.read(
+      onlineSubtitleTaskManagerProvider,
+    )[widget.audioItem.id];
+    // 可续试的失败要留到用户主动重试；只有不可续试的旧失败才随弹窗重开清掉。
+    if (onlineTask is OnlineSubtitleFailed && !onlineTask.retryable ||
+        onlineTask is OnlineSubtitleConflict) {
+      Future(() {
+        if (mounted) {
+          ref
+              .read(onlineSubtitleTaskManagerProvider.notifier)
               .clearState(widget.audioItem.id);
         }
       });
@@ -108,9 +136,26 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
             .firstOrNull ??
         widget.audioItem;
     final task = ref.watch(localTranscriptionTaskManagerProvider)[item.id];
-    final active =
+    final onlineTask = ref.watch(onlineSubtitleTaskManagerProvider)[item.id];
+    final localActive =
         task is LocalTranscriptionDecoding ||
         task is LocalTranscriptionTranscribing;
+    final onlineActive = onlineTask is OnlineSubtitleWorking;
+    final active = localActive || onlineActive;
+    ref.listen(onlineSubtitleTaskManagerProvider.select((m) => m[item.id]), (
+      _,
+      next,
+    ) {
+      if (next is OnlineSubtitleCompleted) {
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (!mounted || !context.mounted) return;
+          ref
+              .read(onlineSubtitleTaskManagerProvider.notifier)
+              .clearState(item.id);
+          Navigator.pop(context);
+        });
+      }
+    });
     ref.listen(
       localTranscriptionTaskManagerProvider.select((m) => m[item.id]),
       (_, next) {
@@ -135,11 +180,53 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
               _header(item, active, l10n),
               if (_error case final error?) _notice(error, Icons.error_outline),
               const SizedBox(height: 16),
-              if (active || task is LocalTranscriptionCompleted)
-                _progress(task, l10n)
+              if (item.hasTranscript && !active) _timingSource(item, l10n),
+              if (active ||
+                  task is LocalTranscriptionCompleted ||
+                  onlineTask is OnlineSubtitleCompleted)
+                _progress(task, onlineTask, l10n)
               else ...[
                 if (task is LocalTranscriptionFailed)
                   _notice(l10n.transcriptionFailed, Icons.error_outline),
+                if (onlineTask case OnlineSubtitleFailed(
+                  :final reason,
+                  :final speechError,
+                ))
+                  _notice(
+                    _onlineFailureText(l10n, reason, speechError),
+                    Icons.error_outline,
+                  ),
+                if (onlineTask case OnlineSubtitleFailed(
+                  retryable: true,
+                  mayHaveBeenCharged: true,
+                ))
+                  _notice(
+                    l10n.onlineSubtitleRetryCostWarning,
+                    Icons.payments_outlined,
+                  ),
+                if (onlineTask case OnlineSubtitleFailed(
+                  retryable: true,
+                  :final completedChunks,
+                  :final totalChunks,
+                  :final failedChunk,
+                ))
+                  _notice(
+                    failedChunk == null
+                        ? l10n.onlineSubtitleChunkProgress(
+                            completedChunks,
+                            totalChunks,
+                          )
+                        : l10n.onlineSubtitleFailedChunk(
+                            failedChunk,
+                            totalChunks,
+                          ),
+                    Icons.list_alt,
+                  ),
+                if (task is LocalTranscriptionConflict ||
+                    onlineTask is OnlineSubtitleConflict)
+                  _notice(l10n.transcriptionConflict, Icons.sync_problem),
+                if (onlineTask is OnlineSubtitleNoSpeech)
+                  _notice(l10n.onlineSubtitleNoSpeech, Icons.hearing_disabled),
                 if (task is LocalTranscriptionEmptyResult)
                   _notice(
                     '${l10n.transcriptionEmptyResult}\n${l10n.transcriptionEmptyResultHint}',
@@ -147,7 +234,7 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
                   ),
                 _options(item, l10n),
                 const SizedBox(height: 16),
-                _action(item, l10n),
+                _action(item, l10n, onlineTask),
               ],
             ],
           ),
@@ -166,9 +253,14 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
       ),
       if (active)
         TextButton(
-          onPressed: () => ref
-              .read(localTranscriptionTaskManagerProvider.notifier)
-              .cancelTranscription(item.id),
+          onPressed: () {
+            ref
+                .read(localTranscriptionTaskManagerProvider.notifier)
+                .cancelTranscription(item.id);
+            ref
+                .read(onlineSubtitleTaskManagerProvider.notifier)
+                .cancelTranscription(item.id);
+          },
           child: Text(l10n.cancel),
         ),
       if (item.hasTranscript && !active) ...[
@@ -206,41 +298,68 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     ),
   );
 
-  Widget _options(AudioItem item, AppLocalizations l10n) => Column(
-    children: [
-      if (_hasPodcast(item))
+  /// 三个并列入口：本地转录、在线转录、本地上传（播客可下载时多一项）。
+  ///
+  /// 模型与语言在语音识别设置里统一选择，弹窗不再重复提供。
+  Widget _options(AudioItem item, AppLocalizations l10n) {
+    final onlineBlocked = ref.watch(
+      onlineSubtitleAvailableProvider,
+    )
+        ? null
+        : ref.watch(
+            onlineModeBlockReasonProvider(RecognitionPurpose.subtitle),
+          );
+    return Column(
+      children: [
+        if (_hasPodcast(item))
+          _option(
+            _SubtitleAction.podcastDownload,
+            l10n.downloadPodcastSubtitle,
+            Icons.closed_caption_outlined,
+            subtitle: l10n.downloadPodcastSubtitleSubtitle,
+          ),
         _option(
-          _SubtitleAction.podcastDownload,
-          l10n.downloadPodcastSubtitle,
-          Icons.closed_caption_outlined,
-          l10n.downloadPodcastSubtitleSubtitle,
+          _SubtitleAction.localTranscription,
+          l10n.offlineTranscription,
+          Icons.offline_bolt_outlined,
+          subtitle: l10n.offlineTranscriptionSubtitle,
         ),
-      _option(
-        _SubtitleAction.transcription,
-        l10n.offlineTranscription,
-        Icons.offline_bolt_outlined,
-        l10n.offlineTranscriptionSubtitle,
-      ),
-      if (_selectedAction == _SubtitleAction.transcription) ...[
-        if (item.transcriptLanguage == 'auto')
-          _notice(l10n.legacyAutoTranscript, Icons.info_outline)
-        else
-          const TranscriptionOptions(),
+        _option(
+          _SubtitleAction.onlineTranscription,
+          l10n.onlineTranscription,
+          Icons.cloud_outlined,
+          subtitle: onlineBlocked == null
+              ? l10n.onlineTranscriptionSubtitle
+              : practiceOnlineBlockReasonText(l10n, onlineBlocked),
+          enabled: onlineBlocked == null,
+        ),
+        if (_selectedAction == _SubtitleAction.localTranscription ||
+            _selectedAction == _SubtitleAction.onlineTranscription) ...[
+          if (item.transcriptLanguage == 'auto')
+            _notice(l10n.legacyAutoTranscript, Icons.info_outline)
+          else ...[
+            const TranscriptionOptions(),
+            if (_selectedAction == _SubtitleAction.onlineTranscription)
+              _subtitleModeNotice(l10n),
+          ],
+        ],
+        _option(
+          _SubtitleAction.localUpload,
+          l10n.localUpload,
+          Icons.folder_open_outlined,
+        ),
       ],
-      _option(
-        _SubtitleAction.localUpload,
-        l10n.localUpload,
-        Icons.folder_open_outlined,
-      ),
-    ],
-  );
+    );
+  }
 
   Widget _option(
     _SubtitleAction action,
     String title,
-    IconData icon, [
+    IconData icon, {
     String? subtitle,
-  ]) => ListTile(
+    bool enabled = true,
+  }) => ListTile(
+    enabled: enabled,
     leading: Icon(icon),
     title: Text(title),
     subtitle: subtitle == null ? null : Text(subtitle),
@@ -250,14 +369,26 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
           ? Icons.radio_button_checked
           : Icons.radio_button_unchecked,
     ),
-    onTap: _downloading ? null : () => setState(() => _selectedAction = action),
+    onTap: _downloading || !enabled
+        ? null
+        : () => setState(() => _selectedAction = action),
   );
 
-  Widget _action(AudioItem item, AppLocalizations l10n) {
+  Widget _action(
+    AudioItem item,
+    AppLocalizations l10n,
+    OnlineSubtitleTaskState? onlineTask,
+  ) {
+    final isTranscription =
+        _selectedAction == _SubtitleAction.localTranscription ||
+        _selectedAction == _SubtitleAction.onlineTranscription;
     final disabled =
-        _downloading ||
-        (_selectedAction == _SubtitleAction.transcription &&
-            item.transcriptLanguage == 'auto');
+        _downloading || (isTranscription && item.transcriptLanguage == 'auto');
+    // 可续试的失败：主按钮只重发失败与未完成块，不重新上传已成功部分。
+    final resumable =
+        _selectedAction == _SubtitleAction.onlineTranscription &&
+        onlineTask is OnlineSubtitleFailed &&
+        onlineTask.retryable;
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
@@ -268,16 +399,81 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
                 height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : Text(switch (_selectedAction) {
-                _SubtitleAction.podcastDownload => l10n.downloadSubtitle,
-                _SubtitleAction.localUpload => l10n.uploadTranscript,
-                _SubtitleAction.transcription => l10n.startTranscription,
-              }),
+            : Text(
+                resumable
+                    ? l10n.onlineSubtitleRetryUnfinished
+                    : switch (_selectedAction) {
+                        _SubtitleAction.podcastDownload =>
+                          l10n.downloadSubtitle,
+                        _SubtitleAction.localUpload => l10n.uploadTranscript,
+                        _SubtitleAction.localTranscription =>
+                          l10n.startTranscription,
+                        _SubtitleAction.onlineTranscription =>
+                          l10n.startTranscription,
+                      },
+              ),
       ),
     );
   }
 
-  Widget _progress(LocalTranscriptionState? task, AppLocalizations l10n) {
+  /// 进度区：本机任务显示真实进度，在线单块请求只能显示服务与模型。
+  Widget _progress(
+    LocalTranscriptionState? task,
+    OnlineSubtitleTaskState? onlineTask,
+    AppLocalizations l10n,
+  ) {
+    if (onlineTask is OnlineSubtitleWorking) {
+      return Column(
+        children: [
+          _notice(
+            l10n.onlineSubtitleService(
+              _serviceLabel(l10n, onlineTask.service),
+              onlineTask.modelId,
+            ),
+            Icons.cloud_upload_outlined,
+          ),
+          _notice(
+            l10n.onlineSubtitleChunkProgress(
+              onlineTask.completedChunks,
+              onlineTask.totalChunks,
+            ),
+            Icons.list_alt,
+          ),
+          _notice(l10n.transcriptionProcessing, Icons.graphic_eq),
+          LinearProgressIndicator(
+            value: onlineTask.totalChunks == 0
+                ? null
+                : onlineTask.completedChunks / onlineTask.totalChunks,
+          ),
+        ],
+      );
+    }
+    if (onlineTask is OnlineSubtitleCompleted) {
+      return Column(
+        children: [
+          _notice(l10n.transcriptionComplete, Icons.check_circle_outline),
+          _notice(
+            l10n.onlineSubtitleService(
+              _serviceLabel(l10n, _subtitleService),
+              onlineTask.modelId,
+            ),
+            Icons.cloud_outlined,
+          ),
+          _notice(
+            onlineTask.reportedCost == null
+                ? l10n.onlineSubtitleCostUnknown
+                : l10n.onlineSubtitleCost(onlineTask.reportedCost.toString()),
+            Icons.payments_outlined,
+          ),
+          _notice(
+            l10n.wordTimingSourceLabel(
+              _wordTimingLabel(l10n, onlineTask.wordTimingSource),
+            ),
+            Icons.timeline,
+          ),
+        ],
+      );
+    }
     final progress = task is LocalTranscriptionTranscribing
         ? task.progress
         : null;
@@ -306,7 +502,69 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     );
   }
 
-  /// 只调用本机任务；模型下载、覆盖确认与历史字幕保护均在请求前完成。
+  /// 选中「在线转录」时的提示。
+  ///
+  /// 就绪后不再展示选中的在线模型（模型统一在设置里管理），只在未通过验证时
+  /// 说明原因，避免用户点了却不知道为什么不能用。
+  Widget _subtitleModeNotice(AppLocalizations l10n) {
+    if (ref.watch(onlineSubtitleAvailableProvider)) {
+      return const SizedBox.shrink();
+    }
+    return _notice(l10n.onlineSubtitleNotVerified, Icons.error_outline);
+  }
+
+  /// 当前字幕的词时间戳来源提示；只展示实际标记，不因来源是在线就宣称逐词精确。
+  Widget _timingSource(AudioItem item, AppLocalizations l10n) => _notice(
+    l10n.wordTimingSourceLabel(
+      _wordTimingLabel(l10n, item.transcriptWordTimingSource),
+    ),
+    Icons.timeline,
+  );
+
+  /// 字幕在线方式当前选中的服务名；未配置时返回空字符串。
+  String get _subtitleService =>
+      ref.read(speechConfigurationProvider).valueOrNull?.config?.kind.name ??
+      '';
+
+  /// 服务显示名：预设名与自定义服务各一个说法，不暴露地址与凭据。
+  String _serviceLabel(AppLocalizations l10n, String service) =>
+      service == SpeechProviderKind.openrouter.name
+      ? l10n.providerKindOpenRouter
+      : l10n.providerKindCustom;
+
+  /// 词时间戳来源文案；null 表示历史数据缺少标记。
+  String _wordTimingLabel(
+    AppLocalizations l10n,
+    TranscriptWordTimingSource? source,
+  ) => switch (source) {
+    TranscriptWordTimingSource.model => l10n.wordTimingSourceModel,
+    TranscriptWordTimingSource.estimated => l10n.wordTimingSourceEstimated,
+    TranscriptWordTimingSource.mixed => l10n.wordTimingSourceMixed,
+    null => l10n.wordTimingSourceUnknown,
+  };
+
+  /// 在线失败文案：供应商错误用既有分类文案，本地原因各自说明下一步。
+  String _onlineFailureText(
+    AppLocalizations l10n,
+    OnlineSubtitleFailureReason reason,
+    SpeechTranscriptionException? speechError,
+  ) {
+    if (speechError != null) return speechErrorText(context, speechError);
+    return switch (reason) {
+      OnlineSubtitleFailureReason.notConfigured =>
+        l10n.onlineSubtitleNotConfigured,
+      OnlineSubtitleFailureReason.notVerified => l10n.onlineSubtitleNotVerified,
+      OnlineSubtitleFailureReason.decodeFailed =>
+        l10n.onlineSubtitleDecodeFailed,
+      OnlineSubtitleFailureReason.invalidResult =>
+        l10n.onlineSubtitleInvalidResult,
+      OnlineSubtitleFailureReason.configChanged =>
+        l10n.onlineSubtitleConfigChanged,
+      OnlineSubtitleFailureReason.unknown => l10n.transcriptionFailed,
+    };
+  }
+
+  /// 路由到在线或本机任务；覆盖确认与历史字幕保护均在请求前完成。
   Future<void> _runAction(AudioItem item) async {
     if (_selectedAction == _SubtitleAction.podcastDownload) {
       return _downloadPodcast(item);
@@ -318,7 +576,22 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
       if (!await _confirmContent(item, status) || !mounted) return;
     }
     if (item.hasTranscript && (!await _confirmOverwrite() || !mounted)) return;
-    final model = ref.read(localTranscriptionModelProvider);
+    // 各自入口直接决定路线，不再依赖「设置里的当前方式」：用户点哪个就跑哪个。
+    if (_selectedAction == _SubtitleAction.onlineTranscription) {
+      // 在线不经过本地模型/VAD 安装门控；能力与范围校验在任务里复核。
+      ref
+          .read(onlineSubtitleTaskManagerProvider.notifier)
+          .startOnlineTranscription(
+            item,
+            autoMergeShortSentences: ref.read(
+              transcriptionMergeEnabledProvider,
+            ),
+          );
+      return;
+    }
+    final model = ref.read(
+      recognitionLocalModelProvider(RecognitionPurpose.subtitle),
+    );
     if (!await ensureAsrModelReadyForTranscription(
           context,
           ref,

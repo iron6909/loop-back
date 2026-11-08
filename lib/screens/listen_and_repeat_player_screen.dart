@@ -530,7 +530,7 @@ class _ListenAndRepeatPlayerScreenState
     // watch 录音相关状态（仅监听 build 中实际使用的字段，避免转录更新触发重建）
     ref.watch(
       speechRecordingControllerProvider.select(
-        (s) => (s.phase, s.currentAttempt, s.promptId),
+        (s) => (s.phase, s.currentAttempt, s.promptId, s.onlineShadowing),
       ),
     );
     final turnState = ref.read(speechRecordingControllerProvider);
@@ -760,6 +760,7 @@ class _ListenAndRepeatPlayerScreenState
                                 recordingMode: recordingMode,
                                 isProcessing: isProcessing,
                                 currentAttempt: currentAttempt,
+                                onlineStatus: turnState.onlineShadowing,
                                 hintText: isPlaying
                                     ? l10n.listenAndRepeatListenHint
                                     : null,
@@ -789,6 +790,18 @@ class _ListenAndRepeatPlayerScreenState
                                       )
                                     : null,
                                 onRecordTap: () => ctrl.onRecordButtonTapped(),
+                                // 分块转写失败后只重发未完成块，不自动重试。
+                                onRetryOnline: () => unawaited(
+                                  ref
+                                      .read(
+                                        speechRecordingControllerProvider
+                                            .notifier,
+                                      )
+                                      .retryOnlineTranscription(
+                                        referenceText:
+                                            turnState.referenceText ?? '',
+                                      ),
+                                ),
                                 // 关闭评级时由面板降级为录音回放 badge。
                                 showRatingBadge: ref.watch(
                                   learningSettingsProvider.select(

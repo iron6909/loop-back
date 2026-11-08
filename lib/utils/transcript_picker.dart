@@ -194,6 +194,8 @@ Future<void> _importLocalSubtitleWithRead(
     item.id,
     srt: srt,
     wordTimestampsJson: wordTimestampsJson,
+    // 本地上传没有真实词级时间戳，整份按字数估算，如实标记为估算。
+    transcriptWordTimingSource: TranscriptWordTimingSource.estimated.index,
   );
   read(audioLibraryProvider.notifier).updateAudioItem(
     item.copyWith(
@@ -201,6 +203,7 @@ Future<void> _importLocalSubtitleWithRead(
       sentenceCount: stats.$1,
       wordCount: stats.$2,
       transcriptSource: TranscriptSource.local,
+      transcriptWordTimingSource: TranscriptWordTimingSource.estimated,
       transcriptLanguage: null,
     ),
   );

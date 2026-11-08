@@ -3608,6 +3608,48 @@ abstract class AppLocalizations {
   /// **'Use the app\'s AI model. It works offline after downloading'**
   String get asrBackendOfflineDescription;
 
+  /// No description provided for @asrBackendLocalWhisper.
+  ///
+  /// In en, this message translates to:
+  /// **'Whisper (on-device)'**
+  String get asrBackendLocalWhisper;
+
+  /// No description provided for @asrBackendLocalWhisperDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the built-in Whisper model. It works offline after downloading'**
+  String get asrBackendLocalWhisperDescription;
+
+  /// No description provided for @asrDownloadSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model Source'**
+  String get asrDownloadSourceTitle;
+
+  /// No description provided for @asrDownloadSourceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies to public models only. Both sources serve the same version and checksums.'**
+  String get asrDownloadSourceDescription;
+
+  /// No description provided for @asrDownloadSourceHuggingFace.
+  ///
+  /// In en, this message translates to:
+  /// **'Hugging Face'**
+  String get asrDownloadSourceHuggingFace;
+
+  /// No description provided for @asrDownloadSourceHuggingFaceMirror.
+  ///
+  /// In en, this message translates to:
+  /// **'hf-mirror.com (mirror)'**
+  String get asrDownloadSourceHuggingFaceMirror;
+
+  /// No description provided for @asrModelSourceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Source: {source} · License: {license}'**
+  String asrModelSourceLine(String source, String license);
+
   /// No description provided for @asrModelTier.
   ///
   /// In en, this message translates to:
@@ -4009,6 +4051,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transcription failed'**
   String get transcriptionFailed;
+
+  /// No description provided for @transcriptionConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles were replaced by another action; your newer subtitles are kept'**
+  String get transcriptionConflict;
 
   /// No description provided for @transcriptionErrorConnection.
   ///
@@ -6371,7 +6419,7 @@ abstract class AppLocalizations {
   /// No description provided for @senseGroupSyntheticTimingNoticeMessage.
   ///
   /// In en, this message translates to:
-  /// **'This sense group playback timing is estimated from your uploaded subtitles and may be inaccurate.'**
+  /// **'This sense group playback timing is estimated from word lengths and may not match the actual speech.'**
   String get senseGroupSyntheticTimingNoticeMessage;
 
   /// No description provided for @transcriptionSignInRequiredTitle.
@@ -10345,6 +10393,414 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unsupported files ignored: {count}'**
   String folderUnsupportedFiles(int count);
+
+  /// No description provided for @recognitionPurposeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recognition by purpose'**
+  String get recognitionPurposeTitle;
+
+  /// No description provided for @recognitionPurposeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles, shadowing, and retelling each keep their own recognition mode and model.'**
+  String get recognitionPurposeDescription;
+
+  /// No description provided for @recognitionPurposeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles'**
+  String get recognitionPurposeSubtitle;
+
+  /// No description provided for @recognitionPurposeShadowing.
+  ///
+  /// In en, this message translates to:
+  /// **'Shadowing'**
+  String get recognitionPurposeShadowing;
+
+  /// No description provided for @recognitionPurposeRetell.
+  ///
+  /// In en, this message translates to:
+  /// **'Retelling'**
+  String get recognitionPurposeRetell;
+
+  /// No description provided for @recognitionModeLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device'**
+  String get recognitionModeLocal;
+
+  /// No description provided for @recognitionModeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System speech'**
+  String get recognitionModeSystem;
+
+  /// No description provided for @recognitionModeOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online speech'**
+  String get recognitionModeOnline;
+
+  /// No description provided for @recognitionOnlineModelSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Online speech · {model}'**
+  String recognitionOnlineModelSummary(String model);
+
+  /// No description provided for @recognitionOnlineNeedsConfiguration.
+  ///
+  /// In en, this message translates to:
+  /// **'Set the service address and key under Online speech below first'**
+  String get recognitionOnlineNeedsConfiguration;
+
+  /// No description provided for @recognitionOnlineNeedsUploadNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Verify model under Online speech below; the first time explains the upload target and possible charges'**
+  String get recognitionOnlineNeedsUploadNotice;
+
+  /// No description provided for @recognitionOnlineNeedsVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Verify model under Online speech below to verify this purpose\'s online model'**
+  String get recognitionOnlineNeedsVerification;
+
+  /// No description provided for @shadowingOnlineProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Online · {service} · {model} · {percent}%'**
+  String shadowingOnlineProgress(String service, String model, int percent);
+
+  /// No description provided for @shadowingOnlineCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Online · {service} · {model} · cost {cost}'**
+  String shadowingOnlineCost(String service, String model, String cost);
+
+  /// No description provided for @shadowingOnlineCostUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Online · {service} · {model} · cost unknown'**
+  String shadowingOnlineCostUnknown(String service, String model);
+
+  /// No description provided for @shadowingOnlineChunkProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} parts done'**
+  String shadowingOnlineChunkProgress(int completed, int total);
+
+  /// No description provided for @shadowingOnlineChargeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'the failed part may already be billed'**
+  String get shadowingOnlineChargeWarning;
+
+  /// No description provided for @shadowingOnlineRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry unfinished parts'**
+  String get shadowingOnlineRetry;
+
+  /// No description provided for @recognitionChangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change recognition settings?'**
+  String get recognitionChangeTitle;
+
+  /// No description provided for @recognitionChangeMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Running recognition tasks affected: {count}. Continuing cancels them and discards unfinished results.'**
+  String recognitionChangeMessage(int count);
+
+  /// No description provided for @recognitionChangeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel tasks and change'**
+  String get recognitionChangeConfirm;
+
+  /// No description provided for @speechProviderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online speech service'**
+  String get speechProviderTitle;
+
+  /// No description provided for @speechProviderDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles, shadowing, and retelling share one service address and key. The address is used as-is with /audio/transcriptions appended; /v1 is not added.'**
+  String get speechProviderDescription;
+
+  /// No description provided for @speechProviderStatusUnconfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not configured'**
+  String get speechProviderStatusUnconfigured;
+
+  /// No description provided for @speechProviderStatusMissingKey.
+  ///
+  /// In en, this message translates to:
+  /// **'API key missing'**
+  String get speechProviderStatusMissingKey;
+
+  /// No description provided for @speechProviderStatusUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved, not verified'**
+  String get speechProviderStatusUnverified;
+
+  /// No description provided for @speechProviderStatusVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved and verified'**
+  String get speechProviderStatusVerified;
+
+  /// No description provided for @speechProviderSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the online speech settings'**
+  String get speechProviderSaveFailed;
+
+  /// No description provided for @speechProviderOnlineModel.
+  ///
+  /// In en, this message translates to:
+  /// **'{purpose} online model'**
+  String speechProviderOnlineModel(String purpose);
+
+  /// No description provided for @speechCapabilityTest.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify model'**
+  String get speechCapabilityTest;
+
+  /// No description provided for @speechCapabilityTesting.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying…'**
+  String get speechCapabilityTesting;
+
+  /// No description provided for @speechCapabilityUnverified.
+  ///
+  /// In en, this message translates to:
+  /// **'Not verified'**
+  String get speechCapabilityUnverified;
+
+  /// No description provided for @speechCapabilitySubtitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtitles available'**
+  String get speechCapabilitySubtitles;
+
+  /// No description provided for @speechCapabilityTextOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Text only, no usable segments'**
+  String get speechCapabilityTextOnly;
+
+  /// No description provided for @speechCapabilityWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Word timestamps available'**
+  String get speechCapabilityWords;
+
+  /// No description provided for @speechCapabilityVerifiedCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified. Provider-reported cost: {cost}'**
+  String speechCapabilityVerifiedCost(String cost);
+
+  /// No description provided for @speechCapabilityVerifiedCostUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified. The provider reported no cost, so the charge is unknown'**
+  String get speechCapabilityVerifiedCostUnknown;
+
+  /// No description provided for @speechModelRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh transcription models'**
+  String get speechModelRefresh;
+
+  /// No description provided for @speechModelRefreshEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The service returned no transcription models; you can still enter a model ID'**
+  String get speechModelRefreshEmpty;
+
+  /// No description provided for @speechModelRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the model list; you can still enter a model ID'**
+  String get speechModelRefreshFailed;
+
+  /// No description provided for @speechUploadNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a test sample?'**
+  String get speechUploadNoticeTitle;
+
+  /// No description provided for @speechUploadNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Echo Loop will upload the bundled 4-second English sample to {host}. Downstream inference provider: {provider}. The service may charge your account for this request. Your own recordings are not used.'**
+  String speechUploadNoticeBody(String host, String provider);
+
+  /// No description provided for @speechUploadProviderOpenRouter.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenRouter and the downstream providers it routes to'**
+  String get speechUploadProviderOpenRouter;
+
+  /// No description provided for @speechUploadProviderCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'the service operator (downstream provider unknown)'**
+  String get speechUploadProviderCustom;
+
+  /// No description provided for @speechUploadNoticeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Send test'**
+  String get speechUploadNoticeConfirm;
+
+  /// No description provided for @onlineSubtitleService.
+  ///
+  /// In en, this message translates to:
+  /// **'Online subtitles: {service} · {model}'**
+  String onlineSubtitleService(String service, String model);
+
+  /// No description provided for @onlineSubtitleCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost reported by the provider: {cost}'**
+  String onlineSubtitleCost(String cost);
+
+  /// No description provided for @onlineSubtitleCostUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'The provider reported no cost, so the actual charge is unknown'**
+  String get onlineSubtitleCostUnknown;
+
+  /// No description provided for @subtitleModeLocalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose'**
+  String get subtitleModeLocalHint;
+
+  /// No description provided for @onlineSubtitleNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No online speech service or API key configured'**
+  String get onlineSubtitleNotConfigured;
+
+  /// No description provided for @onlineSubtitleNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'The current speech configuration has not passed subtitle capability verification'**
+  String get onlineSubtitleNotVerified;
+
+  /// No description provided for @onlineSubtitleChunkProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Chunks done: {completed}/{total}'**
+  String onlineSubtitleChunkProgress(int completed, int total);
+
+  /// No description provided for @onlineSubtitleFailedChunk.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed at chunk {chunk}/{total}'**
+  String onlineSubtitleFailedChunk(int chunk, int total);
+
+  /// No description provided for @onlineSubtitleRetryUnfinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue unfinished chunks'**
+  String get onlineSubtitleRetryUnfinished;
+
+  /// No description provided for @onlineSubtitleRetryCostWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The failed chunk was already sent, so it may have been charged; continuing can charge it again'**
+  String get onlineSubtitleRetryCostWarning;
+
+  /// No description provided for @onlineSubtitleNoSpeech.
+  ///
+  /// In en, this message translates to:
+  /// **'No speech recognized in this material, so the subtitles were left unchanged'**
+  String get onlineSubtitleNoSpeech;
+
+  /// No description provided for @onlineSubtitleDecodeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The audio could not be decoded, so nothing was uploaded'**
+  String get onlineSubtitleDecodeFailed;
+
+  /// No description provided for @onlineSubtitleInvalidResult.
+  ///
+  /// In en, this message translates to:
+  /// **'The service returned unusable timestamps, so no subtitles were saved'**
+  String get onlineSubtitleInvalidResult;
+
+  /// No description provided for @onlineSubtitleConfigChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'The speech configuration changed, so this result was discarded'**
+  String get onlineSubtitleConfigChanged;
+
+  /// No description provided for @wordTimingSourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Word timing source: {source}'**
+  String wordTimingSourceLabel(String source);
+
+  /// No description provided for @wordTimingSourceModel.
+  ///
+  /// In en, this message translates to:
+  /// **'model-provided'**
+  String get wordTimingSourceModel;
+
+  /// No description provided for @wordTimingSourceEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'estimated'**
+  String get wordTimingSourceEstimated;
+
+  /// No description provided for @wordTimingSourceMixed.
+  ///
+  /// In en, this message translates to:
+  /// **'mixed'**
+  String get wordTimingSourceMixed;
+
+  /// No description provided for @wordTimingSourceUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'unknown'**
+  String get wordTimingSourceUnknown;
+
+  /// No description provided for @recognitionOnlineNeedsSuitableModel.
+  ///
+  /// In en, this message translates to:
+  /// **'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it'**
+  String get recognitionOnlineNeedsSuitableModel;
+
+  /// No description provided for @onlineTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Online transcription'**
+  String get onlineTranscription;
+
+  /// No description provided for @onlineTranscriptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe with the configured online speech service'**
+  String get onlineTranscriptionSubtitle;
+
+  /// No description provided for @subtitleOnlineModelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it'**
+  String get subtitleOnlineModelHint;
 }
 
 class _AppLocalizationsDelegate

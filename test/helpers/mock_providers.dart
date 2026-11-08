@@ -26,6 +26,7 @@ import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/providers/retell_recording_controller_provider.dart';
 import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
 import 'package:echo_loop/providers/local_transcription_task_provider.dart';
+import 'package:echo_loop/providers/online_subtitle_task_provider.dart';
 import 'package:echo_loop/database/providers.dart';
 import 'package:echo_loop/providers/learning_settings_provider.dart';
 import 'package:echo_loop/services/notification_permission_service.dart';
@@ -320,6 +321,39 @@ class TestLocalTranscriptionTaskManager extends LocalTranscriptionTaskManager {
     required AsrModelInfo model,
     bool autoMergeShortSentences = true,
   }) async {}
+
+  @override
+  void cancelTranscription(String audioId) {
+    state = Map.of(state)..remove(audioId);
+  }
+
+  @override
+  void clearState(String audioId) {
+    state = Map.of(state)..remove(audioId);
+  }
+}
+
+/// 测试用 OnlineSubtitleTaskManager — build 返回注入的固定状态，
+/// 启动副作用置空，便于验证字幕入口是否按在线方式路由。
+class TestOnlineSubtitleTaskManager extends OnlineSubtitleTaskManager {
+  TestOnlineSubtitleTaskManager([Map<String, OnlineSubtitleTaskState>? initial])
+    : _initialState = initial ?? const {};
+
+  final Map<String, OnlineSubtitleTaskState> _initialState;
+
+  /// 启动记录：(audioId, 是否合并短句)。
+  final List<(String, bool)> calls = [];
+
+  @override
+  Map<String, OnlineSubtitleTaskState> build() => Map.of(_initialState);
+
+  @override
+  Future<void> startOnlineTranscription(
+    AudioItem audioItem, {
+    bool autoMergeShortSentences = true,
+  }) async {
+    calls.add((audioItem.id, autoMergeShortSentences));
+  }
 
   @override
   void cancelTranscription(String audioId) {

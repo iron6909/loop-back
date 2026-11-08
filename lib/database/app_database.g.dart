@@ -122,6 +122,17 @@ class $AudioItemsTable extends AudioItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _transcriptWordTimingSourceMeta =
+      const VerificationMeta('transcriptWordTimingSource');
+  @override
+  late final GeneratedColumn<int> transcriptWordTimingSource =
+      GeneratedColumn<int>(
+        'transcript_word_timing_source',
+        aliasedName,
+        true,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _audioSha256Meta = const VerificationMeta(
     'audioSha256',
   );
@@ -387,6 +398,7 @@ class $AudioItemsTable extends AudioItems
     wordCount,
     isPinned,
     transcriptSource,
+    transcriptWordTimingSource,
     audioSha256,
     originalAudioSha256,
     transcriptLanguage,
@@ -495,6 +507,15 @@ class $AudioItemsTable extends AudioItems
         transcriptSource.isAcceptableOrUnknown(
           data['transcript_source']!,
           _transcriptSourceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('transcript_word_timing_source')) {
+      context.handle(
+        _transcriptWordTimingSourceMeta,
+        transcriptWordTimingSource.isAcceptableOrUnknown(
+          data['transcript_word_timing_source']!,
+          _transcriptWordTimingSourceMeta,
         ),
       );
     }
@@ -747,6 +768,10 @@ class $AudioItemsTable extends AudioItems
         DriftSqlType.int,
         data['${effectivePrefix}transcript_source'],
       ),
+      transcriptWordTimingSource: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}transcript_word_timing_source'],
+      ),
       audioSha256: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}audio_sha256'],
@@ -884,6 +909,11 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
   /// 字幕来源：0=local, 1=ai, null=无字幕
   final int? transcriptSource;
 
+  /// 字幕整体词级时间戳来源：0=模型提供, 1=估算, 2=混合, null=未知（历史数据）。
+  ///
+  /// 只表达整份字幕的时间戳来源；有句子按词长估算时不能标成模型对齐。
+  final int? transcriptWordTimingSource;
+
   /// 媒体文件 SHA256 指纹（缓存，避免重复计算）。纯文件哈希，音视频通用。
   final String? audioSha256;
 
@@ -980,6 +1010,7 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
     required this.wordCount,
     required this.isPinned,
     this.transcriptSource,
+    this.transcriptWordTimingSource,
     this.audioSha256,
     this.originalAudioSha256,
     this.transcriptLanguage,
@@ -1022,6 +1053,11 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
     map['is_pinned'] = Variable<bool>(isPinned);
     if (!nullToAbsent || transcriptSource != null) {
       map['transcript_source'] = Variable<int>(transcriptSource);
+    }
+    if (!nullToAbsent || transcriptWordTimingSource != null) {
+      map['transcript_word_timing_source'] = Variable<int>(
+        transcriptWordTimingSource,
+      );
     }
     if (!nullToAbsent || audioSha256 != null) {
       map['audio_sha256'] = Variable<String>(audioSha256);
@@ -1113,6 +1149,10 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
       transcriptSource: transcriptSource == null && nullToAbsent
           ? const Value.absent()
           : Value(transcriptSource),
+      transcriptWordTimingSource:
+          transcriptWordTimingSource == null && nullToAbsent
+          ? const Value.absent()
+          : Value(transcriptWordTimingSource),
       audioSha256: audioSha256 == null && nullToAbsent
           ? const Value.absent()
           : Value(audioSha256),
@@ -1197,6 +1237,9 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
       wordCount: serializer.fromJson<int>(json['wordCount']),
       isPinned: serializer.fromJson<bool>(json['isPinned']),
       transcriptSource: serializer.fromJson<int?>(json['transcriptSource']),
+      transcriptWordTimingSource: serializer.fromJson<int?>(
+        json['transcriptWordTimingSource'],
+      ),
       audioSha256: serializer.fromJson<String?>(json['audioSha256']),
       originalAudioSha256: serializer.fromJson<String?>(
         json['originalAudioSha256'],
@@ -1258,6 +1301,9 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
       'wordCount': serializer.toJson<int>(wordCount),
       'isPinned': serializer.toJson<bool>(isPinned),
       'transcriptSource': serializer.toJson<int?>(transcriptSource),
+      'transcriptWordTimingSource': serializer.toJson<int?>(
+        transcriptWordTimingSource,
+      ),
       'audioSha256': serializer.toJson<String?>(audioSha256),
       'originalAudioSha256': serializer.toJson<String?>(originalAudioSha256),
       'transcriptLanguage': serializer.toJson<String?>(transcriptLanguage),
@@ -1299,6 +1345,7 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
     int? wordCount,
     bool? isPinned,
     Value<int?> transcriptSource = const Value.absent(),
+    Value<int?> transcriptWordTimingSource = const Value.absent(),
     Value<String?> audioSha256 = const Value.absent(),
     Value<String?> originalAudioSha256 = const Value.absent(),
     Value<String?> transcriptLanguage = const Value.absent(),
@@ -1337,6 +1384,9 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
     transcriptSource: transcriptSource.present
         ? transcriptSource.value
         : this.transcriptSource,
+    transcriptWordTimingSource: transcriptWordTimingSource.present
+        ? transcriptWordTimingSource.value
+        : this.transcriptWordTimingSource,
     audioSha256: audioSha256.present ? audioSha256.value : this.audioSha256,
     originalAudioSha256: originalAudioSha256.present
         ? originalAudioSha256.value
@@ -1415,6 +1465,9 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
       transcriptSource: data.transcriptSource.present
           ? data.transcriptSource.value
           : this.transcriptSource,
+      transcriptWordTimingSource: data.transcriptWordTimingSource.present
+          ? data.transcriptWordTimingSource.value
+          : this.transcriptWordTimingSource,
       audioSha256: data.audioSha256.present
           ? data.audioSha256.value
           : this.audioSha256,
@@ -1496,6 +1549,7 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
           ..write('wordCount: $wordCount, ')
           ..write('isPinned: $isPinned, ')
           ..write('transcriptSource: $transcriptSource, ')
+          ..write('transcriptWordTimingSource: $transcriptWordTimingSource, ')
           ..write('audioSha256: $audioSha256, ')
           ..write('originalAudioSha256: $originalAudioSha256, ')
           ..write('transcriptLanguage: $transcriptLanguage, ')
@@ -1535,6 +1589,7 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
     wordCount,
     isPinned,
     transcriptSource,
+    transcriptWordTimingSource,
     audioSha256,
     originalAudioSha256,
     transcriptLanguage,
@@ -1573,6 +1628,8 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
           other.wordCount == this.wordCount &&
           other.isPinned == this.isPinned &&
           other.transcriptSource == this.transcriptSource &&
+          other.transcriptWordTimingSource ==
+              this.transcriptWordTimingSource &&
           other.audioSha256 == this.audioSha256 &&
           other.originalAudioSha256 == this.originalAudioSha256 &&
           other.transcriptLanguage == this.transcriptLanguage &&
@@ -1609,6 +1666,7 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
   final Value<int> wordCount;
   final Value<bool> isPinned;
   final Value<int?> transcriptSource;
+  final Value<int?> transcriptWordTimingSource;
   final Value<String?> audioSha256;
   final Value<String?> originalAudioSha256;
   final Value<String?> transcriptLanguage;
@@ -1644,6 +1702,7 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
     this.wordCount = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.transcriptSource = const Value.absent(),
+    this.transcriptWordTimingSource = const Value.absent(),
     this.audioSha256 = const Value.absent(),
     this.originalAudioSha256 = const Value.absent(),
     this.transcriptLanguage = const Value.absent(),
@@ -1680,6 +1739,7 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
     this.wordCount = const Value.absent(),
     this.isPinned = const Value.absent(),
     this.transcriptSource = const Value.absent(),
+    this.transcriptWordTimingSource = const Value.absent(),
     this.audioSha256 = const Value.absent(),
     this.originalAudioSha256 = const Value.absent(),
     this.transcriptLanguage = const Value.absent(),
@@ -1719,6 +1779,7 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
     Expression<int>? wordCount,
     Expression<bool>? isPinned,
     Expression<int>? transcriptSource,
+    Expression<int>? transcriptWordTimingSource,
     Expression<String>? audioSha256,
     Expression<String>? originalAudioSha256,
     Expression<String>? transcriptLanguage,
@@ -1755,6 +1816,8 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
       if (wordCount != null) 'word_count': wordCount,
       if (isPinned != null) 'is_pinned': isPinned,
       if (transcriptSource != null) 'transcript_source': transcriptSource,
+      if (transcriptWordTimingSource != null)
+        'transcript_word_timing_source': transcriptWordTimingSource,
       if (audioSha256 != null) 'audio_sha256': audioSha256,
       if (originalAudioSha256 != null)
         'original_audio_sha256': originalAudioSha256,
@@ -1803,6 +1866,7 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
     Value<int>? wordCount,
     Value<bool>? isPinned,
     Value<int?>? transcriptSource,
+    Value<int?>? transcriptWordTimingSource,
     Value<String?>? audioSha256,
     Value<String?>? originalAudioSha256,
     Value<String?>? transcriptLanguage,
@@ -1839,6 +1903,8 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
       wordCount: wordCount ?? this.wordCount,
       isPinned: isPinned ?? this.isPinned,
       transcriptSource: transcriptSource ?? this.transcriptSource,
+      transcriptWordTimingSource:
+          transcriptWordTimingSource ?? this.transcriptWordTimingSource,
       audioSha256: audioSha256 ?? this.audioSha256,
       originalAudioSha256: originalAudioSha256 ?? this.originalAudioSha256,
       transcriptLanguage: transcriptLanguage ?? this.transcriptLanguage,
@@ -1900,6 +1966,11 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
     }
     if (transcriptSource.present) {
       map['transcript_source'] = Variable<int>(transcriptSource.value);
+    }
+    if (transcriptWordTimingSource.present) {
+      map['transcript_word_timing_source'] = Variable<int>(
+        transcriptWordTimingSource.value,
+      );
     }
     if (audioSha256.present) {
       map['audio_sha256'] = Variable<String>(audioSha256.value);
@@ -2001,6 +2072,9 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
           ..write('wordCount: $wordCount, ')
           ..write('isPinned: $isPinned, ')
           ..write('transcriptSource: $transcriptSource, ')
+          ..write(
+            'transcriptWordTimingSource: $transcriptWordTimingSource, ',
+          )
           ..write('audioSha256: $audioSha256, ')
           ..write('originalAudioSha256: $originalAudioSha256, ')
           ..write('transcriptLanguage: $transcriptLanguage, ')

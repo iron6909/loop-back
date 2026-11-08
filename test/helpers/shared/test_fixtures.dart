@@ -27,6 +27,7 @@ AudioItem createTestAudioItem({
   String audioPath = 'audios/test.mp3',
   String? transcriptPath = 'transcripts/test.srt',
   Object? transcriptSource = _deriveSource,
+  TranscriptWordTimingSource? transcriptWordTimingSource,
   DateTime? addedDate,
   int totalDuration = 120,
 }) {
@@ -41,6 +42,7 @@ AudioItem createTestAudioItem({
     audioPath: audioPath,
     transcriptPath: transcriptPath,
     transcriptSource: resolvedSource,
+    transcriptWordTimingSource: transcriptWordTimingSource,
     addedDate: addedDate ?? DateTime(2026, 1, 1),
     totalDuration: totalDuration,
   );

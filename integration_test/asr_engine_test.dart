@@ -15,6 +15,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:echo_loop/services/asr/audio_file_reader.dart';
+import 'package:echo_loop/services/asr/asr_model_catalog.dart';
 import 'package:echo_loop/services/asr/offline_asr_engine.dart';
 import 'package:echo_loop/services/asr/sherpa_onnx_engine.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa;
@@ -133,11 +134,13 @@ void main() {
       final vadFile = File(p.join(vadDir.path, 'silero_vad.onnx'));
       if (!vadFile.existsSync()) {
         await vadDir.create(recursive: true);
+        final vadSpec = asrPublicResourceCatalog[vadModelId]!;
         final client = HttpClient();
         try {
           final request = await client.getUrl(
-            Uri.parse(
-              'https://cdn.echo-loop.top/model/silero-vad/silero_vad.onnx',
+            vadSpec.fileUri(
+              AsrDownloadSource.huggingFace,
+              vadSpec.files.single,
             ),
           );
           final response = await request.close();
