@@ -341,10 +341,9 @@ void main() {
         availableRecognitionModes(
           RecognitionPurpose.subtitle,
           systemSupported: false,
-          onlineSubtitleAvailable: true,
         ),
-        [RecognitionMode.local, RecognitionMode.online],
-        reason: '在线字幕需要片段时间戳能力，未验证前不出现',
+        [RecognitionMode.local],
+        reason: '字幕不在用途面板选方式：本地/在线在管理字幕弹窗里并列选择',
       );
     });
   });

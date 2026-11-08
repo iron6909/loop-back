@@ -175,7 +175,6 @@ class RecognitionPurposeSection extends ConsumerWidget {
     RecognitionPurpose purpose,
   ) {
     final systemSupported = ref.read(systemRecognitionPlatformProvider);
-    final onlineSubtitleAvailable = ref.read(onlineSubtitleAvailableProvider);
     return showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -194,11 +193,13 @@ class RecognitionPurposeSection extends ConsumerWidget {
           final modes = availableRecognitionModes(
             purpose,
             systemSupported: systemSupported,
-            onlineSubtitleAvailable: onlineSubtitleAvailable,
             onlineAvailable: onlineAvailable,
           );
           // 在线不可选时仍展示该方式并说明缺什么，避免用户以为只能本机识别。
-          final onlineBlocked = !modes.contains(RecognitionMode.online)
+          // 字幕不在用途面板里选方式（弹窗里三个入口并列），故不展示在线行。
+          final onlineBlocked =
+              purpose != RecognitionPurpose.subtitle &&
+                  !modes.contains(RecognitionMode.online)
               ? innerRef.watch(onlineModeBlockReasonProvider(purpose))
               : null;
           final showOnlineRow = modes.length > 1 || onlineBlocked != null;
@@ -305,6 +306,21 @@ class RecognitionPurposeSection extends ConsumerWidget {
                             RadioListTile<String>(
                               value: model.id,
                               title: Text(model.displayName),
+                            ),
+                          if (purpose == RecognitionPurpose.subtitle)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.m,
+                                AppSpacing.s,
+                                AppSpacing.m,
+                                AppSpacing.s,
+                              ),
+                              child: Text(
+                                l10n.subtitleOnlineModelHint,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
                             ),
                         ],
                       ),

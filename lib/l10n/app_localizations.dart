@@ -10795,6 +10795,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Transcribe with the configured online speech service'**
   String get onlineTranscriptionSubtitle;
+
+  /// No description provided for @subtitleOnlineModelHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it'**
+  String get subtitleOnlineModelHint;
 }
 
 class _AppLocalizationsDelegate

@@ -6148,4 +6148,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onlineTranscriptionSubtitle =>
       'Transcribe with the configured online speech service';
+
+  @override
+  String get subtitleOnlineModelHint =>
+      'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it';
 }

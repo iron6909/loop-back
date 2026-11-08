@@ -2804,5 +2804,6 @@
   "wordTimingSourceUnknown": "未知",
   "recognitionOnlineNeedsSuitableModel": "该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证",
   "onlineTranscription": "在线转录",
-  "onlineTranscriptionSubtitle": "用已配置的在线语音服务转写"
+  "onlineTranscriptionSubtitle": "用已配置的在线语音服务转写",
+  "subtitleOnlineModelHint": "在线模型与 Key 在下方「在线语音服务」中配置；管理字幕弹窗里可直接选「在线转录」"
 }

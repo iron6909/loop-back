@@ -127,7 +127,7 @@ void main() {
     expect(find.text('On-device · Whisper Tiny (English)'), findsOneWidget);
   });
 
-  testWidgets('字幕用途不提供系统识别，只列出本机与（不可用时的）在线说明', (tester) async {
+  testWidgets('字幕用途只选本机档位，方式在管理字幕弹窗里并列选择', (tester) async {
     final notifier = _RecordingRecognitionSettings(const []);
     await tester.pumpWidget(_buildHarness(notifier, systemSupported: true));
     await tester.pumpAndSettle();
@@ -135,10 +135,15 @@ void main() {
     await tester.tap(find.text('Subtitles'));
     await tester.pumpAndSettle();
 
-    // 字幕不能用系统识别；在线方式可见但被阻断时仍说明原因。
+    // 字幕不提供系统识别，也不在用途面板选方式（本地/在线为弹窗里的并列入口）。
     expect(find.text('System speech'), findsNothing);
-    expect(find.text('Online speech'), findsOneWidget);
+    expect(find.text('Online speech'), findsNothing);
     expect(find.text('Whisper Tiny (English)'), findsOneWidget);
+    // 在线模型去哪里配：面板里直接说明。
+    expect(
+      find.textContaining('Configure the online model and key under Online speech'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('支持的平台上跟读可选系统识别，保存的是跟读自己的选择', (tester) async {

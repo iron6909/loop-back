@@ -3534,5 +3534,6 @@
   "wordTimingSourceUnknown": "unknown",
   "recognitionOnlineNeedsSuitableModel": "This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it",
   "onlineTranscription": "Online transcription",
-  "onlineTranscriptionSubtitle": "Transcribe with the configured online speech service"
+  "onlineTranscriptionSubtitle": "Transcribe with the configured online speech service",
+  "subtitleOnlineModelHint": "Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it"
 }

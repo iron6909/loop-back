@@ -5862,4 +5862,8 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onlineTranscriptionSubtitle => '用已配置的在线语音服务转写';
+
+  @override
+  String get subtitleOnlineModelHint =>
+      '在线模型与 Key 在下方「在线语音服务」中配置；管理字幕弹窗里可直接选「在线转录」';
 }
