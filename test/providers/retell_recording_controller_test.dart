@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart' show CancelToken;
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,7 +12,7 @@ import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
 import 'package:echo_loop/providers/recognition_settings_provider.dart';
 import 'package:echo_loop/providers/retell_recording_controller_provider.dart';
 import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
-import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
+import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
 import 'package:echo_loop/services/speech/speech_config.dart';
 import 'package:echo_loop/services/speech_practice_platform.dart';
 
@@ -75,6 +76,21 @@ final _onlineRetellIdentity = onlineRecognitionIdentity(
   ),
   _onlineRetellModel,
 );
+
+/// 复述在线转写替身：记录被转写的录音路径，按用例返回结果或失败。
+class _FakeRetellOnline implements RetellOnlineTranscriber {
+  _FakeRetellOnline(this._run);
+  final Future<RetellOnlineTranscript> Function(String path) _run;
+
+  @override
+  Future<RetellOnlineTranscript> call(
+    String filePath, {
+    CancelToken? cancelToken,
+  }) => _run(filePath);
+
+  @override
+  Future<void> discard() async {}
+}
 
 class _FakeSpeechPracticeBackend implements SpeechPracticeBackend {
   final _controller = StreamController<SpeechPracticeEvent>.broadcast();
@@ -899,19 +915,18 @@ void main() {
         retellTranscriptProvider.overrideWithValue(
           (_) async => throw StateError('在线方式不得借用本机转写'),
         ),
-        retellOnlineTranscriptProvider.overrideWithValue((
-          path, {
-          cancelToken,
-        }) async {
-          onlinePaths.add(path);
-          return RetellOnlineTranscript(
-            text: 'ask your professor today',
-            identity: _onlineRetellIdentity,
-            modelId: _onlineRetellModel,
-            serviceHost: 'openrouter.ai',
-            reportedCost: 0.0002,
-          );
-        }),
+        retellOnlineTranscriptProvider.overrideWithValue(
+          _FakeRetellOnline((path) async {
+            onlinePaths.add(path);
+            return RetellOnlineTranscript(
+              text: 'ask your professor today',
+              identity: _onlineRetellIdentity,
+              modelId: _onlineRetellModel,
+              serviceHost: 'openrouter.ai',
+              reportedCost: 0.0002,
+            );
+          }),
+        ),
       ],
     );
     final controller = container.read(
@@ -960,12 +975,15 @@ void main() {
         retellTranscriptProvider.overrideWithValue(
           (_) async => throw StateError('在线方式不得借用本机转写'),
         ),
-        retellOnlineTranscriptProvider.overrideWithValue((
-          path, {
-          cancelToken,
-        }) async => throw const PracticeRecordingRejected(
-          PracticeRecordingRejection.tooLong,
-        )),
+        // 长录音分块失败：停在失败块，可能已计费，源录音保留。
+        retellOnlineTranscriptProvider.overrideWithValue(
+          _FakeRetellOnline(
+            (_) async => throw const PracticeChunkFailure(
+              PracticeChunkFailureReason.requestFailed,
+              mayHaveBeenCharged: true,
+            ),
+          ),
+        ),
       ],
     );
     final controller = container.read(

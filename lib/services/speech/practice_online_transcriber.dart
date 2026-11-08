@@ -3,9 +3,6 @@
 /// 录音停止后先判定格式与大小：单块范围内直接上传原始录音；超出单块范围时
 /// 返回 [PracticeRecordingNeedsChunking]，交给练习录音的分块转写按有界分块
 /// 顺序上传。本类不截断录音、不改成本机、不自动重试，也不保留半成品。
-///
-/// 分块编排属于跟读的 #12；复述首期只支持单块，收到
-/// [PracticeRecordingNeedsChunking] 时由调用方明确失败，不只上传开头。
 library;
 
 import 'dart:io';
@@ -33,12 +30,6 @@ enum PracticeRecordingRejection {
 
   /// 文件可读但没有可上传的音频样本。
   emptyAudio,
-
-  /// 时长超出单块上限；只有尚未接入分块的复述会用到。
-  tooLong,
-
-  /// 字节数超出单块上限；只有尚未接入分块的复述会用到。
-  tooLarge,
 }
 
 /// 录音不满足单块请求条件；[rejection] 供界面给出可操作原因。

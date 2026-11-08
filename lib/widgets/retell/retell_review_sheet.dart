@@ -8,6 +8,7 @@ import '../../features/subscription/models/ai_quota_rejection.dart';
 import '../../providers/retell_review_evaluation_provider.dart';
 import '../../services/audio_preview_controller.dart';
 import '../../services/provider/provider_error_text.dart';
+import '../../services/speech/practice_chunk_transcriber.dart';
 import '../../services/speech/speech_error_text.dart';
 import '../../theme/app_theme.dart';
 import 'retell_review_report.dart';
@@ -61,6 +62,9 @@ class _RetellReviewSheet extends ConsumerWidget {
     final pending = state.phase == RetellReviewEvaluationPhase.loading ||
       state.phase == RetellReviewEvaluationPhase.streaming;
     final evaluation = state.evaluation;
+    final speechError = state.speechError;
+    // 分块转写失败停在具体块上：向用户说清重试会不会重复计费。
+    final chunkFailure = speechError is PracticeChunkFailure ? speechError : null;
     return SafeArea(top: false, child: SizedBox(
       key: const ValueKey('retell-review-sheet'),
       height: MediaQuery.sizeOf(context).height * .8,
@@ -83,6 +87,11 @@ class _RetellReviewSheet extends ConsumerWidget {
             ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Icon(Icons.error_outline),
                 Text(retellReviewErrorText(context, state)),
+                if (chunkFailure != null && chunkFailure.mayHaveBeenCharged)
+                  Padding(padding: const EdgeInsets.only(top: AppSpacing.xs),
+                    child: Text(l10n.shadowingOnlineChargeWarning,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.error))),
                 FilledButton.tonalIcon(onPressed: onRetry,
                   icon: const Icon(Icons.refresh_rounded), label: Text(l10n.retellAiReviewRetry)),
               ]))

@@ -1,11 +1,15 @@
 /// 复述评估：同 attempt 转写优先，转写成功后才请求独立文字服务。
 ///
-/// 本机与在线两条转写路径都按复述自己的识别选择执行；识别阶段失败不进入评估，
+/// 本机与在线两条转写路径都按复述自己的识别选择执行；超出单块范围的在线录音
+/// 复用练习录音的分块能力，评估只用完整成功的最终文本。识别阶段失败不进入评估，
 /// 两类错误（语音 / 文字 AI）在状态里分开保存，界面分别呈现。
 library;
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../features/audio_import/audio_transcode_service.dart';
 import '../features/subscription/models/ai_quota_rejection.dart';
 import '../models/retell_review_evaluation.dart';
 import '../models/retell_review_sample.dart';
@@ -13,6 +17,7 @@ import '../services/app_logger.dart';
 import '../services/asr/offline_asr_engine.dart';
 import '../services/retell_transcriber.dart';
 import '../services/sentence_ai_api_client.dart';
+import '../services/speech/practice_chunk_transcriber.dart';
 import '../services/speech/practice_online_transcriber.dart';
 import '../services/speech/speech_config.dart';
 import '../services/speech/speech_transcription_client.dart';
@@ -93,7 +98,7 @@ final retellReviewEvaluationProvider = NotifierProvider<
   RetellReviewEvaluationController, RetellReviewEvaluationState>(
     RetellReviewEvaluationController.new);
 
-/// 复述在线的单块转写结果。
+/// 复述在线的转写结果：单块上传或分块合并后的完整文本。
 class RetellOnlineTranscript {
   const RetellOnlineTranscript({
     required this.text,
@@ -115,58 +120,214 @@ class RetellOnlineTranscript {
   final double? reportedCost;
 }
 
-/// 复述在线的单块转写入口：准入 → 录音边界检查 → 一次上传。
+/// 复述在线的转写入口：准入 → 录音边界检查 → 单块上传或复用练习录音分块。
 ///
 /// 与 [retellTranscriptProvider]（本机）并列，按复述自己的识别选择执行：模型来自
 /// 复述用途的在线配置，不借助字幕或跟读的选择；不做参数变换、不重试、不换服务。
-/// 失败原样抛出分类异常（准入拒绝 / 录音不满足单块条件 / 转写错误），由调用方
-/// 决定如何呈现。
-final retellOnlineTranscriptProvider =
-    Provider<
-      Future<RetellOnlineTranscript> Function(
-        String filePath, {
-        CancelToken? cancelToken,
-      })
-    >((ref) {
-      final client = ref.read(speechTranscriptionClientProvider);
-      return (filePath, {CancelToken? cancelToken}) async {
-        final access = await resolvePracticeOnlineAccess(
-          ref,
-          RecognitionPurpose.retell,
+/// 分块只请求文本，顺序上传并在块边界局部合并，评估只拿全部成功后的完整文本。
+///
+/// 分块进度由本对象持有，绑定录音路径与在线配置身份：同一会话内再转写只补未成功
+/// 的块，换了录音或配置就先丢掉旧块，绝不把两份输入的文本拼在一起。不承诺离开
+/// 复述练习会话后仍保留任务。
+class RetellOnlineTranscriber {
+  RetellOnlineTranscriber({
+    required Ref ref,
+    required SpeechTranscriptionClient client,
+    required AudioTranscodeService transcode,
+  }) : _ref = ref,
+       _client = client,
+       _transcode = transcode;
+
+  final Ref _ref;
+  final SpeechTranscriptionClient _client;
+  final AudioTranscodeService _transcode;
+
+  /// 本段录音的分块会话：只留已成功块的文本与确认无声的块，供手动续试。
+  PracticeChunkSession? _session;
+
+  /// 在途的切块转码会话；取消时终止它，不再提取后续切片。
+  int? _transcodeSession;
+
+  /// 转写一段复述录音，返回可用于评估的完整文本。
+  ///
+  /// 失败原样抛出分类异常（准入拒绝 / 录音不满足条件 / 转写或分块失败），由调用方
+  /// 决定如何呈现；[cancelToken] 取消后不再发请求，旧结果也不会被当成新文本。
+  Future<RetellOnlineTranscript> call(
+    String filePath, {
+    CancelToken? cancelToken,
+  }) async {
+    final access = await resolvePracticeOnlineAccess(
+      _ref,
+      RecognitionPurpose.retell,
+    );
+    switch (access) {
+      case PracticeOnlineAccessDenied():
+        throw access;
+      case PracticeOnlineAccessGranted():
+        return _transcribe(
+          access: access,
+          filePath: filePath,
+          cancelToken: cancelToken,
         );
-        switch (access) {
-          case PracticeOnlineAccessDenied():
-            throw access;
-          case PracticeOnlineAccessGranted():
-            final transcriber = PracticeOnlineTranscriber(client: client);
-            final recording = await transcriber.prepare(filePath);
-            final upload = switch (recording) {
-              PracticeRecordingUpload() => recording,
-              // 复述首期只支持单块：超出即明确失败，不只上传开头。
-              PracticeRecordingNeedsChunking(:final duration) => throw
-                PracticeRecordingRejected(
-                  duration == null
-                      ? PracticeRecordingRejection.tooLarge
-                      : PracticeRecordingRejection.tooLong,
-                ),
-            };
-            final result = await transcriber.transcribe(
-              config: access.config,
-              apiKey: access.apiKey,
-              modelId: access.modelId,
-              recording: upload,
-              cancelToken: cancelToken,
-            );
-            return RetellOnlineTranscript(
-              text: result.text,
-              identity: onlineRecognitionIdentity(access.config, access.modelId),
-              modelId: access.modelId,
-              serviceHost: Uri.tryParse(access.config.baseUrl)?.host ?? '',
-              reportedCost: result.reportedCost,
-            );
-        }
-      };
-    });
+    }
+  }
+
+  /// 丢弃当前分块会话与临时音频；源录音始终保留。
+  Future<void> discard() async {
+    final session = _session;
+    _session = null;
+    _transcodeSession = null;
+    if (session == null) return;
+    await session.discardTemp();
+  }
+
+  /// 单块范围内直接上传，超出单块范围改走有界分块。
+  Future<RetellOnlineTranscript> _transcribe({
+    required PracticeOnlineAccessGranted access,
+    required String filePath,
+    required CancelToken? cancelToken,
+  }) async {
+    final recording = await PracticeOnlineTranscriber(
+      client: _client,
+    ).prepare(filePath);
+    return switch (recording) {
+      PracticeRecordingUpload() => _uploadOnce(
+        access: access,
+        recording: recording,
+        cancelToken: cancelToken,
+      ),
+      PracticeRecordingNeedsChunking(:final duration) => _transcribeChunks(
+        access: access,
+        filePath: filePath,
+        knownDuration: duration,
+        cancelToken: cancelToken,
+      ),
+    };
+  }
+
+  /// 单块录音：停录后只上传一次。
+  Future<RetellOnlineTranscript> _uploadOnce({
+    required PracticeOnlineAccessGranted access,
+    required PracticeRecordingUpload recording,
+    required CancelToken? cancelToken,
+  }) async {
+    final result = await PracticeOnlineTranscriber(client: _client).transcribe(
+      config: access.config,
+      apiKey: access.apiKey,
+      modelId: access.modelId,
+      recording: recording,
+      cancelToken: cancelToken,
+    );
+    return _transcriptOf(
+      access,
+      text: result.text,
+      reportedCost: result.reportedCost,
+    );
+  }
+
+  /// 超出单块范围：按有界分块顺序上传，只交出全部成功后的完整文本。
+  ///
+  /// 会话沿用 [PracticeChunkTranscriber]：失败停在当前块并保留已成功块，同一录音
+  /// 与配置下再次调用只补未完成的块。只有供应商请求失败才保留会话等用户手动续试，
+  /// 其余失败（无语音、解码、配置变化、取消）立即清理临时状态。
+  Future<RetellOnlineTranscript> _transcribeChunks({
+    required PracticeOnlineAccessGranted access,
+    required String filePath,
+    required Duration? knownDuration,
+    required CancelToken? cancelToken,
+  }) async {
+    final token = cancelToken ?? CancelToken();
+    final chunks = PracticeChunkTranscriber(
+      client: _client,
+      transcode: _transcode,
+    );
+    var session = _session;
+    // 换了录音或配置：旧块不属于这次输入，先丢掉再重新规划。
+    if (session != null &&
+        (session.recordingPath != filePath ||
+            session.identity != access.identity)) {
+      await discard();
+      session = null;
+    }
+    session ??= await chunks.plan(
+      recordingPath: filePath,
+      identity: access.identity,
+      audioDuration: knownDuration,
+      isSessionValid: () => !token.isCancelled,
+      onSessionStarted: _onTranscodeSessionStarted,
+    );
+    final active = session;
+    _session = active;
+    // 取消要做到停发：用户取消时终止在途的切块转码。
+    unawaited(token.whenCancel.then((_) => _cancelTranscodeSession()));
+    try {
+      await chunks.run(
+        session: active,
+        config: access.config,
+        apiKey: access.apiKey,
+        modelId: access.modelId,
+        cancelToken: token,
+        isSessionValid: () => !token.isCancelled,
+        readCurrentIdentity: _currentIdentity,
+        onSessionStarted: _onTranscodeSessionStarted,
+      );
+    } on PracticeChunkFailure catch (error) {
+      if (error.reason != PracticeChunkFailureReason.requestFailed) {
+        await discard();
+      }
+      rethrow;
+    } finally {
+      _transcodeSession = null;
+    }
+    final text = active.text;
+    // 全部块成功：临时音频用完即删，源录音不动。
+    await discard();
+    return _transcriptOf(
+      access,
+      text: text,
+      reportedCost: active.reportedCost,
+    );
+  }
+
+  RetellOnlineTranscript _transcriptOf(
+    PracticeOnlineAccessGranted access, {
+    required String text,
+    required double? reportedCost,
+  }) => RetellOnlineTranscript(
+    text: text,
+    identity: onlineRecognitionIdentity(access.config, access.modelId),
+    modelId: access.modelId,
+    serviceHost: Uri.tryParse(access.config.baseUrl)?.host ?? '',
+    reportedCost: reportedCost,
+  );
+
+  /// 当前复述在线的配置身份；与分块会话不一致即表示配置已变化。
+  Future<String?> _currentIdentity() async {
+    final access = await resolvePracticeOnlineAccess(
+      _ref,
+      RecognitionPurpose.retell,
+    );
+    return access is PracticeOnlineAccessGranted ? access.identity : null;
+  }
+
+  void _onTranscodeSessionStarted(int sessionId) =>
+      _transcodeSession = sessionId;
+
+  void _cancelTranscodeSession() {
+    final sessionId = _transcodeSession;
+    if (sessionId != null) _transcode.cancelSession(sessionId);
+  }
+}
+
+final retellOnlineTranscriptProvider = Provider<RetellOnlineTranscriber>((ref) {
+  final transcriber = RetellOnlineTranscriber(
+    ref: ref,
+    client: ref.read(speechTranscriptionClientProvider),
+    transcode: ref.read(localTranscriptionTranscodeServiceProvider),
+  );
+  ref.onDispose(() => unawaited(transcriber.discard()));
+  return transcriber;
+});
 
 class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationState> {
   CancelToken? _token;

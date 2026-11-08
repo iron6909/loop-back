@@ -10,7 +10,8 @@ import 'package:echo_loop/l10n/app_localizations.dart';
 import 'package:echo_loop/models/retell_review_evaluation.dart';
 import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
 import 'package:echo_loop/services/audio_playback_service.dart';
-import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
+import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
+import 'package:echo_loop/services/speech/speech_transcription_client.dart';
 import 'package:echo_loop/services/audio_preview_controller.dart';
 import 'package:echo_loop/theme/app_theme.dart';
 import 'package:echo_loop/widgets/retell/retell_review_corrections.dart';
@@ -594,8 +595,12 @@ void main() {
               const RetellReviewEvaluationState(
                 attemptKey: 'retell:a1:0',
                 phase: RetellReviewEvaluationPhase.failed,
-                speechError: PracticeRecordingRejected(
-                  PracticeRecordingRejection.tooLong,
+                speechError: PracticeChunkFailure(
+                  PracticeChunkFailureReason.requestFailed,
+                  cause: SpeechTranscriptionException(
+                    SpeechTranscriptionErrorKind.timeout,
+                  ),
+                  mayHaveBeenCharged: true,
                 ),
                 onlineSpeech: RetellOnlineSpeech(
                   modelId: 'openai/whisper-retell',
@@ -612,12 +617,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text(
-        'The recording exceeds the single-request limit; '
-        'chunked retelling comes later',
-      ),
+      find.text('Provider request timed out. Try again'),
       findsOneWidget,
       reason: '语音阶段的失败按语音分类显示，不冒充文字 AI 错误',
+    );
+    expect(
+      find.text('the failed part may already be billed'),
+      findsOneWidget,
+      reason: '失败块可能已计费，续试前要让用户知道会再发一次',
     );
     expect(find.text('Online speech cost: 0.0002'), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
