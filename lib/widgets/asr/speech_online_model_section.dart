@@ -400,6 +400,10 @@ class _SpeechOnlineModelSectionState
     final choice = await showModalBottomSheet<({String? modelId})>(
       context: context,
       isScrollControlled: true,
+      // 选择器只占屏幕的一部分；长目录在列表内部滚动。
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.65,
+      ),
       builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
