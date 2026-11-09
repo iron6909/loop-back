@@ -10538,6 +10538,12 @@ abstract class AppLocalizations {
   /// **'Save an API key under Settings → Speech recognition → Online speech service first'**
   String get recognitionOnlineNeedsApiKey;
 
+  /// No description provided for @recognitionOnlineNeedsOnlineModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill in the online model for this purpose under Settings → Speech recognition → Online speech service'**
+  String get recognitionOnlineNeedsOnlineModel;
+
   /// No description provided for @recognitionOnlineNeedsUploadNotice.
   ///
   /// In en, this message translates to:
@@ -10627,6 +10633,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'API key missing'**
   String get speechProviderStatusMissingKey;
+
+  /// No description provided for @speechProviderStatusMissingModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Online model missing'**
+  String get speechProviderStatusMissingModel;
 
   /// No description provided for @speechProviderStatusUnverified.
   ///

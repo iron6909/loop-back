@@ -571,6 +571,29 @@ void main() {
     expect(find.textContaining('Set the service address'), findsNothing);
   });
 
+  testWidgets('在线缺该用途模型时说明补模型，不再要求填服务地址', (tester) async {
+    final notifier = _RecordingRecognitionSettings(const []);
+    await tester.pumpWidget(
+      _buildHarness(
+        notifier,
+        systemSupported: true,
+        onlineBlockReason: PracticeOnlineAccessDenial.missingOnlineModel,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Shadowing'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Fill in the online model for this purpose under Settings → Speech recognition → Online speech service',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Set the service address'), findsNothing);
+  });
+
   testWidgets('在线缺少上传告知时，提示直接指向「验证模型」按钮', (tester) async {
     final notifier = _RecordingRecognitionSettings(const []);
     await tester.pumpWidget(

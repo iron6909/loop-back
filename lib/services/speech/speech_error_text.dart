@@ -55,6 +55,10 @@ String speechErrorText(BuildContext context, Object error) {
         zh
             ? '在线语音缺少 API Key，请前往设置 → 语音识别 → 在线语音服务'
             : 'Online speech has no API key. Open Settings → Speech recognition → Online speech service',
+      PracticeOnlineAccessDenial.missingOnlineModel =>
+        zh
+            ? '该用途还没有在线模型，请前往设置 → 语音识别 → 在线语音服务填写'
+            : 'This purpose has no online model. Open Settings → Speech recognition → Online speech service',
       PracticeOnlineAccessDenial.uploadNoticeMissing =>
         zh
             ? '首次上传录音前需先确认上传告知，请前往设置 → 在线语音服务'

@@ -101,10 +101,7 @@ class _SpeechOnlineModelSectionState
   ) {
     final theme = Theme.of(context);
     final canFetch =
-        config != null &&
-        state.hasApiKey &&
-        !widget.saving &&
-        !_fetchingModels;
+        config != null && state.hasApiKey && !widget.saving && !_fetchingModels;
     final status = _modelListStatusText(l10n, config, state);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -349,9 +346,11 @@ class _SpeechOnlineModelSectionState
       return;
     }
     if (!mounted || generation != _catalogGeneration) return;
+    final sortedModels = [...models]
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     setState(() {
       _fetchingModels = false;
-      _modelIds = models.isEmpty ? null : models;
+      _modelIds = models.isEmpty ? null : sortedModels;
       _modelListMessage = models.isEmpty ? l10n.speechModelRefreshEmpty : null;
     });
   }
@@ -482,10 +481,7 @@ class _SpeechOnlineModelSectionState
     String? Function(String) validate,
   ) => showDialog<String>(
     context: context,
-    builder: (_) => ProviderInputDialog(
-      title: title,
-      initial: initial,
-      validate: validate,
-    ),
+    builder: (_) =>
+        ProviderInputDialog(title: title, initial: initial, validate: validate),
   );
 }

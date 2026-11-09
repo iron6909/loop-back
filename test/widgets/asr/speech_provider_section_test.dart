@@ -584,9 +584,7 @@ void main() {
 
   testWidgets('模型选择器限制高度，长目录在弹层内部滚动', (tester) async {
     final catalog = _FakeCatalog()
-      ..models = [
-        for (var i = 0; i < 30; i++) 'openai/whisper-model-$i',
-      ];
+      ..models = [for (var i = 0; i < 30; i++) 'openai/whisper-model-$i'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfigWithModels,
       apiKey: 'sk-speech-sentinel-4b7d',
@@ -604,6 +602,28 @@ void main() {
     final sheet = tester.getSize(find.byType(BottomSheet));
     expect(sheet.height, lessThan(screenHeight * 0.75));
     expect(find.text('Enter a model ID'), findsOneWidget);
+  });
+
+  testWidgets('模型列表按字母顺序排列', (tester) async {
+    final catalog = _FakeCatalog()
+      ..models = const ['z/model', 'A/model', 'm/model'];
+    final store = _InMemorySpeechConfigStore(
+      config: _openRouterConfigWithModels,
+      apiKey: 'sk-speech-sentinel-4b7d',
+    );
+    await tester.pumpWidget(app(store, catalog: catalog));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Get transcription models'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Subtitles online model'));
+    await tester.pumpAndSettle();
+
+    final a = tester.getTopLeft(find.text('A/model')).dy;
+    final m = tester.getTopLeft(find.text('m/model')).dy;
+    final z = tester.getTopLeft(find.text('z/model')).dy;
+    expect(a, lessThan(m));
+    expect(m, lessThan(z));
   });
 
   testWidgets('获取目录只读：不发验证请求，不写能力记录', (tester) async {

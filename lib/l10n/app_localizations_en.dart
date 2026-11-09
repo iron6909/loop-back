@@ -5980,6 +5980,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Save an API key under Settings → Speech recognition → Online speech service first';
 
   @override
+  String get recognitionOnlineNeedsOnlineModel =>
+      'Fill in the online model for this purpose under Settings → Speech recognition → Online speech service';
+
+  @override
   String get recognitionOnlineNeedsUploadNotice =>
       'Tap Verify model under Settings → Speech recognition → Online speech service; the first time explains the upload target and possible charges';
 
@@ -6037,6 +6041,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speechProviderStatusMissingKey => 'API key missing';
+
+  @override
+  String get speechProviderStatusMissingModel => 'Online model missing';
 
   @override
   String get speechProviderStatusUnverified => 'Saved, not verified';

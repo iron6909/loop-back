@@ -99,7 +99,7 @@ final onlineModeBlockReasonProvider =
       }
       final modelId = config.onlineModelFor(purpose);
       if (modelId.isEmpty) {
-        return PracticeOnlineAccessDenial.missingConfiguration;
+        return PracticeOnlineAccessDenial.missingOnlineModel;
       }
       // 地址与模型齐备后，缺 Key 是另一件要补的事，不能混成「未配置」。
       if (!configuration.hasApiKey) {
@@ -140,9 +140,14 @@ Future<PracticeOnlineAccess> resolvePracticeOnlineAccess(
   final config = await configStore.read();
   final apiKey = await configStore.readApiKey();
   final modelId = config?.onlineModelFor(purpose) ?? '';
-  if (config == null || modelId.isEmpty) {
+  if (config == null) {
     return const PracticeOnlineAccessDenied(
       PracticeOnlineAccessDenial.missingConfiguration,
+    );
+  }
+  if (modelId.isEmpty) {
+    return const PracticeOnlineAccessDenied(
+      PracticeOnlineAccessDenial.missingOnlineModel,
     );
   }
   if (apiKey == null) {

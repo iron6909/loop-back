@@ -35,6 +35,8 @@ String practiceOnlineBlockReasonText(
   PracticeOnlineAccessDenial.missingConfiguration =>
     l10n.recognitionOnlineNeedsConfiguration,
   PracticeOnlineAccessDenial.missingApiKey => l10n.recognitionOnlineNeedsApiKey,
+  PracticeOnlineAccessDenial.missingOnlineModel =>
+    l10n.recognitionOnlineNeedsOnlineModel,
   PracticeOnlineAccessDenial.uploadNoticeMissing =>
     l10n.recognitionOnlineNeedsUploadNotice,
   PracticeOnlineAccessDenial.capabilityUnverified =>
@@ -106,6 +108,10 @@ RecognitionPurposeStatus recognitionPurposeStatus(
         PracticeOnlineAccessDenial.missingApiKey => (
           tone: RecognitionStatusTone.blocked,
           text: l10n.speechProviderStatusMissingKey,
+        ),
+        PracticeOnlineAccessDenial.missingOnlineModel => (
+          tone: RecognitionStatusTone.blocked,
+          text: l10n.speechProviderStatusMissingModel,
         ),
         PracticeOnlineAccessDenial.capabilityNotSuitable => (
           tone: RecognitionStatusTone.blocked,

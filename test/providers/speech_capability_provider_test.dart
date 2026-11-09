@@ -367,6 +367,31 @@ void main() {
     );
   });
 
+  test('有服务地址和 Key，但该用途没有在线模型时说明缺模型', () async {
+    final container = createContainer();
+    speechStore.config = const SpeechConfig(
+      kind: SpeechProviderKind.openrouter,
+      baseUrl: 'https://openrouter.ai/api/v1',
+      onlineModels: {
+        RecognitionPurpose.subtitle: 'openai/whisper-large-v3',
+      },
+    );
+    await container.read(speechConfigurationProvider.future);
+
+    expect(
+      container.read(
+        onlineModeBlockReasonProvider(RecognitionPurpose.shadowing),
+      ),
+      PracticeOnlineAccessDenial.missingOnlineModel,
+    );
+    expect(
+      await container.read(
+        onlinePracticeAvailabilityProvider(RecognitionPurpose.shadowing).future,
+      ),
+      isFalse,
+    );
+  });
+
   test('没有保存服务地址时说明未配置，而不是缺 Key', () async {
     final container = createContainer();
     speechStore.config = null;

@@ -5709,6 +5709,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recognitionOnlineNeedsApiKey => '需先在设置 → 语音识别 → 在线语音服务保存 API Key';
 
   @override
+  String get recognitionOnlineNeedsOnlineModel =>
+      '需先在设置 → 语音识别 → 在线语音服务填写该用途的在线模型';
+
+  @override
   String get recognitionOnlineNeedsUploadNotice =>
       '需先在设置 → 语音识别 → 在线语音服务点「验证模型」；首次会告知上传目标与可能费用';
 
@@ -5765,6 +5769,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get speechProviderStatusMissingKey => '缺少 API Key';
+
+  @override
+  String get speechProviderStatusMissingModel => '未选择在线模型';
 
   @override
   String get speechProviderStatusUnverified => '已保存，尚未验证';
