@@ -287,8 +287,7 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
         : RecognitionMode.local;
     // 跟读在线是一个显式的额外选择；未选在线时继续由离线 ASR 档位决定。
     final shadowingOnline =
-        prefs.getString(shadowingOnlinePrefsKey) ==
-        RecognitionMode.online.name;
+        prefs.getString(shadowingOnlinePrefsKey) == RecognitionMode.online.name;
     return RecognitionSettings(
       subtitle: RecognitionSelection(
         mode: subtitleMode,
@@ -399,5 +398,4 @@ class RecognitionSettingsNotifier extends Notifier<RecognitionSettings> {
     }
     return const RecognitionChangeResult.applied();
   }
-
 }

@@ -79,7 +79,6 @@ Future<bool> confirmCancelInFlightTasks(
   return confirmed ?? false;
 }
 
-
 /// 一个用途行：用途名、方式与模型摘要、当前状态，点开只改该用途。
 class _PurposeRow extends StatelessWidget {
   const _PurposeRow({

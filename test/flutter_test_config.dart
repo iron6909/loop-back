@@ -15,7 +15,7 @@ import 'package:showcaseview/showcaseview.dart';
 /// 测试窗口尺寸（模拟平板/手机横向尺寸）
 const _kTestWindowSize = Size(1200, 800);
 
-Future<void> testExecutable(FutureOr<void> testMain()) async {
+Future<void> testExecutable(FutureOr<void> Function() testMain) async {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
 
   // 全局提供纯 Dart 的偏好实现，避免未显式注入 provider 的测试访问真实平台通道。

@@ -345,8 +345,7 @@ void main() {
   });
 
   testWidgets('获取中显示加载状态并禁用重复点击', (tester) async {
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final pending = catalog.hold();
     await tester.pumpWidget(
       app(
@@ -411,8 +410,7 @@ void main() {
   });
 
   testWidgets('获取成功后可以重新获取并更新列表', (tester) async {
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     await tester.pumpWidget(
       app(
         _InMemorySpeechConfigStore(
@@ -444,7 +442,10 @@ void main() {
   testWidgets('缺 API Key 时获取按钮禁用并说明原因', (tester) async {
     final catalog = _FakeCatalog();
     await tester.pumpWidget(
-      app(_InMemorySpeechConfigStore(config: _openRouterConfig), catalog: catalog),
+      app(
+        _InMemorySpeechConfigStore(config: _openRouterConfig),
+        catalog: catalog,
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -582,8 +583,7 @@ void main() {
   });
 
   testWidgets('获取目录只读：不发验证请求，不写能力记录', (tester) async {
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final capabilityStore = _InMemoryCapabilityStore();
     final probe = _FakeProbe();
     await tester.pumpWidget(
@@ -608,8 +608,7 @@ void main() {
   });
 
   testWidgets('根地址变化后清空列表，模型行回到手填', (tester) async {
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
       apiKey: 'sk-speech-sentinel-4b7d',
@@ -638,8 +637,7 @@ void main() {
   });
 
   testWidgets('API Key 变化后清空列表', (tester) async {
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
       apiKey: 'sk-speech-sentinel-4b7d',
@@ -661,8 +659,7 @@ void main() {
   });
 
   testWidgets('配置变化后迟到的目录结果被丢弃', (tester) async {
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final pending = catalog.hold();
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
@@ -699,8 +696,7 @@ void main() {
   });
 
   testWidgets('页面卸载后迟到的目录结果被丢弃', (tester) async {
-    final catalog = _FakeCatalog()
-      ..models = const ['openai/whisper-large-v3'];
+    final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final pending = catalog.hold();
     await tester.pumpWidget(
       app(

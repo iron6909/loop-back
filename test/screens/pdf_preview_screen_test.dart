@@ -19,7 +19,6 @@ import 'package:echo_loop/widgets/common/anchored_bubble.dart';
 import 'package:echo_loop/services/pdf_export/study_pdf_export_service.dart';
 import 'package:echo_loop/services/pdf_export/study_pdf_loader.dart';
 
-import '../helpers/shared/test_fixtures.dart';
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
 

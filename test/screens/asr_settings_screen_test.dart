@@ -305,9 +305,7 @@ void main() {
     );
   });
 
-  testWidgets('页面不再出现语音引擎卡片与后端单选，分组顺序为识别方式、本机模型、在线服务', (
-    tester,
-  ) async {
+  testWidgets('页面不再出现语音引擎卡片与后端单选，分组顺序为识别方式、本机模型、在线服务', (tester) async {
     _useTallViewport(tester);
     final notifier = _StaticOfflineAsrSettingsNotifier(stateWith());
 
@@ -321,9 +319,7 @@ void main() {
     final recognitionTop = tester.getTopLeft(find.text('Recognition modes')).dy;
     final libraryTop = tester.getTopLeft(find.text('On-device models')).dy;
     final onlineSectionTop = tester.getTopLeft(find.text('Online service')).dy;
-    final onlineTop = tester
-        .getTopLeft(find.text('Online speech service'))
-        .dy;
+    final onlineTop = tester.getTopLeft(find.text('Online speech service')).dy;
     expect(recognitionTop, lessThan(libraryTop));
     expect(libraryTop, lessThan(onlineSectionTop));
     expect(onlineSectionTop, lessThan(onlineTop));
@@ -579,9 +575,7 @@ void main() {
       const config = SpeechConfig(
         kind: SpeechProviderKind.openrouter,
         baseUrl: 'https://openrouter.ai/api/v1',
-        onlineModels: {
-          RecognitionPurpose.shadowing: 'openai/whisper-large-v3',
-        },
+        onlineModels: {RecognitionPurpose.shadowing: 'openai/whisper-large-v3'},
       );
       final capability = SpeechCapability(
         identity: SpeechCapability.identityFor(

@@ -231,7 +231,13 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _modelSubtitle(l10n, theme, model.id, modelState, state.downloadSource),
+          _modelSubtitle(
+            l10n,
+            theme,
+            model.id,
+            modelState,
+            state.downloadSource,
+          ),
           _modelUsageTags(l10n, theme, settings, model.id),
         ],
       ),
@@ -386,9 +392,8 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       );
     }
     return TextButton(
-      onPressed: () => ref
-          .read(offlineAsrSettingsProvider.notifier)
-          .downloadModel(modelId),
+      onPressed: () =>
+          ref.read(offlineAsrSettingsProvider.notifier).downloadModel(modelId),
       child: Text(l10n.localModelDownloadAction),
     );
   }

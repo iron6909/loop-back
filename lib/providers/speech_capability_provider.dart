@@ -120,9 +120,7 @@ final onlineModeBlockReasonProvider =
       final suitable = purpose == RecognitionPurpose.subtitle
           ? capability.segments
           : capability.text;
-      return suitable
-          ? null
-          : PracticeOnlineAccessDenial.capabilityNotSuitable;
+      return suitable ? null : PracticeOnlineAccessDenial.capabilityNotSuitable;
     });
 
 /// 在线方式需要的能力等级：练习只需文本，字幕必须有片段时间戳。
