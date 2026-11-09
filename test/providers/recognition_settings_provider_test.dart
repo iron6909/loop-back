@@ -143,7 +143,10 @@ void main() {
           systemRecognitionPlatformProvider.overrideWithValue(true),
         ],
       );
-      expect(first.read(recognitionSettingsProvider).retell.localModelId, _small);
+      expect(
+        first.read(recognitionSettingsProvider).retell.localModelId,
+        _small,
+      );
       expect(sp.getString(retellModelPrefsKey), _small);
       first.dispose();
 
@@ -155,11 +158,16 @@ void main() {
         ],
       );
       addTearDown(second.dispose);
-      await second.read(recognitionSettingsProvider.notifier).change(
-        purpose: RecognitionPurpose.subtitle,
-        selection: const RecognitionSelection.local(_tiny),
+      await second
+          .read(recognitionSettingsProvider.notifier)
+          .change(
+            purpose: RecognitionPurpose.subtitle,
+            selection: const RecognitionSelection.local(_tiny),
+          );
+      expect(
+        second.read(recognitionSettingsProvider).retell.localModelId,
+        _small,
       );
-      expect(second.read(recognitionSettingsProvider).retell.localModelId, _small);
     });
   });
 
@@ -250,11 +258,7 @@ void main() {
           systemSupported: true,
           onlineAvailable: true,
         ),
-        [
-          RecognitionMode.local,
-          RecognitionMode.system,
-          RecognitionMode.online,
-        ],
+        [RecognitionMode.local, RecognitionMode.system, RecognitionMode.online],
       );
       expect(
         availableRecognitionModes(
@@ -270,11 +274,7 @@ void main() {
           systemSupported: true,
           onlineAvailable: true,
         ),
-        [
-          RecognitionMode.local,
-          RecognitionMode.system,
-          RecognitionMode.online,
-        ],
+        [RecognitionMode.local, RecognitionMode.system, RecognitionMode.online],
         reason: '复述自己的在线方式通过文本能力验证后才出现',
       );
       expect(
@@ -329,27 +329,31 @@ void main() {
       expect(prefs.getString(shadowingOnlinePrefsKey), isNull);
     });
 
-    test('字幕只有通过字能力验证后才出现方式', () {
+    test('字幕只有本机与在线两种方式，在线需通过片段时间戳能力', () {
       expect(
         availableRecognitionModes(
           RecognitionPurpose.subtitle,
-          systemSupported: false,
+          systemSupported: true,
         ),
         [RecognitionMode.local],
+        reason: '在线未通过能力验证时不作为可选方式',
       );
       expect(
         availableRecognitionModes(
           RecognitionPurpose.subtitle,
-          systemSupported: false,
+          systemSupported: true,
+          onlineAvailable: true,
         ),
-        [RecognitionMode.local],
-        reason: '字幕不在用途面板选方式：本地/在线在管理字幕弹窗里并列选择',
+        [RecognitionMode.local, RecognitionMode.online],
+        reason: '字幕可选在线，但从不提供系统识别',
       );
     });
   });
 
   test('字幕在线方式被持久化并在重启后恢复', () async {
-    final container = await _container(prefs: {localTranscriptionModelKey: _small});
+    final container = await _container(
+      prefs: {localTranscriptionModelKey: _small},
+    );
     addTearDown(container.dispose);
 
     await container
@@ -375,6 +379,47 @@ void main() {
     expect(restored.mode, RecognitionMode.online);
     // 切回本机时仍保留大小模型偏好。
     expect(restored.localModelId, _small);
+  });
+
+  group('跟读方式驱动后端', () {
+    test('跟读选本机写本机后端，选系统写平台后端', () async {
+      final asr = _FakeOfflineAsrNotifier(
+        OfflineAsrSettingsState(
+          backend: AsrBackend.offline,
+          selectedModel: _model(_base),
+          recommendedModel: _model(_base),
+        ),
+      );
+      final container = await _container(asrNotifier: asr);
+      addTearDown(container.dispose);
+
+      await container
+          .read(recognitionSettingsProvider.notifier)
+          .change(
+            purpose: RecognitionPurpose.shadowing,
+            selection: const RecognitionSelection(
+              mode: RecognitionMode.system,
+              localModelId: _base,
+            ),
+          );
+      expect(asr.backends, [AsrBackend.platform]);
+      expect(
+        container.read(recognitionSettingsProvider).shadowing.mode,
+        RecognitionMode.system,
+      );
+
+      await container
+          .read(recognitionSettingsProvider.notifier)
+          .change(
+            purpose: RecognitionPurpose.shadowing,
+            selection: const RecognitionSelection.local(_base),
+          );
+      expect(asr.backends, [AsrBackend.platform, AsrBackend.offline]);
+      expect(
+        container.read(recognitionSettingsProvider).shadowing.mode,
+        RecognitionMode.local,
+      );
+    });
   });
 
   group('影响在途任务的选择变更', () {
@@ -511,11 +556,9 @@ void main() {
       registry.register(retellOnline);
       registry.register(subtitleLocal);
 
-      expect(
-        registry.pendingOnline({RecognitionPurpose.subtitle}),
-        [subtitleOnline],
-        reason: '只改字幕在线模型：复述与本机字幕任务都不受影响',
-      );
+      expect(registry.pendingOnline({RecognitionPurpose.subtitle}), [
+        subtitleOnline,
+      ], reason: '只改字幕在线模型：复述与本机字幕任务都不受影响');
       expect(registry.pendingOnline(RecognitionPurpose.values.toSet()), [
         subtitleOnline,
         retellOnline,

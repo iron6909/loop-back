@@ -1037,7 +1037,6 @@
   "speechRecognitionNotConfigured": "未设置",
   "speechRecognitionEnabled": "已开启",
   "speechRecognitionDisabled": "已关闭",
-  "speechRecognitionDescription": "语音识别用于练习评分和后续本地转录。你可以选择适合当前设备的模型。",
   "asrEngine": "语音引擎",
   "asrBackendPlatform": "Apple AI",
   "asrBackendPlatformDescription": "使用系统自带的语音识别，无需下载",
@@ -1151,10 +1150,10 @@
   "timeMachineReset": "恢复系统时间",
   "manageSubtitles": "管理字幕",
   "localUpload": "本地上传",
+  "subtitleModelTranscription": "模型转录",
+  "subtitleModeSettingsHint": "字幕方式与模型在 设置 → 语音识别 → 识别方式 中修改",
   "aiTranscription": "云端转录",
   "aiTranscriptionSubtitle": "精度高，速度快，需联网登录",
-  "offlineTranscription": "本地转录",
-  "offlineTranscriptionSubtitle": "离线、隐私，无需登录",
   "transcriptionModelTier": "识别模型",
   "localTranscriptionDecoding": "正在解码音频…",
   "localTranscriptionForegroundHint": "转录完成前请保持应用在前台，切到后台或锁屏会中断转录。",
@@ -2610,14 +2609,42 @@
       }
     }
   },
-  "recognitionPurposeTitle": "按用途识别",
+  "recognitionModeTitle": "识别方式",
+  "localModelLibraryTitle": "本机模型",
+  "onlineServiceSectionTitle": "在线服务",
+  "localModelLibraryTotal": "已下载 {size}",
+  "@localModelLibraryTotal": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "localModelLibraryDeleteAll": "删除所有已下载模型",
+  "localModelDownloadAction": "下载",
+  "localModelUsageTag": "{purpose}在用",
+  "@localModelUsageTag": {
+    "placeholders": {
+      "purpose": {
+        "type": "String"
+      }
+    }
+  },
   "recognitionPurposeDescription": "字幕、跟读、复述各自选择识别方式与模型，互不影响。",
+  "recognitionPurposeScopeNote": "这里的修改只影响当前用途，不影响其他用途。",
   "recognitionPurposeSubtitle": "字幕转录",
   "recognitionPurposeShadowing": "跟读",
   "recognitionPurposeRetell": "复述",
   "recognitionModeLocal": "本机识别",
   "recognitionModeSystem": "系统识别",
   "recognitionModeOnline": "在线识别",
+  "recognitionStatusLocalDownloaded": "已下载",
+  "recognitionStatusLocalNotDownloaded": "未下载",
+  "recognitionStatusLocalDownloading": "下载中",
+  "recognitionStatusLocalDownloadFailed": "下载失败",
+  "recognitionStatusSystemBuiltIn": "设备自带",
+  "recognitionStatusOnlineVerified": "已验证",
+  "recognitionStatusOnlineUnavailable": "不可用",
   "recognitionOnlineModelSummary": "在线识别 · {model}",
   "@recognitionOnlineModelSummary": {
     "placeholders": {
@@ -2626,9 +2653,10 @@
       }
     }
   },
-  "recognitionOnlineNeedsConfiguration": "需先在下方「在线语音服务」填写服务地址与 Key",
-  "recognitionOnlineNeedsUploadNotice": "需先在下方「在线语音服务」点「验证模型」；首次会告知上传目标与可能费用",
-  "recognitionOnlineNeedsVerification": "需先在下方「在线语音服务」点「验证模型」，验证该用途的在线模型",
+  "recognitionOnlineNeedsConfiguration": "需先在设置 → 语音识别 → 在线语音服务填写服务地址",
+  "recognitionOnlineNeedsApiKey": "需先在设置 → 语音识别 → 在线语音服务保存 API Key",
+  "recognitionOnlineNeedsUploadNotice": "需先在设置 → 语音识别 → 在线语音服务点「验证模型」；首次会告知上传目标与可能费用",
+  "recognitionOnlineNeedsVerification": "需先在设置 → 语音识别 → 在线语音服务点「验证模型」，验证该用途的在线模型",
   "shadowingOnlineProgress": "在线 · {service} · {model} · {percent}%",
   "@shadowingOnlineProgress": {
     "placeholders": {
@@ -2721,7 +2749,20 @@
     }
   },
   "speechCapabilityVerifiedCostUnknown": "验证完成。供应商未报告费用，实际花费未知",
-  "speechModelRefresh": "刷新转写模型目录",
+  "speechModelSectionTitle": "按用途在线模型",
+  "speechModelFetch": "获取转写模型",
+  "speechModelFetching": "正在获取转写模型…",
+  "speechModelFetched": "已获取 {count} 个模型",
+  "@speechModelFetched": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "speechModelFetchNeedsConfig": "保存服务地址后可获取模型",
+  "speechModelFetchNeedsKey": "保存 API Key 后可获取模型",
+  "speechModelManualEntry": "手动输入模型 ID",
   "speechModelRefreshEmpty": "服务没有返回转写模型，仍可手填模型 ID",
   "speechModelRefreshFailed": "无法获取模型目录，仍可手填模型 ID",
   "speechUploadNoticeTitle": "发送测试音频？",
@@ -2759,7 +2800,6 @@
     }
   },
   "onlineSubtitleCostUnknown": "供应商未报告费用，实际花费未知",
-  "subtitleModeLocalHint": "当前用本机模型转录；可在 设置 → 语音识别 → 按用途识别 切换为在线",
   "onlineSubtitleNotConfigured": "尚未配置在线语音服务或 Key",
   "onlineSubtitleNotVerified": "当前语音配置未通过字幕能力验证",
   "onlineSubtitleChunkProgress": "已完成 {completed}/{total} 块",
@@ -2803,7 +2843,5 @@
   "wordTimingSourceMixed": "混合",
   "wordTimingSourceUnknown": "未知",
   "recognitionOnlineNeedsSuitableModel": "该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证",
-  "onlineTranscription": "在线转录",
-  "onlineTranscriptionSubtitle": "用已配置的在线语音服务转写",
-  "subtitleOnlineModelHint": "在线模型与 Key 在下方「在线语音服务」中配置；管理字幕弹窗里可直接选「在线转录」"
+  "subtitleOnlineModelSettingsHint": "在线模型与 Key 在设置 → 语音识别 → 在线语音服务中配置"
 }

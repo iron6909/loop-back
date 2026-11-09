@@ -1,5 +1,7 @@
-/// 管理字幕：播客字幕下载、英语本机转录与本地文件导入。
-/// 转录任务由全局管理器持有，关闭弹窗不取消任务。
+/// 管理字幕：播客字幕下载、模型转录与本地文件导入。
+///
+/// 模型转录按语音识别设置里的字幕方式路由（本机或在线），弹窗内不重复选择
+/// 方式；转录任务由全局管理器持有，关闭弹窗不取消任务。
 library;
 
 import 'dart:async';
@@ -29,6 +31,7 @@ import '../providers/online_subtitle_task_provider.dart';
 import '../providers/recognition_settings_provider.dart';
 import '../providers/speech_capability_provider.dart';
 import '../providers/speech_configuration_provider.dart';
+import '../services/speech/practice_online_transcriber.dart';
 import '../services/speech/speech_config.dart';
 import '../services/speech/speech_error_text.dart';
 import '../services/speech/speech_transcription_client.dart';
@@ -40,12 +43,14 @@ import 'asr/recognition_purpose_section.dart';
 
 part 'manage_subtitles_actions.dart';
 
-enum _SubtitleAction {
-  podcastDownload,
-  localUpload,
-  localTranscription,
-  onlineTranscription,
-}
+enum _SubtitleAction { podcastDownload, localUpload, modelTranscription }
+
+/// 弹窗内的字幕选择快照：展示与路由共用这一份，不再各传三个参数。
+typedef _SubtitleSelectionView = ({
+  RecognitionSelection selection,
+  String onlineModelId,
+  PracticeOnlineAccessDenial? onlineBlocked,
+});
 
 class ManageSubtitlesSheet extends ConsumerStatefulWidget {
   const ManageSubtitlesSheet({
@@ -61,7 +66,7 @@ class ManageSubtitlesSheet extends ConsumerStatefulWidget {
 }
 
 class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
-  _SubtitleAction _selectedAction = _SubtitleAction.localTranscription;
+  _SubtitleAction _selectedAction = _SubtitleAction.modelTranscription;
   bool _downloading = false;
   String? _error;
   Timer? _errorTimer;
@@ -142,6 +147,26 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
         task is LocalTranscriptionTranscribing;
     final onlineActive = onlineTask is OnlineSubtitleWorking;
     final active = localActive || onlineActive;
+    // 弹窗不在本地 / 在线之间再选一次，只展示设置里的字幕方式与模型。
+    final subtitleSelection = ref.watch(
+      recognitionSettingsProvider.select((settings) => settings.subtitle),
+    );
+    final subtitleOnlineModelId = subtitleSelection.usesOnlineModel
+        ? ref.watch(
+            speechConfigurationProvider.select(
+              (value) =>
+                  value.valueOrNull?.config?.onlineModelFor(
+                    RecognitionPurpose.subtitle,
+                  ) ??
+                  '',
+            ),
+          )
+        : '';
+    final subtitleView = (
+      selection: subtitleSelection,
+      onlineModelId: subtitleOnlineModelId,
+      onlineBlocked: _subtitleOnlineBlocked(subtitleSelection),
+    );
     ref.listen(onlineSubtitleTaskManagerProvider.select((m) => m[item.id]), (
       _,
       next,
@@ -232,9 +257,9 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
                     '${l10n.transcriptionEmptyResult}\n${l10n.transcriptionEmptyResultHint}',
                     Icons.hearing_disabled,
                   ),
-                _options(item, l10n),
+                _options(item, l10n, subtitleView),
                 const SizedBox(height: 16),
-                _action(item, l10n, onlineTask),
+                _action(item, l10n, onlineTask, subtitleView),
               ],
             ],
           ),
@@ -298,17 +323,32 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     ),
   );
 
-  /// 三个并列入口：本地转录、在线转录、本地上传（播客可下载时多一项）。
+  /// 字幕在线准入：片段时间戳能力与配置门控，不通过时给出下一步原因。
   ///
-  /// 模型与语言在语音识别设置里统一选择，弹窗不再重复提供。
-  Widget _options(AudioItem item, AppLocalizations l10n) {
-    final onlineBlocked = ref.watch(
-      onlineSubtitleAvailableProvider,
-    )
-        ? null
-        : ref.watch(
-            onlineModeBlockReasonProvider(RecognitionPurpose.subtitle),
-          );
+  /// 本机选择不查在线条件；在线被阻断时模型转录与主按钮禁用，不会静默改成本机。
+  PracticeOnlineAccessDenial? _subtitleOnlineBlocked(
+    RecognitionSelection selection,
+  ) {
+    if (!selection.usesOnlineModel) return null;
+    if (ref.watch(onlineSubtitleAvailableProvider)) return null;
+    return ref.watch(
+          onlineModeBlockReasonProvider(RecognitionPurpose.subtitle),
+        ) ??
+        PracticeOnlineAccessDenial.capabilityUnverified;
+  }
+
+  /// 模型转录与两个文件入口（播客可下载时多一项）；转录方式不再在此选择。
+  Widget _options(
+    AudioItem item,
+    AppLocalizations l10n,
+    _SubtitleSelectionView view,
+  ) {
+    final modelSummary = recognitionSelectionSummary(
+      l10n,
+      view.selection,
+      onlineModelId: view.onlineModelId,
+    );
+    final onlineBlocked = view.onlineBlocked;
     return Column(
       children: [
         if (_hasPodcast(item))
@@ -319,28 +359,21 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
             subtitle: l10n.downloadPodcastSubtitleSubtitle,
           ),
         _option(
-          _SubtitleAction.localTranscription,
-          l10n.offlineTranscription,
-          Icons.offline_bolt_outlined,
-          subtitle: l10n.offlineTranscriptionSubtitle,
-        ),
-        _option(
-          _SubtitleAction.onlineTranscription,
-          l10n.onlineTranscription,
-          Icons.cloud_outlined,
+          _SubtitleAction.modelTranscription,
+          l10n.subtitleModelTranscription,
+          Icons.subtitles_outlined,
+          // 准入不通过时仍展示当前方式与模型，并补上阻断原因。
           subtitle: onlineBlocked == null
-              ? l10n.onlineTranscriptionSubtitle
-              : practiceOnlineBlockReasonText(l10n, onlineBlocked),
+              ? modelSummary
+              : '$modelSummary\n${practiceOnlineBlockReasonText(l10n, onlineBlocked)}',
           enabled: onlineBlocked == null,
         ),
-        if (_selectedAction == _SubtitleAction.localTranscription ||
-            _selectedAction == _SubtitleAction.onlineTranscription) ...[
+        if (_selectedAction == _SubtitleAction.modelTranscription) ...[
           if (item.transcriptLanguage == 'auto')
             _notice(l10n.legacyAutoTranscript, Icons.info_outline)
           else ...[
             const TranscriptionOptions(),
-            if (_selectedAction == _SubtitleAction.onlineTranscription)
-              _subtitleModeNotice(l10n),
+            _notice(l10n.subtitleModeSettingsHint, Icons.info_outline),
           ],
         ],
         _option(
@@ -378,21 +411,25 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     AudioItem item,
     AppLocalizations l10n,
     OnlineSubtitleTaskState? onlineTask,
+    _SubtitleSelectionView view,
   ) {
     final isTranscription =
-        _selectedAction == _SubtitleAction.localTranscription ||
-        _selectedAction == _SubtitleAction.onlineTranscription;
+        _selectedAction == _SubtitleAction.modelTranscription;
+    // 在线准入不通过时主按钮禁用，本地上传不受影响。
     final disabled =
-        _downloading || (isTranscription && item.transcriptLanguage == 'auto');
+        _downloading ||
+        (isTranscription &&
+            (item.transcriptLanguage == 'auto' || view.onlineBlocked != null));
     // 可续试的失败：主按钮只重发失败与未完成块，不重新上传已成功部分。
     final resumable =
-        _selectedAction == _SubtitleAction.onlineTranscription &&
+        isTranscription &&
+        view.selection.usesOnlineModel &&
         onlineTask is OnlineSubtitleFailed &&
         onlineTask.retryable;
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
-        onPressed: disabled ? null : () => _runAction(item),
+        onPressed: disabled ? null : () => _runAction(item, view.selection),
         child: _downloading
             ? const SizedBox(
                 width: 18,
@@ -406,9 +443,7 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
                         _SubtitleAction.podcastDownload =>
                           l10n.downloadSubtitle,
                         _SubtitleAction.localUpload => l10n.uploadTranscript,
-                        _SubtitleAction.localTranscription =>
-                          l10n.startTranscription,
-                        _SubtitleAction.onlineTranscription =>
+                        _SubtitleAction.modelTranscription =>
                           l10n.startTranscription,
                       },
               ),
@@ -502,17 +537,6 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
     );
   }
 
-  /// 选中「在线转录」时的提示。
-  ///
-  /// 就绪后不再展示选中的在线模型（模型统一在设置里管理），只在未通过验证时
-  /// 说明原因，避免用户点了却不知道为什么不能用。
-  Widget _subtitleModeNotice(AppLocalizations l10n) {
-    if (ref.watch(onlineSubtitleAvailableProvider)) {
-      return const SizedBox.shrink();
-    }
-    return _notice(l10n.onlineSubtitleNotVerified, Icons.error_outline);
-  }
-
   /// 当前字幕的词时间戳来源提示；只展示实际标记，不因来源是在线就宣称逐词精确。
   Widget _timingSource(AudioItem item, AppLocalizations l10n) => _notice(
     l10n.wordTimingSourceLabel(
@@ -565,7 +589,12 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
   }
 
   /// 路由到在线或本机任务；覆盖确认与历史字幕保护均在请求前完成。
-  Future<void> _runAction(AudioItem item) async {
+  ///
+  /// [subtitleSelection] 由 build 监听后传入，弹窗内不再读第二遍设置。
+  Future<void> _runAction(
+    AudioItem item,
+    RecognitionSelection subtitleSelection,
+  ) async {
     if (_selectedAction == _SubtitleAction.podcastDownload) {
       return _downloadPodcast(item);
     }
@@ -576,8 +605,8 @@ class _ManageSubtitlesSheetState extends ConsumerState<ManageSubtitlesSheet> {
       if (!await _confirmContent(item, status) || !mounted) return;
     }
     if (item.hasTranscript && (!await _confirmOverwrite() || !mounted)) return;
-    // 各自入口直接决定路线，不再依赖「设置里的当前方式」：用户点哪个就跑哪个。
-    if (_selectedAction == _SubtitleAction.onlineTranscription) {
+    // 模型转录按语音识别设置里的字幕方式路由，不在弹窗里另选一次。
+    if (subtitleSelection.usesOnlineModel) {
       // 在线不经过本地模型/VAD 安装门控；能力与范围校验在任务里复核。
       ref
           .read(onlineSubtitleTaskManagerProvider.notifier)

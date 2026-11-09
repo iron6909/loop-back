@@ -2017,10 +2017,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get speechRecognitionDisabled => 'Disabled';
 
   @override
-  String get speechRecognitionDescription =>
-      'Speech recognition powers practice ratings and future local transcription. Choose the model that fits your device.';
-
-  @override
   String get asrEngine => 'Speech Engine';
 
   @override
@@ -2244,17 +2240,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localUpload => 'Local Upload';
 
   @override
+  String get subtitleModelTranscription => 'Model transcription';
+
+  @override
+  String get subtitleModeSettingsHint =>
+      'Change the subtitle mode and model in Settings → Speech recognition → Recognition modes';
+
+  @override
   String get aiTranscription => 'Cloud Transcription';
 
   @override
   String get aiTranscriptionSubtitle =>
       'Higher accuracy, needs network + sign-in';
-
-  @override
-  String get offlineTranscription => 'On-Device Transcription';
-
-  @override
-  String get offlineTranscriptionSubtitle => 'Offline, private, no sign-in';
 
   @override
   String get transcriptionModelTier => 'Recognition model';
@@ -5898,11 +5895,37 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get recognitionPurposeTitle => 'Recognition by purpose';
+  String get recognitionModeTitle => 'Recognition modes';
+
+  @override
+  String get localModelLibraryTitle => 'On-device models';
+
+  @override
+  String get onlineServiceSectionTitle => 'Online service';
+
+  @override
+  String localModelLibraryTotal(String size) {
+    return 'Downloaded $size';
+  }
+
+  @override
+  String get localModelLibraryDeleteAll => 'Delete all downloaded models';
+
+  @override
+  String get localModelDownloadAction => 'Download';
+
+  @override
+  String localModelUsageTag(String purpose) {
+    return '$purpose in use';
+  }
 
   @override
   String get recognitionPurposeDescription =>
       'Subtitles, shadowing, and retelling each keep their own recognition mode and model.';
+
+  @override
+  String get recognitionPurposeScopeNote =>
+      'Changes here only affect this purpose';
 
   @override
   String get recognitionPurposeSubtitle => 'Subtitles';
@@ -5923,21 +5946,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recognitionModeOnline => 'Online speech';
 
   @override
+  String get recognitionStatusLocalDownloaded => 'Downloaded';
+
+  @override
+  String get recognitionStatusLocalNotDownloaded => 'Not downloaded';
+
+  @override
+  String get recognitionStatusLocalDownloading => 'Downloading';
+
+  @override
+  String get recognitionStatusLocalDownloadFailed => 'Download failed';
+
+  @override
+  String get recognitionStatusSystemBuiltIn => 'Built into the device';
+
+  @override
+  String get recognitionStatusOnlineVerified => 'Verified';
+
+  @override
+  String get recognitionStatusOnlineUnavailable => 'Unavailable';
+
+  @override
   String recognitionOnlineModelSummary(String model) {
     return 'Online speech · $model';
   }
 
   @override
   String get recognitionOnlineNeedsConfiguration =>
-      'Set the service address and key under Online speech below first';
+      'Set the service address under Settings → Speech recognition → Online speech service first';
+
+  @override
+  String get recognitionOnlineNeedsApiKey =>
+      'Save an API key under Settings → Speech recognition → Online speech service first';
 
   @override
   String get recognitionOnlineNeedsUploadNotice =>
-      'Tap Verify model under Online speech below; the first time explains the upload target and possible charges';
+      'Tap Verify model under Settings → Speech recognition → Online speech service; the first time explains the upload target and possible charges';
 
   @override
   String get recognitionOnlineNeedsVerification =>
-      'Tap Verify model under Online speech below to verify this purpose\'s online model';
+      'Tap Verify model under Settings → Speech recognition → Online speech service to verify this purpose\'s online model';
 
   @override
   String shadowingOnlineProgress(String service, String model, int percent) {
@@ -6033,7 +6081,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Verified. The provider reported no cost, so the charge is unknown';
 
   @override
-  String get speechModelRefresh => 'Refresh transcription models';
+  String get speechModelSectionTitle => 'Online models by purpose';
+
+  @override
+  String get speechModelFetch => 'Get transcription models';
+
+  @override
+  String get speechModelFetching => 'Getting transcription models…';
+
+  @override
+  String speechModelFetched(int count) {
+    return '$count transcription models retrieved';
+  }
+
+  @override
+  String get speechModelFetchNeedsConfig =>
+      'Save a service address to get models';
+
+  @override
+  String get speechModelFetchNeedsKey => 'Save an API key to get models';
+
+  @override
+  String get speechModelManualEntry => 'Enter a model ID';
 
   @override
   String get speechModelRefreshEmpty =>
@@ -6075,10 +6144,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get onlineSubtitleCostUnknown =>
       'The provider reported no cost, so the actual charge is unknown';
-
-  @override
-  String get subtitleModeLocalHint =>
-      'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose';
 
   @override
   String get onlineSubtitleNotConfigured =>
@@ -6143,13 +6208,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it';
 
   @override
-  String get onlineTranscription => 'Online transcription';
-
-  @override
-  String get onlineTranscriptionSubtitle =>
-      'Transcribe with the configured online speech service';
-
-  @override
-  String get subtitleOnlineModelHint =>
-      'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it';
+  String get subtitleOnlineModelSettingsHint =>
+      'Configure the online model and key under Settings → Speech recognition → Online speech service';
 }

@@ -3572,12 +3572,6 @@ abstract class AppLocalizations {
   /// **'Disabled'**
   String get speechRecognitionDisabled;
 
-  /// No description provided for @speechRecognitionDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Speech recognition powers practice ratings and future local transcription. Choose the model that fits your device.'**
-  String get speechRecognitionDescription;
-
   /// No description provided for @asrEngine.
   ///
   /// In en, this message translates to:
@@ -3944,6 +3938,18 @@ abstract class AppLocalizations {
   /// **'Local Upload'**
   String get localUpload;
 
+  /// No description provided for @subtitleModelTranscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Model transcription'**
+  String get subtitleModelTranscription;
+
+  /// No description provided for @subtitleModeSettingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the subtitle mode and model in Settings → Speech recognition → Recognition modes'**
+  String get subtitleModeSettingsHint;
+
   /// No description provided for @aiTranscription.
   ///
   /// In en, this message translates to:
@@ -3955,18 +3961,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Higher accuracy, needs network + sign-in'**
   String get aiTranscriptionSubtitle;
-
-  /// No description provided for @offlineTranscription.
-  ///
-  /// In en, this message translates to:
-  /// **'On-Device Transcription'**
-  String get offlineTranscription;
-
-  /// No description provided for @offlineTranscriptionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline, private, no sign-in'**
-  String get offlineTranscriptionSubtitle;
 
   /// No description provided for @transcriptionModelTier.
   ///
@@ -10394,17 +10388,59 @@ abstract class AppLocalizations {
   /// **'Unsupported files ignored: {count}'**
   String folderUnsupportedFiles(int count);
 
-  /// No description provided for @recognitionPurposeTitle.
+  /// No description provided for @recognitionModeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Recognition by purpose'**
-  String get recognitionPurposeTitle;
+  /// **'Recognition modes'**
+  String get recognitionModeTitle;
+
+  /// No description provided for @localModelLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device models'**
+  String get localModelLibraryTitle;
+
+  /// No description provided for @onlineServiceSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online service'**
+  String get onlineServiceSectionTitle;
+
+  /// No description provided for @localModelLibraryTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded {size}'**
+  String localModelLibraryTotal(String size);
+
+  /// No description provided for @localModelLibraryDeleteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all downloaded models'**
+  String get localModelLibraryDeleteAll;
+
+  /// No description provided for @localModelDownloadAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get localModelDownloadAction;
+
+  /// No description provided for @localModelUsageTag.
+  ///
+  /// In en, this message translates to:
+  /// **'{purpose} in use'**
+  String localModelUsageTag(String purpose);
 
   /// No description provided for @recognitionPurposeDescription.
   ///
   /// In en, this message translates to:
   /// **'Subtitles, shadowing, and retelling each keep their own recognition mode and model.'**
   String get recognitionPurposeDescription;
+
+  /// No description provided for @recognitionPurposeScopeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes here only affect this purpose'**
+  String get recognitionPurposeScopeNote;
 
   /// No description provided for @recognitionPurposeSubtitle.
   ///
@@ -10442,6 +10478,48 @@ abstract class AppLocalizations {
   /// **'Online speech'**
   String get recognitionModeOnline;
 
+  /// No description provided for @recognitionStatusLocalDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get recognitionStatusLocalDownloaded;
+
+  /// No description provided for @recognitionStatusLocalNotDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not downloaded'**
+  String get recognitionStatusLocalNotDownloaded;
+
+  /// No description provided for @recognitionStatusLocalDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading'**
+  String get recognitionStatusLocalDownloading;
+
+  /// No description provided for @recognitionStatusLocalDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Download failed'**
+  String get recognitionStatusLocalDownloadFailed;
+
+  /// No description provided for @recognitionStatusSystemBuiltIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Built into the device'**
+  String get recognitionStatusSystemBuiltIn;
+
+  /// No description provided for @recognitionStatusOnlineVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified'**
+  String get recognitionStatusOnlineVerified;
+
+  /// No description provided for @recognitionStatusOnlineUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get recognitionStatusOnlineUnavailable;
+
   /// No description provided for @recognitionOnlineModelSummary.
   ///
   /// In en, this message translates to:
@@ -10451,19 +10529,25 @@ abstract class AppLocalizations {
   /// No description provided for @recognitionOnlineNeedsConfiguration.
   ///
   /// In en, this message translates to:
-  /// **'Set the service address and key under Online speech below first'**
+  /// **'Set the service address under Settings → Speech recognition → Online speech service first'**
   String get recognitionOnlineNeedsConfiguration;
+
+  /// No description provided for @recognitionOnlineNeedsApiKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Save an API key under Settings → Speech recognition → Online speech service first'**
+  String get recognitionOnlineNeedsApiKey;
 
   /// No description provided for @recognitionOnlineNeedsUploadNotice.
   ///
   /// In en, this message translates to:
-  /// **'Tap Verify model under Online speech below; the first time explains the upload target and possible charges'**
+  /// **'Tap Verify model under Settings → Speech recognition → Online speech service; the first time explains the upload target and possible charges'**
   String get recognitionOnlineNeedsUploadNotice;
 
   /// No description provided for @recognitionOnlineNeedsVerification.
   ///
   /// In en, this message translates to:
-  /// **'Tap Verify model under Online speech below to verify this purpose\'s online model'**
+  /// **'Tap Verify model under Settings → Speech recognition → Online speech service to verify this purpose\'s online model'**
   String get recognitionOnlineNeedsVerification;
 
   /// No description provided for @shadowingOnlineProgress.
@@ -10616,11 +10700,47 @@ abstract class AppLocalizations {
   /// **'Verified. The provider reported no cost, so the charge is unknown'**
   String get speechCapabilityVerifiedCostUnknown;
 
-  /// No description provided for @speechModelRefresh.
+  /// No description provided for @speechModelSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Refresh transcription models'**
-  String get speechModelRefresh;
+  /// **'Online models by purpose'**
+  String get speechModelSectionTitle;
+
+  /// No description provided for @speechModelFetch.
+  ///
+  /// In en, this message translates to:
+  /// **'Get transcription models'**
+  String get speechModelFetch;
+
+  /// No description provided for @speechModelFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting transcription models…'**
+  String get speechModelFetching;
+
+  /// No description provided for @speechModelFetched.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} transcription models retrieved'**
+  String speechModelFetched(int count);
+
+  /// No description provided for @speechModelFetchNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a service address to get models'**
+  String get speechModelFetchNeedsConfig;
+
+  /// No description provided for @speechModelFetchNeedsKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Save an API key to get models'**
+  String get speechModelFetchNeedsKey;
+
+  /// No description provided for @speechModelManualEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a model ID'**
+  String get speechModelManualEntry;
 
   /// No description provided for @speechModelRefreshEmpty.
   ///
@@ -10681,12 +10801,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The provider reported no cost, so the actual charge is unknown'**
   String get onlineSubtitleCostUnknown;
-
-  /// No description provided for @subtitleModeLocalHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Transcribing with an on-device model. Switch to online in Settings → Speech recognition → Recognition by purpose'**
-  String get subtitleModeLocalHint;
 
   /// No description provided for @onlineSubtitleNotConfigured.
   ///
@@ -10784,23 +10898,11 @@ abstract class AppLocalizations {
   /// **'This model returned no segment timestamps, so it cannot produce subtitles. Choose a model that supports timestamps and verify it'**
   String get recognitionOnlineNeedsSuitableModel;
 
-  /// No description provided for @onlineTranscription.
+  /// No description provided for @subtitleOnlineModelSettingsHint.
   ///
   /// In en, this message translates to:
-  /// **'Online transcription'**
-  String get onlineTranscription;
-
-  /// No description provided for @onlineTranscriptionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Transcribe with the configured online speech service'**
-  String get onlineTranscriptionSubtitle;
-
-  /// No description provided for @subtitleOnlineModelHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Configure the online model and key under Online speech below; pick Online transcription in the subtitles sheet to use it'**
-  String get subtitleOnlineModelHint;
+  /// **'Configure the online model and key under Settings → Speech recognition → Online speech service'**
+  String get subtitleOnlineModelSettingsHint;
 }
 
 class _AppLocalizationsDelegate

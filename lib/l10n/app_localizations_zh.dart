@@ -1940,10 +1940,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speechRecognitionDisabled => '已关闭';
 
   @override
-  String get speechRecognitionDescription =>
-      '语音识别用于练习评分和后续本地转录。你可以选择适合当前设备的模型。';
-
-  @override
   String get asrEngine => '语音引擎';
 
   @override
@@ -2154,16 +2150,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localUpload => '本地上传';
 
   @override
+  String get subtitleModelTranscription => '模型转录';
+
+  @override
+  String get subtitleModeSettingsHint => '字幕方式与模型在 设置 → 语音识别 → 识别方式 中修改';
+
+  @override
   String get aiTranscription => '云端转录';
 
   @override
   String get aiTranscriptionSubtitle => '精度高，速度快，需联网登录';
-
-  @override
-  String get offlineTranscription => '本地转录';
-
-  @override
-  String get offlineTranscriptionSubtitle => '离线、隐私，无需登录';
 
   @override
   String get transcriptionModelTier => '识别模型';
@@ -5631,10 +5627,35 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get recognitionPurposeTitle => '按用途识别';
+  String get recognitionModeTitle => '识别方式';
+
+  @override
+  String get localModelLibraryTitle => '本机模型';
+
+  @override
+  String get onlineServiceSectionTitle => '在线服务';
+
+  @override
+  String localModelLibraryTotal(String size) {
+    return '已下载 $size';
+  }
+
+  @override
+  String get localModelLibraryDeleteAll => '删除所有已下载模型';
+
+  @override
+  String get localModelDownloadAction => '下载';
+
+  @override
+  String localModelUsageTag(String purpose) {
+    return '$purpose在用';
+  }
 
   @override
   String get recognitionPurposeDescription => '字幕、跟读、复述各自选择识别方式与模型，互不影响。';
+
+  @override
+  String get recognitionPurposeScopeNote => '这里的修改只影响当前用途，不影响其他用途。';
 
   @override
   String get recognitionPurposeSubtitle => '字幕转录';
@@ -5655,20 +5676,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recognitionModeOnline => '在线识别';
 
   @override
+  String get recognitionStatusLocalDownloaded => '已下载';
+
+  @override
+  String get recognitionStatusLocalNotDownloaded => '未下载';
+
+  @override
+  String get recognitionStatusLocalDownloading => '下载中';
+
+  @override
+  String get recognitionStatusLocalDownloadFailed => '下载失败';
+
+  @override
+  String get recognitionStatusSystemBuiltIn => '设备自带';
+
+  @override
+  String get recognitionStatusOnlineVerified => '已验证';
+
+  @override
+  String get recognitionStatusOnlineUnavailable => '不可用';
+
+  @override
   String recognitionOnlineModelSummary(String model) {
     return '在线识别 · $model';
   }
 
   @override
-  String get recognitionOnlineNeedsConfiguration => '需先在下方「在线语音服务」填写服务地址与 Key';
+  String get recognitionOnlineNeedsConfiguration =>
+      '需先在设置 → 语音识别 → 在线语音服务填写服务地址';
+
+  @override
+  String get recognitionOnlineNeedsApiKey => '需先在设置 → 语音识别 → 在线语音服务保存 API Key';
 
   @override
   String get recognitionOnlineNeedsUploadNotice =>
-      '需先在下方「在线语音服务」点「验证模型」；首次会告知上传目标与可能费用';
+      '需先在设置 → 语音识别 → 在线语音服务点「验证模型」；首次会告知上传目标与可能费用';
 
   @override
   String get recognitionOnlineNeedsVerification =>
-      '需先在下方「在线语音服务」点「验证模型」，验证该用途的在线模型';
+      '需先在设置 → 语音识别 → 在线语音服务点「验证模型」，验证该用途的在线模型';
 
   @override
   String shadowingOnlineProgress(String service, String model, int percent) {
@@ -5761,7 +5807,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speechCapabilityVerifiedCostUnknown => '验证完成。供应商未报告费用，实际花费未知';
 
   @override
-  String get speechModelRefresh => '刷新转写模型目录';
+  String get speechModelSectionTitle => '按用途在线模型';
+
+  @override
+  String get speechModelFetch => '获取转写模型';
+
+  @override
+  String get speechModelFetching => '正在获取转写模型…';
+
+  @override
+  String speechModelFetched(int count) {
+    return '已获取 $count 个模型';
+  }
+
+  @override
+  String get speechModelFetchNeedsConfig => '保存服务地址后可获取模型';
+
+  @override
+  String get speechModelFetchNeedsKey => '保存 API Key 后可获取模型';
+
+  @override
+  String get speechModelManualEntry => '手动输入模型 ID';
 
   @override
   String get speechModelRefreshEmpty => '服务没有返回转写模型，仍可手填模型 ID';
@@ -5798,9 +5864,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get onlineSubtitleCostUnknown => '供应商未报告费用，实际花费未知';
-
-  @override
-  String get subtitleModeLocalHint => '当前用本机模型转录；可在 设置 → 语音识别 → 按用途识别 切换为在线';
 
   @override
   String get onlineSubtitleNotConfigured => '尚未配置在线语音服务或 Key';
@@ -5858,12 +5921,6 @@ class AppLocalizationsZh extends AppLocalizations {
       '该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证';
 
   @override
-  String get onlineTranscription => '在线转录';
-
-  @override
-  String get onlineTranscriptionSubtitle => '用已配置的在线语音服务转写';
-
-  @override
-  String get subtitleOnlineModelHint =>
-      '在线模型与 Key 在下方「在线语音服务」中配置；管理字幕弹窗里可直接选「在线转录」';
+  String get subtitleOnlineModelSettingsHint =>
+      '在线模型与 Key 在设置 → 语音识别 → 在线语音服务中配置';
 }

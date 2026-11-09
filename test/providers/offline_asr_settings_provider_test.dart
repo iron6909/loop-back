@@ -52,6 +52,60 @@ class _TestOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   OfflineAsrSettingsState build() => _initialState;
 }
 
+/// 下载成功的模型管理器：只记录安装请求，不触碰真实文件与网络。
+class _SuccessfulDownloadAsrModelManager extends _FakeAsrModelManager {
+  _SuccessfulDownloadAsrModelManager()
+    : super(downloaded: false, localSizeBytes: 153 * 1024 * 1024);
+
+  final downloadedModelIds = <String>[];
+
+  @override
+  Future<String> modelDir(String modelId) async => '/tmp/asr-models/$modelId';
+
+  @override
+  Future<String> downloadModel(
+    String modelId, {
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
+    void Function(AsrModelDownloadProgress)? onProgress,
+    CancelToken? cancelToken,
+  }) async {
+    downloadedModelIds.add(modelId);
+    return '/tmp/asr-models/$modelId';
+  }
+}
+
+/// 记录引擎初始化次数的离线 ASR 引擎。
+class _RecordingAsrEngine implements OfflineAsrEngine {
+  int initializeCalls = 0;
+
+  @override
+  String get name => 'recording';
+
+  @override
+  bool get isReady => initializeCalls > 0;
+
+  @override
+  AsrModelInfo? get currentModel => null;
+
+  @override
+  Future<void> initialize(AsrModelConfig config) async {
+    initializeCalls += 1;
+  }
+
+  @override
+  Future<AsrResult> transcribe(String wavPath) async =>
+      const AsrResult(text: '', inferenceTime: Duration.zero);
+
+  @override
+  Future<List<AsrSegment>> transcribeSegments(
+    String wavPath, {
+    void Function(double progress)? onProgress,
+  }) async => const [];
+
+  @override
+  Future<void> dispose() async {}
+}
+
 class _DelayedAsrModelManager extends _FakeAsrModelManager {
   _DelayedAsrModelManager() : super(downloaded: false, localSizeBytes: 99);
 
@@ -280,6 +334,100 @@ void main() {
     expect(state.localSizeBytes, 0);
     expect(state.downloadError, isNull);
     expect(prefs.getBool('offline_asr_downloaded_$modelId'), isNull);
+  });
+
+  group('资源库下载', () {
+    const otherModelId = 'whisper-tiny-en-int8';
+
+    ProviderContainer containerWith({
+      required AsrBackend backend,
+      required _SuccessfulDownloadAsrModelManager manager,
+      required _RecordingAsrEngine engine,
+    }) {
+      final container = ProviderContainer(
+        overrides: [
+          asrModelManagerProvider.overrideWithValue(manager),
+          offlineAsrEngineProvider.overrideWithValue(engine),
+          offlineAsrSettingsProvider.overrideWith(
+            () => _TestOfflineAsrSettingsNotifier(
+              OfflineAsrSettingsState(
+                backend: backend,
+                recommendedModel: recommendedModel,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    test('系统识别下从资源库下载当前档位不初始化引擎，也不切换后端', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final manager = _SuccessfulDownloadAsrModelManager();
+      final engine = _RecordingAsrEngine();
+      final container = containerWith(
+        backend: AsrBackend.platform,
+        manager: manager,
+        engine: engine,
+      );
+
+      await container
+          .read(offlineAsrSettingsProvider.notifier)
+          .downloadModel(recommendedModel.id);
+
+      final state = container.read(offlineAsrSettingsProvider);
+      expect(state.backend, AsrBackend.platform);
+      expect(state.selectedModel.id, recommendedModel.id);
+      expect(engine.initializeCalls, 0);
+      expect(manager.downloadedModelIds, [recommendedModel.id]);
+      expect(
+        state.modelStateOf(recommendedModel.id).downloadStatus,
+        AsrModelDownloadStatus.downloaded,
+      );
+    });
+
+    test('本机后端下载非跟读档位后不加载离线引擎', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final manager = _SuccessfulDownloadAsrModelManager();
+      final engine = _RecordingAsrEngine();
+      final container = containerWith(
+        backend: AsrBackend.offline,
+        manager: manager,
+        engine: engine,
+      );
+
+      await container
+          .read(offlineAsrSettingsProvider.notifier)
+          .downloadModel(otherModelId);
+
+      expect(engine.initializeCalls, 0);
+      expect(
+        container
+            .read(offlineAsrSettingsProvider)
+            .modelStateOf(otherModelId)
+            .isReady,
+        isTrue,
+      );
+    });
+
+    test('下载跟读当前档位且后端为本机时初始化离线引擎', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final manager = _SuccessfulDownloadAsrModelManager();
+      final engine = _RecordingAsrEngine();
+      final container = containerWith(
+        backend: AsrBackend.offline,
+        manager: manager,
+        engine: engine,
+      );
+
+      await container
+          .read(offlineAsrSettingsProvider.notifier)
+          .downloadModel(recommendedModel.id);
+
+      expect(engine.initializeCalls, 1);
+      expect(container.read(offlineAsrSettingsProvider).engineReady, isTrue);
+    });
   });
 
   test('取消后立即重置 UI，底层写入报存储异常仍不显示重试', () async {

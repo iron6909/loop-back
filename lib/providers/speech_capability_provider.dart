@@ -65,13 +65,20 @@ final speechTranscriptionClientProvider = Provider<SpeechTranscriptionClient>(
   (ref) => SpeechTranscriptionClient(),
 );
 
-/// 某用途能否选用在线：需要 Key、上传告知与该用途的有效文本能力验证。
+/// 某用途能否选用在线：需要 Key、上传告知与该用途自己的能力验证。
 ///
-/// 界面据此决定是否把在线列为可选方式；跟读与复述的录音入口在发请求前用
+/// 字幕要求片段时间戳，跟读与复述只需文本；纯文本能力不能把字幕在线列为可选。
+/// 界面据此决定是否把在线列为可选方式；三条业务入口在发请求前用
 /// [resolvePracticeOnlineAccess] 再确认一次，避免配置已变时静默上传。
 final onlinePracticeAvailabilityProvider =
     FutureProvider.family<bool, RecognitionPurpose>((ref, purpose) async {
-      final access = await resolvePracticeOnlineAccess(ref, purpose);
+      final access = await resolvePracticeOnlineAccess(
+        ref,
+        purpose,
+        requiredCapability: purpose == RecognitionPurpose.subtitle
+            ? OnlineCapabilityRequirement.segments
+            : OnlineCapabilityRequirement.text,
+      );
       return access is PracticeOnlineAccessGranted;
     });
 
@@ -87,14 +94,16 @@ final onlineModeBlockReasonProvider =
     ) {
       final configuration = ref.watch(speechConfigurationProvider).valueOrNull;
       final config = configuration?.config;
-      if (configuration == null ||
-          !configuration.isConfigured ||
-          config == null) {
+      if (configuration == null || config == null) {
         return PracticeOnlineAccessDenial.missingConfiguration;
       }
       final modelId = config.onlineModelFor(purpose);
       if (modelId.isEmpty) {
         return PracticeOnlineAccessDenial.missingConfiguration;
+      }
+      // 地址与模型齐备后，缺 Key 是另一件要补的事，不能混成「未配置」。
+      if (!configuration.hasApiKey) {
+        return PracticeOnlineAccessDenial.missingApiKey;
       }
       final capabilities = ref.watch(speechCapabilityProvider).valueOrNull;
       if (capabilities == null) {
@@ -133,9 +142,14 @@ Future<PracticeOnlineAccess> resolvePracticeOnlineAccess(
   final config = await configStore.read();
   final apiKey = await configStore.readApiKey();
   final modelId = config?.onlineModelFor(purpose) ?? '';
-  if (config == null || apiKey == null || modelId.isEmpty) {
+  if (config == null || modelId.isEmpty) {
     return const PracticeOnlineAccessDenied(
       PracticeOnlineAccessDenial.missingConfiguration,
+    );
+  }
+  if (apiKey == null) {
+    return const PracticeOnlineAccessDenied(
+      PracticeOnlineAccessDenial.missingApiKey,
     );
   }
   // 首次向该服务上传用户录音前必须有告知；没有告知就不上传。

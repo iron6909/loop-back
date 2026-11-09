@@ -209,17 +209,16 @@ final systemRecognitionPlatformProvider = Provider<bool>(
 
 /// 某用途当前可选的识别方式。
 ///
-/// 字幕不在用途面板里选方式：管理字幕弹窗把「本地转录」与「在线转录」作为并列
-/// 入口，在线模型在「在线语音服务」里按用途配置，因此这里只有本机。
-/// 跟读与复述在受支持的平台同时开放系统识别；两者的在线方式各自需要自己用途的
-/// 文本能力验证（[onlineAvailable]），互不借用。
+/// 字幕只提供本机与在线两种方式（在线必须通过片段时间戳能力，[onlineAvailable]），
+/// 从不提供系统识别。跟读与复述在受支持的平台同时开放系统识别；两者的在线方式
+/// 各自需要自己用途的文本能力验证，互不借用。
 List<RecognitionMode> availableRecognitionModes(
   RecognitionPurpose purpose, {
   required bool systemSupported,
   bool onlineAvailable = false,
 }) {
   if (purpose == RecognitionPurpose.subtitle) {
-    return const [RecognitionMode.local];
+    return [RecognitionMode.local, if (onlineAvailable) RecognitionMode.online];
   }
   return [
     RecognitionMode.local,

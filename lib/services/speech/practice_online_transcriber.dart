@@ -100,8 +100,11 @@ class PracticeOnlineAccessGranted extends PracticeOnlineAccess {
 
 /// 拒绝发请求的原因；界面据此引导用户补配置或补验证。
 enum PracticeOnlineAccessDenial {
-  /// 没有保存服务地址或 Key。
+  /// 没有保存服务地址，或该用途还没有在线模型。
   missingConfiguration,
+
+  /// 已有服务地址，但安全存储里没有 API Key。
+  missingApiKey,
 
   /// 首次向该服务上传录音前还没有完成告知。
   uploadNoticeMissing,

@@ -62,6 +62,7 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 - 播放、词典、PDF、字幕编辑等高频链路体验打磨。
 - CI / Release / 更新链路稳定性完善。
 - AI 对话助手：保留通用载体与 `SentenceChatButton`，请求改为供应商 Chat Completions SSE；不再依赖登录、会员或自有后端配额。当前契约以 [本地化规格](./docs/features/20261031-local-openai-localization/spec.md) 为准，旧 [chatbot 实施文档](./docs/chatbot-implementation-plan.md) 保留为历史。
+- 语音识别设置页重排（2026-11-08，[issue #14](https://github.com/iron6909/loop-back/issues/14)）：按「识别方式 → 本机模型 → 在线服务」三层组织，三个用途各一行显示方式、模型与状态；本机模型改为资源库，在线服务独立成页并一次获取转写模型；管理字幕弹窗收拢为单一「模型转录」入口。明细见 [TASKS.md](./TASKS.md)。
 
 ### ⏸ Milestone 5：支付订阅（本分支已停用）
 
