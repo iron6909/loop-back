@@ -30,7 +30,7 @@ abstract final class TtsSettingsKeys {
   static const engine = 'tts_engine';
 
   /// 历史版本写入的旧引擎值（'echoLoop'），读取时保留兼容。
-  static const legacyEchoLoopEngineValue = 'echoLoop';
+  static const legacyTtsEngineValue = 'echoLoop';
   static const accent = 'tts_accent';
   static const kokoroVoiceUs = 'tts_kokoro_voice_us';
   static const kokoroVoiceUk = 'tts_kokoro_voice_uk';
@@ -43,9 +43,9 @@ abstract final class TtsSettingsKeys {
 }
 
 /// 将所有平台历史写入的旧引擎值迁移为 Kokoro 实现名。
-Future<void> migrateLegacyEchoLoopTtsPreference(SharedPreferences prefs) async {
+Future<void> migrateLegacyTtsPreference(SharedPreferences prefs) async {
   if (prefs.getString(TtsSettingsKeys.engine) !=
-      TtsSettingsKeys.legacyEchoLoopEngineValue) {
+      TtsSettingsKeys.legacyTtsEngineValue) {
     return;
   }
   await prefs.setString(TtsSettingsKeys.engine, TtsEngineKind.kokoro.name);
@@ -81,10 +81,10 @@ class TtsSettings {
   /// Kokoro 选用的模型变体（默认 fp32，速度/效果最佳）。
   final KokoroModelVariant kokoroVariant;
 
-  /// Piper（平衡档）美音音色 id（默认 [piperDefaultVoiceUs]）。
+  /// Piper 美音音色 id（默认 [piperDefaultVoiceUs]）。
   final String piperVoiceUs;
 
-  /// Piper（平衡档）英音音色 id（默认 [piperDefaultVoiceUk]）。
+  /// Piper 英音音色 id（默认 [piperDefaultVoiceUk]）。
   final String piperVoiceUk;
 
   /// TTS 模型下载来源（仅影响后续安装，已安装模型不重下）。
@@ -179,7 +179,7 @@ class TtsSettings {
   }
 
   static TtsEngineKind _engineFromName(String? name) {
-    if (name == TtsSettingsKeys.legacyEchoLoopEngineValue) {
+    if (name == TtsSettingsKeys.legacyTtsEngineValue) {
       return TtsEngineKind.kokoro;
     }
     return TtsEngineKind.values.firstWhere(

@@ -201,7 +201,7 @@ List<AppUpdateMigration> buildAppUpdateMigrations(
     AppUpdateMigration(
       version: 4,
       name: 'legacy_tts_settings_migration',
-      action: () => migrateLegacyEchoLoopTtsPreference(prefs),
+      action: () => migrateLegacyTtsPreference(prefs),
     ),
     AppUpdateMigration(
       version: 5,

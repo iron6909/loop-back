@@ -104,7 +104,7 @@ void main() {
     localSizeBytes: 1024,
   );
 
-  testWidgets('默认渲染 Advanced 高质量模型配置', (tester) async {
+  testWidgets('默认渲染 Kokoro 高质量模型配置', (tester) async {
     await tester.pumpWidget(_wrap(const TtsSettings()));
     await tester.pumpAndSettle();
 
@@ -290,7 +290,7 @@ void main() {
     expect(find.text('American · Sarah · Female'), findsOneWidget);
     // 使用中（fp32 选中）不显删除（不删正在用的语音）；int8 未下载也无删除。
     expect(find.byTooltip('Delete model'), findsNothing);
-    // Echo Loop 下无独立口音卡，弹层未开时音色列表与口音标题都不在屏上。
+    // Kokoro 下无独立口音卡，弹层未开时音色列表与口音标题都不在屏上。
     expect(find.byType(Radio<String>), findsNothing);
     expect(find.text('American'), findsNothing);
     expect(find.text('British'), findsNothing);
