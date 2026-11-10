@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:echo_loop/providers/tts/kokoro_model_provider.dart';
+import 'package:echo_loop/services/asr/asr_model_catalog.dart';
 import 'package:echo_loop/services/download/download_failure.dart';
 import 'package:echo_loop/services/reliable_http_downloader.dart';
 import 'package:echo_loop/services/resource_install_manifest.dart';
@@ -38,6 +39,7 @@ class _FakeManager extends KokoroModelManager {
 
   @override
   Future<String> downloadModel({
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
@@ -96,6 +98,7 @@ class _BlockingCancelManager extends _FakeManager {
 
   @override
   Future<String> downloadModel({
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
