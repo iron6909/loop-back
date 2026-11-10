@@ -1,7 +1,7 @@
 # Echo Loop 项目规划
 
-> 最后更新：2026-11-10（词典与发音库去 EchoLoop 化实施完成，真机验收通过）
-> 当前焦点：词典与发音库去 EchoLoop 化代码已交付于集成分支 `feature/20261110-dictionary-pronunciation-decoupling`（spec #26，子工单 #27–#31 全部关闭，真机验收通过）；剩余：分支合并与发布流程待定（同 ASR/TTS 约定）。规格与实施记录见 [docs/features/20261110-dictionary-pronunciation-decoupling/](./docs/features/20261110-dictionary-pronunciation-decoupling/plan.md)。语音合成（TTS）去 EchoLoop 化代码已交付于集成分支 `feature/20261110-tts-provider-decoupling`（spec #20，子工单 #21–#25 全部关闭，真机验收通过）。
+> 最后更新：2026-11-10（词典与发音库去 EchoLoop 化实施完成并已并入 main）
+> 当前焦点：词典与发音库去 EchoLoop 化已实施完成、双轴 code-review 通过、真机验收通过，集成分支 `feature/20261110-dictionary-pronunciation-decoupling` 已并入 `main`（spec #26 与子工单 #27–#31 全部关闭）；本地 main 领先 origin/main，推送与发布流程待定。规格与实施记录见 [docs/features/20261110-dictionary-pronunciation-decoupling/](./docs/features/20261110-dictionary-pronunciation-decoupling/plan.md)。语音合成（TTS）去 EchoLoop 化代码仍在集成分支 `feature/20261110-tts-provider-decoupling`（spec #20 开放，待合并）；语音识别去 EchoLoop 化在集成分支 `feature/20261106-asr-provider-decoupling`（spec #1 开放，待合并）。
 
 ## 产品目标
 
