@@ -4973,10 +4973,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsEnginePlatformDescription => '设备自带，速度快、无需下载，但音质一般。';
 
   @override
-  String get ttsEngineEchoLoop => 'Kokoro';
+  String get ttsEngineKokoro => 'Kokoro';
 
   @override
-  String get ttsEngineEchoLoopDescription => '音质最好，需下载模型，推荐高性能设备使用。';
+  String get ttsEngineKokoroDescription => '音质最好，需下载模型，推荐高性能设备使用。';
 
   @override
   String get ttsEnginePiper => 'Piper';

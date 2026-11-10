@@ -9146,17 +9146,17 @@ abstract class AppLocalizations {
   /// **'Built into your device. Fast, no download required, average quality.'**
   String get ttsEnginePlatformDescription;
 
-  /// No description provided for @ttsEngineEchoLoop.
+  /// No description provided for @ttsEngineKokoro.
   ///
   /// In en, this message translates to:
   /// **'Kokoro'**
-  String get ttsEngineEchoLoop;
+  String get ttsEngineKokoro;
 
-  /// No description provided for @ttsEngineEchoLoopDescription.
+  /// No description provided for @ttsEngineKokoroDescription.
   ///
   /// In en, this message translates to:
   /// **'Best sound quality. Needs a model download; recommended for high-performance devices.'**
-  String get ttsEngineEchoLoopDescription;
+  String get ttsEngineKokoroDescription;
 
   /// No description provided for @ttsEnginePiper.
   ///

@@ -5216,10 +5216,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Built into your device. Fast, no download required, average quality.';
 
   @override
-  String get ttsEngineEchoLoop => 'Kokoro';
+  String get ttsEngineKokoro => 'Kokoro';
 
   @override
-  String get ttsEngineEchoLoopDescription =>
+  String get ttsEngineKokoroDescription =>
       'Best sound quality. Needs a model download; recommended for high-performance devices.';
 
   @override

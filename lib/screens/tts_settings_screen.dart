@@ -220,9 +220,9 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     RadioListTile<TtsEngineKind>(
-                      title: Text(l10n.ttsEngineEchoLoop),
+                      title: Text(l10n.ttsEngineKokoro),
                       subtitle: Text(
-                        l10n.ttsEngineEchoLoopDescription,
+                        l10n.ttsEngineKokoroDescription,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant.withValues(
                             alpha: 0.6,
@@ -241,7 +241,7 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
               // Kokoro 专属：归属标题 + 一张卡（模型 + 音色单行）。
               // 不显示独立口音——音色名已自带口音，选音色即定口音（见 _VoiceDisclosure）。
               const SizedBox(height: AppSpacing.m),
-              _SectionLabel(text: l10n.ttsEngineEchoLoop),
+              _SectionLabel(text: l10n.ttsEngineKokoro),
               Card(
                 clipBehavior: Clip.antiAlias,
                 child: Column(
@@ -586,7 +586,7 @@ class _ModelRow extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         content: Text(
-          l10n.ttsDeleteModelConfirm('${l10n.ttsEngineEchoLoop} · $_name'),
+          l10n.ttsDeleteModelConfirm('${l10n.ttsEngineKokoro} · $_name'),
         ),
         actions: [
           TextButton(
@@ -611,7 +611,7 @@ class _ModelRow extends ConsumerWidget {
 
 /// 残留模型存储清理行（平台 TTS 引擎下，本地仍有已下载但未在使用的模型）。
 ///
-/// 把可能存在的全部残留模型——Advanced/Kokoro 两个变体 + Balanced/Piper 各音色——收成
+/// 把可能存在的全部残留模型——Kokoro 两个变体 + Piper 各音色——收成
 /// **一行**存储入口：标题 + 总占用空间 + 删除，而不是平铺多张模型卡，避免在「平台 TTS」
 /// 下被误读为可选设置。删除清空全部已下载模型（切回对应引擎会按需重新下载）。
 class _ModelStorageRow extends ConsumerWidget {
@@ -957,7 +957,7 @@ class _AccentPreviewRow extends ConsumerWidget {
   }
 }
 
-/// Piper（平衡档）音色列表：按「美音 / 英音」分组列出全部 9 个音色。
+/// Piper 音色列表：按「美音 / 英音」分组列出全部 9 个音色。
 ///
 /// 与 Kokoro 不同，Piper 每音色是独立模型，故行内直接呈现各音色的下载状态与操作
 /// （不收进底部弹层）：点击就绪音色 = 选中 + 试听；点未下载音色 = 选中 + 下载。
