@@ -1,9 +1,10 @@
 /// Kokoro 模型下载、校验、缓存管理。
 ///
 /// Kokoro 从固定公开来源（本项目 GitHub Releases 的 gzip 重打包）整包下载：
-/// 下载归档 → 校验整包 SHA-256 → staging 解包校验 → 原子替换模型目录。共享
-/// `espeak-ng-data` 作为独立依赖资源安装，缺失时只补该依赖、不重下模型本体。
-/// 下载基于 `ReliableHttpDownloader`，网络中断时保留 `.part` 供后续 Range 续传。
+/// 下载归档 → 校验整包 SHA-256 → staging 解包校验 → 原子替换模型目录。模型
+/// 归档自带 `espeak-ng-data/`；若模型目录本体齐全、仅该目录缺失或损坏，则只
+/// 下载独立的 `espeak-ng-data` 归档解包进模型目录，不重下模型本体。下载基于
+/// `ReliableHttpDownloader`，网络中断时保留 `.part` 供后续 Range 续传。
 library;
 
 import 'dart:io';
@@ -175,16 +176,48 @@ class KokoroModelManager {
 
   /// 下载并安装模型，通过 [onProgress] 报告进度，可经 [cancelToken] 取消。
   ///
-  /// 流程：下载归档 → 校验 SHA-256 → staging 解包校验 → 原子替换模型目录，
-  /// 随后补齐缺失的共享 `espeak-ng-data` 依赖（不重下模型本体）。
+  /// 正常流程：下载归档 → 校验 SHA-256 → staging 解包校验 → 原子替换模型目录
+  /// （归档自带 `espeak-ng-data/`）。若模型目录本体齐全、仅 `espeak-ng-data/`
+  /// 缺失或损坏，则只下载独立 espeak 归档解包进模型目录，不重下模型本体。
   Future<String> downloadModel({
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
     final root = Directory(await _modelsRoot);
-    final uri = _uriFor(spec.resource, spec.resource.files.single, source);
     final target = Directory(await modelDir());
+
+    // 只补分支：模型本体齐全、仅 espeak-ng-data 缺失或损坏时，只下该依赖归档。
+    if (await _needsEspeakRepair(target)) {
+      AppLogger.log(
+        'KokoroModel',
+        '┌ downloadModel(repair espeak) dir=${target.path}',
+      );
+      onProgress?.call(
+        const AsrModelDownloadProgress(
+          status: AsrModelDownloadStatus.downloading,
+        ),
+      );
+      await _installEspeakIntoModel(
+        root: root,
+        target: target,
+        source: source,
+        cancelToken: cancelToken,
+      );
+      onProgress?.call(
+        const AsrModelDownloadProgress(
+          status: AsrModelDownloadStatus.downloaded,
+          progress: 1,
+        ),
+      );
+      AppLogger.log(
+        'KokoroModel',
+        '└ downloadModel(repair espeak) done dir=${target.path}',
+      );
+      return target.path;
+    }
+
+    final uri = _uriFor(spec.resource, spec.resource.files.single, source);
     AppLogger.log('KokoroModel', '┌ downloadModel dir=${target.path} url=$uri');
 
     onProgress?.call(
@@ -222,7 +255,6 @@ class KokoroModelManager {
         }
       },
     );
-    await ensureSharedDependencies(source: source, cancelToken: cancelToken);
     onProgress?.call(
       const AsrModelDownloadProgress(
         status: AsrModelDownloadStatus.downloaded,
@@ -233,35 +265,44 @@ class KokoroModelManager {
     return target.path;
   }
 
-  /// 补齐本模型声明的共享依赖（如 `espeak-ng-data`）；缺失只补该依赖，不重下模型本体。
-  Future<void> ensureSharedDependencies({
-    AsrDownloadSource source = AsrDownloadSource.huggingFace,
-    CancelToken? cancelToken,
-  }) async {
-    for (final dependencyId in spec.dependencies) {
-      final resource = resourceRegistry[dependencyId];
-      if (resource == null) {
-        throw StateError('Unknown Kokoro dependency: $dependencyId');
-      }
-      await _ensureDependency(resource, source: source, cancelToken: cancelToken);
-    }
+  /// 模型本体关键文件（onnx/voices/tokens）齐全、仅 `espeak-ng-data/` 缺失或损坏。
+  Future<bool> _needsEspeakRepair(Directory target) async {
+    if (!target.existsSync()) return false;
+    final model = await _findFile(target, spec.modelFileName);
+    final voices = await _findFile(target, kokoroVoicesFileName);
+    final tokens = await _findFile(target, kokoroTokensFileName);
+    if (model == null || voices == null || tokens == null) return false;
+    final dataDir = await _findDir(target, kokoroDataDirectoryName);
+    if (dataDir == null) return true;
+    // 以 espeak 核心数据文件作为目录完整性标记（与旧依赖安装一致）。
+    return !File(p.join(dataDir, 'phondata')).existsSync();
   }
 
-  Future<void> _ensureDependency(
-    AsrPublicResourceSpec resource, {
+  /// 只下载独立 `espeak-ng-data` 归档并解包进模型目录（不重下模型本体）。
+  Future<void> _installEspeakIntoModel({
+    required Directory root,
+    required Directory target,
     required AsrDownloadSource source,
     CancelToken? cancelToken,
   }) async {
-    if (await _isResourceInstalled(resource)) return;
+    final resource = resourceRegistry[kokoroEspeakNgDataResourceId];
+    if (resource == null) {
+      throw StateError(
+        'Missing Kokoro espeak resource: $kokoroEspeakNgDataResourceId',
+      );
+    }
     final file = resource.files.single;
-    final target = Directory(p.join(await _modelsRoot, resource.id));
+    final existing = await _findDir(target, kokoroDataDirectoryName);
+    final dataDir = existing != null
+        ? Directory(existing)
+        : Directory(p.join(target.path, kokoroDataDirectoryName));
     AppLogger.log(
       'KokoroModel',
-      '补共享依赖 resource=${resource.id} url=${_uriFor(resource, file, source)}',
+      '补 espeak-ng-data into=${dataDir.path} url=${_uriFor(resource, file, source)}',
     );
     await _installer.install(
-      root: Directory(await _modelsRoot),
-      target: target,
+      root: root,
+      target: dataDir,
       resourceId: resource.id,
       archiveFileName: '_download_${resource.id}.tar.gz',
       uri: _uriFor(resource, file, source),
@@ -312,15 +353,6 @@ class KokoroModelManager {
       return Uri.parse('$baseUrlOverride/${file.name}');
     }
     return resource.fileUri(source, file);
-  }
-
-  Future<bool> _isResourceInstalled(AsrPublicResourceSpec resource) async {
-    final dir = Directory(p.join(await _modelsRoot, resource.id));
-    if (!dir.existsSync()) return false;
-    // 共享依赖当前只有 espeak-ng-data，以核心数据文件作为完整性标记。
-    if (!File(p.join(dir.path, 'phondata')).existsSync()) return false;
-    final manifest = await readResourceInstallManifest(dir);
-    return manifest != null && manifest.resourceId == resource.id;
   }
 
   /// 在 [dir] 下递归定位关键文件；任一缺失返回 null。

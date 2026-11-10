@@ -1,12 +1,16 @@
 /// Kokoro TTS 模型公开资源目录。
 ///
-/// Kokoro fp32/int8 两个变体与共享 `espeak-ng-data` 都从固定公开来源整包
-/// 下载（本项目 GitHub Releases 托管的 gzip 重打包），逐文件内容与上游
-/// `k2-fsa/sherpa-onnx` 的 `tts-models` 官方资产一致。下载与安装流程由
+/// Kokoro fp32/int8 两个变体从固定公开来源整包下载（本项目 GitHub Releases
+/// `iron6909/loop-back-models` 托管的 gzip 重打包），逐文件内容与上游
+/// `k2-fsa/sherpa-onnx` 的 `tts-models` 官方资产一致。模型归档自带
+/// `espeak-ng-data/`；独立 `espeak-ng-data` 资源只用于模型目录内该目录缺失或
+/// 损坏时的「只补」修复，以及后续 Piper 复用。下载与安装流程由
 /// [KokoroModelManager] 负责。核验记录见
 /// `docs/features/20261110-tts-provider-decoupling/public-source-verification.md`。
 library;
 
+// 按方案「复用或泛化 ASR 公开资源目录抽象」有意复用 ASR 命名类型
+// （AsrDownloadSource/AsrPublicResourceSpec 等），不另起一套 TTS 版本。
 import '../asr/asr_model_catalog.dart'
     show
         AsrDownloadSource,
@@ -15,12 +19,12 @@ import '../asr/asr_model_catalog.dart'
         AsrResourceFile;
 import 'tts_engine.dart' show KokoroModelVariant;
 
-/// espeak-ng-data 共享依赖资源 ID（Kokoro 与 Piper 共用一份）。
+/// espeak-ng-data 资源 ID（模型归档自带；独立归档用于只补修复，Kokoro 与 Piper 共用）。
 const kokoroEspeakNgDataResourceId = 'espeak-ng-data';
 
-/// Kokoro 公开资源的固定仓库。
+/// Kokoro 公开资源的固定仓库（托管位置已确认并完成上传）。
 ///
-/// 最终托管位置待操作者确认；仓库名集中在此常量，若改名/改位置只动这一处。
+/// 仓库名集中在此常量，若改名/改位置只动这一处。
 const kokoroPublicRepository = 'iron6909/loop-back-models';
 
 /// 固定发布 tag（与 sherpa 上游同名对齐）。
@@ -64,9 +68,6 @@ class KokoroModelSpec {
   /// 预计下载字节数（整包）。
   int get estimatedDownloadBytes => resource.estimatedDownloadBytes;
 
-  /// 共享依赖资源 ID。
-  List<String> get dependencies => resource.dependencies;
-
   /// 指定下载源下的归档 URI。GitHub 发布资产无已核实镜像，选镜像时仍走上游。
   Uri fileUri(AsrDownloadSource source) =>
       resource.fileUri(source, resource.files.single);
@@ -109,7 +110,6 @@ final kokoroModelSpecs = <KokoroModelVariant, KokoroModelSpec>{
           sizeBytes: 313785757,
         ),
       ],
-      dependencies: const [kokoroEspeakNgDataResourceId],
     ),
   ),
   KokoroModelVariant.int8: KokoroModelSpec(
@@ -130,12 +130,11 @@ final kokoroModelSpecs = <KokoroModelVariant, KokoroModelSpec>{
           sizeBytes: 102614756,
         ),
       ],
-      dependencies: const [kokoroEspeakNgDataResourceId],
     ),
   ),
 };
 
-/// 全部 Kokoro 公开资源（两变体 + 共享 espeak-ng-data）。
+/// 全部 Kokoro 公开资源（两变体 + 共享 espeak-ng-data，后者仅供只补修复与 Piper 复用）。
 final kokoroPublicResourceCatalog = <String, AsrPublicResourceSpec>{
   for (final spec in kokoroModelSpecs.values) spec.id: spec.resource,
   kokoroEspeakNgDataResourceId: kokoroEspeakNgDataResource,

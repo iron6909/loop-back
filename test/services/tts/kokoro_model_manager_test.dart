@@ -141,7 +141,7 @@ List<int> _buildArchive({bool includeDataDir = true}) {
   if (includeDataDir) {
     // 目录由文件路径隐式建立。
     archive.add(
-      ArchiveFile('espeak-ng-data/phontab', 5, List<int>.filled(5, 4)),
+      ArchiveFile('espeak-ng-data/phondata', 6, List<int>.filled(6, 4)),
     );
   }
   final tar = TarEncoder().encodeBytes(archive);
@@ -158,10 +158,7 @@ List<int> _buildEspeakArchive() {
 }
 
 /// 构造测试用模型规格（`archiveFileName` 固定为 `test.tar.gz`）。
-KokoroModelSpec _testSpec({
-  required String sha,
-  List<String> dependencies = const [],
-}) {
+KokoroModelSpec _testSpec({required String sha}) {
   return KokoroModelSpec(
     variant: KokoroModelVariant.int8,
     id: 'test-model',
@@ -175,7 +172,6 @@ KokoroModelSpec _testSpec({
       files: [
         AsrResourceFile(name: 'test.tar.gz', sha256: sha, sizeBytes: 1024),
       ],
-      dependencies: dependencies,
     ),
   );
 }
@@ -185,7 +181,6 @@ KokoroModelManager _manager(
   List<int> archive, {
   String? sha,
   List<Uri>? requestUris,
-  List<String> dependencies = const [],
 }) {
   final dio = Dio();
   dio.httpClientAdapter = _MockArchiveAdapter(
@@ -195,12 +190,28 @@ KokoroModelManager _manager(
   return KokoroModelManager(
     dio: dio,
     baseUrlOverride: 'http://mock.local',
-    spec: _testSpec(
-      sha: sha ?? sha256.convert(archive).toString(),
-      dependencies: dependencies,
-    ),
+    spec: _testSpec(sha: sha ?? sha256.convert(archive).toString()),
     modelsRootResolver: () async => root.path,
   );
+}
+
+/// 构造 espeak-ng-data 独立资源规格及其注册表（供只补修复分支使用）。
+Map<String, AsrPublicResourceSpec> _espeakRegistry(List<int> archive) {
+  final resource = AsrPublicResourceSpec(
+    id: 'espeak-ng-data',
+    repository: 'example/models',
+    revision: 'tts-models',
+    layout: AsrPublicResourceLayout.githubReleaseAsset,
+    license: 'GPL-3.0-or-later',
+    files: [
+      AsrResourceFile(
+        name: 'espeak-ng-data.tar.gz',
+        sha256: sha256.convert(archive).toString(),
+        sizeBytes: archive.length,
+      ),
+    ],
+  );
+  return {'espeak-ng-data': resource};
 }
 
 void main() {
@@ -413,27 +424,10 @@ void main() {
     expect(await manager.modelLocalSize(), greaterThan(0));
   });
 
-  test('共享 espeak 依赖：首次安装一并补齐，缺失只补该依赖不重下模型', () async {
+  test('首次安装只下模型归档，不产生顶层 espeak 目录', () async {
     final modelArchive = _buildArchive();
     final espeakArchive = _buildEspeakArchive();
-    final modelSha = sha256.convert(modelArchive).toString();
-    final espeakSha = sha256.convert(espeakArchive).toString();
     final requested = <Uri>[];
-
-    final espeakResource = AsrPublicResourceSpec(
-      id: 'espeak-ng-data',
-      repository: 'example/models',
-      revision: 'tts-models',
-      layout: AsrPublicResourceLayout.githubReleaseAsset,
-      license: 'GPL-3.0-or-later',
-      files: [
-        AsrResourceFile(
-          name: 'espeak-ng-data.tar.gz',
-          sha256: espeakSha,
-          sizeBytes: espeakArchive.length,
-        ),
-      ],
-    );
     final dio = Dio();
     dio.httpClientAdapter = _MultiArchiveAdapter(
       {
@@ -445,29 +439,113 @@ void main() {
     final manager = KokoroModelManager(
       dio: dio,
       baseUrlOverride: 'http://mock.local',
-      spec: _testSpec(sha: modelSha, dependencies: const ['espeak-ng-data']),
-      resourceRegistryOverride: {'espeak-ng-data': espeakResource},
+      spec: _testSpec(sha: sha256.convert(modelArchive).toString()),
+      resourceRegistryOverride: _espeakRegistry(espeakArchive),
       modelsRootResolver: () async => root.path,
     );
 
-    // 首次安装：模型归档 + espeak 依赖归档都下载。
     await manager.downloadModel();
-    expect(await manager.isModelDownloaded(), isTrue);
-    expect(
-      requested.map((u) => u.pathSegments.last).toSet(),
-      {'test.tar.gz', 'espeak-ng-data.tar.gz'},
-    );
-    final espeakDir = Directory(p.join(root.path, 'espeak-ng-data'));
-    expect(File(p.join(espeakDir.path, 'phondata')).existsSync(), isTrue);
 
-    // 删除共享依赖目录后只补 espeak，模型归档不重下。
-    await espeakDir.delete(recursive: true);
-    requested.clear();
-    await manager.ensureSharedDependencies();
+    expect(await manager.isModelDownloaded(), isTrue);
+    expect(requested.map((u) => u.pathSegments.last).toList(), ['test.tar.gz']);
+    // 模型归档自带 espeak-ng-data，不再在 tts-models 顶层安装独立目录。
     expect(
-      requested.map((u) => u.pathSegments.last).toSet(),
-      {'espeak-ng-data.tar.gz'},
+      Directory(p.join(root.path, 'espeak-ng-data')).existsSync(),
+      isFalse,
     );
-    expect(File(p.join(espeakDir.path, 'phondata')).existsSync(), isTrue);
+    final paths = await manager.kokoroConfigPaths();
+    expect(File(p.join(paths.dataDir, 'phondata')).existsSync(), isTrue);
+  });
+
+  test('espeak 缺失时只下 espeak 归档且模型不重下', () async {
+    final modelArchive = _buildArchive();
+    final espeakArchive = _buildEspeakArchive();
+    final requested = <Uri>[];
+    final dio = Dio();
+    dio.httpClientAdapter = _MultiArchiveAdapter(
+      {
+        'test.tar.gz': modelArchive,
+        'espeak-ng-data.tar.gz': espeakArchive,
+      },
+      requestUris: requested,
+    );
+    final manager = KokoroModelManager(
+      dio: dio,
+      baseUrlOverride: 'http://mock.local',
+      spec: _testSpec(sha: sha256.convert(modelArchive).toString()),
+      resourceRegistryOverride: _espeakRegistry(espeakArchive),
+      modelsRootResolver: () async => root.path,
+    );
+
+    await manager.downloadModel();
+    requested.clear();
+
+    // 删除模型目录内的 espeak-ng-data，模拟损坏安装。
+    final dataDir = Directory(
+      p.join(await manager.modelDir(), 'espeak-ng-data'),
+    );
+    await dataDir.delete(recursive: true);
+    expect(await manager.isModelDownloaded(), isFalse);
+
+    // 再下载：只补 espeak 归档，模型归档不重下，修复后即视为已下载。
+    await manager.downloadModel();
+    expect(
+      requested.map((u) => u.pathSegments.last).toList(),
+      ['espeak-ng-data.tar.gz'],
+    );
+    expect(await manager.isModelDownloaded(), isTrue);
+    expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
+  });
+
+  test('espeak 修复失败 → 抛错且模型目录保留', () async {
+    final modelArchive = _buildArchive();
+    final espeakArchive = _buildEspeakArchive();
+    final dio = Dio();
+    dio.httpClientAdapter = _MultiArchiveAdapter({'test.tar.gz': modelArchive});
+    final manager = KokoroModelManager(
+      dio: dio,
+      baseUrlOverride: 'http://mock.local',
+      spec: _testSpec(sha: sha256.convert(modelArchive).toString()),
+      resourceRegistryOverride: _espeakRegistry(espeakArchive),
+      modelsRootResolver: () async => root.path,
+    );
+    await manager.downloadModel();
+    final modelDir = await manager.modelDir();
+    await Directory(
+      p.join(modelDir, 'espeak-ng-data'),
+    ).delete(recursive: true);
+
+    // 坏 manager：espeak 资源 SHA 故意写错，只补分支校验失败。
+    final badDio = Dio();
+    badDio.httpClientAdapter = _MultiArchiveAdapter({
+      'espeak-ng-data.tar.gz': espeakArchive,
+    });
+    final badManager = KokoroModelManager(
+      dio: badDio,
+      baseUrlOverride: 'http://mock.local',
+      spec: _testSpec(sha: sha256.convert(modelArchive).toString()),
+      resourceRegistryOverride: {
+        'espeak-ng-data': AsrPublicResourceSpec(
+          id: 'espeak-ng-data',
+          repository: 'example/models',
+          revision: 'tts-models',
+          layout: AsrPublicResourceLayout.githubReleaseAsset,
+          license: 'GPL-3.0-or-later',
+          files: [
+            AsrResourceFile(
+              name: 'espeak-ng-data.tar.gz',
+              sha256: 'deadbeef',
+              sizeBytes: espeakArchive.length,
+            ),
+          ],
+        ),
+      },
+      modelsRootResolver: () async => root.path,
+    );
+
+    await expectLater(badManager.downloadModel(), throwsA(isA<StateError>()));
+    // 模型本体文件保留，espeak 仍未恢复 → 仍视为未下载（failed 由 provider 映射）。
+    expect(File(p.join(modelDir, 'model.int8.onnx')).existsSync(), isTrue);
+    expect(await badManager.isModelDownloaded(), isFalse);
   });
 }
