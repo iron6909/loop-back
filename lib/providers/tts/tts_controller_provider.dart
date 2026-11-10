@@ -66,7 +66,7 @@ final ttsEngineFactoryProvider = Provider<TtsEngineFactory>((ref) {
 
 /// 音色试听示范句：短、音素丰富、自然语调，贴合 App 场景。
 const String kTtsPreviewText =
-    'Hi, welcome to Echo Loop. Listen, speak, repeat. '
+    'Hi, welcome. Listen, speak, repeat. '
     'Keep going, and fluency will come.';
 
 /// 某音色试听的发音项标识（供发音按钮/音色行显激活态，与普通发音 key 不冲突）。

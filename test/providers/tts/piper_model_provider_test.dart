@@ -297,4 +297,19 @@ void main() {
     expect(s.downloadStatus, AsrModelDownloadStatus.notDownloaded);
     expect(s.localSizeBytes, 0);
   });
+
+  test('不可再分发音色 ensureDownloaded 不触发下载且保持未下载', () async {
+    const voiceId = 'en_US-lessac-medium';
+    final manager = _FakeManager();
+    final c = _container((_) => manager);
+    addTearDown(c.dispose);
+
+    await c.read(piperModelProvider.notifier).ensureDownloaded(voiceId);
+
+    expect(manager.downloadCount, 0);
+    expect(
+      c.read(piperModelProvider).of(voiceId).downloadStatus,
+      AsrModelDownloadStatus.notDownloaded,
+    );
+  });
 }

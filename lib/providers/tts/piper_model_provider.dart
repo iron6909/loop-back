@@ -198,6 +198,8 @@ class PiperModelNotifier extends Notifier<PiperModelsState> {
 
   /// 确保某音色就绪：未就绪且未在下载则触发下载。
   Future<void> ensureDownloaded(String voiceId) async {
+    // 许可不允许再分发的音色不提供下载，也不应被下载状态机置为失败。
+    if (piperVoiceById(voiceId)?.redistributable != true) return;
     final s = state.of(voiceId);
     if (s.isReady ||
         s.isDownloading ||

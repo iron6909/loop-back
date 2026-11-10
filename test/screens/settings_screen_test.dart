@@ -482,7 +482,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Text-to-Speech'), findsOneWidget);
-        expect(find.text('Echo Loop AI'), findsOneWidget);
+        expect(find.text('Kokoro'), findsOneWidget);
         expect(find.text('American'), findsNothing);
       });
 
@@ -498,7 +498,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Text-to-Speech'), findsOneWidget);
-        expect(find.text('Echo Loop AI'), findsOneWidget);
+        expect(find.text('Kokoro'), findsOneWidget);
       });
 
       testWidgets('开发者选项关闭时不显示开发者分组', (tester) async {
