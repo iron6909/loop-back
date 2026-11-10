@@ -406,6 +406,31 @@ void main() {
     expect(find.byIcon(Icons.download_rounded), findsNWidgets(7));
   });
 
+  testWidgets('点击未安装的不可再分发音色 → 不改变当前选中音色', (tester) async {
+    await tester.pumpWidget(
+      _wrap(
+        const TtsSettings(engine: TtsEngineKind.piper),
+        piperModels: const PiperModelsState({}),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      _containerOf(tester).read(ttsSettingsProvider).activePiperVoice,
+      'en_US-amy-medium',
+    );
+
+    await tester.scrollUntilVisible(find.text('Lessac'), 300);
+    await tester.tap(find.text('Lessac'));
+    await tester.pumpAndSettle();
+
+    // 不可再分发且未安装：应保持原选择（不再把 lessac 设为当前音色）。
+    expect(
+      _containerOf(tester).read(ttsSettingsProvider).activePiperVoice,
+      'en_US-amy-medium',
+    );
+  });
+
   testWidgets('下载来源默认公开上游，可切换到 hf-mirror.com', (tester) async {
     await tester.pumpWidget(_wrap(const TtsSettings()));
     await tester.pumpAndSettle();

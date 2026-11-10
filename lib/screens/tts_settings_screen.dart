@@ -1238,12 +1238,12 @@ class _PiperVoiceRow extends ConsumerWidget {
 
   /// 点击：选中（口音 + 音色），并按状态触发试听 / 下载 / 重试。
   void _onTap(WidgetRef ref) {
+    final st = ref.read(piperModelProvider).of(voice.id);
+    // 不可再分发且未安装/损坏：不改变当前音色（无下载/试听入口，选中只会变成死路）。
+    if (!voice.redistributable && !st.isReady) return;
     final settingsNotifier = ref.read(ttsSettingsProvider.notifier);
     settingsNotifier.setAccent(voice.accent);
     settingsNotifier.setPiperVoice(voice.accent, voice.id);
-    final st = ref.read(piperModelProvider).of(voice.id);
-    // 不可再分发且未安装/损坏：只选中，不提供下载/重试。
-    if (!voice.redistributable && !st.isReady) return;
     final notifier = ref.read(piperModelProvider.notifier);
     if (!st.isReady) {
       // 点击未下载音色会切换当前配置并启动下载；先停止旧音色试听，避免下载期间继续播放旧音频。
