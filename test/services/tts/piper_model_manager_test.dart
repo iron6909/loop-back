@@ -194,7 +194,7 @@ PiperModelManager _manager(
 }) {
   final dio = Dio();
   dio.httpClientAdapter = _MockResourceAdapter(
-    {voice.resource!.files.single.name: archive},
+    {voice.resource.files.single.name: archive},
     requestUris: requestUris,
   );
   return PiperModelManager(
@@ -458,7 +458,7 @@ void main() {
       baseUrlOverride: 'http://mock.local',
       voice: voice,
       resourceRegistryOverride: {
-        voice.id: voice.resource!,
+        voice.id: voice.resource,
         ttsEspeakNgDataResourceId: _espeakSpec(espeak),
       },
       modelsRootResolver: () async => root.path,
@@ -517,7 +517,7 @@ void main() {
       baseUrlOverride: 'http://mock.local',
       voice: voice,
       resourceRegistryOverride: {
-        voice.id: voice.resource!,
+        voice.id: voice.resource,
         ttsEspeakNgDataResourceId: _espeakSpec(espeak),
       },
       modelsRootResolver: () async => root.path,
@@ -537,7 +537,7 @@ void main() {
     final dio = Dio();
     dio.httpClientAdapter = _MockResourceAdapter(
       {
-        voice.resource!.files.single.name: modelArchive,
+        voice.resource.files.single.name: modelArchive,
         ttsEspeakNgDataFileName: espeakArchive,
       },
       requestUris: requestedUris,
@@ -547,7 +547,7 @@ void main() {
       baseUrlOverride: 'http://mock.local',
       voice: voice,
       resourceRegistryOverride: {
-        voice.id: voice.resource!,
+        voice.id: voice.resource,
         ttsEspeakNgDataResourceId: _espeakSpec(espeakArchive),
       },
       modelsRootResolver: () async => root.path,
@@ -568,17 +568,5 @@ void main() {
     expect(requestedUris.map((u) => u.path).toList(), ['/espeak-ng-data.tar.gz']);
     expect(await manager.isModelDownloaded(), isTrue);
     expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
-  });
-
-  test('许可不允许再分发的音色 → downloadModel 抛错', () async {
-    final voice = piperVoiceById('en_US-lessac-medium')!;
-    final manager = PiperModelManager(
-      voice: voice,
-      baseUrlOverride: 'http://mock.local',
-      modelsRootResolver: () async => root.path,
-    );
-    await expectLater(manager.downloadModel(), throwsA(isA<StateError>()));
-    expect(voice.redistributable, isFalse);
-    expect(voice.resource, isNull);
   });
 }

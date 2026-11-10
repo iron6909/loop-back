@@ -2,23 +2,22 @@
 ///
 /// 覆盖「升级迁移」契约（docs/features/20261110-tts-provider-decoupling/plan.md
 /// 迁移规则表）：已装旧 install.json（resourceId 不变）继续识别且不重下；引擎/音色/
-/// 变体/口音偏好全部保留（含不可再分发音色 alan/lessac 存量）；合成缓存键按
-/// voiceId/modelTag 分桶、品牌改名不失效；损坏安装回到未安装态；新装默认（含英音
-/// 已改 cori）不变。与 #23（设置页/ARB/widget）并行，本文件不触碰设置页与
-/// ARB/widget 测试文件。
+/// 变体/口音偏好保留；已移除音色 lessac/alan 的孤儿目录被清理、存量偏好回退默认；
+/// 合成缓存键按 voiceId/modelTag 分桶、品牌改名不失效；损坏安装回到未安装态；
+/// 新装默认（含英音 cori）不变。与 #23（设置页/ARB/widget）并行，本文件不触碰
+/// 设置页与 ARB/widget 测试文件。
 library;
 
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:echo_loop/providers/tts/kokoro_model_provider.dart';
-import 'package:echo_loop/providers/tts/piper_model_provider.dart';
 import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
+import 'package:echo_loop/services/storage_migration_service.dart';
 import 'package:echo_loop/services/tts/kokoro_model_catalog.dart';
 import 'package:echo_loop/services/tts/kokoro_model_manager.dart';
 import 'package:echo_loop/services/tts/kokoro_voices.dart';
 import 'package:echo_loop/services/tts/piper_model_catalog.dart';
-import 'package:echo_loop/services/tts/piper_model_manager.dart';
 import 'package:echo_loop/services/tts/tts_cache_store.dart';
 import 'package:echo_loop/services/tts/tts_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,42 +121,30 @@ void main() {
       );
     });
 
-    test('Piper 不可再分发音色（lessac）旧安装仍识别为已下载', () async {
-      final root = await Directory.systemTemp.createTemp('tts_migrate_piper_');
+    test('已移除音色（lessac/alan）孤儿目录 → 启动迁移清理', () async {
+      final root = await Directory.systemTemp.createTemp('tts_orphan_cleanup_');
       addTearDown(() async {
         if (await root.exists()) await root.delete(recursive: true);
       });
-      const voiceId = 'en_US-lessac-medium';
-      await _writePiperInstall(root, voiceId);
+      await _writePiperInstall(root, 'en_US-lessac-medium');
+      await _writePiperInstall(root, 'en_GB-alan-medium');
+      await _writePiperInstall(root, 'en_US-amy-medium'); // 仍保留
 
-      final managers = <String, PiperModelManager>{};
-      final container = ProviderContainer(
-        overrides: [
-          piperModelManagerProvider.overrideWith((ref, id) {
-            return managers.putIfAbsent(
-              id,
-              () => PiperModelManager(
-                voice: piperVoiceById(id) ?? piperVoices.first,
-                modelsRootResolver: () async => root.path,
-              ),
-            );
-          }),
-        ],
+      await removeOrphanPiperModelDirs(
+        removedPiperVoiceIds,
+        modelsRootResolver: () async => root.path,
       );
-      addTearDown(container.dispose);
-      addTearDown(() {
-        for (final manager in managers.values) {
-          manager.dispose();
-        }
-      });
 
-      await container
-          .read(piperModelProvider.notifier)
-          .refreshInstalledStates();
-
-      expect(container.read(piperModelProvider).of(voiceId).isReady, isTrue);
       expect(
-        File(p.join(root.path, voiceId, '$voiceId.onnx')).existsSync(),
+        Directory(p.join(root.path, 'en_US-lessac-medium')).existsSync(),
+        isFalse,
+      );
+      expect(
+        Directory(p.join(root.path, 'en_GB-alan-medium')).existsSync(),
+        isFalse,
+      );
+      expect(
+        Directory(p.join(root.path, 'en_US-amy-medium')).existsSync(),
         isTrue,
       );
     });
@@ -203,7 +190,7 @@ void main() {
   });
 
   group('偏好保留与新装默认', () {
-    test('存量偏好全部保留（含 alan/lessac 不可再分发音色）', () async {
+    test('存量偏好保留，lessac/alan 回退对应口音默认', () async {
       SharedPreferences.setMockInitialValues({
         TtsSettingsKeys.engine: TtsEngineKind.piper.name,
         TtsSettingsKeys.accent: TtsAccent.uk.name,
@@ -214,17 +201,18 @@ void main() {
         TtsSettingsKeys.piperVoiceUk: 'en_GB-alan-medium',
       });
       final prefs = await SharedPreferences.getInstance();
-      final s = TtsSettings.fromPrefsSync(prefs);
 
-      expect(s.engine, TtsEngineKind.piper);
-      expect(s.accent, TtsAccent.uk);
-      expect(s.kokoroVoiceUs, 'am_michael');
-      expect(s.kokoroVoiceUk, 'bm_lewis');
-      expect(s.kokoroVariant, KokoroModelVariant.int8);
-      // 不可再分发，但目录身份保留 → 存量偏好仍有效，不回退默认音色。
-      expect(s.piperVoiceUs, 'en_US-lessac-medium');
-      expect(s.piperVoiceUk, 'en_GB-alan-medium');
-      expect(s.activePiperVoice, 'en_GB-alan-medium');
+      await fallbackRemovedPiperVoicePreferences(prefs);
+
+      // 其它偏好保留，已移除音色写回对应口音默认。
+      expect(prefs.getString(TtsSettingsKeys.engine), TtsEngineKind.piper.name);
+      expect(prefs.getString(TtsSettingsKeys.accent), TtsAccent.uk.name);
+      expect(prefs.getString(TtsSettingsKeys.kokoroVoiceUs), 'am_michael');
+      expect(prefs.getString(TtsSettingsKeys.kokoroVoiceUk), 'bm_lewis');
+      expect(prefs.getString(TtsSettingsKeys.piperVoiceUs), 'en_US-amy-medium');
+      expect(prefs.getString(TtsSettingsKeys.piperVoiceUk), 'en_GB-cori-medium');
+      final s = TtsSettings.fromPrefsSync(prefs);
+      expect(s.activePiperVoice, 'en_GB-cori-medium');
     });
 
     test('新装默认不变（含英音默认已改 cori）', () {
@@ -242,16 +230,17 @@ void main() {
       expect(piperDefaultVoiceUk, 'en_GB-cori-medium');
     });
 
-    test('存量 alan 偏好不受英音默认改为 cori 影响', () async {
+    test('其它无效值不写回默认（只处理被移除的两个 ID）', () async {
       SharedPreferences.setMockInitialValues({
+        TtsSettingsKeys.piperVoiceUs: 'bogus',
         TtsSettingsKeys.piperVoiceUk: 'en_GB-alan-medium',
       });
       final prefs = await SharedPreferences.getInstance();
-      expect(
-        TtsSettings.fromPrefsSync(prefs).piperVoiceUk,
-        'en_GB-alan-medium',
-      );
-      // 缺省时才落到新默认 cori。
+
+      await fallbackRemovedPiperVoicePreferences(prefs);
+
+      expect(prefs.getString(TtsSettingsKeys.piperVoiceUs), 'bogus');
+      expect(prefs.getString(TtsSettingsKeys.piperVoiceUk), 'en_GB-cori-medium');
       expect(piperDefaultVoiceUk, 'en_GB-cori-medium');
     });
   });

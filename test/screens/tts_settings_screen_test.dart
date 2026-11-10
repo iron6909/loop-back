@@ -6,8 +6,6 @@ import 'package:echo_loop/providers/tts/piper_model_provider.dart';
 import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
 import 'package:echo_loop/services/download/download_failure.dart';
 import 'package:echo_loop/screens/tts_settings_screen.dart';
-import 'package:echo_loop/services/asr/asr_model_catalog.dart'
-    show AsrDownloadSource;
 import 'package:echo_loop/services/tts/kokoro_model_manager.dart'
     show AsrModelDownloadStatus, KokoroModelVariant;
 import 'package:echo_loop/services/tts/tts_engine.dart';
@@ -250,8 +248,7 @@ void main() {
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.byTooltip('Cancel'), findsNothing);
-    // lessac/alan 不可再分发，不提供下载按钮；amy 正在下载也不显下载图标，
-    // 故其余 6 个可下载音色 → 6 个下载图标。
+    // amy 正在下载不显下载图标，其余 6 个音色 → 6 个下载图标。
     expect(find.byIcon(Icons.download_rounded), findsNWidgets(6));
   });
 
@@ -378,7 +375,7 @@ void main() {
     expect(find.text('British'), findsNothing);
   });
 
-  testWidgets('Piper → 逐音色展示来源/许可，lessac/alan 不可下载', (tester) async {
+  testWidgets('Piper → 逐音色展示来源/许可，全部可下载', (tester) async {
     await tester.pumpWidget(
       _wrap(const TtsSettings(engine: TtsEngineKind.piper)),
     );
@@ -392,63 +389,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('License: CC BY-SA 4.0'), findsOneWidget);
-    // lessac/alan 只显不可再分发许可，不提供下载按钮。
-    expect(find.text('Not available for download'), findsNWidgets(2));
-    expect(
-      find.textContaining('Blizzard 2013 Research Licence'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('All Rights Reserved (redistribution not permitted)'),
-      findsOneWidget,
-    );
-    // 7 个可再分发音色保留下载入口，lessac/alan 无。
+    // 7 个音色均可下载，各提供下载入口。
     expect(find.byIcon(Icons.download_rounded), findsNWidgets(7));
-  });
-
-  testWidgets('点击未安装的不可再分发音色 → 不改变当前选中音色', (tester) async {
-    await tester.pumpWidget(
-      _wrap(
-        const TtsSettings(engine: TtsEngineKind.piper),
-        piperModels: const PiperModelsState({}),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(
-      _containerOf(tester).read(ttsSettingsProvider).activePiperVoice,
-      'en_US-amy-medium',
-    );
-
-    await tester.scrollUntilVisible(find.text('Lessac'), 300);
-    await tester.tap(find.text('Lessac'));
-    await tester.pumpAndSettle();
-
-    // 不可再分发且未安装：应保持原选择（不再把 lessac 设为当前音色）。
-    expect(
-      _containerOf(tester).read(ttsSettingsProvider).activePiperVoice,
-      'en_US-amy-medium',
-    );
-  });
-
-  testWidgets('下载来源默认公开上游，可切换到 hf-mirror.com', (tester) async {
-    await tester.pumpWidget(_wrap(const TtsSettings()));
-    await tester.pumpAndSettle();
-
-    expect(
-      _containerOf(tester).read(ttsSettingsProvider).downloadSource,
-      AsrDownloadSource.huggingFace,
-    );
-
-    await tester.scrollUntilVisible(find.text('Download Source'), 200);
-    await tester.pumpAndSettle();
-    expect(find.text('Public upstream'), findsOneWidget);
-
-    await tester.tap(find.text('hf-mirror.com'));
-    await tester.pumpAndSettle();
-    expect(
-      _containerOf(tester).read(ttsSettingsProvider).downloadSource,
-      AsrDownloadSource.huggingFaceMirror,
-    );
   });
 }
