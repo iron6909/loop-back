@@ -8,11 +8,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import '../providers/dictionary/dictionary_offline_resources_provider.dart';
 import '../providers/dictionary/dictionary_registry.dart';
 import '../providers/dictionary/dictionary_settings_provider.dart';
 import '../providers/dictionary/visible_sources_provider.dart';
+import '../providers/dictionary_provider.dart';
+import '../providers/offline_asr_settings_provider.dart';
+import '../providers/pronunciation/pronunciation_providers.dart';
+import '../providers/settings_provider.dart';
+import '../services/asr/asr_model_catalog.dart';
+import '../services/dictionary/dictionary_catalog.dart';
 import '../services/dictionary/dictionary_source.dart';
+import '../services/download/download_failure.dart';
+import '../services/pronunciation/pronunciation_catalog.dart';
 import '../theme/app_theme.dart';
+import '../utils/download_failure_message.dart';
+import '../utils/file_size.dart';
 import '../widgets/dictionary/dict_source_presentation.dart';
 
 /// 词典设置页面
@@ -94,6 +105,23 @@ class DictionarySettingsScreen extends ConsumerWidget {
                     enabled: !settings.disabledIds.contains(s.id),
                     onChanged: (v) => notifier.setDisabled(s.id, !v),
                   ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          _SectionHeader(
+            title: l10n.offlineResourcesTitle,
+            description: l10n.offlineResourcesDescription,
+          ),
+          Card(
+            child: Column(
+              children: [
+                for (final lang in dictionarySpecs.keys)
+                  _DictionaryResourceTile(nativeLanguage: lang),
+                const Divider(height: 1),
+                const _PronunciationResourceTile(),
+                const Divider(height: 1),
+                const _DownloadSourceTile(),
               ],
             ),
           ),
@@ -205,6 +233,284 @@ class _SourceToggleTile extends StatelessWidget {
       title: Text(label),
       value: enabled,
       onChanged: onChanged,
+    );
+  }
+}
+
+/// 下载进度百分比（0.0~1.0 → "45%"）。
+String _percent(double progress) =>
+    '${(progress * 100).toStringAsFixed(0)}%';
+
+/// 下载来源展示文案，与语音识别设置页保持一致。
+String _sourceLabel(AppLocalizations l10n, AsrDownloadSource source) =>
+    switch (source) {
+      AsrDownloadSource.huggingFace => l10n.asrDownloadSourceHuggingFace,
+      AsrDownloadSource.huggingFaceMirror =>
+        l10n.asrDownloadSourceHuggingFaceMirror,
+    };
+
+/// 单个语言变体的离线词典行：来源/许可 + 状态/进度/重试。
+class _DictionaryResourceTile extends ConsumerWidget {
+  const _DictionaryResourceTile({required this.nativeLanguage});
+
+  final String nativeLanguage;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final spec = dictionarySpecOf(nativeLanguage);
+    final label = supportedNativeLanguages[nativeLanguage] ?? nativeLanguage;
+    final dictState = ref.watch(dictionaryProvider);
+    final isCurrent = dictState.nativeLanguage == nativeLanguage;
+
+    final DictionaryStatus status;
+    final double progress;
+    final DownloadFailureKind? failure;
+    if (isCurrent) {
+      status = dictState.status;
+      progress = dictState.progress;
+      failure = dictState.failure;
+    } else {
+      // 非当前母语不由 dictionaryProvider 管理，只做本地安装检查。
+      final installed =
+          ref.watch(dictionaryInstalledProvider(nativeLanguage)).valueOrNull ??
+          false;
+      status = installed
+          ? DictionaryStatus.downloaded
+          : DictionaryStatus.notDownloaded;
+      progress = 0;
+      failure = null;
+    }
+
+    return ListTile(
+      leading: const Icon(Icons.menu_book_outlined),
+      title: Text(label),
+      subtitle: _dictionarySubtitle(
+        l10n,
+        theme,
+        spec,
+        status,
+        progress,
+        failure,
+      ),
+      trailing: isCurrent
+          ? _dictionaryTrailing(l10n, status, ref)
+          : null,
+    );
+  }
+}
+
+/// 词典行的来源/许可与状态文案。
+Widget _dictionarySubtitle(
+  AppLocalizations l10n,
+  ThemeData theme,
+  DictionarySpec spec,
+  DictionaryStatus status,
+  double progress,
+  DownloadFailureKind? failure,
+) {
+  final statusLine = switch (status) {
+    DictionaryStatus.downloading => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 6),
+        LinearProgressIndicator(value: progress),
+        const SizedBox(height: 2),
+        Text(l10n.speechModelDownloading(_percent(progress))),
+      ],
+    ),
+    DictionaryStatus.failed => Text(
+      downloadFailureMessage(l10n, failure),
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.error,
+      ),
+    ),
+    DictionaryStatus.notDownloaded => Text(
+      l10n.dictionaryNotDownloaded,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+      ),
+    ),
+    DictionaryStatus.downloaded => Text(
+      l10n.speechModelStatusReady,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: AppTheme.successColor,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+  };
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        l10n.dictionaryResourceSource(spec.license, spec.resource.repository),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
+      ),
+      statusLine,
+    ],
+  );
+}
+
+/// 当前母语词典在未下载/失败时的下载与重试入口。
+Widget? _dictionaryTrailing(
+  AppLocalizations l10n,
+  DictionaryStatus status,
+  WidgetRef ref,
+) {
+  return switch (status) {
+    DictionaryStatus.notDownloaded => TextButton(
+      onPressed: () => ref.read(dictionaryProvider.notifier).retryDownload(),
+      child: Text(l10n.download),
+    ),
+    DictionaryStatus.failed => TextButton(
+      onPressed: () => ref.read(dictionaryProvider.notifier).retryDownload(),
+      child: Text(l10n.retry),
+    ),
+    DictionaryStatus.downloading || DictionaryStatus.downloaded => null,
+  };
+}
+
+/// 离线发音库行：仅标注托管仓库（ADR-0002），状态与失败重试。
+class _PronunciationResourceTile extends ConsumerWidget {
+  const _PronunciationResourceTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final state = ref.watch(pronunciationLibraryProvider);
+
+    final statusLine = switch (state.status) {
+      PronunciationLibraryStatus.downloading => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 6),
+          LinearProgressIndicator(value: state.progress),
+          const SizedBox(height: 2),
+          Text(l10n.speechModelDownloading(_percent(state.progress))),
+        ],
+      ),
+      PronunciationLibraryStatus.installing => Text(
+        l10n.pronunciationInstalling,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
+      ),
+      PronunciationLibraryStatus.ready => Text(
+        l10n.speechModelReady(
+          state.localSizeBytes > 0 ? formatBytes(state.localSizeBytes) : '—',
+        ),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: AppTheme.successColor,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      PronunciationLibraryStatus.failed => Text(
+        downloadFailureMessage(l10n, state.failure),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.error,
+        ),
+      ),
+      PronunciationLibraryStatus.notDownloaded => Text(
+        l10n.ttsModelNotDownloaded,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
+      ),
+    };
+
+    final trailing = switch (state.status) {
+      PronunciationLibraryStatus.failed => TextButton(
+        onPressed: () =>
+            ref.read(pronunciationLibraryProvider.notifier).retryDownload(),
+        child: Text(l10n.retry),
+      ),
+      PronunciationLibraryStatus.notDownloaded => TextButton(
+        onPressed: () =>
+            ref.read(pronunciationLibraryProvider.notifier).ensureDownloaded(),
+        child: Text(l10n.download),
+      ),
+      PronunciationLibraryStatus.downloading ||
+      PronunciationLibraryStatus.installing ||
+      PronunciationLibraryStatus.ready => null,
+    };
+
+    return ListTile(
+      leading: const Icon(Icons.record_voice_over_outlined),
+      title: Text(l10n.pronunciationLibrary),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.pronunciationResourceSource(pronunciationPublicRepository),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            ),
+          ),
+          statusLine,
+        ],
+      ),
+      trailing: trailing,
+    );
+  }
+}
+
+/// 下载来源切换：与语音识别设置页共用同一份偏好，两处互见一致。
+class _DownloadSourceTile extends ConsumerWidget {
+  const _DownloadSourceTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final source = ref.watch(offlineAsrSettingsProvider).downloadSource;
+    return ExpansionTile(
+      leading: Icon(
+        Icons.cloud_download_outlined,
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+      title: Text(l10n.asrDownloadSourceTitle),
+      subtitle: Text(_sourceLabel(l10n, source)),
+      shape: const Border(),
+      collapsedShape: const Border(),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.m,
+            0,
+            AppSpacing.m,
+            AppSpacing.s,
+          ),
+          child: Text(
+            l10n.asrDownloadSourceDescription,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        RadioGroup<AsrDownloadSource>(
+          groupValue: source,
+          onChanged: (value) {
+            if (value == null) return;
+            ref
+                .read(offlineAsrSettingsProvider.notifier)
+                .setDownloadSource(value);
+          },
+          child: Column(
+            children: [
+              for (final s in AsrDownloadSource.values)
+                RadioListTile<AsrDownloadSource>(
+                  title: Text(_sourceLabel(l10n, s)),
+                  value: s,
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

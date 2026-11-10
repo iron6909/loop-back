@@ -3119,6 +3119,28 @@
   "dictionarySourcesDescription": "Disabled dictionaries won't appear in the lookup switcher",
   "dictionaryAutoSpeakOnLookup": "Auto-play Pronunciation",
   "dictionaryAdFilterTitle": "Block ads in web dictionaries",
+  "offlineResourcesTitle": "Offline Resources",
+  "offlineResourcesDescription": "Offline dictionary and pronunciation data are downloaded from fixed public sources.",
+  "dictionaryResourceSource": "Data: {license} · Hosted on: {repository}",
+  "@dictionaryResourceSource": {
+    "placeholders": {
+      "license": {
+        "type": "String"
+      },
+      "repository": {
+        "type": "String"
+      }
+    }
+  },
+  "pronunciationResourceSource": "Hosted on: {repository}",
+  "@pronunciationResourceSource": {
+    "placeholders": {
+      "repository": {
+        "type": "String"
+      }
+    }
+  },
+  "pronunciationInstalling": "Installing...",
   "dictSourceLocal": "Local Dictionary",
   "dictSourceAi": "AI Dictionary",
   "dictSourceCambridge": "Cambridge",

@@ -2434,6 +2434,28 @@
   "dictionarySourcesDescription": "关闭的词典不会出现在查词切换器中",
   "dictionaryAutoSpeakOnLookup": "查词时自动播放发音",
   "dictionaryAdFilterTitle": "屏蔽网页词典广告",
+  "offlineResourcesTitle": "离线资源",
+  "offlineResourcesDescription": "离线词典与发音数据从固定公开源下载。",
+  "dictionaryResourceSource": "数据：{license} · 托管于：{repository}",
+  "@dictionaryResourceSource": {
+    "placeholders": {
+      "license": {
+        "type": "String"
+      },
+      "repository": {
+        "type": "String"
+      }
+    }
+  },
+  "pronunciationResourceSource": "托管于：{repository}",
+  "@pronunciationResourceSource": {
+    "placeholders": {
+      "repository": {
+        "type": "String"
+      }
+    }
+  },
+  "pronunciationInstalling": "安装中...",
   "dictSourceLocal": "本地词典",
   "dictSourceAi": "AI 词典",
   "dictSourceCambridge": "Cambridge",

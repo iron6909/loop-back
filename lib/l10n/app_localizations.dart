@@ -9422,6 +9422,36 @@ abstract class AppLocalizations {
   /// **'Block ads in web dictionaries'**
   String get dictionaryAdFilterTitle;
 
+  /// No description provided for @offlineResourcesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline Resources'**
+  String get offlineResourcesTitle;
+
+  /// No description provided for @offlineResourcesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline dictionary and pronunciation data are downloaded from fixed public sources.'**
+  String get offlineResourcesDescription;
+
+  /// No description provided for @dictionaryResourceSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Data: {license} · Hosted on: {repository}'**
+  String dictionaryResourceSource(String license, String repository);
+
+  /// No description provided for @pronunciationResourceSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Hosted on: {repository}'**
+  String pronunciationResourceSource(String repository);
+
+  /// No description provided for @pronunciationInstalling.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing...'**
+  String get pronunciationInstalling;
+
   /// No description provided for @dictSourceLocal.
   ///
   /// In en, this message translates to:

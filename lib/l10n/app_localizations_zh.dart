@@ -5127,6 +5127,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dictionaryAdFilterTitle => '屏蔽网页词典广告';
 
   @override
+  String get offlineResourcesTitle => '离线资源';
+
+  @override
+  String get offlineResourcesDescription => '离线词典与发音数据从固定公开源下载。';
+
+  @override
+  String dictionaryResourceSource(String license, String repository) {
+    return '数据：$license · 托管于：$repository';
+  }
+
+  @override
+  String pronunciationResourceSource(String repository) {
+    return '托管于：$repository';
+  }
+
+  @override
+  String get pronunciationInstalling => '安装中...';
+
+  @override
   String get dictSourceLocal => '本地词典';
 
   @override
