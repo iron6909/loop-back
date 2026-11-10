@@ -6,16 +6,17 @@
 /// - [synthesize] 合成到本地文件（可缓存、可复用，长文也走这条）；
 /// - [speakLive] 实时朗读兜底（不产文件、不缓存），用于 [synthesize] 失败时降级。
 ///
-/// 本期实现 `PlatformTtsEngine`（flutter_tts）。未来 Kokoro 只需新增一个
-/// [TtsEngine] 实现并在工厂里加一个分支，上层（协调器/缓存/播放器）零改动。
+/// 现已实现 `PlatformTtsEngine`（flutter_tts）、`KokoroTtsEngine`（本地 Kokoro 82M）
+/// 与 `PiperTtsEngine`（本地 Piper VITS）三个引擎；三者均实现 [TtsEngine]，上层
+/// （协调器/缓存/播放器）只按工厂选择，不感知具体引擎。
 library;
 
 /// TTS 引擎种类。
 enum TtsEngineKind {
-  /// 平台 TTS（flutter_tts，封装系统 TTS）。本期唯一可用。
+  /// 平台 TTS（flutter_tts，封装系统 TTS）。
   platform,
 
-  /// Kokoro TTS（Echo Loop AI Advanced，本地 Kokoro 82M）。质量最佳，CPU 推理偏慢。
+  /// Kokoro TTS（本地 Kokoro 82M）。质量最佳，CPU 推理偏慢。
   kokoro,
 
   /// Piper VITS（本地，均衡档）。质量优于系统 TTS、速度远快于 Kokoro；
@@ -25,7 +26,7 @@ enum TtsEngineKind {
 
 /// 供诊断日志显示的实际 TTS 后端名。
 ///
-/// [TtsEngineKind.kokoro] 是 Echo Loop AI Advanced 的实际 Kokoro 实现；
+/// [TtsEngineKind.kokoro] 对应本地 Kokoro 实现；
 /// 日志输出实现名以便排障。
 extension TtsEngineKindDiagnostics on TtsEngineKind {
   String get diagnosticName => switch (this) {
@@ -44,7 +45,7 @@ enum TtsAccent {
   uk,
 }
 
-/// Echo Loop（Kokoro）模型精度变体。
+/// Kokoro 模型精度变体。
 ///
 /// 同一 Kokoro 82M 模型的两种打包：fp32 未量化（推理快、效果好，Apple/ARM 上
 /// 显著快于 int8）；int8 量化（体积小、内存占用低，面向低内存设备）。详见

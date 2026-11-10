@@ -1,6 +1,6 @@
-/// Piper VITS（Echo Loop TTS 平衡档）模型下载状态机 Provider（多音色）。
+/// Piper VITS 模型下载状态机 Provider（多音色）。
 ///
-/// 管理 9 个 Piper 音色各自的下载/重试/取消/删除与就绪状态——与 Kokoro 不同，
+/// 管理 7 个 Piper 音色各自的下载/重试/取消/删除与就绪状态——与 Kokoro 不同，
 /// Piper 每音色是一个独立模型，故下载单元是「音色」（key=voiceId）。每个音色一个
 /// [PiperModelManager]（`piperModelManagerProvider` 的 family），互不干扰、可独立
 /// 下载与删除。引擎当前用哪个音色由 [ttsSettingsProvider] 的 `activePiperVoice`
@@ -209,7 +209,10 @@ class PiperModelNotifier extends Notifier<PiperModelsState> {
     try {
       final manager = ref.read(piperModelManagerProvider(voiceId));
       final manifest = await manager.readInstallManifest();
-      if (manifest != null) {
+      // 安装清单存在但模型文件被外部损坏（如 espeak-ng-data 被删）时，
+      // 不能仅凭清单误报就绪：还需校验关键文件齐全，缺失则走修复下载。
+      final filesReady = await manager.isModelDownloaded();
+      if (manifest != null && filesReady) {
         markReady(voiceId, manifest);
         return;
       }

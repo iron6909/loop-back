@@ -1,4 +1,4 @@
-/// Piper VITS TTS 引擎（Echo Loop TTS 平衡档，本地 sherpa-onnx 推理）。
+/// Piper VITS TTS 引擎（本地 sherpa-onnx 推理）。
 ///
 /// 实现 [TtsEngine] 契约，接入统一 TTS 管线（合成→文件→缓存→播放），上层
 /// 协调器/缓存/播放器零改动。Piper **始终产文件**（无实时朗读）：

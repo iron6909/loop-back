@@ -4973,16 +4973,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsEnginePlatformDescription => '设备自带，速度快、无需下载，但音质一般。';
 
   @override
-  String get ttsEngineEchoLoop => 'Echo Loop AI (Advanced)';
+  String get ttsEngineKokoro => 'Kokoro';
 
   @override
-  String get ttsEngineComingSoon => '即将推出';
+  String get ttsEngineKokoroDescription => '音质最好，需下载模型，推荐高性能设备使用。';
 
   @override
-  String get ttsEngineEchoLoopDescription => '音质最好，需下载模型，推荐高性能设备使用。';
-
-  @override
-  String get ttsEnginePiper => 'Echo Loop AI (Balanced)';
+  String get ttsEnginePiper => 'Piper';
 
   @override
   String get ttsEnginePiperDescription => '音质自然流畅，需下载模型，推荐中等配置设备使用。';
@@ -4991,13 +4988,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsModel => '模型';
 
   @override
-  String get ttsModelHighQuality => '高质量';
+  String get ttsModelHighQuality => '全精度 (fp32)';
 
   @override
   String get ttsModelHighQualityDescription => '音质最佳，速度可接受。约 300 MB。';
 
   @override
-  String get ttsModelLite => '轻量';
+  String get ttsModelLite => '量化 (int8)';
 
   @override
   String get ttsModelLiteDescription => '体积小、速度慢，适合低端设备。约 100 MB。';
@@ -5071,18 +5068,31 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsDeleteModel => '删除模型';
 
   @override
-  String get ttsDeleteModelConfirm => '删除 Echo Loop 语音模型？可随时重新下载。';
+  String ttsDeleteModelConfirm(String model) {
+    return '删除 $model 语音模型？可随时重新下载。';
+  }
+
+  @override
+  String get ttsDeleteAllModelsConfirm => '删除所有已下载的模型？可随时重新下载。';
 
   @override
   String get ttsCancelDownload => '取消';
 
   @override
-  String get ttsDownloadedModelsTitle => '已下载的 Echo Loop 模型';
+  String get ttsDownloadedModelsTitle => '已下载的模型';
 
   @override
   String ttsDownloadedModelsDesc(String size) {
     return '未在使用 · 占用 $size';
   }
+
+  @override
+  String ttsSourceGithubRelease(String repository) {
+    return '$repository（GitHub Release）';
+  }
+
+  @override
+  String get ttsKokoroLicense => 'Apache-2.0 · espeak-ng-data GPL-3.0-or-later';
 
   @override
   String get asrDeleteAllModelsConfirm => '删除所有已下载的 Echo Loop 语音识别模型？可随时重新下载。';

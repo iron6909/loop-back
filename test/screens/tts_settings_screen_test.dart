@@ -102,18 +102,25 @@ void main() {
     localSizeBytes: 1024,
   );
 
-  testWidgets('默认渲染 Advanced 高质量模型配置', (tester) async {
+  testWidgets('默认渲染 Kokoro 高质量模型配置', (tester) async {
     await tester.pumpWidget(_wrap(const TtsSettings()));
     await tester.pumpAndSettle();
 
     // 平台引擎显示名随宿主而变（Apple → Apple AI，其余 → System Speech）。
     expect(find.text(_platformEngineLabel), findsOneWidget);
-    // Echo Loop 现拆为两档可选：Balanced(Piper) / Advanced(Kokoro)。
-    expect(find.text('Echo Loop AI (Balanced)'), findsOneWidget);
-    expect(find.text('Echo Loop AI (Advanced)'), findsNWidgets(2));
+    // 两个本地引擎以真实名展示：Piper / Kokoro（引擎单选 + 专属归属标题）。
+    expect(find.text('Piper'), findsOneWidget);
+    expect(find.text('Kokoro'), findsNWidgets(2));
     expect(find.textContaining('Best sound quality'), findsOneWidget);
-    expect(find.text('High quality'), findsOneWidget);
+    expect(find.text('Full precision (fp32)'), findsOneWidget);
     expect(find.text('Recommended'), findsOneWidget);
+    // Kokoro 卡展示来源与许可（含共享 espeak-ng-data 许可）。
+    expect(
+      find.textContaining('iron6909/loop-back-models (GitHub Release)'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Apache-2.0'), findsOneWidget);
+    expect(find.textContaining('espeak-ng-data GPL-3.0-or-later'), findsOneWidget);
   });
 
   test('Android 不显示系统语音入口，其他平台保留', () {
@@ -121,20 +128,20 @@ void main() {
     expect(showPlatformTtsEngine(false), isTrue);
   });
 
-  testWidgets('Echo Loop → 显示两个模型变体（高质量带推荐徽标 / 轻量）', (tester) async {
+  testWidgets('Kokoro → 显示两个模型变体（全精度带推荐徽标 / 量化）', (tester) async {
     await tester.pumpWidget(
       _wrap(const TtsSettings(engine: TtsEngineKind.kokoro)),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('High quality'), findsOneWidget);
-    expect(find.text('Lightweight'), findsOneWidget);
+    expect(find.text('Full precision (fp32)'), findsOneWidget);
+    expect(find.text('Quantized (int8)'), findsOneWidget);
     expect(find.text('Recommended'), findsOneWidget);
     // 两个变体的单选控件。
     expect(find.byType(Radio<KokoroModelVariant>), findsNWidgets(2));
   });
 
-  testWidgets('点轻量变体 → setKokoroVariant(int8) + ensureDownloaded(int8)', (
+  testWidgets('点量化变体 → setKokoroVariant(int8) + ensureDownloaded(int8)', (
     tester,
   ) async {
     final notifier = _TestKokoroNotifier(const KokoroModelsState({}));
@@ -146,7 +153,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Lightweight'));
+    await tester.tap(find.text('Quantized (int8)'));
     await tester.pumpAndSettle();
 
     expect(
@@ -241,7 +248,8 @@ void main() {
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.byTooltip('Cancel'), findsNothing);
-    expect(find.byIcon(Icons.download_rounded), findsNWidgets(8));
+    // amy 正在下载不显下载图标，其余 6 个音色 → 6 个下载图标。
+    expect(find.byIcon(Icons.download_rounded), findsNWidgets(6));
   });
 
   testWidgets('存储空间不足 → 显清晰的空间不足文案（非原始异常）', (tester) async {
@@ -279,7 +287,7 @@ void main() {
     expect(find.text('American · Sarah · Female'), findsOneWidget);
     // 使用中（fp32 选中）不显删除（不删正在用的语音）；int8 未下载也无删除。
     expect(find.byTooltip('Delete model'), findsNothing);
-    // Echo Loop 下无独立口音卡，弹层未开时音色列表与口音标题都不在屏上。
+    // Kokoro 下无独立口音卡，弹层未开时音色列表与口音标题都不在屏上。
     expect(find.byType(Radio<String>), findsNothing);
     expect(find.text('American'), findsNothing);
     expect(find.text('British'), findsNothing);
@@ -365,5 +373,23 @@ void main() {
 
     expect(_containerOf(tester).read(ttsSettingsProvider).accent, TtsAccent.us);
     expect(find.text('British'), findsNothing);
+  });
+
+  testWidgets('Piper → 逐音色展示来源/许可，全部可下载', (tester) async {
+    await tester.pumpWidget(
+      _wrap(const TtsSettings(engine: TtsEngineKind.piper)),
+    );
+    await tester.pumpAndSettle();
+
+    // HF 逐文件音色展示仓库来源与逐音色许可。
+    expect(
+      find.textContaining(
+        'Source: csukuangfj/vits-piper-en_US-amy-medium',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('License: CC BY-SA 4.0'), findsOneWidget);
+    // 7 个音色均可下载，各提供下载入口。
+    expect(find.byIcon(Icons.download_rounded), findsNWidgets(7));
   });
 }

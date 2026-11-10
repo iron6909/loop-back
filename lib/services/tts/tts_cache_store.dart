@@ -40,19 +40,21 @@ class TtsCacheStore {
   final TtsCacheDao Function() _resolveDao;
   final Future<Directory> Function() _resolveCacheDir;
   TtsCacheDao? _daoCache;
-  Directory? _cachedDir;
+  Directory? _cachedBase;
 
   TtsCacheDao get _dao => _daoCache ??= _resolveDao();
 
   /// 解析（并按需创建）TTS 缓存目录。
+  ///
+  /// 仅缓存基目录解析结果；每次调用仍校验 `tts_cache/` 是否存在，因为
+  /// Android 缓存目录是 transient 产物，可能被系统清理后又被再次写入。
   Future<Directory> _dir() async {
-    if (_cachedDir != null) return _cachedDir!;
-    final base = await _resolveCacheDir();
+    final base = _cachedBase ??= await _resolveCacheDir();
     final dir = Directory('${base.path}/tts_cache');
     if (!await dir.exists()) {
       await dir.create(recursive: true);
     }
-    return _cachedDir = dir;
+    return dir;
   }
 
   /// 由发音参数派生稳定缓存键。

@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:echo_loop/providers/tts/kokoro_model_provider.dart';
+import 'package:echo_loop/services/asr/asr_model_catalog.dart';
 import 'package:echo_loop/services/download/download_failure.dart';
 import 'package:echo_loop/services/reliable_http_downloader.dart';
 import 'package:echo_loop/services/resource_install_manifest.dart';
@@ -38,6 +39,7 @@ class _FakeManager extends KokoroModelManager {
 
   @override
   Future<String> downloadModel({
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
@@ -96,6 +98,7 @@ class _BlockingCancelManager extends _FakeManager {
 
   @override
   Future<String> downloadModel({
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
@@ -156,6 +159,18 @@ void main() {
       c.read(kokoroModelProvider).of(_fp32).installManifest?.resourceSize,
       1024,
     );
+  });
+
+  test('install.json 存在但文件损坏 → ensureDownloaded 触发修复下载而非误报就绪', () async {
+    // 安装清单仍在、关键文件（如 espeak-ng-data）被外部删除：应走修复下载。
+    final manager = _FakeManager(installMarker: true, downloaded: false);
+    final c = _container(manager);
+    addTearDown(c.dispose);
+
+    await c.read(kokoroModelProvider.notifier).ensureDownloaded(_fp32);
+
+    expect(manager.downloadCount, 1);
+    expect(c.read(kokoroModelProvider).of(_fp32).isReady, isTrue);
   });
 
   test('refreshInstalledStates 检查全部变体且不下载', () async {

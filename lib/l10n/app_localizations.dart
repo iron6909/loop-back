@@ -9146,28 +9146,22 @@ abstract class AppLocalizations {
   /// **'Built into your device. Fast, no download required, average quality.'**
   String get ttsEnginePlatformDescription;
 
-  /// No description provided for @ttsEngineEchoLoop.
+  /// No description provided for @ttsEngineKokoro.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop AI (Advanced)'**
-  String get ttsEngineEchoLoop;
+  /// **'Kokoro'**
+  String get ttsEngineKokoro;
 
-  /// No description provided for @ttsEngineComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Coming soon'**
-  String get ttsEngineComingSoon;
-
-  /// No description provided for @ttsEngineEchoLoopDescription.
+  /// No description provided for @ttsEngineKokoroDescription.
   ///
   /// In en, this message translates to:
   /// **'Best sound quality. Needs a model download; recommended for high-performance devices.'**
-  String get ttsEngineEchoLoopDescription;
+  String get ttsEngineKokoroDescription;
 
   /// No description provided for @ttsEnginePiper.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop AI (Balanced)'**
+  /// **'Piper'**
   String get ttsEnginePiper;
 
   /// No description provided for @ttsEnginePiperDescription.
@@ -9185,7 +9179,7 @@ abstract class AppLocalizations {
   /// No description provided for @ttsModelHighQuality.
   ///
   /// In en, this message translates to:
-  /// **'High quality'**
+  /// **'Full precision (fp32)'**
   String get ttsModelHighQuality;
 
   /// No description provided for @ttsModelHighQualityDescription.
@@ -9197,7 +9191,7 @@ abstract class AppLocalizations {
   /// No description provided for @ttsModelLite.
   ///
   /// In en, this message translates to:
-  /// **'Lightweight'**
+  /// **'Quantized (int8)'**
   String get ttsModelLite;
 
   /// No description provided for @ttsModelLiteDescription.
@@ -9329,8 +9323,14 @@ abstract class AppLocalizations {
   /// No description provided for @ttsDeleteModelConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete the Echo Loop voice model? You can re-download it anytime.'**
-  String get ttsDeleteModelConfirm;
+  /// **'Delete the {model} voice model? You can re-download it anytime.'**
+  String ttsDeleteModelConfirm(String model);
+
+  /// No description provided for @ttsDeleteAllModelsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all downloaded models? You can re-download them anytime.'**
+  String get ttsDeleteAllModelsConfirm;
 
   /// No description provided for @ttsCancelDownload.
   ///
@@ -9341,7 +9341,7 @@ abstract class AppLocalizations {
   /// No description provided for @ttsDownloadedModelsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Downloaded Echo Loop models'**
+  /// **'Downloaded models'**
   String get ttsDownloadedModelsTitle;
 
   /// No description provided for @ttsDownloadedModelsDesc.
@@ -9349,6 +9349,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not in use · {size}'**
   String ttsDownloadedModelsDesc(String size);
+
+  /// No description provided for @ttsSourceGithubRelease.
+  ///
+  /// In en, this message translates to:
+  /// **'{repository} (GitHub Release)'**
+  String ttsSourceGithubRelease(String repository);
+
+  /// No description provided for @ttsKokoroLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'Apache-2.0 · espeak-ng-data GPL-3.0-or-later'**
+  String get ttsKokoroLicense;
 
   /// No description provided for @asrDeleteAllModelsConfirm.
   ///

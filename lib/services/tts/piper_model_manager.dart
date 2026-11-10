@@ -1,12 +1,10 @@
 /// Piper VITS 模型下载、校验、缓存管理（按音色，每音色一个独立模型）。
 ///
-/// 镜像 `KokoroModelManager`，但绑定单个 [PiperVoice]（而非 Kokoro 的精度变体）：
-/// 每个音色一个 `.tar.gz` 归档，下载 → 校验整包 SHA-256 → staging 解包校验 →
-/// 原子替换以音色 id 命名的目录（`*.onnx` / `tokens.txt` / `espeak-ng-data/`）。
-///
-/// 与 Kokoro 的唯一差异：Piper 为单说话人，**无 `voices.bin`**；模型文件名由各音色
-/// 决定（如 `en_US-amy-medium.onnx`），故按扩展名定位 `.onnx`（排除 `.onnx.json`）。
-/// 归档约束同 §7.17（gzip、无 macOS xattr、换包先传 CDN 再改 SHA）。
+/// 音色资源按布局分两类：HF resolve 逐文件（onnx + tokens.txt，共享 espeak 依赖）
+/// 与 GitHub 重打包整包（ryan/joe/hfc_female 三个音色，归档自带 espeak-ng-data）。
+/// 下载 → 校验 SHA-256 → staging 校验 → 原子替换；共享 espeak-ng-data 缺失时
+/// 只补该依赖、不重下模型本体（同 #21 Kokoro 的只补修复）。下载基于
+/// `ReliableHttpDownloader`，网络中断保留 `.part`/`.part.meta.json` 供续传。
 library;
 
 import 'dart:io';
@@ -17,13 +15,22 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../app_logger.dart';
+import '../asr/asr_model_catalog.dart'
+    show
+        AsrDownloadSource,
+        AsrPublicResourceLayout,
+        AsrPublicResourceSpec,
+        AsrResourceFile;
 import '../asr/asr_model_manager.dart'
     show AsrModelDownloadStatus, AsrModelDownloadProgress;
+import '../asr/asr_resource_installer.dart'
+    show AsrResourceFileDownload, AsrResourceInstaller;
 import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
-import 'piper_model_catalog.dart';
-import '../runtime_endpoint_router.dart';
 import '../resource_install_manifest.dart';
+import 'piper_model_catalog.dart';
+import 'tts_espeak_repair.dart'
+    show installTtsEspeakData, ttsEspeakDataNeedsRepair;
 
 // 复用 ASR 的下载状态/进度类型（已是通用命名，避免重复定义）。
 export '../asr/asr_model_manager.dart'
@@ -56,12 +63,14 @@ class PiperModelManager {
   /// 同一个 [_dio] 来关闭底层 HTTP 客户端。
   late final Dio _dio;
   late final ReliableHttpDownloader _downloader;
-  late final ResourceArchiveInstaller _installer;
+  late final ResourceArchiveInstaller _archiveInstaller;
+  late final AsrResourceInstaller _fileInstaller;
 
-  /// 本管理器绑定的音色（决定目录名/归档/SHA）。
+  /// 本管理器绑定的音色（决定目录名/资源/SHA）。
   final PiperVoice voice;
 
-  final RuntimeEndpointRouter _endpointRouter;
+  /// 全部 Piper 公开资源（7 个可下载音色 + 共享 espeak-ng-data）；测试可覆盖。
+  final Map<String, AsrPublicResourceSpec> resourceRegistry;
 
   /// 下载基地址覆盖（仅测试）。
   final String? baseUrlOverride;
@@ -74,8 +83,9 @@ class PiperModelManager {
     Dio? dio,
     this.baseUrlOverride,
     this.modelsRootResolver,
-    RuntimeEndpointRouter? endpointRouter,
-  }) : _endpointRouter = endpointRouter ?? runtimeEndpointRouter {
+    Map<String, AsrPublicResourceSpec>? resourceRegistryOverride,
+  }) : resourceRegistry =
+           resourceRegistryOverride ?? piperPublicResourceCatalog {
     // TTS 模型下载体积较大，但断网时不能无限等待；接收超时只限制长时间无数据。
     _dio =
         dio ??
@@ -87,7 +97,8 @@ class PiperModelManager {
           ),
         );
     _downloader = DioReliableHttpDownloader(dio: _dio);
-    _installer = ResourceArchiveInstaller(_downloader);
+    _archiveInstaller = ResourceArchiveInstaller(_downloader);
+    _fileInstaller = AsrResourceInstaller(_downloader);
   }
 
   /// 模型存储根目录（与 Kokoro 共用 `tts-models`，各音色子目录隔离）。
@@ -169,31 +180,106 @@ class PiperModelManager {
 
   /// 下载并安装模型，通过 [onProgress] 报告进度，可经 [cancelToken] 取消。
   ///
-  /// 流程：下载归档 → 校验 SHA-256 → staging 解包校验 → 原子替换模型目录。
+  /// 模型本体齐全、仅 espeak-ng-data 缺失或损坏时只补该依赖。
   Future<String> downloadModel({
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
-    final root = await _modelsRoot;
-    final uri = baseUrlOverride == null
-        ? _endpointRouter.modelCdnUri('/model/${voice.archivePath}')
-        : Uri.parse('$baseUrlOverride/model/${voice.archivePath}');
+    final spec = voice.resource;
+    final root = Directory(await _modelsRoot);
     final target = Directory(await modelDir());
-    AppLogger.log('PiperModel', '┌ downloadModel dir=${target.path} url=$uri');
 
+    // 只补分支：模型本体（onnx/tokens）齐全、仅 espeak-ng-data 缺失或损坏。
+    if (await _needsEspeakRepair(target)) {
+      AppLogger.log(
+        'PiperModel',
+        '┌ downloadModel(repair espeak) dir=${target.path}',
+      );
+      onProgress?.call(
+        const AsrModelDownloadProgress(
+          status: AsrModelDownloadStatus.downloading,
+        ),
+      );
+      await installTtsEspeakData(
+        logTag: 'PiperModel',
+        root: root,
+        target: target,
+        dataDirectoryName: piperDataDirectoryName,
+        existingDataDirPath: await _findDir(target, piperDataDirectoryName),
+        resourceRegistry: resourceRegistry,
+        installer: _archiveInstaller,
+        source: source,
+        uriFor: _uriFor,
+        cancelToken: cancelToken,
+      );
+      onProgress?.call(
+        const AsrModelDownloadProgress(
+          status: AsrModelDownloadStatus.downloaded,
+          progress: 1,
+        ),
+      );
+      AppLogger.log(
+        'PiperModel',
+        '└ downloadModel(repair espeak) done dir=${target.path}',
+      );
+      return target.path;
+    }
+
+    AppLogger.log('PiperModel', '┌ downloadModel dir=${target.path}');
     onProgress?.call(
       const AsrModelDownloadProgress(
         status: AsrModelDownloadStatus.downloading,
       ),
     );
 
-    await _installer.install(
-      root: Directory(root),
+    if (spec.layout == AsrPublicResourceLayout.githubReleaseAsset) {
+      await _installArchiveVoice(
+        root: root,
+        target: target,
+        spec: spec,
+        source: source,
+        cancelToken: cancelToken,
+        onProgress: onProgress,
+      );
+    } else {
+      await _installFileVoice(
+        root: root,
+        target: target,
+        spec: spec,
+        source: source,
+        cancelToken: cancelToken,
+        onProgress: onProgress,
+      );
+    }
+
+    onProgress?.call(
+      const AsrModelDownloadProgress(
+        status: AsrModelDownloadStatus.downloaded,
+        progress: 1,
+      ),
+    );
+    AppLogger.log('PiperModel', '└ downloadModel done dir=${target.path}');
+    return target.path;
+  }
+
+  /// 安装 GitHub 重打包整包音色（归档自带 espeak-ng-data）。
+  Future<void> _installArchiveVoice({
+    required Directory root,
+    required Directory target,
+    required AsrPublicResourceSpec spec,
+    required AsrDownloadSource source,
+    CancelToken? cancelToken,
+    void Function(AsrModelDownloadProgress)? onProgress,
+  }) async {
+    final file = spec.files.single;
+    await _archiveInstaller.install(
+      root: root,
       target: target,
-      resourceId: voice.id,
-      archiveFileName: '_download_${voice.id}.tar.gz',
-      uri: uri,
-      expectedSha256: voice.sha256.isEmpty ? null : voice.sha256,
+      resourceId: spec.id,
+      archiveFileName: '_download_${spec.id}.tar.gz',
+      uri: _uriFor(spec, file, source),
+      expectedSha256: file.sha256,
       cancelToken: cancelToken,
       onProgress: (progress) => onProgress?.call(
         AsrModelDownloadProgress(
@@ -216,14 +302,65 @@ class PiperModelManager {
         }
       },
     );
-    onProgress?.call(
-      const AsrModelDownloadProgress(
-        status: AsrModelDownloadStatus.downloaded,
-        progress: 1,
+  }
+
+  /// 安装 HF 逐文件音色：onnx + tokens.txt，再补共享 espeak-ng-data。
+  Future<void> _installFileVoice({
+    required Directory root,
+    required Directory target,
+    required AsrPublicResourceSpec spec,
+    required AsrDownloadSource source,
+    CancelToken? cancelToken,
+    void Function(AsrModelDownloadProgress)? onProgress,
+  }) async {
+    await _fileInstaller.installFiles(
+      root: root,
+      target: target,
+      resourceId: spec.id,
+      downloads: [
+        for (final file in spec.files)
+          AsrResourceFileDownload(
+            file: file,
+            uri: _uriFor(spec, file, source),
+          ),
+      ],
+      cancelToken: cancelToken,
+      onProgress: (value) => onProgress?.call(
+        AsrModelDownloadProgress(
+          status: AsrModelDownloadStatus.downloading,
+          progress: value,
+        ),
+      ),
+      onInstalling: () => onProgress?.call(
+        const AsrModelDownloadProgress(
+          status: AsrModelDownloadStatus.downloading,
+          progress: 1,
+        ),
       ),
     );
-    AppLogger.log('PiperModel', '└ downloadModel done dir=${target.path}');
-    return target.path;
+    await installTtsEspeakData(
+      logTag: 'PiperModel',
+      root: root,
+      target: target,
+      dataDirectoryName: piperDataDirectoryName,
+      existingDataDirPath: await _findDir(target, piperDataDirectoryName),
+      resourceRegistry: resourceRegistry,
+      installer: _archiveInstaller,
+      source: source,
+      uriFor: _uriFor,
+      cancelToken: cancelToken,
+    );
+  }
+
+  /// 模型本体关键文件（onnx/tokens）齐全、仅 `espeak-ng-data/` 缺失或损坏。
+  Future<bool> _needsEspeakRepair(Directory target) async {
+    if (!target.existsSync()) return false;
+    final model = await _findOnnx(target);
+    final tokens = await _findFile(target, piperTokensFileName);
+    if (model == null || tokens == null) return false;
+    return ttsEspeakDataNeedsRepair(
+      await _findDir(target, piperDataDirectoryName),
+    );
   }
 
   /// 删除本地模型。
@@ -237,16 +374,29 @@ class PiperModelManager {
 
   /// 清理用户主动取消或删除时遗留的下载归档、续传文件和 staging。
   Future<void> discardPartialDownload() async {
-    await _installer.discardPartial(
-      root: Directory(await _modelsRoot),
+    final root = Directory(await _modelsRoot);
+    await _archiveInstaller.discardPartial(
+      root: root,
       resourceId: voice.id,
       archiveFileName: '_download_${voice.id}.tar.gz',
     );
+    await _fileInstaller.discardPartial(root: root, resourceId: voice.id);
   }
 
   /// 释放资源。
   void dispose() {
     _dio.close();
+  }
+
+  Uri _uriFor(
+    AsrPublicResourceSpec resource,
+    AsrResourceFile file,
+    AsrDownloadSource source,
+  ) {
+    if (baseUrlOverride != null) {
+      return Uri.parse('$baseUrlOverride/${file.name}');
+    }
+    return resource.fileUri(source, file);
   }
 
   /// 在 [dir] 下递归定位关键文件；任一缺失返回 null。
@@ -257,7 +407,10 @@ class PiperModelManager {
     final model = await _findOnnx(dir);
     final tokens = await _findFile(dir, piperTokensFileName);
     final dataDir = await _findDir(dir, piperDataDirectoryName);
-    if (model == null || tokens == null || dataDir == null) {
+    if (model == null ||
+        tokens == null ||
+        dataDir == null ||
+        ttsEspeakDataNeedsRepair(dataDir)) {
       return null;
     }
     return PiperModelPaths(model: model, tokens: tokens, dataDir: dataDir);

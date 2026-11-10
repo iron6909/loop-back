@@ -1,4 +1,4 @@
-/// Kokoro（Echo Loop TTS）音色目录。
+/// Kokoro TTS 音色目录。
 ///
 /// sherpa-onnx `kokoro-en-v0_19` 模型的 11 个英文发音人。发音人的口音由命名前缀
 /// 编码：`a*`=美音、`b*`=英音；`*f_`=女声、`*m_`=男声。合成时按 [KokoroVoice.sid]

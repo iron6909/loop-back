@@ -1,4 +1,4 @@
-/// Echo Loop TTS（Kokoro）模型下载状态机 Provider（多变体）。
+/// Kokoro TTS 模型下载状态机 Provider（多变体）。
 ///
 /// 管理 fp32 / int8 两个 Kokoro 模型变体各自的下载/重试/取消/删除与就绪状态。
 /// 每个变体一个 [KokoroModelManager]（`kokoroModelManagerProvider` 的 family），
@@ -203,7 +203,10 @@ class KokoroModelNotifier extends Notifier<KokoroModelsState> {
     try {
       final manager = ref.read(kokoroModelManagerProvider(variant));
       final manifest = await manager.readInstallManifest();
-      if (manifest != null) {
+      // 安装清单存在但模型文件被外部损坏（如 espeak-ng-data 被删）时，
+      // 不能仅凭清单误报就绪：还需校验关键文件齐全，缺失则走修复下载。
+      final filesReady = await manager.isModelDownloaded();
+      if (manifest != null && filesReady) {
         markReady(variant, manifest);
         return;
       }

@@ -70,11 +70,11 @@ void main() {
 
     test('历史 echoLoop 值迁移为 kokoro', () async {
       SharedPreferences.setMockInitialValues({
-        TtsSettingsKeys.engine: TtsSettingsKeys.legacyEchoLoopEngineValue,
+        TtsSettingsKeys.engine: TtsSettingsKeys.legacyTtsEngineValue,
       });
       final prefs = await SharedPreferences.getInstance();
 
-      await migrateLegacyEchoLoopTtsPreference(prefs);
+      await migrateLegacyTtsPreference(prefs);
 
       expect(prefs.getString(TtsSettingsKeys.engine), 'kokoro');
       expect(TtsSettings.fromPrefsSync(prefs).engine, TtsEngineKind.kokoro);
@@ -86,7 +86,7 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
 
-      await migrateLegacyEchoLoopTtsPreference(prefs);
+      await migrateLegacyTtsPreference(prefs);
 
       expect(
         prefs.getString(TtsSettingsKeys.engine),
