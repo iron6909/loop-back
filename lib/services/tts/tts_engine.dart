@@ -6,13 +6,14 @@
 /// - [synthesize] 合成到本地文件（可缓存、可复用，长文也走这条）；
 /// - [speakLive] 实时朗读兜底（不产文件、不缓存），用于 [synthesize] 失败时降级。
 ///
-/// 本期实现 `PlatformTtsEngine`（flutter_tts）。未来 Kokoro 只需新增一个
-/// [TtsEngine] 实现并在工厂里加一个分支，上层（协调器/缓存/播放器）零改动。
+/// 现已实现 `PlatformTtsEngine`（flutter_tts）、`KokoroTtsEngine`（本地 Kokoro 82M）
+/// 与 `PiperTtsEngine`（本地 Piper VITS）三个引擎；三者均实现 [TtsEngine]，上层
+/// （协调器/缓存/播放器）只按工厂选择，不感知具体引擎。
 library;
 
 /// TTS 引擎种类。
 enum TtsEngineKind {
-  /// 平台 TTS（flutter_tts，封装系统 TTS）。本期唯一可用。
+  /// 平台 TTS（flutter_tts，封装系统 TTS）。
   platform,
 
   /// Kokoro TTS（本地 Kokoro 82M）。质量最佳，CPU 推理偏慢。
