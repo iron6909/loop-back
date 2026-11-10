@@ -64,7 +64,7 @@ class AsrResourceFile {
 
 /// 一个 ASR 资源的固定公开身份：模型本体与共享依赖共用同一份描述。
 class AsrPublicResourceSpec {
-  AsrPublicResourceSpec({
+  const AsrPublicResourceSpec({
     required this.id,
     required this.repository,
     required this.revision,

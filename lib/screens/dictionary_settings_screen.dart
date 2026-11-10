@@ -20,10 +20,11 @@ import '../services/asr/asr_model_catalog.dart';
 import '../services/dictionary/dictionary_catalog.dart';
 import '../services/dictionary/dictionary_source.dart';
 import '../services/download/download_failure.dart';
-import '../services/pronunciation/pronunciation_catalog.dart';
+import '../services/resource_archive_spec.dart';
 import '../theme/app_theme.dart';
 import '../utils/download_failure_message.dart';
 import '../utils/file_size.dart';
+import '../widgets/asr/asr_download_source_presentation.dart';
 import '../widgets/dictionary/dict_source_presentation.dart';
 
 /// 词典设置页面
@@ -237,17 +238,27 @@ class _SourceToggleTile extends StatelessWidget {
   }
 }
 
-/// 下载进度百分比（0.0~1.0 → "45%"）。
-String _percent(double progress) =>
-    '${(progress * 100).toStringAsFixed(0)}%';
+/// 下载进度块：进度条 + 百分比文案，词典与发音库共用。
+class _DownloadProgress extends StatelessWidget {
+  const _DownloadProgress({required this.l10n, required this.progress});
 
-/// 下载来源展示文案，与语音识别设置页保持一致。
-String _sourceLabel(AppLocalizations l10n, AsrDownloadSource source) =>
-    switch (source) {
-      AsrDownloadSource.huggingFace => l10n.asrDownloadSourceHuggingFace,
-      AsrDownloadSource.huggingFaceMirror =>
-        l10n.asrDownloadSourceHuggingFaceMirror,
-    };
+  final AppLocalizations l10n;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final percent = '${(progress * 100).toStringAsFixed(0)}%';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 6),
+        LinearProgressIndicator(value: progress),
+        const SizedBox(height: 2),
+        Text(l10n.speechModelDownloading(percent)),
+      ],
+    );
+  }
+}
 
 /// 单个语言变体的离线词典行：来源/许可 + 状态/进度/重试。
 class _DictionaryResourceTile extends ConsumerWidget {
@@ -264,23 +275,30 @@ class _DictionaryResourceTile extends ConsumerWidget {
     final dictState = ref.watch(dictionaryProvider);
     final isCurrent = dictState.nativeLanguage == nativeLanguage;
 
-    final DictionaryStatus status;
-    final double progress;
-    final DownloadFailureKind? failure;
     if (isCurrent) {
-      status = dictState.status;
-      progress = dictState.progress;
-      failure = dictState.failure;
+      return ListTile(
+        leading: const Icon(Icons.menu_book_outlined),
+        title: Text(label),
+        subtitle: _dictionarySubtitle(
+          l10n,
+          theme,
+          spec,
+          dictState.status,
+          dictState.progress,
+          dictState.failure,
+        ),
+        trailing: _dictionaryTrailing(l10n, dictState.status, ref),
+      );
+    }
+
+    // 非当前母语不由 dictionaryProvider 管理，改用逐语言 provider 做安装检查与下载。
+    final resource = ref.watch(dictionaryResourceProvider(nativeLanguage));
+    final status = resource.status;
+    final Widget? trailing;
+    if (status == null) {
+      trailing = null;
     } else {
-      // 非当前母语不由 dictionaryProvider 管理，只做本地安装检查。
-      final installed =
-          ref.watch(dictionaryInstalledProvider(nativeLanguage)).valueOrNull ??
-          false;
-      status = installed
-          ? DictionaryStatus.downloaded
-          : DictionaryStatus.notDownloaded;
-      progress = 0;
-      failure = null;
+      trailing = _dictionaryResourceTrailing(l10n, status, ref, nativeLanguage);
     }
 
     return ListTile(
@@ -291,34 +309,33 @@ class _DictionaryResourceTile extends ConsumerWidget {
         theme,
         spec,
         status,
-        progress,
-        failure,
+        resource.progress,
+        resource.failure,
       ),
-      trailing: isCurrent
-          ? _dictionaryTrailing(l10n, status, ref)
-          : null,
+      trailing: trailing,
     );
   }
 }
 
-/// 词典行的来源/许可与状态文案。
+/// 词典行的来源/许可与状态文案。[status] 为 null 表示仍在本地安装检查。
 Widget _dictionarySubtitle(
   AppLocalizations l10n,
   ThemeData theme,
   DictionarySpec spec,
-  DictionaryStatus status,
+  DictionaryStatus? status,
   double progress,
   DownloadFailureKind? failure,
 ) {
   final statusLine = switch (status) {
-    DictionaryStatus.downloading => Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 6),
-        LinearProgressIndicator(value: progress),
-        const SizedBox(height: 2),
-        Text(l10n.speechModelDownloading(_percent(progress))),
-      ],
+    null => Text(
+      l10n.downloadLoading,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+      ),
+    ),
+    DictionaryStatus.downloading => _DownloadProgress(
+      l10n: l10n,
+      progress: progress,
     ),
     DictionaryStatus.failed => Text(
       downloadFailureMessage(l10n, failure),
@@ -374,6 +391,30 @@ Widget? _dictionaryTrailing(
   };
 }
 
+/// 非当前母语词典在未下载/失败时的下载与重试入口。
+Widget? _dictionaryResourceTrailing(
+  AppLocalizations l10n,
+  DictionaryStatus status,
+  WidgetRef ref,
+  String nativeLanguage,
+) {
+  return switch (status) {
+    DictionaryStatus.notDownloaded => TextButton(
+      onPressed: () => ref
+          .read(dictionaryResourceProvider(nativeLanguage).notifier)
+          .download(),
+      child: Text(l10n.download),
+    ),
+    DictionaryStatus.failed => TextButton(
+      onPressed: () => ref
+          .read(dictionaryResourceProvider(nativeLanguage).notifier)
+          .retryDownload(),
+      child: Text(l10n.retry),
+    ),
+    DictionaryStatus.downloading || DictionaryStatus.downloaded => null,
+  };
+}
+
 /// 离线发音库行：仅标注托管仓库（ADR-0002），状态与失败重试。
 class _PronunciationResourceTile extends ConsumerWidget {
   const _PronunciationResourceTile();
@@ -385,14 +426,9 @@ class _PronunciationResourceTile extends ConsumerWidget {
     final state = ref.watch(pronunciationLibraryProvider);
 
     final statusLine = switch (state.status) {
-      PronunciationLibraryStatus.downloading => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 6),
-          LinearProgressIndicator(value: state.progress),
-          const SizedBox(height: 2),
-          Text(l10n.speechModelDownloading(_percent(state.progress))),
-        ],
+      PronunciationLibraryStatus.downloading => _DownloadProgress(
+        l10n: l10n,
+        progress: state.progress,
       ),
       PronunciationLibraryStatus.installing => Text(
         l10n.pronunciationInstalling,
@@ -446,7 +482,9 @@ class _PronunciationResourceTile extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.pronunciationResourceSource(pronunciationPublicRepository),
+            l10n.pronunciationResourceSource(
+              dictionaryPronunciationPublicRepository,
+            ),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
@@ -474,7 +512,7 @@ class _DownloadSourceTile extends ConsumerWidget {
         color: theme.colorScheme.onSurfaceVariant,
       ),
       title: Text(l10n.asrDownloadSourceTitle),
-      subtitle: Text(_sourceLabel(l10n, source)),
+      subtitle: Text(asrDownloadSourceLabel(l10n, source)),
       shape: const Border(),
       collapsedShape: const Border(),
       children: [
@@ -504,7 +542,7 @@ class _DownloadSourceTile extends ConsumerWidget {
             children: [
               for (final s in AsrDownloadSource.values)
                 RadioListTile<AsrDownloadSource>(
-                  title: Text(_sourceLabel(l10n, s)),
+                  title: Text(asrDownloadSourceLabel(l10n, s)),
                   value: s,
                 ),
             ],

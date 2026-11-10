@@ -13,6 +13,7 @@ import 'package:echo_loop/services/asr/asr_model_catalog.dart';
 import 'package:echo_loop/services/dictionary/dictionary_catalog.dart';
 import 'package:echo_loop/services/dictionary_download_manager.dart';
 import 'package:echo_loop/services/reliable_http_downloader.dart';
+import 'package:echo_loop/services/resource_archive_spec.dart';
 import 'package:echo_loop/services/resource_install_manifest.dart';
 
 /// 按固定下载 URL 返回预置 ZIP；其余请求 404。
@@ -70,8 +71,8 @@ DictionarySpec _testSpec({
     resourceId: resourceId,
     resource: AsrPublicResourceSpec(
       id: resourceId,
-      repository: dictionaryPublicRepository,
-      revision: dictionaryPublicRevision,
+      repository: dictionaryPronunciationPublicRepository,
+      revision: dictionaryPronunciationPublicRevision,
       layout: AsrPublicResourceLayout.huggingFaceDatasetResolve,
       license: dictionaryDataLicense,
       files: [
@@ -101,9 +102,9 @@ void main() {
     expect(zhTw.archiveFileName, 'dict_en_zh-TW-v1.sqlite.zip');
     expect(zhCn.estimatedDownloadBytes, 12552930);
     expect(zhTw.estimatedDownloadBytes, 12552893);
-    expect(dictionaryPublicRepository, 'banko3/loop-back');
+    expect(dictionaryPronunciationPublicRepository, 'banko3/loop-back');
     expect(
-      dictionaryPublicRevision,
+      dictionaryPronunciationPublicRevision,
       '3b3a5bef53a1c2c86f72117a8ce149554122baac',
     );
     expect(zhCn.license, 'ECDICT (MIT)');
@@ -295,6 +296,63 @@ void main() {
         ? dictDir.listSync().whereType<File>()
         : const <File>[];
     expect(leftovers, isEmpty);
+  });
+
+  test('zh-CN 与 zh-TW 两个真实规格各自独立安装、互不干扰', () async {
+    final zhCn = dictionarySpecOf('zh-CN');
+    final zhTw = dictionarySpecOf('zh-TW');
+
+    // 两个变体身份不同，安装目录由母语决定。
+    expect(zhCn.resourceId, isNot(zhTw.resourceId));
+    expect(zhCn.archiveFileName, isNot(zhTw.archiveFileName));
+    expect(zhCn.archiveSha256, isNot(zhTw.archiveSha256));
+
+    final m = DictionaryDownloadManager.withDio(
+      Dio()
+        ..httpClientAdapter = _MockAdapter(
+          downloadUrl: 'http://unused.local/x.zip',
+        ),
+    );
+
+    // 先安装 zh-CN：zh-CN 可识别，zh-TW 仍视为未下载。
+    final zhCnDir = Directory(
+      p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh-CN'),
+    )..createSync(recursive: true);
+    File(p.join(zhCnDir.path, 'dict.sqlite')).writeAsBytesSync(
+      List<int>.filled(8, 1),
+    );
+    await writeResourceInstallManifest(
+      zhCnDir,
+      resourceId: zhCn.resourceId,
+      installAt: DateTime(2024),
+    );
+
+    expect(await m.isDictionaryDownloaded('zh-CN'), isTrue);
+    expect(await m.isDictionaryDownloaded('zh-TW'), isFalse);
+
+    // 再安装 zh-TW：zh-CN 保持已下载，两个目录互不覆盖。
+    final zhTwDir = Directory(
+      p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh-TW'),
+    )..createSync(recursive: true);
+    File(p.join(zhTwDir.path, 'dict.sqlite')).writeAsBytesSync(
+      List<int>.filled(8, 2),
+    );
+    await writeResourceInstallManifest(
+      zhTwDir,
+      resourceId: zhTw.resourceId,
+      installAt: DateTime(2024),
+    );
+
+    expect(await m.isDictionaryDownloaded('zh-TW'), isTrue);
+    expect(await m.isDictionaryDownloaded('zh-CN'), isTrue);
+    expect(File(p.join(zhCnDir.path, 'dict.sqlite')).existsSync(), isTrue);
+    expect(File(p.join(zhTwDir.path, 'dict.sqlite')).existsSync(), isTrue);
+
+    // 两个变体落在不同安装目录，避免互相覆盖。
+    expect(
+      await m.dictionaryPath('zh-CN'),
+      isNot(await m.dictionaryPath('zh-TW')),
+    );
   });
 }
 

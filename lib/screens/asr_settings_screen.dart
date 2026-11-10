@@ -19,6 +19,7 @@ import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
 import '../theme/app_theme.dart';
 import '../utils/download_failure_message.dart';
+import '../widgets/asr/asr_download_source_presentation.dart';
 import '../widgets/asr/recognition_purpose_section.dart';
 import '../widgets/asr/speech_provider_section.dart';
 import 'speech_provider_settings_screen.dart';
@@ -307,7 +308,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       children.add(
         Text(
           l10n.asrModelSourceLine(
-            _sourceLabel(l10n, downloadSource),
+            asrDownloadSourceLabel(l10n, downloadSource),
             publicSpec.license,
           ),
           style: theme.textTheme.bodySmall?.copyWith(
@@ -414,7 +415,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
         color: theme.colorScheme.onSurfaceVariant,
       ),
       title: Text(l10n.asrDownloadSourceTitle),
-      subtitle: Text(_sourceLabel(l10n, state.downloadSource)),
+      subtitle: Text(asrDownloadSourceLabel(l10n, state.downloadSource)),
       shape: const Border(),
       collapsedShape: const Border(),
       children: [
@@ -444,7 +445,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
             children: [
               for (final source in AsrDownloadSource.values)
                 RadioListTile<AsrDownloadSource>(
-                  title: Text(_sourceLabel(l10n, source)),
+                  title: Text(asrDownloadSourceLabel(l10n, source)),
                   value: source,
                 ),
             ],
@@ -520,14 +521,6 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
   }
 
   // ========== 工具方法 ==========
-
-  static String _sourceLabel(AppLocalizations l10n, AsrDownloadSource source) {
-    return switch (source) {
-      AsrDownloadSource.huggingFace => l10n.asrDownloadSourceHuggingFace,
-      AsrDownloadSource.huggingFaceMirror =>
-        l10n.asrDownloadSourceHuggingFaceMirror,
-    };
-  }
 
   static String _modelDescription(AppLocalizations l10n, String modelId) {
     if (modelId.contains('tiny')) return l10n.asrModelFastDescription;

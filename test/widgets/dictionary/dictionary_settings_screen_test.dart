@@ -64,6 +64,45 @@ class _FakePronunciationLibrary extends PronunciationLibraryNotifier {
   Future<void> retryDownload() async {}
 }
 
+/// 测试用逐语言词典资源 Notifier：build 返回固定状态，下载副作用记录调用。
+class _FakeDictionaryResource extends DictionaryResourceNotifier {
+  _FakeDictionaryResource(this.installedLanguage);
+
+  final String installedLanguage;
+  final downloadedLanguages = <String>[];
+  final retriedLanguages = <String>[];
+
+  @override
+  DictionaryResourceState build(String arg) => DictionaryResourceState(
+    status: arg == installedLanguage
+        ? DictionaryStatus.downloaded
+        : DictionaryStatus.notDownloaded,
+  );
+
+  @override
+  Future<void> download() async {
+    downloadedLanguages.add(arg);
+  }
+
+  @override
+  Future<void> retryDownload() async {
+    retriedLanguages.add(arg);
+  }
+}
+
+/// 测试用：逐语言词典仍处于本地安装检查中（显式 loading 态）。
+class _FakeCheckingDictionaryResource extends DictionaryResourceNotifier {
+  @override
+  DictionaryResourceState build(String arg) =>
+      const DictionaryResourceState();
+
+  @override
+  Future<void> download() async {}
+
+  @override
+  Future<void> retryDownload() async {}
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -86,6 +125,7 @@ void main() {
     PronunciationLibraryStatus pronunciationStatus =
         PronunciationLibraryStatus.ready,
     DownloadFailureKind? pronunciationFailure,
+    DictionaryResourceNotifier? resourceNotifier,
   }) {
     final container = ProviderContainer(
       overrides: [
@@ -108,8 +148,8 @@ void main() {
             ),
           ),
         ),
-        dictionaryInstalledProvider.overrideWith(
-          (ref, lang) async => lang == nativeLanguage,
+        dictionaryResourceProvider.overrideWith(
+          () => resourceNotifier ?? _FakeDictionaryResource(nativeLanguage),
         ),
         offlineAsrOverride(),
       ],
@@ -229,6 +269,36 @@ void main() {
     );
     expect(find.text('Offline Word Pronunciation'), findsOneWidget);
     expect(find.text('Hosted on: banko3/loop-back'), findsOneWidget);
+  });
+
+  testWidgets('非当前母语词典未下载时提供下载入口并触发按需下载', (tester) async {
+    final resourceNotifier = _FakeDictionaryResource('zh-CN');
+    final (_, widget) = build(resourceNotifier: resourceNotifier);
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+
+    // 当前 zh-CN 已下载，非当前 zh-TW 未下载并给出下载入口。
+    expect(find.text('Dictionary not yet downloaded'), findsOneWidget);
+    final download = find.text('Download');
+    expect(download, findsOneWidget);
+
+    await tester.ensureVisible(download);
+    await tester.pumpAndSettle();
+    await tester.tap(download);
+    await tester.pumpAndSettle();
+
+    expect(resourceNotifier.downloadedLanguages, ['zh-TW']);
+  });
+
+  testWidgets('非当前母语安装检查未完成时显示加载态而非未下载', (tester) async {
+    final (_, widget) = build(
+      resourceNotifier: _FakeCheckingDictionaryResource(),
+    );
+    await tester.pumpWidget(widget);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Loading'), findsOneWidget);
+    expect(find.text('Dictionary not yet downloaded'), findsNothing);
   });
 
   testWidgets('当前母语词典失败展示可读原因并可重试', (tester) async {
