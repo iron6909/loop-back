@@ -1,7 +1,7 @@
 # Echo Loop 项目规划
 
-> 最后更新：2026-11-10（词典与发音库去 EchoLoop 化方案定稿）
-> 当前焦点：词典与发音库去 EchoLoop 化——方案定稿（D1–D13 + Q14 确认）、规格发布为 [issue #26](https://github.com/iron6909/loop-back/issues/26)、工单 [#27](https://github.com/iron6909/loop-back/issues/27)–[#31](https://github.com/iron6909/loop-back/issues/31) 已拆分并应用 `ready-for-agent`；公开源仓库 `banko3/loop-back`（revision `3b3a5bef…`）已建、三归档已上传、双源独立下载核对通过，工单 #27/#28 可开工。方案见 [docs/features/20261110-dictionary-pronunciation-decoupling/](./docs/features/20261110-dictionary-pronunciation-decoupling/plan.md)。语音合成（TTS）去 EchoLoop 化代码已交付于集成分支 `feature/20261110-tts-provider-decoupling`（spec #20，子工单 #21–#25 全部关闭，真机验收通过）。
+> 最后更新：2026-11-10（词典与发音库去 EchoLoop 化实施完成，真机验收通过）
+> 当前焦点：词典与发音库去 EchoLoop 化代码已交付于集成分支 `feature/20261110-dictionary-pronunciation-decoupling`（spec #26，子工单 #27–#31 全部关闭，真机验收通过）；剩余：分支合并与发布流程待定（同 ASR/TTS 约定）。规格与实施记录见 [docs/features/20261110-dictionary-pronunciation-decoupling/](./docs/features/20261110-dictionary-pronunciation-decoupling/plan.md)。语音合成（TTS）去 EchoLoop 化代码已交付于集成分支 `feature/20261110-tts-provider-decoupling`（spec #20，子工单 #21–#25 全部关闭，真机验收通过）。
 
 ## 产品目标
 
