@@ -22,10 +22,7 @@ const pronunciationPublicRevision = '3b3a5bef53a1c2c86f72117a8ce149554122baac';
 
 /// 内置离线发音包资源规格。
 class PronunciationSpec {
-  const PronunciationSpec({
-    required this.resourceId,
-    required this.resource,
-  });
+  const PronunciationSpec({required this.resourceId, required this.resource});
 
   final String resourceId;
 

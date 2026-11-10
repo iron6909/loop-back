@@ -26,14 +26,11 @@ class PronunciationLibraryPaths {
 
 /// 发音资源包下载、校验与安装管理器。
 class PronunciationLibraryManager {
-  PronunciationLibraryManager({
-    Dio? dio,
-    String? url,
-    String? sha256,
-  }) : _dio = dio ?? Dio(),
-       _ownsDio = dio == null,
-       _urlOverride = url,
-       _sha256 = sha256 ?? pronunciationSpec.archiveSha256 {
+  PronunciationLibraryManager({Dio? dio, String? url, String? sha256})
+    : _dio = dio ?? Dio(),
+      _ownsDio = dio == null,
+      _urlOverride = url,
+      _sha256 = sha256 ?? pronunciationSpec.archiveSha256 {
     _downloader = DioReliableHttpDownloader(dio: _dio);
     _installer = ResourceArchiveInstaller(_downloader);
   }
