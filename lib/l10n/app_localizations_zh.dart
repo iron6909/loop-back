@@ -5095,24 +5095,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsKokoroLicense => 'Apache-2.0 · espeak-ng-data GPL-3.0-or-later';
 
   @override
-  String get ttsDownloadSourceTitle => '下载来源';
-
-  @override
-  String get ttsDownloadSourceDescription => '仅作用于有镜像的模型，两个来源使用相同版本与校验值。';
-
-  @override
-  String get ttsDownloadSourcePublic => '公开上游';
-
-  @override
-  String get ttsDownloadSourceMirror => 'hf-mirror.com';
-
-  @override
-  String get ttsModelNotAvailable => '不可下载';
-
-  @override
-  String get ttsModelDownloadNotAllowed => '此音色的许可不允许再分发，无法下载。';
-
-  @override
   String get asrDeleteAllModelsConfirm => '删除所有已下载的 Echo Loop 语音识别模型？可随时重新下载。';
 
   @override

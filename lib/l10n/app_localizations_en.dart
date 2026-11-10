@@ -5347,26 +5347,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ttsKokoroLicense => 'Apache-2.0 · espeak-ng-data GPL-3.0-or-later';
 
   @override
-  String get ttsDownloadSourceTitle => 'Download Source';
-
-  @override
-  String get ttsDownloadSourceDescription =>
-      'Applies to models that have a mirror. Both sources serve the same version and checksums.';
-
-  @override
-  String get ttsDownloadSourcePublic => 'Public upstream';
-
-  @override
-  String get ttsDownloadSourceMirror => 'hf-mirror.com';
-
-  @override
-  String get ttsModelNotAvailable => 'Not available for download';
-
-  @override
-  String get ttsModelDownloadNotAllowed =>
-      'This voice can\'t be downloaded because its license doesn\'t permit redistribution.';
-
-  @override
   String get asrDeleteAllModelsConfirm =>
       'Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.';
 

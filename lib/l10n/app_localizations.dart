@@ -9362,42 +9362,6 @@ abstract class AppLocalizations {
   /// **'Apache-2.0 · espeak-ng-data GPL-3.0-or-later'**
   String get ttsKokoroLicense;
 
-  /// No description provided for @ttsDownloadSourceTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Download Source'**
-  String get ttsDownloadSourceTitle;
-
-  /// No description provided for @ttsDownloadSourceDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Applies to models that have a mirror. Both sources serve the same version and checksums.'**
-  String get ttsDownloadSourceDescription;
-
-  /// No description provided for @ttsDownloadSourcePublic.
-  ///
-  /// In en, this message translates to:
-  /// **'Public upstream'**
-  String get ttsDownloadSourcePublic;
-
-  /// No description provided for @ttsDownloadSourceMirror.
-  ///
-  /// In en, this message translates to:
-  /// **'hf-mirror.com'**
-  String get ttsDownloadSourceMirror;
-
-  /// No description provided for @ttsModelNotAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Not available for download'**
-  String get ttsModelNotAvailable;
-
-  /// No description provided for @ttsModelDownloadNotAllowed.
-  ///
-  /// In en, this message translates to:
-  /// **'This voice can\'t be downloaded because its license doesn\'t permit redistribution.'**
-  String get ttsModelDownloadNotAllowed;
-
   /// No description provided for @asrDeleteAllModelsConfirm.
   ///
   /// In en, this message translates to:

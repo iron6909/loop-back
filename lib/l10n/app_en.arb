@@ -3102,12 +3102,6 @@
     }
   },
   "ttsKokoroLicense": "Apache-2.0 · espeak-ng-data GPL-3.0-or-later",
-  "ttsDownloadSourceTitle": "Download Source",
-  "ttsDownloadSourceDescription": "Applies to models that have a mirror. Both sources serve the same version and checksums.",
-  "ttsDownloadSourcePublic": "Public upstream",
-  "ttsDownloadSourceMirror": "hf-mirror.com",
-  "ttsModelNotAvailable": "Not available for download",
-  "ttsModelDownloadNotAllowed": "This voice can't be downloaded because its license doesn't permit redistribution.",
   "asrDeleteAllModelsConfirm": "Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.",
   "asrDownloadedModelsTitle": "Downloaded speech recognition models",
   "asrDownloadedModelsDesc": "Not in use · {size}",
