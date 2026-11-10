@@ -82,7 +82,8 @@ class KokoroModelManager {
     this.modelsRootResolver,
     Map<String, AsrPublicResourceSpec>? resourceRegistryOverride,
   }) : spec = spec ?? kokoroSpecOf(kokoroDefaultVariant),
-       resourceRegistry = resourceRegistryOverride ?? kokoroPublicResourceCatalog {
+       resourceRegistry =
+           resourceRegistryOverride ?? kokoroPublicResourceCatalog {
     // TTS 模型下载体积较大，但断网时不能无限等待；接收超时只限制长时间无数据。
     _dio =
         dio ??
