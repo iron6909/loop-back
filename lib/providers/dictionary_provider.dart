@@ -10,6 +10,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../services/app_logger.dart';
 import '../services/dictionary_download_manager.dart';
 import '../services/dictionary_service.dart';
+import '../services/download/download_failure.dart';
 import '../services/reliable_http_downloader.dart';
 import '../services/startup_trace.dart';
 import 'offline_asr_settings_provider.dart';
@@ -39,8 +40,8 @@ class DictionaryState {
   /// 下载进度（0.0-1.0），仅在 [status] 为 [DictionaryStatus.downloading] 时有意义
   final double progress;
 
-  /// 错误信息，仅在 [status] 为 [DictionaryStatus.failed] 时有值
-  final String? error;
+  /// 失败归类，仅在 [status] 为 [DictionaryStatus.failed] 时有值
+  final DownloadFailureKind? failure;
 
   /// 当前词典对应的母语
   final String nativeLanguage;
@@ -48,21 +49,21 @@ class DictionaryState {
   const DictionaryState({
     required this.status,
     this.progress = 0,
-    this.error,
+    this.failure,
     required this.nativeLanguage,
   });
 
   DictionaryState copyWith({
     DictionaryStatus? status,
     double? progress,
-    String? error,
+    DownloadFailureKind? failure,
     bool clearError = false,
     String? nativeLanguage,
   }) {
     return DictionaryState(
       status: status ?? this.status,
       progress: progress ?? this.progress,
-      error: clearError ? null : error ?? this.error,
+      failure: clearError ? null : failure ?? this.failure,
       nativeLanguage: nativeLanguage ?? this.nativeLanguage,
     );
   }
@@ -181,13 +182,13 @@ class Dictionary extends _$Dictionary {
         );
         state = state.copyWith(
           status: DictionaryStatus.failed,
-          error: e.message ?? 'Download failed',
+          failure: classifyDownloadFailure(e),
         );
       } else {
         AppLogger.log('Dict', 'download failed lang=$nativeLanguage error=$e');
         state = state.copyWith(
           status: DictionaryStatus.failed,
-          error: e.toString(),
+          failure: classifyDownloadFailure(e),
         );
       }
     }

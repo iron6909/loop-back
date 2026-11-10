@@ -5382,6 +5382,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dictionaryAdFilterTitle => 'Block ads in web dictionaries';
 
   @override
+  String get offlineResourcesTitle => 'Offline Resources';
+
+  @override
+  String get offlineResourcesDescription =>
+      'Offline dictionary and pronunciation data are downloaded from fixed public sources.';
+
+  @override
+  String dictionaryResourceSource(String license, String repository) {
+    return 'Data: $license · Hosted on: $repository';
+  }
+
+  @override
+  String pronunciationResourceSource(String repository) {
+    return 'Hosted on: $repository';
+  }
+
+  @override
+  String get pronunciationInstalling => 'Installing...';
+
+  @override
   String get dictSourceLocal => 'Local Dictionary';
 
   @override
