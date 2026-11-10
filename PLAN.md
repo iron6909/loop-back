@@ -1,7 +1,7 @@
 # Echo Loop 项目规划
 
-> 最后更新：2026-11-10（语音合成去 EchoLoop 化方案定稿）
-> 当前焦点：语音识别去 EchoLoop 化已交付；语音合成（TTS）去品牌化方案已定稿（[spec #20](https://github.com/iron6909/loop-back/issues/20)），实施工单 [#21](https://github.com/iron6909/loop-back/issues/21)–[#25](https://github.com/iron6909/loop-back/issues/25) 按阻断边待实施。规格与实施计划见 [docs/features/20261110-tts-provider-decoupling/](./docs/features/20261110-tts-provider-decoupling/plan.md)。
+> 最后更新：2026-11-10（语音合成去 EchoLoop 化实施完成）
+> 当前焦点：语音合成（TTS）去 EchoLoop 化代码已交付于集成分支 `feature/20261110-tts-provider-decoupling`（spec #20，子工单 #21–#25 全部关闭，真机验收通过）；规格与实施记录见 [docs/features/20261110-tts-provider-decoupling/](./docs/features/20261110-tts-provider-decoupling/plan.md)。
 
 ## 产品目标
 
@@ -53,6 +53,12 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 
 剩余验证缺口：域名隔离后的真机抓包、Maestro 在线三用途流程与备份恢复往返、Apple 编译与集成测试、VAD 录音推理路径，均需 macOS 宿主或具备抓包条件的设备。原 Android 停录 native/VAD 崩溃仍独立跟踪，本次未修复。
 
+### ✅ 语音合成去 EchoLoop 化（2026-11-10）
+
+已完成并合入集成分支 `feature/20261110-tts-provider-decoupling`（明细见 [TASKS.md](./TASKS.md)）。Kokoro fp32/int8 与 Piper 9 音色改从固定公开源分发（公开仓库 `iron6909/loop-back-models` tag `tts-models` 重打包 gzip + csukuangfj HF resolve/hf-mirror 镜像），不再依赖 EchoLoop 资源 CDN；界面还原真实模型名（Kokoro / Piper、Full precision (fp32) / Quantized (int8)）并展示来源与许可，下载来源可切换上游/镜像；lessac/alan 因许可禁止再分发不提供下载（已装可用，英音默认改 cori）；espeak-ng-data 按共享依赖「只补」修复；Android 真机验收全过（公开源下载、镜像切换、断网离线合成、损坏修复、发音朗读）。
+
+剩余验证缺口：Apple 编译与集成测试需 macOS 宿主；集成分支并入 main 的发布流程待定；规格 issue #20 按 ASR #1 同约定保持开放。
+
 ### 🚧 Milestone 4：体验优化与生产就绪
 
 持续推进中：
@@ -75,7 +81,7 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 1. 在 Android 真机完成目录导入、本机转录、历史缺媒体与供应商设置验收。
 2. 解决既有 Android 离线 ASR 闪退，保持独立复述转写不传 VAD 路径。
 3. 在具备 macOS 宿主与抓包条件的设备上补齐语音识别去耦的剩余验收：Apple 编译与集成测试、在线三用途流程、域名隔离网络证据、VAD 录音路径。
-4. 实施语音合成去 EchoLoop 化（spec #20，工单 #21–#25）：从外部源核对与 Kokoro/Piper 公开分发开始，再到设置页去品牌、迁移回归与真机验收。
+4. 语音合成去 EchoLoop 化已实施完成（集成分支 `feature/20261110-tts-provider-decoupling`，真机验收通过）；剩余：Apple 编译待 macOS 宿主、分支合并与发布流程。
 5. 完成启动埋点权限快照的手动验证。
 6. 继续收敛录音识别模块复用边界与发布构建验证。
 
