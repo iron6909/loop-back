@@ -11,8 +11,6 @@ import 'helpers/test_app.dart';
 const _endpoints = RegionalServiceEndpoints(
   globalApiBaseUrl: 'https://global-api.example',
   chinaApiBaseUrl: 'https://china-api.example',
-  globalModelCdnBaseUrl: 'https://global-cdn.example',
-  chinaModelCdnBaseUrl: 'https://china-cdn.example',
 );
 
 class _NoRefreshRemoteConfigController extends RemoteConfigController {

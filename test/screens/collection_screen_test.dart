@@ -176,9 +176,9 @@ void main() {
                 name: 'Community Lessons',
               ).copyWith(
                 source: CollectionSource.community,
-                coverUrl: 'https://cdn.echo-loop.top/media/images/cover.jpg',
+                coverUrl: 'https://community.example.com/media/images/cover.jpg',
                 coverUrlChina:
-                    'https://cdn.echo-loop.cn/media/images/cover.jpg',
+                    'https://community.example.cn/media/images/cover.jpg',
               );
 
           await tester.pumpWidget(
