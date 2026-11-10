@@ -59,15 +59,31 @@ class _MockAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
+/// 构造受控词典规格：文件名/SHA 由测试指定，公开源身份复用目录常量。
+DictionarySpec _testSpec({
+  String archiveFileName = 'dict-v1.sqlite.zip',
+  String resourceId = 'dict-en_zh-v1',
+  required String sha,
+}) {
+  return DictionarySpec(
+    nativeLanguage: 'zh',
+    resourceId: resourceId,
+    resource: AsrPublicResourceSpec(
+      id: resourceId,
+      repository: dictionaryPublicRepository,
+      revision: dictionaryPublicRevision,
+      layout: AsrPublicResourceLayout.huggingFaceDatasetResolve,
+      license: dictionaryDataLicense,
+      files: [
+        AsrResourceFile(name: archiveFileName, sha256: sha, sizeBytes: 0),
+      ],
+    ),
+  );
+}
+
 /// 按公开源布局构造受控归档的完整下载 URL。
 Uri _publicUri(String archiveFileName, AsrDownloadSource source) =>
-    DictionarySpec(
-      nativeLanguage: 'zh',
-      resourceId: 'dict-en_zh-v1',
-      archiveFileName: archiveFileName,
-      archiveSha256: 'unused',
-      estimatedDownloadBytes: 0,
-    ).fileUri(source);
+    _testSpec(archiveFileName: archiveFileName, sha: 'unused').fileUri(source);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -149,12 +165,10 @@ void main() {
     return DictionaryDownloadManager.withDio(
       dio,
       specs: {
-        'zh': DictionarySpec(
-          nativeLanguage: 'zh',
-          resourceId: resourceId,
+        'zh': _testSpec(
           archiveFileName: archiveFileName,
-          archiveSha256: sha,
-          estimatedDownloadBytes: zip.length,
+          resourceId: resourceId,
+          sha: sha,
         ),
       },
     );

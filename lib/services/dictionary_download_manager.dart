@@ -19,8 +19,9 @@ import 'resource_install_manifest.dart';
 
 /// 词典下载管理器
 class DictionaryDownloadManager {
-  DictionaryDownloadManager({this.specs = dictionarySpecs})
-    : _dio = Dio(
+  DictionaryDownloadManager({Map<String, DictionarySpec>? specs})
+    : specs = specs ?? dictionarySpecs,
+      _dio = Dio(
         BaseOptions(
           connectTimeout: const Duration(seconds: 15),
           receiveTimeout: const Duration(minutes: 5),
@@ -32,7 +33,10 @@ class DictionaryDownloadManager {
 
   /// 测试用构造器
   @visibleForTesting
-  DictionaryDownloadManager.withDio(this._dio, {this.specs = dictionarySpecs}) {
+  DictionaryDownloadManager.withDio(
+    this._dio, {
+    Map<String, DictionarySpec>? specs,
+  }) : specs = specs ?? dictionarySpecs {
     _downloader = DioReliableHttpDownloader(dio: _dio);
     _installer = ResourceArchiveInstaller(_downloader);
   }
