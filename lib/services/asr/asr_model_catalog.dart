@@ -36,6 +36,10 @@ enum AsrPublicResourceLayout {
   /// `<域名>/<repository>/resolve/<revision>/<file>`：Hugging Face 及其镜像通用。
   huggingFaceResolve,
 
+  /// `<域名>/datasets/<repository>/resolve/<revision>/<file>`：Hugging Face
+  /// 数据集仓库（词典/发音库等整包资源）及其镜像通用。
+  huggingFaceDatasetResolve,
+
   /// `<域名>/<repository>/releases/download/<revision>/<file>`：GitHub 发布资产。
   githubReleaseAsset,
 }
@@ -103,6 +107,8 @@ class AsrPublicResourceSpec {
     final directory = switch (layout) {
       AsrPublicResourceLayout.huggingFaceResolve =>
         '${source.host}/$repository/resolve/$revision/',
+      AsrPublicResourceLayout.huggingFaceDatasetResolve =>
+        '${source.host}/datasets/$repository/resolve/$revision/',
       AsrPublicResourceLayout.githubReleaseAsset =>
         'https://github.com/$repository/releases/download/$revision/',
     };

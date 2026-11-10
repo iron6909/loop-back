@@ -11,6 +11,7 @@ import '../../services/pronunciation/pronunciation_library_manager.dart';
 import '../../services/pronunciation/pronunciation_repository.dart';
 import '../../services/reliable_http_downloader.dart';
 import '../../utils/text_normalize.dart';
+import '../offline_asr_settings_provider.dart';
 import '../short_audio_player_provider.dart';
 import '../tts/tts_controller_provider.dart';
 
@@ -115,8 +116,10 @@ class PronunciationLibraryNotifier extends Notifier<PronunciationLibraryState> {
       status: PronunciationLibraryStatus.downloading,
     );
     final manager = ref.read(pronunciationLibraryManagerProvider);
+    final source = ref.read(offlineAsrSettingsProvider).downloadSource;
     try {
       final paths = await manager.downloadAndInstall(
+        source: source,
         cancelToken: cancelToken,
         onDownloadProgress: (progress) {
           if (!_isCurrent(sessionId, cancelToken)) return;
