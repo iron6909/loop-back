@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:echo_loop/providers/tts/piper_model_provider.dart';
 import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
+import 'package:echo_loop/services/asr/asr_model_catalog.dart';
 import 'package:echo_loop/services/reliable_http_downloader.dart';
 import 'package:echo_loop/services/resource_install_manifest.dart';
 import 'package:echo_loop/services/tts/piper_model_manager.dart';
@@ -40,6 +41,7 @@ class _FakeManager extends PiperModelManager {
 
   @override
   Future<String> downloadModel({
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
@@ -96,6 +98,7 @@ class _BlockingCancelManager extends _FakeManager {
 
   @override
   Future<String> downloadModel({
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
