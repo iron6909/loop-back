@@ -306,7 +306,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _ttsEngineSummary(AppLocalizations l10n, TtsEngineKind engine) {
     return switch (engine) {
       TtsEngineKind.platform => platformSpeechEngineName(l10n),
-      TtsEngineKind.kokoro || TtsEngineKind.piper => l10n.asrBackendOffline,
+      TtsEngineKind.kokoro => l10n.ttsEngineKokoro,
+      TtsEngineKind.piper => l10n.ttsEnginePiper,
     };
   }
 

@@ -31,7 +31,7 @@ class _TestKokoroNotifier extends KokoroModelNotifier {
 }
 
 void main() {
-  test('Advanced 发音状态复用当前 Kokoro 全局下载进度', () {
+  test('Kokoro 发音状态复用当前 Kokoro 全局下载进度', () {
     final container = ProviderContainer(
       overrides: [
         initialTtsSettingsProvider.overrideWithValue(
@@ -58,7 +58,7 @@ void main() {
     expect(state.isReady, isFalse);
   });
 
-  test('Balanced 发音状态复用当前 Piper 全局失败状态', () {
+  test('Piper 发音状态复用当前 Piper 全局失败状态', () {
     const voiceId = 'en_US-amy-medium';
     final container = ProviderContainer(
       overrides: [
@@ -81,7 +81,8 @@ void main() {
     expect(state.engine, TtsEngineKind.piper);
     expect(state.status, AsrModelDownloadStatus.failed);
     expect(state.isReady, isFalse);
-    expect(state.estimatedDownloadBytes, greaterThan(0));
+    // HF 逐文件音色的预估包含共享 espeak 依赖（约 9MB）。
+    expect(state.estimatedDownloadBytes, 72189194);
   });
 
   testWidgets('未下载时显示说明、预计流量和手动下载按钮', (tester) async {

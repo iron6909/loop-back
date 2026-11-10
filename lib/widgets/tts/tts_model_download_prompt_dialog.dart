@@ -32,12 +32,16 @@ class TtsPlaybackModelState {
   final DownloadFailureKind? failure;
   final int estimatedDownloadBytes;
 
+  /// 许可是否允许再分发（决定可否提供下载入口）。
+  final bool redistributable;
+
   const TtsPlaybackModelState({
     required this.engine,
     required this.status,
     required this.progress,
     required this.failure,
     required this.estimatedDownloadBytes,
+    this.redistributable = true,
   });
 
   bool get isReady =>
@@ -76,9 +80,10 @@ final ttsPlaybackModelStateProvider = Provider<TtsPlaybackModelState>((ref) {
         progress: state.downloadProgress,
         failure: state.downloadError,
         estimatedDownloadBytes:
-            piperVoiceById(settings.activePiperVoice)?.resource
-                ?.estimatedDownloadBytes ??
+            piperVoiceById(settings.activePiperVoice)?.estimatedDownloadBytes ??
             0,
+        redistributable:
+            piperVoiceById(settings.activePiperVoice)?.redistributable ?? true,
       );
   }
 });
@@ -238,6 +243,8 @@ class TtsModelDownloadDialog extends ConsumerWidget {
     final failed = model.status == AsrModelDownloadStatus.failed;
     final notDownloaded = model.status == AsrModelDownloadStatus.notDownloaded;
     final downloading = model.status == AsrModelDownloadStatus.downloading;
+    // 不可再分发的音色未安装/损坏时，只能如实告知不可下载，不给下载/重试入口。
+    final notAllowed = !model.redistributable && !model.isReady;
     final progress = '${(model.progress * 100).toStringAsFixed(0)}%';
     final size = formatBytes(model.estimatedDownloadBytes);
     final title = switch (model.status) {
@@ -253,7 +260,11 @@ class TtsModelDownloadDialog extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (notDownloaded)
+          if (notAllowed)
+            _DownloadMessage(
+              children: [Text(l10n.ttsModelDownloadNotAllowed)],
+            ),
+          if (notDownloaded && !notAllowed)
             _DownloadMessage(
               children: [
                 Text(l10n.ttsModelDownloadIntro),
@@ -273,7 +284,7 @@ class TtsModelDownloadDialog extends ConsumerWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-          if (failed) ...[
+          if (failed && !notAllowed) ...[
             const SizedBox(height: 8),
             _DownloadMessage(
               children: [
@@ -291,7 +302,9 @@ class TtsModelDownloadDialog extends ConsumerWidget {
           ],
         ],
       ),
-      actions: downloading
+      actions: notAllowed
+          ? const []
+          : downloading
           ? [
               TextButton(
                 onPressed: () {
@@ -341,9 +354,10 @@ class TtsModelDownloadDialog extends ConsumerWidget {
       progress: state.downloadProgress,
       failure: state.downloadError,
       estimatedDownloadBytes:
-          piperVoiceById(settings.activePiperVoice)?.resource
-              ?.estimatedDownloadBytes ??
+          piperVoiceById(settings.activePiperVoice)?.estimatedDownloadBytes ??
           0,
+      redistributable:
+          piperVoiceById(settings.activePiperVoice)?.redistributable ?? true,
     );
   }
 

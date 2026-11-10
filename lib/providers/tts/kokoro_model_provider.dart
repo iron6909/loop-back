@@ -1,4 +1,4 @@
-/// Echo Loop TTS（Kokoro）模型下载状态机 Provider（多变体）。
+/// Kokoro TTS 模型下载状态机 Provider（多变体）。
 ///
 /// 管理 fp32 / int8 两个 Kokoro 模型变体各自的下载/重试/取消/删除与就绪状态。
 /// 每个变体一个 [KokoroModelManager]（`kokoroModelManagerProvider` 的 family），
@@ -298,8 +298,10 @@ class KokoroModelNotifier extends Notifier<KokoroModelsState> {
     CancelToken cancelToken,
   ) async {
     final manager = ref.read(kokoroModelManagerProvider(variant));
+    final source = ref.read(ttsSettingsProvider).downloadSource;
     try {
       await manager.downloadModel(
+        source: source,
         cancelToken: cancelToken,
         onProgress: (p) {
           if (!_isCurrent(variant, session, cancelToken)) return;

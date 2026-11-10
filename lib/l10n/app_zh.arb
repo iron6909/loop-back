@@ -2374,15 +2374,14 @@
   "ttsEnginePlatform": "系统语音",
   "ttsEnginePlatformApple": "Apple AI",
   "ttsEnginePlatformDescription": "设备自带，速度快、无需下载，但音质一般。",
-  "ttsEngineEchoLoop": "Echo Loop AI (Advanced)",
-  "ttsEngineComingSoon": "即将推出",
-  "ttsEngineEchoLoopDescription": "音质最好，需下载模型，推荐高性能设备使用。",
-  "ttsEnginePiper": "Echo Loop AI (Balanced)",
+  "ttsEngineKokoro": "Kokoro",
+  "ttsEngineKokoroDescription": "音质最好，需下载模型，推荐高性能设备使用。",
+  "ttsEnginePiper": "Piper",
   "ttsEnginePiperDescription": "音质自然流畅，需下载模型，推荐中等配置设备使用。",
   "ttsModel": "模型",
-  "ttsModelHighQuality": "高质量",
+  "ttsModelHighQuality": "全精度 (fp32)",
   "ttsModelHighQualityDescription": "音质最佳，速度可接受。约 300 MB。",
-  "ttsModelLite": "轻量",
+  "ttsModelLite": "量化 (int8)",
   "ttsModelLiteDescription": "体积小、速度慢，适合低端设备。约 100 MB。",
   "ttsModelRecommended": "推荐",
   "ttsModelNotDownloaded": "未下载",
@@ -2404,10 +2403,33 @@
   "ttsVoiceFemale": "女",
   "ttsVoiceMale": "男",
   "ttsDeleteModel": "删除模型",
-  "ttsDeleteModelConfirm": "删除 Echo Loop 语音模型？可随时重新下载。",
+  "ttsDeleteModelConfirm": "删除 {model} 语音模型？可随时重新下载。",
+  "@ttsDeleteModelConfirm": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsDeleteAllModelsConfirm": "删除所有已下载的模型？可随时重新下载。",
   "ttsCancelDownload": "取消",
-  "ttsDownloadedModelsTitle": "已下载的 Echo Loop 模型",
+  "ttsDownloadedModelsTitle": "已下载的模型",
   "ttsDownloadedModelsDesc": "未在使用 · 占用 {size}",
+  "ttsSourceGithubRelease": "{repository}（GitHub Release）",
+  "@ttsSourceGithubRelease": {
+    "placeholders": {
+      "repository": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsKokoroLicense": "Apache-2.0 · espeak-ng-data GPL-3.0-or-later",
+  "ttsDownloadSourceTitle": "下载来源",
+  "ttsDownloadSourceDescription": "仅作用于有镜像的模型，两个来源使用相同版本与校验值。",
+  "ttsDownloadSourcePublic": "公开上游",
+  "ttsDownloadSourceMirror": "hf-mirror.com",
+  "ttsModelNotAvailable": "不可下载",
+  "ttsModelDownloadNotAllowed": "此音色的许可不允许再分发，无法下载。",
   "asrDeleteAllModelsConfirm": "删除所有已下载的 Echo Loop 语音识别模型？可随时重新下载。",
   "asrDownloadedModelsTitle": "已下载的语音识别模型",
   "asrDownloadedModelsDesc": "未在使用 · 占用 {size}",

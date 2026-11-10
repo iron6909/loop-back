@@ -5216,17 +5216,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Built into your device. Fast, no download required, average quality.';
 
   @override
-  String get ttsEngineEchoLoop => 'Echo Loop AI (Advanced)';
+  String get ttsEngineKokoro => 'Kokoro';
 
   @override
-  String get ttsEngineComingSoon => 'Coming soon';
-
-  @override
-  String get ttsEngineEchoLoopDescription =>
+  String get ttsEngineKokoroDescription =>
       'Best sound quality. Needs a model download; recommended for high-performance devices.';
 
   @override
-  String get ttsEnginePiper => 'Echo Loop AI (Balanced)';
+  String get ttsEnginePiper => 'Piper';
 
   @override
   String get ttsEnginePiperDescription =>
@@ -5236,14 +5233,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ttsModel => 'Model';
 
   @override
-  String get ttsModelHighQuality => 'High quality';
+  String get ttsModelHighQuality => 'Full precision (fp32)';
 
   @override
   String get ttsModelHighQualityDescription =>
       'Best sound at acceptable speed. About 300 MB.';
 
   @override
-  String get ttsModelLite => 'Lightweight';
+  String get ttsModelLite => 'Quantized (int8)';
 
   @override
   String get ttsModelLiteDescription =>
@@ -5322,19 +5319,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ttsDeleteModel => 'Delete model';
 
   @override
-  String get ttsDeleteModelConfirm =>
-      'Delete the Echo Loop voice model? You can re-download it anytime.';
+  String ttsDeleteModelConfirm(String model) {
+    return 'Delete the $model voice model? You can re-download it anytime.';
+  }
+
+  @override
+  String get ttsDeleteAllModelsConfirm =>
+      'Delete all downloaded models? You can re-download them anytime.';
 
   @override
   String get ttsCancelDownload => 'Cancel';
 
   @override
-  String get ttsDownloadedModelsTitle => 'Downloaded Echo Loop models';
+  String get ttsDownloadedModelsTitle => 'Downloaded models';
 
   @override
   String ttsDownloadedModelsDesc(String size) {
     return 'Not in use · $size';
   }
+
+  @override
+  String ttsSourceGithubRelease(String repository) {
+    return '$repository (GitHub Release)';
+  }
+
+  @override
+  String get ttsKokoroLicense => 'Apache-2.0 · espeak-ng-data GPL-3.0-or-later';
+
+  @override
+  String get ttsDownloadSourceTitle => 'Download Source';
+
+  @override
+  String get ttsDownloadSourceDescription =>
+      'Applies to models that have a mirror. Both sources serve the same version and checksums.';
+
+  @override
+  String get ttsDownloadSourcePublic => 'Public upstream';
+
+  @override
+  String get ttsDownloadSourceMirror => 'hf-mirror.com';
+
+  @override
+  String get ttsModelNotAvailable => 'Not available for download';
+
+  @override
+  String get ttsModelDownloadNotAllowed =>
+      'This voice can\'t be downloaded because its license doesn\'t permit redistribution.';
 
   @override
   String get asrDeleteAllModelsConfirm =>
