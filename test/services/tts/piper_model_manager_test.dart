@@ -529,6 +529,47 @@ void main() {
     expect(requestedUris.single.path, '/espeak-ng-data.tar.gz');
   });
 
+  test('espeak 目录存在但 phondata 缺失 → 视为未下载且只补 espeak', () async {
+    final modelArchive = _buildArchive();
+    final espeakArchive = _buildEspeakArchive();
+    final voice = githubVoice(modelArchive);
+    final requestedUris = <Uri>[];
+    final dio = Dio();
+    dio.httpClientAdapter = _MockResourceAdapter(
+      {
+        voice.resource!.files.single.name: modelArchive,
+        ttsEspeakNgDataFileName: espeakArchive,
+      },
+      requestUris: requestedUris,
+    );
+    final manager = PiperModelManager(
+      dio: dio,
+      baseUrlOverride: 'http://mock.local',
+      voice: voice,
+      resourceRegistryOverride: {
+        voice.id: voice.resource!,
+        ttsEspeakNgDataResourceId: _espeakSpec(espeakArchive),
+      },
+      modelsRootResolver: () async => root.path,
+    );
+
+    await manager.downloadModel();
+    requestedUris.clear();
+
+    // 仅删除 phondata（保留 espeak-ng-data 目录），模拟目录存在但核心文件缺失。
+    final dataDir = Directory(
+      p.join(await manager.modelDir(), piperDataDirectoryName),
+    );
+    await File(p.join(dataDir.path, 'phondata')).delete();
+    expect(await manager.isModelDownloaded(), isFalse);
+
+    // 再下载：只补 espeak 归档，模型归档不重下，修复后即视为已下载。
+    await manager.downloadModel();
+    expect(requestedUris.map((u) => u.path).toList(), ['/espeak-ng-data.tar.gz']);
+    expect(await manager.isModelDownloaded(), isTrue);
+    expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
+  });
+
   test('许可不允许再分发的音色 → downloadModel 抛错', () async {
     final voice = piperVoiceById('en_US-lessac-medium')!;
     final manager = PiperModelManager(

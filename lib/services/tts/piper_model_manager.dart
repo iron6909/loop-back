@@ -29,7 +29,8 @@ import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
 import '../resource_install_manifest.dart';
 import 'piper_model_catalog.dart';
-import 'tts_shared_resource_catalog.dart' show ttsEspeakNgDataResourceId;
+import 'tts_espeak_repair.dart'
+    show installTtsEspeakData, ttsEspeakDataNeedsRepair;
 
 // 复用 ASR 的下载状态/进度类型（已是通用命名，避免重复定义）。
 export '../asr/asr_model_manager.dart'
@@ -204,10 +205,16 @@ class PiperModelManager {
           status: AsrModelDownloadStatus.downloading,
         ),
       );
-      await _installEspeakIntoModel(
+      await installTtsEspeakData(
+        logTag: 'PiperModel',
         root: root,
         target: target,
+        dataDirectoryName: piperDataDirectoryName,
+        existingDataDirPath: await _findDir(target, piperDataDirectoryName),
+        resourceRegistry: resourceRegistry,
+        installer: _archiveInstaller,
         source: source,
+        uriFor: _uriFor,
         cancelToken: cancelToken,
       );
       onProgress?.call(
@@ -335,10 +342,16 @@ class PiperModelManager {
         ),
       ),
     );
-    await _installEspeakIntoModel(
+    await installTtsEspeakData(
+      logTag: 'PiperModel',
       root: root,
       target: target,
+      dataDirectoryName: piperDataDirectoryName,
+      existingDataDirPath: await _findDir(target, piperDataDirectoryName),
+      resourceRegistry: resourceRegistry,
+      installer: _archiveInstaller,
       source: source,
+      uriFor: _uriFor,
       cancelToken: cancelToken,
     );
   }
@@ -349,49 +362,8 @@ class PiperModelManager {
     final model = await _findOnnx(target);
     final tokens = await _findFile(target, piperTokensFileName);
     if (model == null || tokens == null) return false;
-    final dataDir = await _findDir(target, piperDataDirectoryName);
-    if (dataDir == null) return true;
-    // 以 espeak 核心数据文件作为目录完整性标记（与 Kokoro 只补修复一致）。
-    return !File(p.join(dataDir, 'phondata')).existsSync();
-  }
-
-  /// 只下载共享 `espeak-ng-data` 归档并解包进模型目录（不重下模型本体）。
-  Future<void> _installEspeakIntoModel({
-    required Directory root,
-    required Directory target,
-    required AsrDownloadSource source,
-    CancelToken? cancelToken,
-  }) async {
-    final resource = resourceRegistry[ttsEspeakNgDataResourceId];
-    if (resource == null) {
-      throw StateError('Missing espeak resource: $ttsEspeakNgDataResourceId');
-    }
-    final file = resource.files.single;
-    final existing = await _findDir(target, piperDataDirectoryName);
-    final dataDir = existing != null
-        ? Directory(existing)
-        : Directory(p.join(target.path, piperDataDirectoryName));
-    AppLogger.log(
-      'PiperModel',
-      '补 espeak-ng-data into=${dataDir.path} url=${_uriFor(resource, file, source)}',
-    );
-    await _archiveInstaller.install(
-      root: root,
-      target: dataDir,
-      resourceId: resource.id,
-      archiveFileName: '_download_${resource.id}.tar.gz',
-      uri: _uriFor(resource, file, source),
-      expectedSha256: file.sha256,
-      cancelToken: cancelToken,
-      extractAndValidate: (archive, staging) async {
-        await extractFileToDisk(archive.path, staging.path);
-        if (!File(p.join(staging.path, 'phondata')).existsSync()) {
-          throw StateError(
-            'espeak-ng-data key files missing after extraction in '
-            '${staging.path}',
-          );
-        }
-      },
+    return ttsEspeakDataNeedsRepair(
+      await _findDir(target, piperDataDirectoryName),
     );
   }
 
@@ -439,7 +411,10 @@ class PiperModelManager {
     final model = await _findOnnx(dir);
     final tokens = await _findFile(dir, piperTokensFileName);
     final dataDir = await _findDir(dir, piperDataDirectoryName);
-    if (model == null || tokens == null || dataDir == null) {
+    if (model == null ||
+        tokens == null ||
+        dataDir == null ||
+        ttsEspeakDataNeedsRepair(dataDir)) {
       return null;
     }
     return PiperModelPaths(model: model, tokens: tokens, dataDir: dataDir);

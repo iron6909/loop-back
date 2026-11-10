@@ -497,6 +497,46 @@ void main() {
     expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
   });
 
+  test('espeak 目录存在但 phondata 缺失 → 视为未下载且只补 espeak', () async {
+    final modelArchive = _buildArchive();
+    final espeakArchive = _buildEspeakArchive();
+    final requested = <Uri>[];
+    final dio = Dio();
+    dio.httpClientAdapter = _MultiArchiveAdapter(
+      {
+        'test.tar.gz': modelArchive,
+        'espeak-ng-data.tar.gz': espeakArchive,
+      },
+      requestUris: requested,
+    );
+    final manager = KokoroModelManager(
+      dio: dio,
+      baseUrlOverride: 'http://mock.local',
+      spec: _testSpec(sha: sha256.convert(modelArchive).toString()),
+      resourceRegistryOverride: _espeakRegistry(espeakArchive),
+      modelsRootResolver: () async => root.path,
+    );
+
+    await manager.downloadModel();
+    requested.clear();
+
+    // 仅删除 phondata（保留 espeak-ng-data 目录），模拟目录存在但核心文件缺失。
+    final dataDir = Directory(
+      p.join(await manager.modelDir(), 'espeak-ng-data'),
+    );
+    await File(p.join(dataDir.path, 'phondata')).delete();
+    expect(await manager.isModelDownloaded(), isFalse);
+
+    // 再下载：只补 espeak 归档，模型归档不重下，修复后即视为已下载。
+    await manager.downloadModel();
+    expect(
+      requested.map((u) => u.pathSegments.last).toList(),
+      ['espeak-ng-data.tar.gz'],
+    );
+    expect(await manager.isModelDownloaded(), isTrue);
+    expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
+  });
+
   test('espeak 修复失败 → 抛错且模型目录保留', () async {
     final modelArchive = _buildArchive();
     final espeakArchive = _buildEspeakArchive();

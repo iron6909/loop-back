@@ -23,7 +23,8 @@ import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
 import '../resource_install_manifest.dart';
 import 'kokoro_model_catalog.dart';
-import 'tts_shared_resource_catalog.dart' show ttsEspeakNgDataResourceId;
+import 'tts_espeak_repair.dart'
+    show installTtsEspeakData, ttsEspeakDataNeedsRepair;
 
 // 复用 ASR 的下载状态/进度类型（已是通用命名，避免重复定义）。
 export '../asr/asr_model_manager.dart'
@@ -200,10 +201,16 @@ class KokoroModelManager {
           status: AsrModelDownloadStatus.downloading,
         ),
       );
-      await _installEspeakIntoModel(
+      await installTtsEspeakData(
+        logTag: 'KokoroModel',
         root: root,
         target: target,
+        dataDirectoryName: kokoroDataDirectoryName,
+        existingDataDirPath: await _findDir(target, kokoroDataDirectoryName),
+        resourceRegistry: resourceRegistry,
+        installer: _installer,
         source: source,
+        uriFor: _uriFor,
         cancelToken: cancelToken,
       );
       onProgress?.call(
@@ -274,52 +281,8 @@ class KokoroModelManager {
     final voices = await _findFile(target, kokoroVoicesFileName);
     final tokens = await _findFile(target, kokoroTokensFileName);
     if (model == null || voices == null || tokens == null) return false;
-    final dataDir = await _findDir(target, kokoroDataDirectoryName);
-    if (dataDir == null) return true;
-    // 以 espeak 核心数据文件作为目录完整性标记（与旧依赖安装一致）。
-    return !File(p.join(dataDir, 'phondata')).existsSync();
-  }
-
-  /// 只下载独立 `espeak-ng-data` 归档并解包进模型目录（不重下模型本体）。
-  Future<void> _installEspeakIntoModel({
-    required Directory root,
-    required Directory target,
-    required AsrDownloadSource source,
-    CancelToken? cancelToken,
-  }) async {
-    final resource = resourceRegistry[ttsEspeakNgDataResourceId];
-    if (resource == null) {
-      throw StateError(
-        'Missing Kokoro espeak resource: $ttsEspeakNgDataResourceId',
-      );
-    }
-    final file = resource.files.single;
-    final existing = await _findDir(target, kokoroDataDirectoryName);
-    final dataDir = existing != null
-        ? Directory(existing)
-        : Directory(p.join(target.path, kokoroDataDirectoryName));
-    AppLogger.log(
-      'KokoroModel',
-      '补 espeak-ng-data into=${dataDir.path} url=${_uriFor(resource, file, source)}',
-    );
-    await _installer.install(
-      root: root,
-      target: dataDir,
-      resourceId: resource.id,
-      archiveFileName: '_download_${resource.id}.tar.gz',
-      uri: _uriFor(resource, file, source),
-      expectedSha256: file.sha256,
-      cancelToken: cancelToken,
-      extractAndValidate: (archive, staging) async {
-        await extractFileToDisk(archive.path, staging.path);
-        // espeak-ng-data 归档根级平铺，以核心数据文件作为完整性标记。
-        if (!File(p.join(staging.path, 'phondata')).existsSync()) {
-          throw StateError(
-            'espeak-ng-data key files missing after extraction in '
-            '${staging.path}',
-          );
-        }
-      },
+    return ttsEspeakDataNeedsRepair(
+      await _findDir(target, kokoroDataDirectoryName),
     );
   }
 
@@ -365,7 +328,11 @@ class KokoroModelManager {
     final voices = await _findFile(dir, kokoroVoicesFileName);
     final tokens = await _findFile(dir, kokoroTokensFileName);
     final dataDir = await _findDir(dir, kokoroDataDirectoryName);
-    if (model == null || voices == null || tokens == null || dataDir == null) {
+    if (model == null ||
+        voices == null ||
+        tokens == null ||
+        dataDir == null ||
+        ttsEspeakDataNeedsRepair(dataDir)) {
       return null;
     }
     return KokoroModelPaths(
