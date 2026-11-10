@@ -193,7 +193,7 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
       unawaited(
         NetworkPermissionTrigger.trigger(
           _prefs,
-          runtimeEndpointRouter.modelCdnBaseUrl,
+          runtimeEndpointRouter.apiBaseUrl,
         ),
       );
     }

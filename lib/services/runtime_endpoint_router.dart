@@ -1,7 +1,7 @@
 import '../config/regional_service_endpoints.dart';
 import 'app_logger.dart';
 
-/// 按本次启动最终地区在全球和中国 API/CDN 之间固定选择一个区域。
+/// 按本次启动最终地区在全球和中国 API 之间固定选择一个区域。
 class RuntimeEndpointRouter {
   RuntimeEndpointRouter({required this.endpoints});
 
@@ -12,9 +12,8 @@ class RuntimeEndpointRouter {
   /// 当前地区判定快照。
   bool get isChinaUser => _isChinaUser;
 
-  /// 当前 API 与 CDN 共用的区域选择。
+  /// 当前 API 区域选择。
   ServiceEndpointRegion get apiRegion => _selectedRegion;
-  ServiceEndpointRegion get modelCdnRegion => _selectedRegion;
 
   ServiceEndpointRegion get _selectedRegion =>
       _isChinaUser ? ServiceEndpointRegion.china : ServiceEndpointRegion.global;
@@ -25,29 +24,17 @@ class RuntimeEndpointRouter {
     service: 'API',
   );
 
-  /// 当前所选区域的模型 CDN 地址；未配置时明确报错，不访问另一区域。
-  String get modelCdnBaseUrl => _requiredEndpoint(
-    endpoints.modelCdnBaseUrlFor(_selectedRegion),
-    service: 'model CDN',
-  );
-
   Uri apiUri(String path) => _resolvePath(apiBaseUrl, path);
 
-  /// 启动地区决策完成后固定本进程的 API 与 CDN 区域。
+  /// 启动地区决策完成后固定本进程的 API 区域。
   void updateFromUserRegion({required bool isChinaUser}) {
     _isChinaUser = isChinaUser;
     final region = _selectedRegion;
     AppLogger.log(
       'EndpointRouter',
       'userRegion china=$isChinaUser selected=${region.name} '
-          'api=${_endpointLabel(endpoints.apiBaseUrlFor(region))} '
-          'cdn=${_endpointLabel(endpoints.modelCdnBaseUrlFor(region))}',
+          'api=${_endpointLabel(endpoints.apiBaseUrlFor(region))}',
     );
-  }
-
-  /// 将 CDN 资源相对路径解析到当前选中的 CDN 域名。
-  Uri modelCdnUri(String resourcePath) {
-    return _resolvePath(modelCdnBaseUrl, resourcePath);
   }
 
   String _requiredEndpoint(String? endpoint, {required String service}) {
