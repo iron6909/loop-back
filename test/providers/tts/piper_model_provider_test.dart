@@ -163,6 +163,18 @@ void main() {
     );
   });
 
+  test('install.json 存在但文件损坏 → ensureDownloaded 触发修复下载而非误报就绪', () async {
+    // 安装清单仍在、关键文件（如 espeak-ng-data）被外部删除：应走修复下载。
+    final manager = _FakeManager(installMarker: true, downloaded: false);
+    final c = _container((_) => manager);
+    addTearDown(c.dispose);
+
+    await c.read(piperModelProvider.notifier).ensureDownloaded(_us);
+
+    expect(manager.downloadCount, 1);
+    expect(c.read(piperModelProvider).of(_us).isReady, isTrue);
+  });
+
   test('refreshInstalledStates 检查全部音色且不下载', () async {
     final managers = <String, _FakeManager>{};
     final c = _container((voiceId) {
