@@ -1,7 +1,7 @@
 # Echo Loop 项目规划
 
-> 最后更新：2026-11-02（供应商直连与自有后端本地化）
-> 当前焦点：Android 本地化改造收尾；代码已交付，最终真机验收待设备。规格与实施计划见 [spec.md](./docs/features/20261031-local-openai-localization/spec.md)、[plan.md](./docs/features/20261031-local-openai-localization/plan.md)。
+> 最后更新：2026-11-10（语音合成去 EchoLoop 化方案定稿）
+> 当前焦点：语音识别去 EchoLoop 化已交付；语音合成（TTS）去品牌化方案已定稿（[spec #20](https://github.com/iron6909/loop-back/issues/20)），实施工单 [#21](https://github.com/iron6909/loop-back/issues/21)–[#25](https://github.com/iron6909/loop-back/issues/25) 按阻断边待实施。规格与实施计划见 [docs/features/20261110-tts-provider-decoupling/](./docs/features/20261110-tts-provider-decoupling/plan.md)。
 
 ## 产品目标
 
@@ -75,8 +75,9 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 1. 在 Android 真机完成目录导入、本机转录、历史缺媒体与供应商设置验收。
 2. 解决既有 Android 离线 ASR 闪退，保持独立复述转写不传 VAD 路径。
 3. 在具备 macOS 宿主与抓包条件的设备上补齐语音识别去耦的剩余验收：Apple 编译与集成测试、在线三用途流程、域名隔离网络证据、VAD 录音路径。
-4. 完成启动埋点权限快照的手动验证。
-5. 继续收敛录音识别模块复用边界与发布构建验证。
+4. 实施语音合成去 EchoLoop 化（spec #20，工单 #21–#25）：从外部源核对与 Kokoro/Piper 公开分发开始，再到设置页去品牌、迁移回归与真机验收。
+5. 完成启动埋点权限快照的手动验证。
+6. 继续收敛录音识别模块复用边界与发布构建验证。
 
 ## 架构约束（精简版）
 
