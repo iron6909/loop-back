@@ -5,6 +5,8 @@
 library;
 
 import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
+import 'package:echo_loop/services/asr/asr_model_catalog.dart'
+    show AsrDownloadSource;
 import 'package:echo_loop/services/tts/piper_model_catalog.dart';
 import 'package:echo_loop/services/tts/tts_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -332,6 +334,55 @@ void main() {
       expect(
         const TtsSettings(accent: TtsAccent.uk),
         const TtsSettings(accent: TtsAccent.uk),
+      );
+    });
+  });
+
+  group('下载来源', () {
+    test('默认公开上游', () {
+      expect(
+        const TtsSettings().downloadSource,
+        AsrDownloadSource.huggingFace,
+      );
+    });
+
+    test('fromPrefsSync 读取保存的来源；非法值回退公开上游', () async {
+      SharedPreferences.setMockInitialValues({
+        TtsSettingsKeys.downloadSource: AsrDownloadSource.huggingFaceMirror.name,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      expect(
+        TtsSettings.fromPrefsSync(prefs).downloadSource,
+        AsrDownloadSource.huggingFaceMirror,
+      );
+
+      SharedPreferences.setMockInitialValues({
+        TtsSettingsKeys.downloadSource: 'bogus',
+      });
+      final bad = await SharedPreferences.getInstance();
+      expect(
+        TtsSettings.fromPrefsSync(bad).downloadSource,
+        AsrDownloadSource.huggingFace,
+      );
+    });
+
+    test('setDownloadSource 写 SP + 更新 state', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final c = makeContainer(prefs);
+      addTearDown(c.dispose);
+
+      await c
+          .read(ttsSettingsProvider.notifier)
+          .setDownloadSource(AsrDownloadSource.huggingFaceMirror);
+      expect(
+        c.read(ttsSettingsProvider).downloadSource,
+        AsrDownloadSource.huggingFaceMirror,
+      );
+      final saved = await SharedPreferences.getInstance();
+      expect(
+        saved.getString(TtsSettingsKeys.downloadSource),
+        AsrDownloadSource.huggingFaceMirror.name,
       );
     });
   });

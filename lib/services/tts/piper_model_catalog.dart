@@ -115,6 +115,20 @@ class PiperVoice {
   /// 是否允许下载（许可允许再分发）。
   bool get redistributable => resource != null;
 
+  /// 预计下载字节数（供下载弹窗预估）。
+  ///
+  /// HF 逐文件音色单独下载共享 espeak 依赖，预估需把该依赖一并计入；GitHub
+  /// 整包音色归档自带 espeak，不重复计入。不可再分发音色返回 0。
+  int get estimatedDownloadBytes {
+    final resource = this.resource;
+    if (resource == null) return 0;
+    if (resource.layout != AsrPublicResourceLayout.huggingFaceResolve) {
+      return resource.estimatedDownloadBytes;
+    }
+    return resource.estimatedDownloadBytes +
+        ttsEspeakNgDataResource.estimatedDownloadBytes;
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

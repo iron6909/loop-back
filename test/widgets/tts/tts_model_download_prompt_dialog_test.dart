@@ -81,7 +81,8 @@ void main() {
     expect(state.engine, TtsEngineKind.piper);
     expect(state.status, AsrModelDownloadStatus.failed);
     expect(state.isReady, isFalse);
-    expect(state.estimatedDownloadBytes, greaterThan(0));
+    // HF 逐文件音色的预估包含共享 espeak 依赖（约 9MB）。
+    expect(state.estimatedDownloadBytes, 72189194);
   });
 
   testWidgets('未下载时显示说明、预计流量和手动下载按钮', (tester) async {

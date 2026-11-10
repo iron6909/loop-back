@@ -3045,15 +3045,14 @@
   "ttsEnginePlatform": "System Speech",
   "ttsEnginePlatformApple": "Apple AI",
   "ttsEnginePlatformDescription": "Built into your device. Fast, no download required, average quality.",
-  "ttsEngineEchoLoop": "Echo Loop AI (Advanced)",
-  "ttsEngineComingSoon": "Coming soon",
+  "ttsEngineEchoLoop": "Kokoro",
   "ttsEngineEchoLoopDescription": "Best sound quality. Needs a model download; recommended for high-performance devices.",
-  "ttsEnginePiper": "Echo Loop AI (Balanced)",
+  "ttsEnginePiper": "Piper",
   "ttsEnginePiperDescription": "Natural, smooth sound. Needs a model download; recommended for mid-range devices.",
   "ttsModel": "Model",
-  "ttsModelHighQuality": "High quality",
+  "ttsModelHighQuality": "Full precision (fp32)",
   "ttsModelHighQualityDescription": "Best sound at acceptable speed. About 300 MB.",
-  "ttsModelLite": "Lightweight",
+  "ttsModelLite": "Quantized (int8)",
   "ttsModelLiteDescription": "Small and memory-friendly for low-end devices, but slower. About 100 MB.",
   "ttsModelRecommended": "Recommended",
   "ttsModelNotDownloaded": "Not downloaded",
@@ -3075,9 +3074,17 @@
   "ttsVoiceFemale": "Female",
   "ttsVoiceMale": "Male",
   "ttsDeleteModel": "Delete model",
-  "ttsDeleteModelConfirm": "Delete the Echo Loop voice model? You can re-download it anytime.",
+  "ttsDeleteModelConfirm": "Delete the {model} voice model? You can re-download it anytime.",
+  "@ttsDeleteModelConfirm": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsDeleteAllModelsConfirm": "Delete all downloaded models? You can re-download them anytime.",
   "ttsCancelDownload": "Cancel",
-  "ttsDownloadedModelsTitle": "Downloaded Echo Loop models",
+  "ttsDownloadedModelsTitle": "Downloaded models",
   "ttsDownloadedModelsDesc": "Not in use · {size}",
   "@ttsDownloadedModelsDesc": {
     "placeholders": {
@@ -3086,6 +3093,21 @@
       }
     }
   },
+  "ttsSourceGithubRelease": "{repository} (GitHub Release)",
+  "@ttsSourceGithubRelease": {
+    "placeholders": {
+      "repository": {
+        "type": "String"
+      }
+    }
+  },
+  "ttsKokoroLicense": "Apache-2.0 · espeak-ng-data GPL-3.0-or-later",
+  "ttsDownloadSourceTitle": "Download Source",
+  "ttsDownloadSourceDescription": "Applies to models that have a mirror. Both sources serve the same version and checksums.",
+  "ttsDownloadSourcePublic": "Public upstream",
+  "ttsDownloadSourceMirror": "hf-mirror.com",
+  "ttsModelNotAvailable": "Not available for download",
+  "ttsModelDownloadNotAllowed": "This voice can't be downloaded because its license doesn't permit redistribution.",
   "asrDeleteAllModelsConfirm": "Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.",
   "asrDownloadedModelsTitle": "Downloaded speech recognition models",
   "asrDownloadedModelsDesc": "Not in use · {size}",

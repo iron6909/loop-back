@@ -6,6 +6,8 @@ import 'package:echo_loop/providers/tts/piper_model_provider.dart';
 import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
 import 'package:echo_loop/services/download/download_failure.dart';
 import 'package:echo_loop/screens/tts_settings_screen.dart';
+import 'package:echo_loop/services/asr/asr_model_catalog.dart'
+    show AsrDownloadSource;
 import 'package:echo_loop/services/tts/kokoro_model_manager.dart'
     show AsrModelDownloadStatus, KokoroModelVariant;
 import 'package:echo_loop/services/tts/tts_engine.dart';
@@ -108,12 +110,19 @@ void main() {
 
     // 平台引擎显示名随宿主而变（Apple → Apple AI，其余 → System Speech）。
     expect(find.text(_platformEngineLabel), findsOneWidget);
-    // Echo Loop 现拆为两档可选：Balanced(Piper) / Advanced(Kokoro)。
-    expect(find.text('Echo Loop AI (Balanced)'), findsOneWidget);
-    expect(find.text('Echo Loop AI (Advanced)'), findsNWidgets(2));
+    // 两个本地引擎以真实名展示：Piper / Kokoro（引擎单选 + 专属归属标题）。
+    expect(find.text('Piper'), findsOneWidget);
+    expect(find.text('Kokoro'), findsNWidgets(2));
     expect(find.textContaining('Best sound quality'), findsOneWidget);
-    expect(find.text('High quality'), findsOneWidget);
+    expect(find.text('Full precision (fp32)'), findsOneWidget);
     expect(find.text('Recommended'), findsOneWidget);
+    // Kokoro 卡展示来源与许可（含共享 espeak-ng-data 许可）。
+    expect(
+      find.textContaining('iron6909/loop-back-models (GitHub Release)'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('Apache-2.0'), findsOneWidget);
+    expect(find.textContaining('espeak-ng-data GPL-3.0-or-later'), findsOneWidget);
   });
 
   test('Android 不显示系统语音入口，其他平台保留', () {
@@ -121,20 +130,20 @@ void main() {
     expect(showPlatformTtsEngine(false), isTrue);
   });
 
-  testWidgets('Echo Loop → 显示两个模型变体（高质量带推荐徽标 / 轻量）', (tester) async {
+  testWidgets('Kokoro → 显示两个模型变体（全精度带推荐徽标 / 量化）', (tester) async {
     await tester.pumpWidget(
       _wrap(const TtsSettings(engine: TtsEngineKind.kokoro)),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('High quality'), findsOneWidget);
-    expect(find.text('Lightweight'), findsOneWidget);
+    expect(find.text('Full precision (fp32)'), findsOneWidget);
+    expect(find.text('Quantized (int8)'), findsOneWidget);
     expect(find.text('Recommended'), findsOneWidget);
     // 两个变体的单选控件。
     expect(find.byType(Radio<KokoroModelVariant>), findsNWidgets(2));
   });
 
-  testWidgets('点轻量变体 → setKokoroVariant(int8) + ensureDownloaded(int8)', (
+  testWidgets('点量化变体 → setKokoroVariant(int8) + ensureDownloaded(int8)', (
     tester,
   ) async {
     final notifier = _TestKokoroNotifier(const KokoroModelsState({}));
@@ -146,7 +155,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Lightweight'));
+    await tester.tap(find.text('Quantized (int8)'));
     await tester.pumpAndSettle();
 
     expect(
@@ -241,7 +250,9 @@ void main() {
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.byTooltip('Cancel'), findsNothing);
-    expect(find.byIcon(Icons.download_rounded), findsNWidgets(8));
+    // lessac/alan 不可再分发，不提供下载按钮；amy 正在下载也不显下载图标，
+    // 故其余 6 个可下载音色 → 6 个下载图标。
+    expect(find.byIcon(Icons.download_rounded), findsNWidgets(6));
   });
 
   testWidgets('存储空间不足 → 显清晰的空间不足文案（非原始异常）', (tester) async {
@@ -365,5 +376,54 @@ void main() {
 
     expect(_containerOf(tester).read(ttsSettingsProvider).accent, TtsAccent.us);
     expect(find.text('British'), findsNothing);
+  });
+
+  testWidgets('Piper → 逐音色展示来源/许可，lessac/alan 不可下载', (tester) async {
+    await tester.pumpWidget(
+      _wrap(const TtsSettings(engine: TtsEngineKind.piper)),
+    );
+    await tester.pumpAndSettle();
+
+    // HF 逐文件音色展示仓库来源与逐音色许可。
+    expect(
+      find.textContaining(
+        'Source: csukuangfj/vits-piper-en_US-amy-medium',
+      ),
+      findsOneWidget,
+    );
+    expect(find.textContaining('License: CC BY-SA 4.0'), findsOneWidget);
+    // lessac/alan 只显不可再分发许可，不提供下载按钮。
+    expect(find.text('Not available for download'), findsNWidgets(2));
+    expect(
+      find.textContaining('Blizzard 2013 Research Licence'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('All Rights Reserved (redistribution not permitted)'),
+      findsOneWidget,
+    );
+    // 7 个可再分发音色保留下载入口，lessac/alan 无。
+    expect(find.byIcon(Icons.download_rounded), findsNWidgets(7));
+  });
+
+  testWidgets('下载来源默认公开上游，可切换到 hf-mirror.com', (tester) async {
+    await tester.pumpWidget(_wrap(const TtsSettings()));
+    await tester.pumpAndSettle();
+
+    expect(
+      _containerOf(tester).read(ttsSettingsProvider).downloadSource,
+      AsrDownloadSource.huggingFace,
+    );
+
+    await tester.scrollUntilVisible(find.text('Download Source'), 200);
+    await tester.pumpAndSettle();
+    expect(find.text('Public upstream'), findsOneWidget);
+
+    await tester.tap(find.text('hf-mirror.com'));
+    await tester.pumpAndSettle();
+    expect(
+      _containerOf(tester).read(ttsSettingsProvider).downloadSource,
+      AsrDownloadSource.huggingFaceMirror,
+    );
   });
 }

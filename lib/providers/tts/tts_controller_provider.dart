@@ -104,7 +104,7 @@ TtsSpeechConfig ttsPiperVoicePreviewConfig(PiperVoice voice) {
 /// 计算有效引擎：始终尊重用户选择。
 ///
 /// 本地引擎模型未就绪时只触发下载，不回退系统语音。用户需要兜底时应主动选择
-/// 平台 TTS，避免选中 Echo Loop/Balanced 时听到 Apple/System 语音。
+/// 平台 TTS，避免选中 Kokoro/Piper 时听到 Apple/System 语音。
 TtsEngineKind effectiveTtsEngine(
   TtsEngineKind selected, {
   required bool kokoroReady,
@@ -285,7 +285,7 @@ class TtsController extends Notifier<TtsControllerState> {
   /// 试听某 Kokoro 音色：用该音色（及其口音、当前模型变体）朗读示范句。
   ///
   /// 命中预热缓存则秒播；未命中则即时合成。设 [speakingKey] 为该音色的试听 key，
-  /// 供音色行显播放态。仅 Echo Loop 场景调用（音色弹层只在模型就绪时显示）。
+  /// 供音色行显播放态。仅 Kokoro 场景调用（音色弹层只在模型就绪时显示）。
   Future<void> previewVoice(KokoroVoice voice) async {
     final variant = ref.read(ttsSettingsProvider).kokoroVariant;
     final key = ttsVoicePreviewKey(voice.id);
@@ -461,7 +461,7 @@ class TtsController extends Notifier<TtsControllerState> {
 
   /// 后台预热全部音色的试听片段（fire-and-forget、低优先、命中缓存即跳过）。
   ///
-  /// 仅在选中 Echo Loop 且模型就绪时执行；按当前模型变体逐个合成入库，供进设置页
+  /// 仅在选中 Kokoro 且模型就绪时执行；按当前模型变体逐个合成入库，供进设置页
   /// 后即时试听。顺序 await（worker 本就串行），每轮校验 [_prewarmToken]，离开页面/
   /// 切变体后旧批次自动停止。失败静默（与发音一致），不阻塞、不弹窗。
   Future<void> prewarmVoicePreviews() async {

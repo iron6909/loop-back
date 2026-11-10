@@ -1,7 +1,7 @@
 /// 语音合成（TTS）设置页。
 ///
-/// 合成引擎（平台 TTS / Echo Loop）+ 口音（美音 / 英音）；选中 Echo Loop 时在
-/// 「Echo Loop TTS」归属标题下用一张卡集中显示其专属子设置（模型下载状态 + 音色）。
+/// 合成引擎（平台 TTS / Kokoro / Piper）+ 口音（美音 / 英音）；选中 Kokoro 时在
+/// 「Kokoro」归属标题下用一张卡集中显示其专属子设置（模型下载状态 + 音色）。
 /// 音色按业界惯例收成单行（当前值 + 展开），点开用底部弹层选择，避免多音色平铺撑长
 /// 页面。切换立即生效（写 SP → 协调器热重配）。
 library;
@@ -18,6 +18,9 @@ import '../providers/tts/piper_model_provider.dart';
 import '../providers/tts/tts_controller_provider.dart';
 import '../providers/tts/tts_model_installation_provider.dart';
 import '../providers/tts/tts_settings_provider.dart';
+import '../services/asr/asr_model_catalog.dart'
+    show AsrDownloadSource, AsrPublicResourceLayout, AsrPublicResourceSpec;
+import '../services/tts/kokoro_model_catalog.dart';
 import '../services/tts/kokoro_model_manager.dart'
     show AsrModelDownloadStatus, KokoroModelVariant;
 import '../services/tts/kokoro_voices.dart';
@@ -140,11 +143,11 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final settings = ref.watch(ttsSettingsProvider);
-    final isEchoLoop = settings.engine == TtsEngineKind.kokoro;
+    final isKokoro = settings.engine == TtsEngineKind.kokoro;
     final isPiper = settings.engine == TtsEngineKind.piper;
     final showPlatformEngine = showPlatformTtsEngine(Platform.isAndroid);
-    // 任一已下载模型（Advanced/Kokoro 变体 或 Balanced/Piper 音色）即提供管理入口
-    //（删除回收空间），不限当前引擎。
+    // 任一已下载模型（Kokoro 变体 或 Piper 音色）即提供管理入口（删除回收空间），
+    // 不限当前引擎。
     final models = ref.watch(kokoroModelProvider);
     final piperModels = ref.watch(piperModelProvider);
     final anyDownloaded =
@@ -234,8 +237,8 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
               ),
             ),
 
-            if (isEchoLoop) ...[
-              // Echo Loop（自然/Kokoro）专属：归属标题 + 一张卡（模型 + 音色单行）。
+            if (isKokoro) ...[
+              // Kokoro 专属：归属标题 + 一张卡（模型 + 音色单行）。
               // 不显示独立口音——音色名已自带口音，选音色即定口音（见 _VoiceDisclosure）。
               const SizedBox(height: AppSpacing.m),
               _SectionLabel(text: l10n.ttsEngineEchoLoop),
@@ -252,7 +255,7 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
                 ),
               ),
             ] else if (isPiper) ...[
-              // Piper（平衡）专属：归属标题 + 音色列表（每音色一个独立模型，
+              // Piper 专属：归属标题 + 音色列表（每音色一个独立模型，
               // 行内显示各自下载状态，点击就绪音色即试听、点未下载音色即下载）。
               const SizedBox(height: AppSpacing.m),
               _SectionLabel(text: l10n.ttsEnginePiper),
@@ -283,6 +286,40 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
                 _ModelStorageRow(l10n: l10n),
               ],
             ],
+
+            // 下载来源切换：只影响后续安装，已安装模型不重下。
+            const SizedBox(height: AppSpacing.m),
+            _SectionLabel(text: l10n.ttsDownloadSourceTitle),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.m,
+                0,
+                AppSpacing.m,
+                AppSpacing.s,
+              ),
+              child: Text(
+                l10n.ttsDownloadSourceDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            Card(
+              child: RadioGroup<AsrDownloadSource>(
+                groupValue: settings.downloadSource,
+                onChanged: _onDownloadSourceChanged,
+                child: Column(
+                  children: [
+                    for (final source in AsrDownloadSource.values)
+                      RadioListTile<AsrDownloadSource>(
+                        title: Text(_ttsSourceOptionLabel(l10n, source)),
+                        value: source,
+                        selected: settings.downloadSource == source,
+                      ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -291,14 +328,14 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
 
   void _onEngineChanged(TtsEngineKind? value) {
     if (value == null) return;
-    // 切换引擎先停掉正在试听的旧引擎发音（如 Apple 语音→Echo Loop），避免旧例子
-    // 继续播到尾。
+    // 切换引擎先停掉正在试听的旧引擎发音（如 Apple 语音→Kokoro/Piper），避免旧
+    // 例子继续播到尾。
     ref.read(ttsControllerProvider.notifier).stop();
     ref.read(ttsSettingsProvider.notifier).setEngine(value);
     if (value == TtsEngineKind.kokoro) {
       final variant = ref.read(ttsSettingsProvider).kokoroVariant;
       ref.read(kokoroModelProvider.notifier).ensureDownloaded(variant);
-      // 切到 Echo Loop：立即预热各音色（与平台分支对称）。模型已就绪则即时开跑；
+      // 切到 Kokoro：立即预热各音色（与平台分支对称）。模型已就绪则即时开跑；
       // 未就绪则此调用在 ready 门控提前返回，待下载完成 kokoroReady 翻转由
       // initState 的 listenManual 补触发——两条路径都覆盖，不留「已下载却不预热」空档。
       ref.read(ttsControllerProvider.notifier).prewarmVoicePreviews();
@@ -315,11 +352,33 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
       ref.read(ttsControllerProvider.notifier).prewarmAccentPreviews();
     }
   }
+
+  /// 切换下载来源：只影响后续安装，已安装模型不重下。
+  void _onDownloadSourceChanged(AsrDownloadSource? value) {
+    if (value == null) return;
+    ref.read(ttsSettingsProvider.notifier).setDownloadSource(value);
+  }
 }
 
-/// Echo Loop 模型选择列表：列出 fp32（高质量·推荐）/ int8（轻量）两个变体。
+/// 下载来源选项的展示名。
+String _ttsSourceOptionLabel(AppLocalizations l10n, AsrDownloadSource source) {
+  return switch (source) {
+    AsrDownloadSource.huggingFace => l10n.ttsDownloadSourcePublic,
+    AsrDownloadSource.huggingFaceMirror => l10n.ttsDownloadSourceMirror,
+  };
+}
+
+/// 资源来源的展示名：GitHub 发布资产带仓库与发布形态；HF 资源直接显仓库。
+String _ttsSourceLabel(AppLocalizations l10n, AsrPublicResourceSpec resource) {
+  if (resource.layout == AsrPublicResourceLayout.githubReleaseAsset) {
+    return l10n.ttsSourceGithubRelease(resource.repository);
+  }
+  return resource.repository;
+}
+
+/// Kokoro 模型选择列表：列出 fp32（全精度·推荐）/ int8（量化）两个变体。
 ///
-/// 内嵌于 Echo Loop 归属卡（不包 Card）。每个变体可单选切换为「使用中」，点未下载变体
+/// 内嵌于 Kokoro 归属卡（不包 Card）。每个变体可单选切换为「使用中」，点未下载变体
 /// 即下载并启用；非使用中的已下载变体可删除（正在用的不可删，对齐 ASR 约定）。
 class _ModelPicker extends ConsumerWidget {
   const _ModelPicker({required this.l10n, required this.theme});
@@ -348,7 +407,37 @@ class _ModelPicker extends ConsumerWidget {
         ),
       );
     }
-    return Column(children: rows);
+    return Column(
+      children: [
+        ...rows,
+        const Divider(height: 1, indent: 16, endIndent: 16),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.m,
+            AppSpacing.s,
+            AppSpacing.m,
+            AppSpacing.m,
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              l10n.asrModelSourceLine(
+                _ttsSourceLabel(
+                  l10n,
+                  kokoroSpecOf(KokoroModelVariant.fp32).resource,
+                ),
+                l10n.ttsKokoroLicense,
+              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.6,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -496,7 +585,9 @@ class _ModelRow extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        content: Text(l10n.ttsDeleteModelConfirm),
+        content: Text(
+          l10n.ttsDeleteModelConfirm('${l10n.ttsEngineEchoLoop} · $_name'),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -583,7 +674,7 @@ class _ModelStorageRow extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        content: Text(l10n.ttsDeleteModelConfirm),
+        content: Text(l10n.ttsDeleteAllModelsConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -657,7 +748,7 @@ String formatModelBytes(int bytes) {
 /// 音色「当前值 + 展开」单行：标题 + 当前音色（名称 · 性别）+ 雪佛龙；点开底部弹层选。
 ///
 /// 弹层按「美音 / 英音」分组列出全部 11 个音色。音色名自带口音，选中某音色即同时把
-/// 全局口音设为该音色的口音（见 [_openSheet]），故 Echo Loop 下无需单独的口音控件。
+/// 全局口音设为该音色的口音（见 [_openSheet]），故 Kokoro 下无需单独的口音控件。
 class _VoiceDisclosure extends ConsumerWidget {
   const _VoiceDisclosure({required this.l10n});
 
@@ -984,12 +1075,30 @@ class _PiperVoiceRow extends ConsumerWidget {
           Expanded(child: _statusText(theme, state)),
         ],
       ),
+      subtitle: _sourceLine(theme),
       trailing: _trailing(context, ref, theme, state, isPlaying, isActive),
       onTap: () => _onTap(ref),
     );
   }
 
-  /// 单行内联状态文本：下载中→百分比；失败→简短错误；就绪→体积；否则→未下载。
+  /// 来源/许可说明：可再分发显来源+许可，不可再分发只显许可（不引导下载）。
+  Widget _sourceLine(ThemeData theme) {
+    final resource = voice.resource;
+    final text = resource == null
+        ? voice.license
+        : l10n.asrModelSourceLine(
+            _ttsSourceLabel(l10n, resource),
+            resource.license,
+          );
+    return Text(
+      text,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+      ),
+    );
+  }
+
+  /// 单行内联状态文本：下载中→百分比；失败→简短错误；就绪→体积；否则→未下载/不可下载。
   Widget _statusText(ThemeData theme, PiperModelState state) {
     String text;
     Color? color;
@@ -1006,7 +1115,9 @@ class _PiperVoiceRow extends ConsumerWidget {
       );
       color = AppTheme.successColor;
     } else {
-      text = l10n.ttsModelNotDownloaded;
+      text = voice.redistributable
+          ? l10n.ttsModelNotDownloaded
+          : l10n.ttsModelNotAvailable;
       color = theme.colorScheme.onSurfaceVariant;
     }
     return Text(
@@ -1040,6 +1151,19 @@ class _PiperVoiceRow extends ConsumerWidget {
           ),
         ),
       );
+    }
+    // 不可再分发音色不提供下载/重试入口；已装且非当前仍可删除。
+    if (!voice.redistributable) {
+      if (state.isReady && !isActive) {
+        return IconButton(
+          icon: const Icon(Icons.delete_outline_rounded),
+          iconSize: 20,
+          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+          tooltip: l10n.ttsDeleteModel,
+          onPressed: () => _confirmDelete(context, ref),
+        );
+      }
+      return null;
     }
     final notifier = ref.read(piperModelProvider.notifier);
     if (state.isDownloading) {
@@ -1118,6 +1242,8 @@ class _PiperVoiceRow extends ConsumerWidget {
     settingsNotifier.setAccent(voice.accent);
     settingsNotifier.setPiperVoice(voice.accent, voice.id);
     final st = ref.read(piperModelProvider).of(voice.id);
+    // 不可再分发且未安装/损坏：只选中，不提供下载/重试。
+    if (!voice.redistributable && !st.isReady) return;
     final notifier = ref.read(piperModelProvider.notifier);
     if (!st.isReady) {
       // 点击未下载音色会切换当前配置并启动下载；先停止旧音色试听，避免下载期间继续播放旧音频。
@@ -1136,7 +1262,11 @@ class _PiperVoiceRow extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        content: Text(l10n.ttsDeleteModelConfirm),
+        content: Text(
+          l10n.ttsDeleteModelConfirm(
+            '${l10n.ttsEnginePiper} · ${voice.displayName}',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
@@ -1161,7 +1291,7 @@ class _PiperVoiceRow extends ConsumerWidget {
 /// 分组小标题。
 ///
 /// 与全局设置页（`settings_screen.dart` 的 `_buildSection`）保持一致：titleSmall +
-/// 品牌色 + 加粗。也用作「Echo Loop TTS」归属标题——点名其下子设置的所属引擎。
+/// 品牌色 + 加粗。也用作「Kokoro」归属标题——点名其下子设置的所属引擎。
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.text, this.hint});
 
