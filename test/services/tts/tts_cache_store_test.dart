@@ -117,6 +117,15 @@ void main() {
   });
 
   group('TtsCacheStore lookup/store', () {
+    test('reserveDir 在缓存目录被外部删除后重建目录', () async {
+      final path = await store.reserveDir();
+      expect(await Directory(path).exists(), isTrue);
+      // 外部删除（如系统清缓存）后，再次 reserve 应重建目录而非返回悬空路径。
+      await Directory(path).delete(recursive: true);
+      final path2 = await store.reserveDir();
+      expect(await Directory(path2).exists(), isTrue);
+    });
+
     test('store 后 lookup 命中返回文件', () async {
       final result = await writeFile('k1');
       await store.store(

@@ -161,6 +161,18 @@ void main() {
     );
   });
 
+  test('install.json 存在但文件损坏 → ensureDownloaded 触发修复下载而非误报就绪', () async {
+    // 安装清单仍在、关键文件（如 espeak-ng-data）被外部删除：应走修复下载。
+    final manager = _FakeManager(installMarker: true, downloaded: false);
+    final c = _container(manager);
+    addTearDown(c.dispose);
+
+    await c.read(kokoroModelProvider.notifier).ensureDownloaded(_fp32);
+
+    expect(manager.downloadCount, 1);
+    expect(c.read(kokoroModelProvider).of(_fp32).isReady, isTrue);
+  });
+
   test('refreshInstalledStates 检查全部变体且不下载', () async {
     final manager = _FakeManager(downloaded: true, installMarker: true);
     final c = _container(manager);
