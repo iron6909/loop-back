@@ -301,10 +301,8 @@ class KokoroModelNotifier extends Notifier<KokoroModelsState> {
     CancelToken cancelToken,
   ) async {
     final manager = ref.read(kokoroModelManagerProvider(variant));
-    final source = ref.read(ttsSettingsProvider).downloadSource;
     try {
       await manager.downloadModel(
-        source: source,
         cancelToken: cancelToken,
         onProgress: (p) {
           if (!_isCurrent(variant, session, cancelToken)) return;

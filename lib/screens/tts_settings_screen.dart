@@ -19,7 +19,7 @@ import '../providers/tts/tts_controller_provider.dart';
 import '../providers/tts/tts_model_installation_provider.dart';
 import '../providers/tts/tts_settings_provider.dart';
 import '../services/asr/asr_model_catalog.dart'
-    show AsrDownloadSource, AsrPublicResourceLayout, AsrPublicResourceSpec;
+    show AsrPublicResourceLayout, AsrPublicResourceSpec;
 import '../services/tts/kokoro_model_catalog.dart';
 import '../services/tts/kokoro_model_manager.dart'
     show AsrModelDownloadStatus, KokoroModelVariant;
@@ -286,40 +286,6 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
                 _ModelStorageRow(l10n: l10n),
               ],
             ],
-
-            // 下载来源切换：只影响后续安装，已安装模型不重下。
-            const SizedBox(height: AppSpacing.m),
-            _SectionLabel(text: l10n.ttsDownloadSourceTitle),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.m,
-                0,
-                AppSpacing.m,
-                AppSpacing.s,
-              ),
-              child: Text(
-                l10n.ttsDownloadSourceDescription,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            Card(
-              child: RadioGroup<AsrDownloadSource>(
-                groupValue: settings.downloadSource,
-                onChanged: _onDownloadSourceChanged,
-                child: Column(
-                  children: [
-                    for (final source in AsrDownloadSource.values)
-                      RadioListTile<AsrDownloadSource>(
-                        title: Text(_ttsSourceOptionLabel(l10n, source)),
-                        value: source,
-                        selected: settings.downloadSource == source,
-                      ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -352,20 +318,6 @@ class _TtsSettingsScreenState extends ConsumerState<TtsSettingsScreen> {
       ref.read(ttsControllerProvider.notifier).prewarmAccentPreviews();
     }
   }
-
-  /// 切换下载来源：只影响后续安装，已安装模型不重下。
-  void _onDownloadSourceChanged(AsrDownloadSource? value) {
-    if (value == null) return;
-    ref.read(ttsSettingsProvider.notifier).setDownloadSource(value);
-  }
-}
-
-/// 下载来源选项的展示名。
-String _ttsSourceOptionLabel(AppLocalizations l10n, AsrDownloadSource source) {
-  return switch (source) {
-    AsrDownloadSource.huggingFace => l10n.ttsDownloadSourcePublic,
-    AsrDownloadSource.huggingFaceMirror => l10n.ttsDownloadSourceMirror,
-  };
 }
 
 /// 资源来源的展示名：GitHub 发布资产带仓库与发布形态；HF 资源直接显仓库。
@@ -957,7 +909,7 @@ class _AccentPreviewRow extends ConsumerWidget {
   }
 }
 
-/// Piper 音色列表：按「美音 / 英音」分组列出全部 9 个音色。
+/// Piper 音色列表：按「美音 / 英音」分组列出全部 7 个音色。
 ///
 /// 与 Kokoro 不同，Piper 每音色是独立模型，故行内直接呈现各音色的下载状态与操作
 /// （不收进底部弹层）：点击就绪音色 = 选中 + 试听；点未下载音色 = 选中 + 下载。
@@ -1081,15 +1033,13 @@ class _PiperVoiceRow extends ConsumerWidget {
     );
   }
 
-  /// 来源/许可说明：可再分发显来源+许可，不可再分发只显许可（不引导下载）。
+  /// 来源/许可说明：每个音色均展示公开来源与许可。
   Widget _sourceLine(ThemeData theme) {
     final resource = voice.resource;
-    final text = resource == null
-        ? voice.license
-        : l10n.asrModelSourceLine(
-            _ttsSourceLabel(l10n, resource),
-            resource.license,
-          );
+    final text = l10n.asrModelSourceLine(
+      _ttsSourceLabel(l10n, resource),
+      resource.license,
+    );
     return Text(
       text,
       style: theme.textTheme.bodySmall?.copyWith(
@@ -1098,7 +1048,7 @@ class _PiperVoiceRow extends ConsumerWidget {
     );
   }
 
-  /// 单行内联状态文本：下载中→百分比；失败→简短错误；就绪→体积；否则→未下载/不可下载。
+  /// 单行内联状态文本：下载中→百分比；失败→简短错误；就绪→体积；否则→未下载。
   Widget _statusText(ThemeData theme, PiperModelState state) {
     String text;
     Color? color;
@@ -1115,9 +1065,7 @@ class _PiperVoiceRow extends ConsumerWidget {
       );
       color = AppTheme.successColor;
     } else {
-      text = voice.redistributable
-          ? l10n.ttsModelNotDownloaded
-          : l10n.ttsModelNotAvailable;
+      text = l10n.ttsModelNotDownloaded;
       color = theme.colorScheme.onSurfaceVariant;
     }
     return Text(
@@ -1151,19 +1099,6 @@ class _PiperVoiceRow extends ConsumerWidget {
           ),
         ),
       );
-    }
-    // 不可再分发音色不提供下载/重试入口；已装且非当前仍可删除。
-    if (!voice.redistributable) {
-      if (state.isReady && !isActive) {
-        return IconButton(
-          icon: const Icon(Icons.delete_outline_rounded),
-          iconSize: 20,
-          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
-          tooltip: l10n.ttsDeleteModel,
-          onPressed: () => _confirmDelete(context, ref),
-        );
-      }
-      return null;
     }
     final notifier = ref.read(piperModelProvider.notifier);
     if (state.isDownloading) {
@@ -1239,8 +1174,6 @@ class _PiperVoiceRow extends ConsumerWidget {
   /// 点击：选中（口音 + 音色），并按状态触发试听 / 下载 / 重试。
   void _onTap(WidgetRef ref) {
     final st = ref.read(piperModelProvider).of(voice.id);
-    // 不可再分发且未安装/损坏：不改变当前音色（无下载/试听入口，选中只会变成死路）。
-    if (!voice.redistributable && !st.isReady) return;
     final settingsNotifier = ref.read(ttsSettingsProvider.notifier);
     settingsNotifier.setAccent(voice.accent);
     settingsNotifier.setPiperVoice(voice.accent, voice.id);

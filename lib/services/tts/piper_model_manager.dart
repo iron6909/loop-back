@@ -180,17 +180,13 @@ class PiperModelManager {
 
   /// 下载并安装模型，通过 [onProgress] 报告进度，可经 [cancelToken] 取消。
   ///
-  /// 许可不允许再分发的音色（[voice.resource] 为 null）不提供下载，抛
-  /// [StateError]。模型本体齐全、仅 espeak-ng-data 缺失或损坏时只补该依赖。
+  /// 模型本体齐全、仅 espeak-ng-data 缺失或损坏时只补该依赖。
   Future<String> downloadModel({
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {
     final spec = voice.resource;
-    if (spec == null) {
-      throw StateError('Piper voice ${voice.id} is not redistributable');
-    }
     final root = Directory(await _modelsRoot);
     final target = Directory(await modelDir());
 

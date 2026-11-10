@@ -1,4 +1,4 @@
-/// Piper VITS 音色目录（9 个 medium 单说话人模型）。
+/// Piper VITS 音色目录（7 个 medium 单说话人模型）。
 ///
 /// 与 Kokoro 根本不同：Piper 每个音色 = 一个**独立单说话人模型**（一个 `.onnx`），
 /// 故音色既是「选择项」也是「下载单元」——每个音色单独下载、互不共享，合成时固定
@@ -9,8 +9,9 @@
 ///
 /// 公开源为 csukuangfj 的逐音色 HF 仓库（4 个与现有安装逐字节一致的音色）与
 /// `iron6909/loop-back-models` 的重打包资产（ryan/joe/hfc_female 三个音色，其
-/// HF 仓库 onnx 为旧版、与现有安装不一致）。lessac/alan 两个音色许可不允许
-/// 再分发，仅保留目录身份、不提供下载。逐音色许可与核验见
+/// HF 仓库 onnx 为旧版、与现有安装不一致）。lessac/alan 两个音色许可不允许再分发，
+/// 已从目录移除（见 [removedPiperVoiceIds]，启动迁移清理其孤儿安装目录）。逐音色
+/// 许可与核验见
 /// `docs/features/20261110-tts-provider-decoupling/public-source-verification.md`。
 library;
 
@@ -91,7 +92,7 @@ class PiperVoice {
     required this.accent,
     required this.isFemale,
     required this.license,
-    this.resource,
+    required this.resource,
   });
 
   /// 音色标识（如 `en_US-amy-medium`）：本地目录名 + 缓存 voiceId + 下载 key。
@@ -109,19 +110,14 @@ class PiperVoice {
   /// 逐音色许可字符串（以 rhasspy/piper-voices 的 LICENSE/MODEL_CARD 为准）。
   final String license;
 
-  /// 固定公开资源身份；许可不允许再分发的音色为 null（不提供下载）。
-  final AsrPublicResourceSpec? resource;
-
-  /// 是否允许下载（许可允许再分发）。
-  bool get redistributable => resource != null;
+  /// 固定公开资源身份；所有音色均有公开资源、可下载。
+  final AsrPublicResourceSpec resource;
 
   /// 预计下载字节数（供下载弹窗预估）。
   ///
   /// HF 逐文件音色单独下载共享 espeak 依赖，预估需把该依赖一并计入；GitHub
-  /// 整包音色归档自带 espeak，不重复计入。不可再分发音色返回 0。
+  /// 整包音色归档自带 espeak，不重复计入。
   int get estimatedDownloadBytes {
-    final resource = this.resource;
-    if (resource == null) return 0;
     if (resource.layout != AsrPublicResourceLayout.huggingFaceResolve) {
       return resource.estimatedDownloadBytes;
     }
@@ -146,10 +142,9 @@ class PiperVoice {
       Object.hash(id, displayName, accent, isFemale, license, resource);
 }
 
-/// 全部 9 个 Piper 音色（6 美音 + 3 英音）。
+/// 全部 7 个 Piper 音色（5 美音 + 2 英音），均可公开下载。
 ///
-/// lessac/alan 许可不允许再分发（[PiperVoice.resource] 为 null），仅保留目录身份：
-/// 已安装的旧目录继续识别与使用，但不再提供公开下载。
+/// lessac/alan 许可不允许再分发，已从目录移除（见 [removedPiperVoiceIds]）。
 final List<PiperVoice> piperVoices = [
   // 美音（en_US）
   PiperVoice(
@@ -171,13 +166,6 @@ final List<PiperVoice> piperVoices = [
           '87c8ef66eae5473ed0cc0366b3964c736ca6c5f676c979522ea31234e47430b9',
       tokensSizeBytes: 921,
     ),
-  ),
-  PiperVoice(
-    id: 'en_US-lessac-medium',
-    displayName: 'Lessac',
-    accent: TtsAccent.us,
-    isFemale: true,
-    license: 'Blizzard 2013 Research Licence (redistribution not permitted)',
   ),
   PiperVoice(
     id: 'en_US-ryan-medium',
@@ -246,13 +234,6 @@ final List<PiperVoice> piperVoices = [
   ),
   // 英音（en_GB）
   PiperVoice(
-    id: 'en_GB-alan-medium',
-    displayName: 'Alan',
-    accent: TtsAccent.uk,
-    isFemale: false,
-    license: 'All Rights Reserved (redistribution not permitted)',
-  ),
-  PiperVoice(
     id: 'en_GB-cori-medium',
     displayName: 'Cori',
     accent: TtsAccent.uk,
@@ -297,13 +278,22 @@ final List<PiperVoice> piperVoices = [
 /// 美音默认音色。
 const String piperDefaultVoiceUs = 'en_US-amy-medium';
 
-/// 英音默认音色（alan 因许可不允许再分发，改为 CC BY 4.0 的 cori）。
+/// 英音默认音色（cori，CC BY 4.0）。
 const String piperDefaultVoiceUk = 'en_GB-cori-medium';
+
+/// 已从目录移除的音色 ID：lessac / alan 许可不允许再分发，不再提供下载。
+const removedPiperVoiceLessacId = 'en_US-lessac-medium';
+const removedPiperVoiceAlanId = 'en_GB-alan-medium';
+
+/// 全部已移除音色 ID；启动迁移据此清理孤儿安装目录并回退存量偏好。
+const removedPiperVoiceIds = [
+  removedPiperVoiceLessacId,
+  removedPiperVoiceAlanId,
+];
 
 /// 全部 Piper 公开资源（7 个可下载音色 + 共享 espeak-ng-data）。
 final piperPublicResourceCatalog = <String, AsrPublicResourceSpec>{
-  for (final voice in piperVoices)
-    if (voice.resource != null) voice.id: voice.resource!,
+  for (final voice in piperVoices) voice.id: voice.resource,
   ttsEspeakNgDataResourceId: ttsEspeakNgDataResource,
 };
 

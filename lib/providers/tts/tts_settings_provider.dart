@@ -12,7 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/app_logger.dart';
-import '../../services/asr/asr_model_catalog.dart' show AsrDownloadSource;
 import '../../services/tts/kokoro_voices.dart';
 import '../../services/tts/piper_model_catalog.dart';
 import '../../services/tts/tts_engine.dart';
@@ -37,9 +36,6 @@ abstract final class TtsSettingsKeys {
   static const kokoroVariant = 'tts_kokoro_variant';
   static const piperVoiceUs = 'tts_piper_voice_us';
   static const piperVoiceUk = 'tts_piper_voice_uk';
-
-  /// TTS 模型下载来源（公开上游 / hf-mirror 镜像）。
-  static const downloadSource = 'tts_download_source';
 }
 
 /// 将所有平台历史写入的旧引擎值迁移为 Kokoro 实现名。
@@ -62,6 +58,22 @@ Future<void> migrateAndroidPlatformTtsPreference(
     return;
   }
   await prefs.setString(TtsSettingsKeys.engine, TtsEngineKind.kokoro.name);
+}
+
+/// 将选中已移除 Piper 音色（lessac/alan）的存量偏好回退到对应口音默认。
+///
+/// 只处理这两个被移除的 ID；其它无效值保持原样（读取时仍由 [TtsSettings] 回退默认，
+/// 但不写回）。回退写入失败不阻断启动。
+Future<void> fallbackRemovedPiperVoicePreferences(
+  SharedPreferences prefs,
+) async {
+  if (prefs.getString(TtsSettingsKeys.piperVoiceUs) ==
+      removedPiperVoiceLessacId) {
+    await prefs.setString(TtsSettingsKeys.piperVoiceUs, piperDefaultVoiceUs);
+  }
+  if (prefs.getString(TtsSettingsKeys.piperVoiceUk) == removedPiperVoiceAlanId) {
+    await prefs.setString(TtsSettingsKeys.piperVoiceUk, piperDefaultVoiceUk);
+  }
 }
 
 /// TTS 设置不可变值对象。
@@ -87,9 +99,6 @@ class TtsSettings {
   /// Piper 英音音色 id（默认 [piperDefaultVoiceUk]）。
   final String piperVoiceUk;
 
-  /// TTS 模型下载来源（仅影响后续安装，已安装模型不重下）。
-  final AsrDownloadSource downloadSource;
-
   const TtsSettings({
     this.engine = TtsEngineKind.kokoro,
     this.accent = TtsAccent.us,
@@ -98,7 +107,6 @@ class TtsSettings {
     this.kokoroVariant = KokoroModelVariant.fp32,
     this.piperVoiceUs = piperDefaultVoiceUs,
     this.piperVoiceUk = piperDefaultVoiceUk,
-    this.downloadSource = AsrDownloadSource.huggingFace,
   });
 
   /// 当前口音对应的语言标签。
@@ -151,9 +159,6 @@ class TtsSettings {
         prefs.getString(TtsSettingsKeys.piperVoiceUk),
         TtsAccent.uk,
       ),
-      downloadSource: _downloadSourceFromName(
-        prefs.getString(TtsSettingsKeys.downloadSource),
-      ),
     );
   }
 
@@ -195,13 +200,6 @@ class TtsSettings {
     );
   }
 
-  static AsrDownloadSource _downloadSourceFromName(String? name) {
-    return AsrDownloadSource.values.firstWhere(
-      (source) => source.name == name,
-      orElse: () => AsrDownloadSource.huggingFace,
-    );
-  }
-
   TtsSettings copyWith({
     TtsEngineKind? engine,
     TtsAccent? accent,
@@ -210,7 +208,6 @@ class TtsSettings {
     KokoroModelVariant? kokoroVariant,
     String? piperVoiceUs,
     String? piperVoiceUk,
-    AsrDownloadSource? downloadSource,
   }) {
     return TtsSettings(
       engine: engine ?? this.engine,
@@ -220,7 +217,6 @@ class TtsSettings {
       kokoroVariant: kokoroVariant ?? this.kokoroVariant,
       piperVoiceUs: piperVoiceUs ?? this.piperVoiceUs,
       piperVoiceUk: piperVoiceUk ?? this.piperVoiceUk,
-      downloadSource: downloadSource ?? this.downloadSource,
     );
   }
 
@@ -235,8 +231,7 @@ class TtsSettings {
           kokoroVoiceUk == other.kokoroVoiceUk &&
           kokoroVariant == other.kokoroVariant &&
           piperVoiceUs == other.piperVoiceUs &&
-          piperVoiceUk == other.piperVoiceUk &&
-          downloadSource == other.downloadSource;
+          piperVoiceUk == other.piperVoiceUk;
 
   @override
   int get hashCode => Object.hash(
@@ -247,7 +242,6 @@ class TtsSettings {
     kokoroVariant,
     piperVoiceUs,
     piperVoiceUk,
-    downloadSource,
   );
 }
 
@@ -312,13 +306,6 @@ class TtsSettingsNotifier extends Notifier<TtsSettings> {
       state = state.copyWith(piperVoiceUs: voiceId);
       await _persist(TtsSettingsKeys.piperVoiceUs, voiceId);
     }
-  }
-
-  /// 切换 TTS 模型下载来源（仅影响后续安装，已安装模型不重下）。
-  Future<void> setDownloadSource(AsrDownloadSource source) async {
-    if (state.downloadSource == source) return;
-    state = state.copyWith(downloadSource: source);
-    await _persist(TtsSettingsKeys.downloadSource, source.name);
   }
 
   Future<void> _persist(String key, String value) async {

@@ -58,6 +58,35 @@ Future<void> migrateTtsModelInstallLayout() async {
   }
 }
 
+/// 删除已从目录移除的 Piper 音色（lessac/alan）的孤儿安装目录与 install.json。
+///
+/// 这些音色因许可不允许再分发已从目录移除；旧版本可能已下载其模型。清理失败不
+/// 阻断启动，仅记录日志。[modelsRootResolver] 仅测试注入。
+Future<void> removeOrphanPiperModelDirs(
+  List<String> voiceIds, {
+  Future<String> Function()? modelsRootResolver,
+}) async {
+  if (voiceIds.isEmpty) return;
+  final rootPath = modelsRootResolver != null
+      ? await modelsRootResolver()
+      : p.join((await getApplicationSupportDirectory()).path, 'tts-models');
+  final modelsRoot = Directory(rootPath);
+  if (!await modelsRoot.exists()) return;
+  for (final voiceId in voiceIds) {
+    final dir = Directory(p.join(modelsRoot.path, voiceId));
+    if (!await dir.exists()) continue;
+    try {
+      await dir.delete(recursive: true);
+      AppLogger.log('TtsMigration', '已清理已移除音色孤儿目录 voice=$voiceId');
+    } catch (error, stackTrace) {
+      AppLogger.log(
+        'TtsMigration',
+        '清理已移除音色孤儿目录失败 voice=$voiceId: $error\n$stackTrace',
+      );
+    }
+  }
+}
+
 /// 将旧版按需下载的词典文件迁移到统一资源安装布局。
 ///
 /// 迁移只处理本地文件，不联网；重命名和写入清单分别可安全重试。

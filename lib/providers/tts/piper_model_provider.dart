@@ -1,6 +1,6 @@
 /// Piper VITS 模型下载状态机 Provider（多音色）。
 ///
-/// 管理 9 个 Piper 音色各自的下载/重试/取消/删除与就绪状态——与 Kokoro 不同，
+/// 管理 7 个 Piper 音色各自的下载/重试/取消/删除与就绪状态——与 Kokoro 不同，
 /// Piper 每音色是一个独立模型，故下载单元是「音色」（key=voiceId）。每个音色一个
 /// [PiperModelManager]（`piperModelManagerProvider` 的 family），互不干扰、可独立
 /// 下载与删除。引擎当前用哪个音色由 [ttsSettingsProvider] 的 `activePiperVoice`
@@ -198,8 +198,6 @@ class PiperModelNotifier extends Notifier<PiperModelsState> {
 
   /// 确保某音色就绪：未就绪且未在下载则触发下载。
   Future<void> ensureDownloaded(String voiceId) async {
-    // 许可不允许再分发的音色不提供下载，也不应被下载状态机置为失败。
-    if (piperVoiceById(voiceId)?.redistributable != true) return;
     final s = state.of(voiceId);
     if (s.isReady ||
         s.isDownloading ||
@@ -305,10 +303,8 @@ class PiperModelNotifier extends Notifier<PiperModelsState> {
     CancelToken cancelToken,
   ) async {
     final manager = ref.read(piperModelManagerProvider(voiceId));
-    final source = ref.read(ttsSettingsProvider).downloadSource;
     try {
       await manager.downloadModel(
-        source: source,
         cancelToken: cancelToken,
         onProgress: (p) {
           if (!_isCurrent(voiceId, session, cancelToken)) return;
