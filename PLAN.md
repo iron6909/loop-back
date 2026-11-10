@@ -1,7 +1,7 @@
 # Echo Loop 项目规划
 
-> 最后更新：2026-11-10（语音合成去 EchoLoop 化实施完成）
-> 当前焦点：语音合成（TTS）去 EchoLoop 化代码已交付于集成分支 `feature/20261110-tts-provider-decoupling`（spec #20，子工单 #21–#25 全部关闭，真机验收通过）；规格与实施记录见 [docs/features/20261110-tts-provider-decoupling/](./docs/features/20261110-tts-provider-decoupling/plan.md)。
+> 最后更新：2026-11-10（词典与发音库去 EchoLoop 化方案定稿）
+> 当前焦点：词典与发音库去 EchoLoop 化——方案定稿（D1–D13 + Q14 确认）、规格发布为 [issue #26](https://github.com/iron6909/loop-back/issues/26)、工单 [#27](https://github.com/iron6909/loop-back/issues/27)–[#31](https://github.com/iron6909/loop-back/issues/31) 已拆分并应用 `ready-for-agent`；公开源仓库 `banko3/loop-back`（revision `3b3a5bef…`）已建、三归档已上传、双源独立下载核对通过，工单 #27/#28 可开工。方案见 [docs/features/20261110-dictionary-pronunciation-decoupling/](./docs/features/20261110-dictionary-pronunciation-decoupling/plan.md)。语音合成（TTS）去 EchoLoop 化代码已交付于集成分支 `feature/20261110-tts-provider-decoupling`（spec #20，子工单 #21–#25 全部关闭，真机验收通过）。
 
 ## 产品目标
 
@@ -83,7 +83,8 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 3. 在具备 macOS 宿主与抓包条件的设备上补齐语音识别去耦的剩余验收：Apple 编译与集成测试、在线三用途流程、域名隔离网络证据、VAD 录音路径。
 4. 语音合成去 EchoLoop 化已实施完成（集成分支 `feature/20261110-tts-provider-decoupling`，真机验收通过）；剩余：Apple 编译待 macOS 宿主、分支合并与发布流程。
 5. 完成启动埋点权限快照的手动验证。
-6. 继续收敛录音识别模块复用边界与发布构建验证。
+6. 词典与发音库去 EchoLoop 化：方案已定稿（2026-11-10），规格与工单拆分待办；完成后共享 CDN 配置整体删除，正常流程不再引用任何 EchoLoop 域名（仅保留官网链接）。
+7. 继续收敛录音识别模块复用边界与发布构建验证。
 
 ## 架构约束（精简版）
 
