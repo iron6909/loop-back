@@ -1,6 +1,6 @@
 /// 词典下载与本地存储管理
 ///
-/// 负责从固定 CDN 下载词典 ZIP、解压安装并管理本地缓存。
+/// 负责从固定公开源（Hugging Face 及镜像）下载词典 ZIP、解压安装并管理本地缓存。
 library;
 
 import 'dart:io';
@@ -12,40 +12,32 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'dictionary/dictionary_catalog.dart';
 import 'app_logger.dart';
+import 'asr/asr_model_catalog.dart' show AsrDownloadSource;
 import 'reliable_http_downloader.dart';
 import 'resource_archive_installer.dart';
 import 'resource_install_manifest.dart';
-import 'runtime_endpoint_router.dart';
 
 /// 词典下载管理器
 class DictionaryDownloadManager {
-  DictionaryDownloadManager({
-    this.specs = dictionarySpecs,
-    RuntimeEndpointRouter? endpointRouter,
-  }) : _endpointRouter = endpointRouter ?? runtimeEndpointRouter,
-       _dio = Dio(
-         BaseOptions(
-           connectTimeout: const Duration(seconds: 15),
-           receiveTimeout: const Duration(minutes: 5),
-         ),
-       ) {
+  DictionaryDownloadManager({this.specs = dictionarySpecs})
+    : _dio = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(minutes: 5),
+        ),
+      ) {
     _downloader = DioReliableHttpDownloader(dio: _dio);
     _installer = ResourceArchiveInstaller(_downloader);
   }
 
   /// 测试用构造器
   @visibleForTesting
-  DictionaryDownloadManager.withDio(
-    this._dio, {
-    this.specs = dictionarySpecs,
-    RuntimeEndpointRouter? endpointRouter,
-  }) : _endpointRouter = endpointRouter ?? runtimeEndpointRouter {
+  DictionaryDownloadManager.withDio(this._dio, {this.specs = dictionarySpecs}) {
     _downloader = DioReliableHttpDownloader(dio: _dio);
     _installer = ResourceArchiveInstaller(_downloader);
   }
 
   final Dio _dio;
-  final RuntimeEndpointRouter _endpointRouter;
   final Map<String, DictionarySpec> specs;
 
   /// `ReliableHttpDownloader` 接口本身不提供释放能力，[dispose] 需要靠持有
@@ -91,6 +83,7 @@ class DictionaryDownloadManager {
   /// 返回下载后的本地文件路径。
   Future<String> download(
     String nativeLanguage, {
+    AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(double progress)? onProgress,
     CancelToken? cancelToken,
   }) async {
@@ -107,7 +100,7 @@ class DictionaryDownloadManager {
         root: root,
         target: Directory(dir),
         resourceId: spec.resourceId,
-        uri: _endpointRouter.modelCdnUri(spec.archivePath),
+        uri: spec.fileUri(source),
         expectedSha256: spec.archiveSha256,
         cancelToken: cancelToken,
         onProgress: onProgress,

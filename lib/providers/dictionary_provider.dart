@@ -12,6 +12,7 @@ import '../services/dictionary_download_manager.dart';
 import '../services/dictionary_service.dart';
 import '../services/reliable_http_downloader.dart';
 import '../services/startup_trace.dart';
+import 'offline_asr_settings_provider.dart';
 import 'settings_provider.dart';
 
 part 'dictionary_provider.g.dart';
@@ -148,6 +149,7 @@ class Dictionary extends _$Dictionary {
         'dictionary_download',
         () => _manager.download(
           nativeLanguage,
+          source: ref.read(offlineAsrSettingsProvider).downloadSource,
           onProgress: (progress) {
             state = state.copyWith(progress: progress);
           },
