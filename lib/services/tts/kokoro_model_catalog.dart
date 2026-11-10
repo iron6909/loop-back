@@ -18,17 +18,12 @@ import '../asr/asr_model_catalog.dart'
         AsrPublicResourceSpec,
         AsrResourceFile;
 import 'tts_engine.dart' show KokoroModelVariant;
-
-/// espeak-ng-data 资源 ID（模型归档自带；独立归档用于只补修复，Kokoro 与 Piper 共用）。
-const kokoroEspeakNgDataResourceId = 'espeak-ng-data';
-
-/// Kokoro 公开资源的固定仓库（托管位置已确认并完成上传）。
-///
-/// 仓库名集中在此常量，若改名/改位置只动这一处。
-const kokoroPublicRepository = 'iron6909/loop-back-models';
-
-/// 固定发布 tag（与 sherpa 上游同名对齐）。
-const kokoroPublicRevision = 'tts-models';
+import 'tts_shared_resource_catalog.dart'
+    show
+        ttsEspeakNgDataResource,
+        ttsEspeakNgDataResourceId,
+        ttsPublicRepository,
+        ttsPublicRevision;
 
 /// 默认 Kokoro 模型变体。
 const kokoroDefaultVariant = KokoroModelVariant.fp32;
@@ -73,23 +68,6 @@ class KokoroModelSpec {
       resource.fileUri(source, resource.files.single);
 }
 
-/// Kokoro 共享发音数据 `espeak-ng-data` 的固定公开资源身份。
-final kokoroEspeakNgDataResource = AsrPublicResourceSpec(
-  id: kokoroEspeakNgDataResourceId,
-  repository: kokoroPublicRepository,
-  revision: kokoroPublicRevision,
-  layout: AsrPublicResourceLayout.githubReleaseAsset,
-  license: 'GPL-3.0-or-later',
-  files: const [
-    AsrResourceFile(
-      name: 'espeak-ng-data.tar.gz',
-      sha256:
-          '6ebdff81e71e67e6cc4caac37a28ebfe38b364db5cbac66746efc94403abb8a2',
-      sizeBytes: 8986848,
-    ),
-  ],
-);
-
 /// Kokoro 模型规格表。
 final kokoroModelSpecs = <KokoroModelVariant, KokoroModelSpec>{
   KokoroModelVariant.fp32: KokoroModelSpec(
@@ -98,8 +76,8 @@ final kokoroModelSpecs = <KokoroModelVariant, KokoroModelSpec>{
     modelFileName: 'model.onnx',
     resource: AsrPublicResourceSpec(
       id: 'kokoro-en-v0_19',
-      repository: kokoroPublicRepository,
-      revision: kokoroPublicRevision,
+      repository: ttsPublicRepository,
+      revision: ttsPublicRevision,
       layout: AsrPublicResourceLayout.githubReleaseAsset,
       license: 'Apache-2.0',
       files: const [
@@ -118,8 +96,8 @@ final kokoroModelSpecs = <KokoroModelVariant, KokoroModelSpec>{
     modelFileName: 'model.int8.onnx',
     resource: AsrPublicResourceSpec(
       id: 'kokoro-en-v0_19-int8',
-      repository: kokoroPublicRepository,
-      revision: kokoroPublicRevision,
+      repository: ttsPublicRepository,
+      revision: ttsPublicRevision,
       layout: AsrPublicResourceLayout.githubReleaseAsset,
       license: 'Apache-2.0',
       files: const [
@@ -137,7 +115,7 @@ final kokoroModelSpecs = <KokoroModelVariant, KokoroModelSpec>{
 /// 全部 Kokoro 公开资源（两变体 + 共享 espeak-ng-data，后者仅供只补修复与 Piper 复用）。
 final kokoroPublicResourceCatalog = <String, AsrPublicResourceSpec>{
   for (final spec in kokoroModelSpecs.values) spec.id: spec.resource,
-  kokoroEspeakNgDataResourceId: kokoroEspeakNgDataResource,
+  ttsEspeakNgDataResourceId: ttsEspeakNgDataResource,
 };
 
 /// 按变体读取 Kokoro 模型规格。

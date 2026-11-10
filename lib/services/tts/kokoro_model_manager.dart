@@ -23,6 +23,7 @@ import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
 import '../resource_install_manifest.dart';
 import 'kokoro_model_catalog.dart';
+import 'tts_shared_resource_catalog.dart' show ttsEspeakNgDataResourceId;
 
 // 复用 ASR 的下载状态/进度类型（已是通用命名，避免重复定义）。
 export '../asr/asr_model_manager.dart'
@@ -286,10 +287,10 @@ class KokoroModelManager {
     required AsrDownloadSource source,
     CancelToken? cancelToken,
   }) async {
-    final resource = resourceRegistry[kokoroEspeakNgDataResourceId];
+    final resource = resourceRegistry[ttsEspeakNgDataResourceId];
     if (resource == null) {
       throw StateError(
-        'Missing Kokoro espeak resource: $kokoroEspeakNgDataResourceId',
+        'Missing Kokoro espeak resource: $ttsEspeakNgDataResourceId',
       );
     }
     final file = resource.files.single;

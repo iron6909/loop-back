@@ -76,7 +76,8 @@ final ttsPlaybackModelStateProvider = Provider<TtsPlaybackModelState>((ref) {
         progress: state.downloadProgress,
         failure: state.downloadError,
         estimatedDownloadBytes:
-            piperVoiceById(settings.activePiperVoice)?.estimatedDownloadBytes ??
+            piperVoiceById(settings.activePiperVoice)?.resource
+                ?.estimatedDownloadBytes ??
             0,
       );
   }
@@ -340,7 +341,8 @@ class TtsModelDownloadDialog extends ConsumerWidget {
       progress: state.downloadProgress,
       failure: state.downloadError,
       estimatedDownloadBytes:
-          piperVoiceById(settings.activePiperVoice)?.estimatedDownloadBytes ??
+          piperVoiceById(settings.activePiperVoice)?.resource
+              ?.estimatedDownloadBytes ??
           0,
     );
   }
