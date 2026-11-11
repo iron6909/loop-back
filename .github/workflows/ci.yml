@@ -186,7 +186,9 @@ jobs:
 
       - name: Install CocoaPods
         if: matrix.platform == 'ios'
-        run: cd ios && pod install
+        # PostHog 等 pod 约束随 pubspec 升级后，先单独更新再 install，
+        # 否则 pod install 会因 lock 里版本不满足约束而失败。
+        run: cd ios && pod update PostHog && pod install
 
       - name: Build iOS (no codesign)
         if: matrix.platform == 'ios'
