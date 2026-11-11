@@ -7,8 +7,8 @@ library;
 
 import 'dart:async';
 
-import 'package:echo_loop/services/audio_playback_service.dart';
-import 'package:echo_loop/services/audio_preview_controller.dart';
+import 'package:loop_back/services/audio_playback_service.dart';
+import 'package:loop_back/services/audio_preview_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 不触碰平台的播放替身，由测试决定每次播放何时结束。

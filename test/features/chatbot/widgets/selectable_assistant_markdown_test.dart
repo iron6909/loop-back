@@ -5,10 +5,10 @@
 /// headless 下算出真实选区，因此这里可以直接断言选中文本、跨块拼接与剪贴板内容。
 library;
 
-import 'package:echo_loop/features/chatbot/widgets/selectable_assistant_markdown.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/selection/selectable_content.dart';
-import 'package:echo_loop/widgets/selection/selection_toolbar_host.dart';
+import 'package:loop_back/features/chatbot/widgets/selectable_assistant_markdown.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/selection/selectable_content.dart';
+import 'package:loop_back/widgets/selection/selection_toolbar_host.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';

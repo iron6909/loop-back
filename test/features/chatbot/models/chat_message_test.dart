@@ -1,8 +1,8 @@
 /// ChatMessage 模型测试：factory / copyWith / toWire / includeInHistory。
 library;
 
-import 'package:echo_loop/features/chatbot/models/chat_message.dart';
-import 'package:echo_loop/features/chatbot/models/chat_role.dart';
+import 'package:loop_back/features/chatbot/models/chat_message.dart';
+import 'package:loop_back/features/chatbot/models/chat_role.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

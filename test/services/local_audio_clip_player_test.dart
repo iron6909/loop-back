@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:echo_loop/models/word_highlight_binding.dart';
+import 'package:loop_back/models/word_highlight_binding.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
 
 class _FakeBackend implements AudioClipPlayerBackend {
   bool completeOnOpen = false;

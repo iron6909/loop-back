@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/services/app_update_migration.dart';
+import 'package:loop_back/services/app_update_migration.dart';
 
 void main() {
   group('AppUpdateMigrationRunner', () {

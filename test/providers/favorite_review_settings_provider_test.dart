@@ -1,5 +1,5 @@
-import 'package:echo_loop/models/favorite_review_settings.dart';
-import 'package:echo_loop/providers/favorite_review_settings_provider.dart';
+import 'package:loop_back/models/favorite_review_settings.dart';
+import 'package:loop_back/providers/favorite_review_settings_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';

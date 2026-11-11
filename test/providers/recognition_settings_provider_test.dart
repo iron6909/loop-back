@@ -1,12 +1,12 @@
 /// 用途识别选择：三用途独立、旧偏好迁移、系统识别可用范围与在途任务取消。
 library;
 
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/providers/local_transcription_model_provider.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/recognition_settings_provider.dart';
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/providers/local_transcription_model_provider.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/providers/recognition_settings_provider.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

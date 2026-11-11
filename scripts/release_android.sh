@@ -42,7 +42,7 @@ Environment variables:
   R2_ACCESS_KEY_ID      R2 API token access key ID
   R2_SECRET_ACCESS_KEY  R2 API token secret access key
   R2_BUCKET             R2 bucket name (default: public)
-  R2_PUBLIC_URL         Public base URL for download links (default: https://cdn.echo-loop.top)
+  R2_PUBLIC_URL         Public base URL for download links (required; no default)
 EOF
 }
 
@@ -79,7 +79,7 @@ if [[ -z "${ANDROID_HOME:-}" ]]; then
 fi
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$PATH"
 
-# 全球/中国 API 可用 API_BASE_URL 和 API_CHINA_BASE_URL 覆盖。
+# 无自有后端 API；环境文件仅携带渠道/分析等必要 dart-define。
 ENV_FILE=".prod.env"
 
 # 版本名来源优先级：命令行参数 > 环境变量 > pubspec.yaml
@@ -104,7 +104,7 @@ fi
 # 对外分发不需要暴露。同 versionName 重发会覆盖。
 VERSION="${BUILD_NAME}"
 ARCH="arm64"
-APK_NAME="Echo-Loop-${VERSION}-${ARCH}.apk"
+APK_NAME="LoopBack-${VERSION}-${ARCH}.apk"
 APK_PATH="build/release/$APK_NAME"
 
 log "Version: $VERSION"
@@ -167,12 +167,12 @@ R2_SECRET_ACCESS_KEY="${R2_SECRET_ACCESS_KEY:-$R2_SECRET_ACCESS_KEY_PUBLIC}"
 : "${R2_ACCESS_KEY_ID:?Set R2_ACCESS_KEY_ID or R2_ACCESS_KEY_ID_PUBLIC}"
 : "${R2_SECRET_ACCESS_KEY:?Set R2_SECRET_ACCESS_KEY or R2_SECRET_ACCESS_KEY_PUBLIC}"
 R2_BUCKET="${R2_BUCKET:-public}"
-R2_PUBLIC_URL="${R2_PUBLIC_URL:-https://cdn.echo-loop.top}"
+R2_PUBLIC_URL="${R2_PUBLIC_URL:-}"
 
 command -v aws >/dev/null 2>&1 || fail "aws CLI not found. Install it first."
 
 R2_KEY="android/$APK_NAME"
-R2_LATEST_KEY="android/Echo-Loop-latest.apk"
+R2_LATEST_KEY="android/LoopBack-latest.apk"
 
 log "Uploading to R2: s3://${R2_BUCKET}/${R2_KEY} ..."
 

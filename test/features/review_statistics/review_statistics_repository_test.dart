@@ -1,10 +1,10 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/daos/study_statistics_dao.dart';
-import 'package:echo_loop/features/review_statistics/review_statistics_repository.dart';
-import 'package:echo_loop/models/study_stage.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/daos/study_statistics_dao.dart';
+import 'package:loop_back/features/review_statistics/review_statistics_repository.dart';
+import 'package:loop_back/models/study_stage.dart';
 
 void main() {
   late AppDatabase db;

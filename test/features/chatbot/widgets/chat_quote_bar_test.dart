@@ -1,7 +1,7 @@
 /// ChatQuoteBar 测试：引用文本 / 快捷指令 / 关闭 / 流式禁用。
 library;
 
-import 'package:echo_loop/features/chatbot/widgets/chat_quote_bar.dart';
+import 'package:loop_back/features/chatbot/widgets/chat_quote_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

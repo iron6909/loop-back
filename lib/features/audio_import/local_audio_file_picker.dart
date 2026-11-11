@@ -29,7 +29,7 @@ class AndroidLocalAudioFilePicker {
   AndroidLocalAudioFilePicker({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel(_channelName);
 
-  static const _channelName = 'top.echo-loop/local_audio_picker';
+  static const _channelName = 'top.loop-back/local_audio_picker';
   final MethodChannel _channel;
 
   /// 唤起系统多选；用户取消或未选中任何文件时返回 null。

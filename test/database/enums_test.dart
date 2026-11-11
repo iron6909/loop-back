@@ -4,7 +4,7 @@
 /// `LearningStage.allSubStages` 全量子步骤定义。
 library;
 
-import 'package:echo_loop/database/enums.dart';
+import 'package:loop_back/database/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

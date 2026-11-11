@@ -11,7 +11,7 @@ import '../utils/app_data_dir.dart';
 import 'app_logger.dart';
 import 'media_session_router.dart';
 
-/// Echo Loop 全局后台播放控制器。
+/// LoopBack 全局后台播放控制器。
 ///
 /// 它负责把播放器状态和系统媒体控制连接起来，本身不是音频解码器，也不限定只能服务音频；
 /// 真正的播放由注入的播放器负责。锁屏、通知栏和耳机控制统一通过这里映射。
@@ -20,8 +20,8 @@ import 'media_session_router.dart';
 /// 1. 系统媒体会话、锁屏/通知栏状态只认这一层；
 /// 2. Flutter 业务层通过 facade 调它，不直接持有 `AudioPlayer`；
 /// 3. 未来若要加上一句/下一句、循环切换、睡眠定时等锁屏控制，只扩这里。
-class EchoLoopAudioHandler extends BaseAudioHandler with SeekHandler {
-  EchoLoopAudioHandler({ja.AudioPlayer? player})
+class LoopBackAudioHandler extends BaseAudioHandler with SeekHandler {
+  LoopBackAudioHandler({ja.AudioPlayer? player})
     : _player = player ?? ja.AudioPlayer() {
     _playbackEventSub = _player.playbackEventStream.listen(
       (_) => _broadcastState(),
@@ -286,9 +286,9 @@ class EchoLoopAudioHandler extends BaseAudioHandler with SeekHandler {
       MediaItem(
         id: id,
         title: title,
-        // 系统播放控制面板副标题展示所属合集名（subtitle）；不再附加 album「Echo
-        // Loop」造成「合集 – Echo Loop」。无合集时回退显示 app 名「Echo Loop」。
-        artist: subtitle ?? 'Echo Loop',
+        // 系统播放控制面板副标题展示所属合集名（subtitle）；不再附加 album 品牌名
+        // 造成「合集 – LoopBack」。无合集时回退显示 app 名「LoopBack」。
+        artist: subtitle ?? 'LoopBack',
         artUri: _artworkUri,
       ),
     );
@@ -446,7 +446,7 @@ class EchoLoopAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 }
 
-EchoLoopAudioHandler? _globalAudioHandler;
+LoopBackAudioHandler? _globalAudioHandler;
 MediaSessionRouter? _globalMediaSessionRouter;
 
 /// 系统媒体会话注册器的可替换初始化函数，供启动编排和测试复用。
@@ -460,15 +460,15 @@ typedef BackgroundMediaSessionInitializer =
 class BackgroundMediaSessionCoordinator {
   BackgroundMediaSessionCoordinator({
     BackgroundMediaSessionInitializer? initializeSystemSession,
-    Future<void> Function(EchoLoopAudioHandler handler)? prepareHandler,
+    Future<void> Function(LoopBackAudioHandler handler)? prepareHandler,
   }) : _initializeSystemSession =
            initializeSystemSession ?? _initializeAudioService,
        _prepareHandler = prepareHandler ?? _prepareAudioHandler;
 
   final BackgroundMediaSessionInitializer _initializeSystemSession;
-  final Future<void> Function(EchoLoopAudioHandler handler) _prepareHandler;
+  final Future<void> Function(LoopBackAudioHandler handler) _prepareHandler;
 
-  EchoLoopAudioHandler? _handler;
+  LoopBackAudioHandler? _handler;
   MediaSessionRouter? _router;
   Future<void>? _initialization;
   bool _systemSessionReady = false;
@@ -477,7 +477,7 @@ class BackgroundMediaSessionCoordinator {
   bool get isSystemSessionReady => _systemSessionReady;
 
   /// 返回前台播放所需的 handler；首次读取时同步创建，不等待平台服务。
-  EchoLoopAudioHandler get handler => _handler ??= EchoLoopAudioHandler();
+  LoopBackAudioHandler get handler => _handler ??= LoopBackAudioHandler();
 
   /// 返回前台视频播放所需的 router；即使 AudioService 失败也保持可用。
   MediaSessionRouter get router =>
@@ -517,7 +517,7 @@ class BackgroundMediaSessionCoordinator {
   }
 }
 
-Future<void> _prepareAudioHandler(EchoLoopAudioHandler handler) async {
+Future<void> _prepareAudioHandler(LoopBackAudioHandler handler) async {
   try {
     await handler.configureSession();
   } catch (error, stackTrace) {
@@ -540,8 +540,8 @@ Future<void> _initializeAudioService(MediaSessionRouter router) async {
   await AudioService.init(
     builder: () => router,
     config: AudioServiceConfig(
-      androidNotificationChannelId: 'app.echoloop.audio',
-      androidNotificationChannelName: 'Echo Loop Playback',
+      androidNotificationChannelId: 'app.loopback.audio',
+      androidNotificationChannelName: 'LoopBack Playback',
       androidStopForegroundOnPause: false,
       // 通知 small icon：app logo 的白色剪影（Android 强制单色，彩色 logo 见封面图）。
       androidNotificationIcon: 'drawable/ic_stat_logo',
@@ -552,7 +552,7 @@ Future<void> _initializeAudioService(MediaSessionRouter router) async {
 final backgroundMediaSessionCoordinator = BackgroundMediaSessionCoordinator();
 
 /// 初始化全局后台播放 handler。
-Future<EchoLoopAudioHandler> initEchoLoopAudioHandler() async {
+Future<LoopBackAudioHandler> initLoopBackAudioHandler() async {
   final handler = backgroundMediaSessionCoordinator.handler;
   _globalAudioHandler = handler;
   _globalMediaSessionRouter = backgroundMediaSessionCoordinator.router;
@@ -561,7 +561,7 @@ Future<EchoLoopAudioHandler> initEchoLoopAudioHandler() async {
 }
 
 /// 播放入口触发后台媒体会话的静默重试，不阻塞当前前台播放。
-void retryEchoLoopAudioServiceOnPlayback() {
+void retryLoopBackAudioServiceOnPlayback() {
   final handler = backgroundMediaSessionCoordinator.handler;
   _globalAudioHandler = handler;
   _globalMediaSessionRouter = backgroundMediaSessionCoordinator.router;
@@ -572,10 +572,10 @@ void retryEchoLoopAudioServiceOnPlayback() {
   );
 }
 
-EchoLoopAudioHandler get echoLoopAudioHandler {
+LoopBackAudioHandler get loopBackAudioHandler {
   return _globalAudioHandler ??= backgroundMediaSessionCoordinator.handler;
 }
 
-MediaSessionRouter get echoLoopMediaSessionRouter {
+MediaSessionRouter get loopBackMediaSessionRouter {
   return _globalMediaSessionRouter ??= backgroundMediaSessionCoordinator.router;
 }

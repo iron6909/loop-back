@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lottie/lottie.dart';
-import 'package:echo_loop/widgets/dialogs/step_complete_dialog.dart';
+import 'package:loop_back/widgets/dialogs/step_complete_dialog.dart';
 
 import '../helpers/test_app.dart';
 

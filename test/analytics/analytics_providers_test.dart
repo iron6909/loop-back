@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:echo_loop/analytics/analytics_channel.dart';
-import 'package:echo_loop/analytics/analytics_providers.dart';
-import 'package:echo_loop/analytics/analytics_service.dart';
-import 'package:echo_loop/analytics/consent_manager.dart';
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/analytics/analytics_channel.dart';
+import 'package:loop_back/analytics/analytics_providers.dart';
+import 'package:loop_back/analytics/analytics_service.dart';
+import 'package:loop_back/analytics/consent_manager.dart';
+import 'package:loop_back/services/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

@@ -17,8 +17,6 @@ import '../features/community_collections/community_collection_routes.dart';
 import '../features/podcast/podcast_models.dart';
 import '../features/podcast/screens/podcast_discovery_screen.dart';
 import '../features/podcast/screens/podcast_preview_screen.dart';
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import '../features/onboarding_survey/screens/onboarding_survey_screen.dart';
 import '../features/subtitle_editor/subtitle_simple_editor_screen.dart';
 import '../models/audio_item.dart';
 import '../providers/audio_library_provider.dart';
@@ -166,9 +164,6 @@ abstract class AppRoutes {
       ? '/collections/$collectionId/$audioId/review-difficult-practice'
       : '/audio/$audioId/review-difficult-practice';
 
-  /// Onboarding 问卷页路径（仅首启新用户访问）
-  static const onboardingSurvey = '/onboarding/survey';
-
   /// 订阅计划介绍 / 购买页（Paywall）
   static const paywall = '/paywall';
 
@@ -289,12 +284,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           state.uri.path == AppRoutes.account ||
           state.uri.path == AppRoutes.paywall) {
         return AppRoutes.settings;
-      }
-      // /onboarding/survey 自身路径必须早返，否则在拦截路径上产生死循环
-      if (state.uri.path == AppRoutes.onboardingSurvey) return null;
-      // 首启新用户、未完成且未学习过 → 强制进入问卷
-      if (ref.read(shouldShowSurveyProvider)) {
-        return AppRoutes.onboardingSurvey;
       }
       // 兼容旧发现页链接，停用远端内容后统一回到我的合集。
       if (state.uri.path == '/collections/discover' ||
@@ -501,15 +490,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // Onboarding 问卷（首启新用户全屏，无 tab bar / 不可返回）
+      // Onboarding 问卷已移除（开源版本不再采集首启问卷）。
       GoRoute(
         path: AppRoutes.backupRestore,
         builder: (context, state) => const BackupRestoreScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.onboardingSurvey,
-        parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const OnboardingSurveyScreen(),
       ),
       for (final path in [
         AppRoutes.login,

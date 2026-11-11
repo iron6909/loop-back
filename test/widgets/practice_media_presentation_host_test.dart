@@ -1,5 +1,5 @@
-import 'package:echo_loop/providers/media_engine/media_engine_provider.dart';
-import 'package:echo_loop/widgets/common/practice_media_presentation_host.dart';
+import 'package:loop_back/providers/media_engine/media_engine_provider.dart';
+import 'package:loop_back/widgets/common/practice_media_presentation_host.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

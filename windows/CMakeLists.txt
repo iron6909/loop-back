@@ -1,11 +1,11 @@
 # Project-level configuration.
 cmake_minimum_required(VERSION 3.14)
-project(echo_loop LANGUAGES CXX)
-set(APPLICATION_NAME "Echo Loop")
+project(loop_back LANGUAGES CXX)
+set(APPLICATION_NAME "LoopBack")
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "echo_loop")
+set(BINARY_NAME "loop_back")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('iOS Info.plist 默认显示名使用 Echo Loop', () async {
+  test('iOS Info.plist 默认显示名使用 LoopBack', () async {
     final content = await File('ios/Runner/Info.plist').readAsString();
 
     expect(content, contains('<key>CFBundleDisplayName</key>'));
-    expect(content, contains('<string>Echo Loop</string>'));
+    expect(content, contains('<string>LoopBack</string>'));
     expect(content, isNot(contains('<string>Fluency</string>')));
   });
 
@@ -19,8 +19,8 @@ void main() {
       'ios/Runner/zh-Hans.lproj/InfoPlist.strings',
     ).readAsString();
 
-    expect(english, contains('"CFBundleName" = "Echo Loop";'));
-    expect(chinese, contains('"CFBundleName" = "Echo Loop";'));
+    expect(english, contains('"CFBundleName" = "LoopBack";'));
+    expect(chinese, contains('"CFBundleName" = "LoopBack";'));
   });
 
   test('iOS 字幕文档类型声明了 LSHandlerRank', () async {
@@ -33,6 +33,6 @@ void main() {
     expect(content, contains('<string>SubRip Subtitle</string>'));
     expect(content, contains('<string>WebVTT Subtitle</string>'));
     expect(content, contains('<string>LRC Lyrics</string>'));
-    expect(content, contains('<string>top.echo-loop.lrc-lyrics</string>'));
+    expect(content, contains('<string>top.loop-back.lrc-lyrics</string>'));
   });
 }

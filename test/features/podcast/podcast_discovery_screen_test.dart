@@ -1,14 +1,14 @@
-import 'package:echo_loop/features/podcast/data/featured_podcast_service.dart';
-import 'package:echo_loop/features/podcast/models/featured_podcast.dart';
-import 'package:echo_loop/features/podcast/podcast_preview_provider.dart';
-import 'package:echo_loop/features/podcast/podcast_models.dart';
-import 'package:echo_loop/features/podcast/podcast_repository.dart';
-import 'package:echo_loop/features/podcast/podcast_search_provider.dart';
-import 'package:echo_loop/features/podcast/podcast_search_service.dart';
-import 'package:echo_loop/features/podcast/screens/podcast_discovery_screen.dart';
-import 'package:echo_loop/features/podcast/widgets/podcast_subscribe_tile.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
+import 'package:loop_back/features/podcast/data/featured_podcast_service.dart';
+import 'package:loop_back/features/podcast/models/featured_podcast.dart';
+import 'package:loop_back/features/podcast/podcast_preview_provider.dart';
+import 'package:loop_back/features/podcast/podcast_models.dart';
+import 'package:loop_back/features/podcast/podcast_repository.dart';
+import 'package:loop_back/features/podcast/podcast_search_provider.dart';
+import 'package:loop_back/features/podcast/podcast_search_service.dart';
+import 'package:loop_back/features/podcast/screens/podcast_discovery_screen.dart';
+import 'package:loop_back/features/podcast/widgets/podcast_subscribe_tile.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/providers/collection_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

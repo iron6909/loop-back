@@ -4,8 +4,8 @@ library;
 
 import 'dart:typed_data';
 
-import 'package:echo_loop/services/asr/offline_asr_engine.dart' show AsrSegment;
-import 'package:echo_loop/utils/audio_chunk_planner.dart';
+import 'package:loop_back/services/asr/offline_asr_engine.dart' show AsrSegment;
+import 'package:loop_back/utils/audio_chunk_planner.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 构造 16 kHz 单声道 16 bit PCM；[silent] 内的绝对时间写成 0 振幅。

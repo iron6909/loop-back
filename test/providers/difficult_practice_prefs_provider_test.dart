@@ -5,12 +5,12 @@
 /// 未设字段保持 null(不冻结智能默认)、跨实例持久化。
 library;
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
-import 'package:echo_loop/models/stage_settings_overrides.dart'
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/stage_settings_overrides.dart'
     show StageSettingsSlots, stageSlotKey;
-import 'package:echo_loop/providers/difficult_practice_prefs_provider.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart'
+import 'package:loop_back/providers/difficult_practice_prefs_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart'
     show sharedPreferencesProvider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

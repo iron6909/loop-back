@@ -1,16 +1,16 @@
 /// 记忆调度领域契约与 Registry 回归测试。
 library;
 
-import 'package:echo_loop/features/memory_scheduler/application/memory_model_registry.dart';
-import 'package:echo_loop/features/memory_scheduler/config/memory_profiles.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_model_adapter.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_namespaces.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_profile.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_schedule.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_commands.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_exceptions.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_subject_ref.dart';
+import 'package:loop_back/features/memory_scheduler/application/memory_model_registry.dart';
+import 'package:loop_back/features/memory_scheduler/config/memory_profiles.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_model_adapter.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_namespaces.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_profile.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_schedule.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_commands.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_exceptions.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_subject_ref.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,4 +1,4 @@
-import 'package:echo_loop/utils/learning_duration_estimator.dart';
+import 'package:loop_back/utils/learning_duration_estimator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

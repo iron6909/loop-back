@@ -1,17 +1,17 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/widgets/selection/app_selectable_text.dart';
+import 'package:loop_back/widgets/selection/app_selectable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/sense_group_result.dart';
-import 'package:echo_loop/models/sentence_ai_result.dart';
-import 'package:echo_loop/services/provider/provider_http_client.dart';
-import 'package:echo_loop/utils/sense_group_timing.dart';
-import 'package:echo_loop/widgets/common/shimmer_placeholder.dart';
-import 'package:echo_loop/widgets/practice/selectable_sentence_text.dart';
-import 'package:echo_loop/widgets/practice/sense_group_text.dart';
-import 'package:echo_loop/widgets/practice/sentence_annotation_card.dart';
+import 'package:loop_back/models/sense_group_result.dart';
+import 'package:loop_back/models/sentence_ai_result.dart';
+import 'package:loop_back/services/provider/provider_http_client.dart';
+import 'package:loop_back/utils/sense_group_timing.dart';
+import 'package:loop_back/widgets/common/shimmer_placeholder.dart';
+import 'package:loop_back/widgets/practice/selectable_sentence_text.dart';
+import 'package:loop_back/widgets/practice/sense_group_text.dart';
+import 'package:loop_back/widgets/practice/sentence_annotation_card.dart';
 
 import '../helpers/test_app.dart';
 

@@ -1,7 +1,7 @@
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/favorite_review_settings_provider.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/bookmark_review/bookmark_review_settings_sheet.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/favorite_review_settings_provider.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/bookmark_review/bookmark_review_settings_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/startup_trace.dart';
+import 'package:loop_back/services/startup_trace.dart';
 
 void main() {
   test('在日志 sink 就绪前缓冲事件，并按原顺序落盘', () {

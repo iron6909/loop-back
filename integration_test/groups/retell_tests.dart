@@ -8,16 +8,16 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/main.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/retell_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/screens/retell_player_screen.dart';
-import 'package:echo_loop/widgets/practice/practice_progress_section.dart';
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
+import 'package:loop_back/main.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/retell_player_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/screens/retell_player_screen.dart';
+import 'package:loop_back/widgets/practice/practice_progress_section.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/models/sentence.dart';
 
 import '../helpers/test_notifiers.dart';
 
@@ -129,7 +129,7 @@ void retellTests() {
     /// 初始化 RetellPlayer 段落数据。
     Future<void> navigateToRetell(WidgetTester tester) async {
       await _pumpUi(tester, 1000);
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       // 设置学习会话为复述模式
@@ -390,7 +390,7 @@ void retellTests() {
       expect(find.byType(RetellPlayerScreen), findsNothing);
 
       // 验证断点已保存（第 2 段第一句的全局句子索引 = 2）
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(context);
       final progressState = container2.read(learningProgressNotifierProvider);
       final progress = progressState.progressMap['test-audio-1'];

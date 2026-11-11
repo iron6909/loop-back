@@ -14,7 +14,7 @@ import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
 import '../models/reminder_settings.dart';
 import '../services/app_logger.dart';
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import '../features/user_preferences/domain/user_preferences_sync_events.dart';
 

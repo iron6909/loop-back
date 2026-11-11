@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/services/silence_skip_detector.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/services/silence_skip_detector.dart';
 
 /// 构造测试字幕（毫秒粒度）
 Sentence _s(int idx, int startMs, int endMs) => Sentence(

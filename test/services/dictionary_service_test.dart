@@ -6,7 +6,7 @@ library;
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/dictionary_service.dart';
+import 'package:loop_back/services/dictionary_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 

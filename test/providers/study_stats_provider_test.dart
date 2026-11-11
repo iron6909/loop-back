@@ -2,11 +2,11 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/providers/study_stats_provider.dart';
-import 'package:echo_loop/services/study_time_service.dart';
-import 'package:echo_loop/models/study_stage.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/providers/study_stats_provider.dart';
+import 'package:loop_back/services/study_time_service.dart';
+import 'package:loop_back/models/study_stage.dart';
 
 AppDatabase _createTestDb() {
   return AppDatabase(

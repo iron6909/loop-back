@@ -7,9 +7,9 @@ library;
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_config_store.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_config_store.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -27,7 +27,7 @@ String _secureKeyName(Invocation invocation) {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const sentinelKey = 'sk-speech-sentinel-4b7d';
+  const sentinelKey = 'spk-4b7d';
   const openRouterBaseUrl = 'https://openrouter.ai/api/v1';
 
   late Map<String, String> secrets;
@@ -235,7 +235,7 @@ void main() {
       await store.save(openRouter(), apiKey: sentinelKey);
       final version = await store.readCredentialVersion();
 
-      await store.save(openRouter(), apiKey: 'sk-speech-rotated-91cf');
+      await store.save(openRouter(), apiKey: 'rot-91cf');
 
       expect(await store.readCredentialVersion(), isNot(version));
     });

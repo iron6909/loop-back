@@ -3,13 +3,13 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/tag_provider.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/tag_provider.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 
 import '../database/dao_test.dart';
 import '../helpers/mock_providers.dart';

@@ -103,7 +103,7 @@ Future<BackupManifest> performImport(
       onProgress: onProgress,
     );
 
-    candidateDatabase = AppDatabase(openConnectionWithName('echo_loop.db'));
+    candidateDatabase = AppDatabase(openConnectionWithName('loop_back.db'));
     AppLogger.log('Backup', 'candidate_database_opened');
     switchAppDatabase(candidateDatabase, ref);
     await _reloadDatabaseProviders(ref);
@@ -131,7 +131,7 @@ Future<BackupManifest> performImport(
     await candidateDatabase?.close();
     await applied?.rollback();
     if (databaseWasClosed) {
-      final fallbackDb = AppDatabase(openConnectionWithName('echo_loop.db'));
+      final fallbackDb = AppDatabase(openConnectionWithName('loop_back.db'));
       switchAppDatabase(fallbackDb, ref);
       await _reloadDatabaseProviders(ref);
       AppLogger.log('Backup', 'fallback_database_reopened');

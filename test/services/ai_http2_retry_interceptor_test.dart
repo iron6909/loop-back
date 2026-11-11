@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/ai_http2_retry_interceptor.dart';
+import 'package:loop_back/services/ai_http2_retry_interceptor.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

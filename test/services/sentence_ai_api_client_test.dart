@@ -4,11 +4,11 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:echo_loop/models/dictionary/dictionary_entry.dart';
-import 'package:echo_loop/models/sense_group_result.dart';
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/structured_ai_client.dart';
-import 'package:echo_loop/services/sentence_ai_api_client.dart';
+import 'package:loop_back/models/dictionary/dictionary_entry.dart';
+import 'package:loop_back/models/sense_group_result.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/structured_ai_client.dart';
+import 'package:loop_back/services/sentence_ai_api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../helpers/provider_fixture.dart';
 

@@ -3,7 +3,7 @@
 // 验证排序方式的持久化：字符串解析回退、setSortType 写入。
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/providers/audio_list_settings_provider.dart';
+import 'package:loop_back/providers/audio_list_settings_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

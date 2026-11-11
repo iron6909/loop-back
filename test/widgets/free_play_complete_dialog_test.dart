@@ -1,5 +1,5 @@
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/widgets/dialogs/free_play_complete_dialog.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/widgets/dialogs/free_play_complete_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lottie/lottie.dart';

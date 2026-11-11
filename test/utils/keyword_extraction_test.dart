@@ -1,11 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/utils/keyword_extraction.dart';
-import 'package:echo_loop/utils/stopwords.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/utils/keyword_extraction.dart';
+import 'package:loop_back/utils/stopwords.dart';
 
 /// 辅助函数：创建带指定文本的句子列表
 List<Sentence> _makeSentences(List<String> texts) {

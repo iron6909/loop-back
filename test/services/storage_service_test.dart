@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/models/playback_settings.dart';
-import 'package:echo_loop/services/storage_service.dart';
+import 'package:loop_back/models/playback_settings.dart';
+import 'package:loop_back/services/storage_service.dart';
 
 void main() {
   group('StorageService', () {

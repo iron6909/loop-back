@@ -1,4 +1,4 @@
-package app.echoloop
+package app.loopback
 
 import org.junit.After
 import org.junit.Assert.assertEquals

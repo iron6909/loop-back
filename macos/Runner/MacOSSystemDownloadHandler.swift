@@ -18,11 +18,11 @@ final class MacOSSystemDownloadHandler: NSObject, FlutterStreamHandler, URLSessi
 
   init(binaryMessenger: FlutterBinaryMessenger) {
     methodChannel = FlutterMethodChannel(
-      name: "top.echo-loop/system_download",
+      name: "top.loop-back/system_download",
       binaryMessenger: binaryMessenger
     )
     eventChannel = FlutterEventChannel(
-      name: "top.echo-loop/system_download/events",
+      name: "top.loop-back/system_download/events",
       binaryMessenger: binaryMessenger
     )
 

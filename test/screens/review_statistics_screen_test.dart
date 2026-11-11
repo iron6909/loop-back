@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/review_statistics/review_statistics_repository.dart';
-import 'package:echo_loop/screens/review_statistics_screen.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/common/app_segmented_button.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/features/review_statistics/review_statistics_repository.dart';
+import 'package:loop_back/screens/review_statistics_screen.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/common/app_segmented_button.dart';
 
 void main() {
   testWidgets('统计页按时间口径展示范围筛选、分区和说明', (tester) async {

@@ -7,18 +7,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/startup_bootstrap_provider.dart';
-import 'package:echo_loop/providers/study_stats_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/media_playback/media_playback_provider.dart';
-import 'package:echo_loop/models/media_playback_state.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/router/main_shell.dart';
-import 'package:echo_loop/services/study_time_service.dart';
-import 'package:echo_loop/models/study_stage.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/startup_bootstrap_provider.dart';
+import 'package:loop_back/providers/study_stats_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/media_playback/media_playback_provider.dart';
+import 'package:loop_back/models/media_playback_state.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/router/main_shell.dart';
+import 'package:loop_back/services/study_time_service.dart';
+import 'package:loop_back/models/study_stage.dart';
 
 import '../helpers/mock_providers.dart';
 

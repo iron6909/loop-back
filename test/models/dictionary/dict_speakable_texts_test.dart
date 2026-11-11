@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/dict_entry.dart';
-import 'package:echo_loop/models/dictionary/dict_speakable_texts.dart';
-import 'package:echo_loop/models/dictionary/dictionary_entry.dart';
-import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
+import 'package:loop_back/models/dict_entry.dart';
+import 'package:loop_back/models/dictionary/dict_speakable_texts.dart';
+import 'package:loop_back/models/dictionary/dictionary_entry.dart';
+import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
 
 ExampleSentence _ex(String s, [String t = '译文']) =>
     ExampleSentence(sentence: s, translation: t);

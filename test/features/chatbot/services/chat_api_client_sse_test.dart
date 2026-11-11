@@ -6,11 +6,11 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/chatbot/models/chat_message.dart';
-import 'package:echo_loop/features/chatbot/services/provider_chat_api_client.dart';
-import 'package:echo_loop/features/chatbot/services/ndjson_text_stream.dart';
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/provider_http_client.dart';
+import 'package:loop_back/features/chatbot/models/chat_message.dart';
+import 'package:loop_back/features/chatbot/services/provider_chat_api_client.dart';
+import 'package:loop_back/features/chatbot/services/ndjson_text_stream.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/provider_http_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Adapter implements HttpClientAdapter {

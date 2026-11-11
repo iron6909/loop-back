@@ -1,5 +1,5 @@
-import 'package:echo_loop/analytics/models/event_names.dart';
-import 'package:echo_loop/analytics/posthog_event_policy.dart';
+import 'package:loop_back/analytics/models/event_names.dart';
+import 'package:loop_back/analytics/posthog_event_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,9 +1,9 @@
 /// ChatEditScreen 测试：预填 / 发送返回文本 / 关闭返回 null / 空文本禁用发送。
 library;
 
-import 'package:echo_loop/features/chatbot/screens/chat_edit_screen.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/features/chatbot/screens/chat_edit_screen.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';

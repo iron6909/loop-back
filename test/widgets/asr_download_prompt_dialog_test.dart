@@ -3,15 +3,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/asr_model_installation_provider.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
-import 'package:echo_loop/providers/asr_model_installation_gate.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/download/download_failure.dart';
-import 'package:echo_loop/widgets/asr_download_prompt_dialog.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/asr_model_installation_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
+import 'package:loop_back/providers/asr_model_installation_gate.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/services/download/download_failure.dart';
+import 'package:loop_back/widgets/asr_download_prompt_dialog.dart';
 
 import '../helpers/mock_providers.dart';
 
@@ -70,7 +70,7 @@ class _TestOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
 
 const _recommendedModel = AsrModelInfo(
   id: 'whisper-base-en-int8',
-  displayName: 'Echo Loop AI (Balanced)',
+  displayName: 'LoopBack AI (Balanced)',
   type: AsrModelType.whisper,
 );
 

@@ -4,11 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/desktop_sidebar_provider.dart';
-import 'package:echo_loop/router/widgets/main_shell_navigation_rail.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/desktop_sidebar_provider.dart';
+import 'package:loop_back/router/widgets/main_shell_navigation_rail.dart';
+import 'package:loop_back/theme/app_theme.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

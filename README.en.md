@@ -3,32 +3,27 @@
 </div>
 
 <div align="center">
-  <img src="assets/icon/app-icon-1024-rounded.png" alt="Echo Loop" width="128" />
+  <img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="128" />
 
-  <h1>Echo Loop — Efficient English Listening & Speaking Training</h1>
+  <h1>LoopBack — Efficient English Listening & Speaking Training</h1>
 
   <p><strong>You no longer have to figure out how to practice English on your own.</strong></p>
 
-  <p>Intensive listening · Shadowing · Blind listening · Retelling · Review — Echo Loop guides you through every step at a scientifically-paced rhythm.</p>
+  <p>Intensive listening · Shadowing · Blind listening · Retelling · Review — LoopBack guides you through every step at a scientifically-paced rhythm.</p>
 
   <p><sub><em>This project is academically advised by <a href="https://sfs.muc.edu.cn/info/1063/3729.htm"> Yang Yan</a> from the School of Foreign Studies, Minzu University of China.</em></sub></p>
 
   <p>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" /></a>
     <img src="https://img.shields.io/badge/Platform-iOS%20%C2%B7%20Android%20%C2%B7%20macOS%20%C2%B7%20Windows-brightgreen.svg" alt="Platform" />
-    <a href="https://github.com/echo-loop/Echo-Loop/releases/latest"><img src="https://img.shields.io/github/v/release/echo-loop/Echo-Loop?label=release&color=orange" alt="Latest release" /></a>
-    <a href="https://github.com/echo-loop/Echo-Loop/releases"><img src="https://img.shields.io/github/downloads/echo-loop/Echo-Loop/total?label=downloads" alt="Total release downloads" /></a>
-    <a href="https://github.com/echo-loop/Echo-Loop/commits/main"><img src="https://img.shields.io/github/last-commit/echo-loop/Echo-Loop" alt="Last commit" /></a>
+    <a href="https://github.com/iron6909/loop-back/releases/latest"><img src="https://img.shields.io/github/v/release/iron6909/loop-back?label=release&color=orange" alt="Latest release" /></a>
+    <a href="https://github.com/iron6909/loop-back/releases"><img src="https://img.shields.io/github/downloads/iron6909/loop-back/total?label=downloads" alt="Total release downloads" /></a>
+    <a href="https://github.com/iron6909/loop-back/commits/main"><img src="https://img.shields.io/github/last-commit/iron6909/loop-back" alt="Last commit" /></a>
   </p>
 
   <p>
-    <a href="https://trendshift.io/repositories/41519?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-41519" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/41519/weekly?language=Dart" alt="echo-loop%2FEcho-Loop | Trendshift" width="250" height="55" /></a>
   </p>
 
-  <p>
-    <a href="https://apps.apple.com/app/id6760324074"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="48" /></a>
-    <a href="https://play.google.com/store/apps/details?id=app.echoloop"><img src="assets/badges/google-play-en.png" alt="Get it on Google Play" height="48" /></a>
-  </p>
 </div>
 
 ---
@@ -48,7 +43,7 @@
     <td align="center"><img src="assets/screenshots/07-favorites.png" alt="Saved sentences" width="180" /><br/><sub>Saved hard sentences, practice to mastery</sub></td>
     <td align="center"><img src="assets/screenshots/08-flashcard.png" alt="Flashcard review" width="180" /><br/><sub>Flashcard review with original context</sub></td>
     <td align="center"><img src="assets/screenshots/09-freestyle.png" alt="Freestyle practice" width="180" /><br/><sub>Practice freely at your own pace</sub></td>
-    <td align="center"><img src="assets/icon/app-icon-1024-rounded.png" alt="Echo Loop" width="120" /></td>
+    <td align="center"><img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="120" /></td>
   </tr>
 </table>
 
@@ -75,17 +70,17 @@ When using other English-learning apps, you have to decide for yourself: how man
 
 **Those decisions themselves are what drains your willpower** — it's not that you can't understand, it's that you don't know what to do next.
 
-Echo Loop takes those decisions off your plate. Pick a piece of audio you want to understand, hit start, and from intensive listening to completion, every step tells you "what to do right now".
+LoopBack takes those decisions off your plate. Pick a piece of audio you want to understand, hit start, and from intensive listening to completion, every step tells you "what to do right now".
 
-You just need to keep opening the app — Echo Loop handles the rest. Practicing one piece thoroughly beats listening to 100 random ones.
+You just need to keep opening the app — LoopBack handles the rest. Practicing one piece thoroughly beats listening to 100 random ones.
 
 ---
 
 ## 🆚 How it differs from other solutions
 
-We picked four English-learning apps most familiar to Chinese learners for comparison. Each individual feature exists, more or less, in other apps. But Echo Loop's real difference is this: **it strings every step together and drives you through automatically — you don't need to figure out the method, control repetition counts, or manage review intervals yourself.**
+We picked four English-learning apps most familiar to Chinese learners for comparison. Each individual feature exists, more or less, in other apps. But LoopBack's real difference is this: **it strings every step together and drives you through automatically — you don't need to figure out the method, control repetition counts, or manage review intervals yourself.**
 
-| Feature | Echo Loop | Daily English Listening | Kekenet | Liulishuo | Anki |
+| Feature | LoopBack | Daily English Listening | Kekenet | Liulishuo | Anki |
 |---|---|---|---|---|---|
 | **App-driven learning rhythm** | ✅ Fully automatic | ❌ | ❌ | ❌ | ❌ |
 | Listen → speak loop (intensive + shadowing + **retelling**) | ✅ | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ❌ |
@@ -115,7 +110,7 @@ flowchart LR
   E --> F[Completion<br/>Finish this round of learning]
 ```
 
-**Every step above is auto-driven by Echo Loop — no judgment calls required.**
+**Every step above is auto-driven by LoopBack — no judgment calls required.**
 
 You don't need to manage "how many times should I listen" or "is it time to review last week's material". Open the app, and what to do today appears right in front of you.
 
@@ -143,28 +138,7 @@ Each piece of material is split into 1 first-pass session + 7 spaced reviews. In
 
 ## 📥 Download & try it
 
-<table>
-  <tr>
-    <td valign="middle">
-      <p>
-        <a href="https://apps.apple.com/app/id6760324074"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" height="48" /></a>
-        &nbsp;
-        <a href="https://play.google.com/store/apps/details?id=app.echoloop"><img src="assets/badges/google-play-en.png" alt="Get it on Google Play" height="48" /></a>
-        &nbsp;
-        <a href="https://github.com/echo-loop/Echo-Loop/releases"><img src="https://img.shields.io/badge/Android-Download%20APK-3DDC84?logo=android&logoColor=white&style=for-the-badge" alt="Android APK" height="48" /></a>
-      </p>
-      <p><sub>Desktop: macOS in development · Windows planned · Web not planned</sub></p>
-    </td>
-    <td valign="middle" align="center" width="120">
-      <img src="assets/qr/app-store.png" alt="App Store QR code" width="110" /><br/>
-      <sub>Scan to download iOS</sub>
-    </td>
-    <td valign="middle" align="center" width="120">
-      <img src="assets/qr/google-play.png" alt="Google Play QR code" width="110" /><br/>
-      <sub>Scan to download Android</sub>
-    </td>
-  </tr>
-</table>
+This branch is not distributed through app stores. Download the Android APK from GitHub [Releases](https://github.com/iron6909/loop-back/releases) and sideload it; iOS/macOS/Windows currently build from source (desktop in development, web not planned).
 
 ---
 
@@ -175,7 +149,7 @@ This branch connects directly to an AI provider configured by the user and curre
 English subtitle transcription and retelling transcription run on the device. Account login, membership checkout, cloud transcription, community sync, Baidu Netdisk import and self-update checks are disabled. Existing learning data stays available; Android folders can become collections, and curated podcasts come from a bundled catalog.
 
 <details>
-<summary><strong>Is Echo Loop free?</strong></summary>
+<summary><strong>Is LoopBack free?</strong></summary>
 
 All core features are free, with no usage caps and no item limits:
 
@@ -187,7 +161,7 @@ All core features are free, with no usage caps and no item limits:
 - **Offline transcription**: download a model and generate subtitles on your device, no sign-in needed
 - **Offline dictionary, learning statistics, PDF note export, backup & restore**
 
-AI explanations and the study assistant use your configured provider, which charges according to its own plan or usage. This branch has no Echo Loop AI allowance or membership checkout.
+AI explanations and the study assistant use your configured provider, which charges according to its own plan or usage. This branch has no LoopBack AI allowance or membership checkout.
 
 </details>
 
@@ -215,19 +189,14 @@ No. Keys stay in device secure storage and are excluded from logs, ordinary pref
 <details>
 <summary><strong>Which platforms are supported?</strong></summary>
 
-Right now the focus is **iOS and Android**: get it from the App Store or Google Play, or download the Android APK from [Releases](https://github.com/echo-loop/Echo-Loop/releases). Native macOS and Windows versions are in development and will be released later.
-
-To use it on a computer today:
-
-- **Mac (Apple silicon)**: search for Echo Loop in the Mac App Store and install the iOS version directly
-- **Windows**: install Tencent's YingYongBao (应用宝) app store, then install the Echo Loop Android APK inside it
+Right now the focus is **Android**: download the APK from GitHub [Releases](https://github.com/iron6909/loop-back/releases) and sideload it. iOS and desktop macOS/Windows builds follow the source, with releases refined later.
 
 </details>
 
 <details>
 <summary><strong>How is it different from other English apps?</strong></summary>
 
-Other apps mostly give you materials and tools and leave it to you to work out how to practice. Echo Loop handles the *how*: intensive listening, shadowing, blind listening, retelling and spaced review run as a single flow, and the app tells you what to do at every step. You don't need to make a plan, count repetitions or track review dates. See "🆚 How it differs from other solutions" above for a detailed comparison.
+Other apps mostly give you materials and tools and leave it to you to work out how to practice. LoopBack handles the *how*: intensive listening, shadowing, blind listening, retelling and spaced review run as a single flow, and the app tells you what to do at every step. You don't need to make a plan, count repetitions or track review dates. See "🆚 How it differs from other solutions" above for a detailed comparison.
 
 </details>
 
@@ -273,15 +242,6 @@ Your learning data is stored on your device. Before switching phones or reinstal
 
 ---
 
-## 💬 Join the community
-
-Practice English alongside other committed learners: share methods, give feedback, and be the first to hear about new features.
-
-- [Join the QQ group (1109595757)](https://qm.qq.com/q/f4YeczPPUc): Share learning methods and resources with other committed learners.
-- [Contact us on WeChat](https://i.postimg.cc/P5tVpPTV/echo-loop-wecom.jpg): Scan the QR code to contact Echo Loop.
-- [Follow us on Bilibili](https://space.bilibili.com/509449049/upload/video): Get English-learning content and feature updates.
-- [Follow us on Xiaohongshu](https://xhslink.cn/m/4zOdGUcDH4N): Get practical tips, feature updates, and English-learning content.
-
 ---
 
 ## 🗺️ Roadmap
@@ -320,11 +280,11 @@ Practice English alongside other committed learners: share methods, give feedbac
 
 ## ⭐ Star History
 
-<a href="https://www.star-history.com/?repos=echo-loop%2FEcho-Loop&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=iron6909%2Floop-back&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=echo-loop/Echo-Loop&type=date&theme=dark&legend=top-left&sealed_token=Yn1CvBygp-TANTMrrjOoIPcBqfBW4dJBno9qMlDVPTRaqlNZEvy5k6QNjheAb8AxwJ3ygwow4Zszp0Z5XCtxf7OP4MOtE_fCjKTjyBALH5gvoX-6BOLIIQ" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=echo-loop/Echo-Loop&type=date&legend=top-left&sealed_token=Yn1CvBygp-TANTMrrjOoIPcBqfBW4dJBno9qMlDVPTRaqlNZEvy5k6QNjheAb8AxwJ3ygwow4Zszp0Z5XCtxf7OP4MOtE_fCjKTjyBALH5gvoX-6BOLIIQ" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=echo-loop/Echo-Loop&type=date&legend=top-left&sealed_token=Yn1CvBygp-TANTMrrjOoIPcBqfBW4dJBno9qMlDVPTRaqlNZEvy5k6QNjheAb8AxwJ3ygwow4Zszp0Z5XCtxf7OP4MOtE_fCjKTjyBALH5gvoX-6BOLIIQ" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
  </picture>
 </a>
 ---
@@ -350,31 +310,18 @@ Thanks to [Yang Yan](https://sfs.muc.edu.cn/info/1063/3729.htm) (School of Forei
 <summary><strong>🚀 Quick start</strong></summary>
 
 ```bash
-git clone git@github.com:echo-loop/Echo-Loop.git
-cd Echo-Loop
-cp .dev.env.template .dev.env   # fill in Supabase / Google settings
+git clone git@github.com:iron6909/loop-back.git
+cd loop-back
+cp .dev.env.template .dev.env   # fill in channel/analytics defines (no self-hosted API)
 flutter pub get
 dart run build_runner build
 flutter run -d <ios|android|macos> --dart-define-from-file=.dev.env
 ```
 
-> Supabase, Google, and other compile-time settings live in `.dev.env` (debug) / `.prod.env`
-> (release) and are injected via `--dart-define-from-file`. Both files are gitignored.
-> The global API defaults to `https://www.echo-loop.top` and can be overridden at compile time
-> with `API_BASE_URL`. The model CDN addresses are configured in
-> `lib/config/regional_service_endpoints.dart`.
-> The China API defaults to `https://www.echo-loop.cn` and can be overridden with
-> `API_CHINA_BASE_URL`. Local builds can override them in `.prod.env`; GitHub Actions CI/Release
-> passes the corresponding GitHub Variables directly to the build commands.
-> release builds use one `isChinaUser` result: China Apple Storefront, device country, or
-> `/api/v1/client/config` `context.countryCode` set to `CN`/`CHN` selects China, so one package
-> contains both global and China API candidates and serves both regions. When there is no China
-> evidence, the first API request uses the global endpoint. When the region conclusion changes,
-> the app keeps its current API endpoint while a
-> config request probes the new preference. It tries the other region once on a network error or
-> 5xx. A successful probe activates the preferred region; alternate success keeps API requests on
-> the available endpoint for the session, and a later config refresh probes the preference again.
-> Model CDN routing always follows `isChinaUser`; source API defaults apply when no override is set.
+> Compile-time settings live in `.dev.env` (debug) / `.prod.env` (release) and are injected
+> via `--dart-define-from-file`. Both files are gitignored. There is no self-hosted API or
+> resource CDN anymore, so no service endpoints need to be configured.
+
 
 </details>
 
@@ -461,7 +408,7 @@ flutter analyze                          # Static analysis
 flutter test                             # All tests
 flutter test integration_test -d macos   # Integration tests
 # Maestro UI smoke test (start a device and install the dev build first)
-MAESTRO_APP_ID=app.echoloop.dev scripts/test_maestro.sh
+MAESTRO_APP_ID=app.loopback.dev scripts/test_maestro.sh
 # Android device: build, install the dev build, then run the Study tests
 scripts/test_maestro_android.sh
 # With multiple devices, specify the target; alternatively export MAESTRO_ANDROID_DEVICE=<adb-serial> once
@@ -470,7 +417,7 @@ dart format .                            # Format
 ```
 
 > Install the Maestro CLI with `curl -fsSL https://get.maestro.mobile.dev | bash`.
-> For the iOS dev build, use `MAESTRO_APP_ID=top.echo-loop.dev`; flows live in `maestro/`.
+> For the iOS dev build, use `MAESTRO_APP_ID=top.loop-back.dev`; flows live in `maestro/`.
 
 **Code generation** (after modifying Riverpod providers)
 
@@ -504,7 +451,7 @@ flutter run --release -d <DEVICE_ID> --dart-define-from-file=.dev.env
 
 ---
 
-AtomGit mirror for users in China: <a href="https://atomgit.com/echo-loop/Echo-Loop">Echo Loop on AtomGit</a>
+AtomGit mirror for users in China: <a href="https://atomgit.com/iron6909/loop-back">LoopBack on AtomGit</a>
 
 ## 📄 License
 

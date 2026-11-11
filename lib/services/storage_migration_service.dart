@@ -188,13 +188,13 @@ Future<void> _migrateDirectoryContents(
 /// 需要迁移的数据库相关文件。
 const _dbFiles = [
   // 当前版本
-  'echo_loop.db',
-  'echo_loop.db-wal',
-  'echo_loop.db-shm',
-  'echo_loop_demo.db',
-  'echo_loop_demo.db-wal',
-  'echo_loop_demo.db-shm',
-  // 旧版本名称（fluency → echo_loop 重命名迁移已删除，这里兜底）
+  'loop_back.db',
+  'loop_back.db-wal',
+  'loop_back.db-shm',
+  'loop_back_demo.db',
+  'loop_back_demo.db-wal',
+  'loop_back_demo.db-shm',
+  // 历史版本数据库文件名（fluency），保留用于旧数据兜底迁移
   'fluency.db',
   'fluency.db-wal',
   'fluency.db-shm',

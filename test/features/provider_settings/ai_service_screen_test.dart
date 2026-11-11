@@ -5,9 +5,9 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/provider_settings/screens/ai_service_screen.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/provider_configuration_provider.dart';
+import 'package:loop_back/features/provider_settings/screens/ai_service_screen.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/provider_configuration_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

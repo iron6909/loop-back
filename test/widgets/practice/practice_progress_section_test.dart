@@ -5,8 +5,8 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/practice/practice_progress_section.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/practice/practice_progress_section.dart';
 
 /// 创建简易测试 App（进度与信息组件均不依赖 Riverpod）。
 Widget _buildTestWidget({

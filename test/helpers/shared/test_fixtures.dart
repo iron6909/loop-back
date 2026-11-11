@@ -9,12 +9,12 @@
 /// - 默认日期取 `DateTime(2026, 1, 1)`，便于断言可重复
 library;
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/tag.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/tag.dart';
 
 /// 创建测试用 AudioItem
 ///

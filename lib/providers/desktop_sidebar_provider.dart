@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import '../services/app_logger.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/services/learned_vocabulary_tracker.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/services/learned_vocabulary_tracker.dart';
 
 void main() {
   group('LearnedVocabularyTracker.extractWordForms', () {

@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
+import 'package:loop_back/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 import 'migration_fixture_helper.dart';
@@ -14,7 +14,7 @@ void main() {
         dir.deleteSync(recursive: true);
       }
     });
-    final file = File('${dir.path}/echo_loop.db');
+    final file = File('${dir.path}/loop_back.db');
     await _createV28Database(file);
 
     final db = AppDatabase(NativeDatabase(file));

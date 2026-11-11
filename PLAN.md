@@ -1,6 +1,6 @@
-# Echo Loop 项目规划
+# LoopBack 项目规划
 
-> 最后更新：2026-11-10（三大去 EchoLoop 化项目全部合入 main，仓库开放票据清零）
+> 最后更新：2026-11-11（三大去 EchoLoop 化项目全部合入 main，仓库开放票据清零；LoopBack 品牌更名与去品牌收尾完成——显示名/包名/通道/数据库文件全量更名，Firebase 与 iOS 网络权限触发整删，死资源清理；全部 EchoLoop 域名链接与商店上架内容已删除，项目不上架应用商店，仅 GitHub Releases 侧载分发）
 > 当前焦点：语音识别、语音合成、词典与发音库三个去 EchoLoop 化项目已全部合入 `main`，规格与工单票据全部关闭；本地 main 领先 origin/main，推送与发布流程待定。实施明细见 [TASKS.md](./TASKS.md)；已如实记录的真机/Apple 剩余验证项继续跟踪。
 
 ## 产品目标

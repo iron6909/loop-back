@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/api_log_interceptor.dart';
+import 'package:loop_back/services/api_log_interceptor.dart';
 
 void main() {
   group('ApiLogInterceptor', () {

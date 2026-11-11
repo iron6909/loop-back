@@ -13,7 +13,7 @@
 ///   前放同号标号，两向内部链接（标号 ↔ 词条锚点）；
 /// - 翻译弱化为句下灰色小字；AI 解析集中在文末「附录 · 句子解析」，
 ///   正文句末尾注标记 [n] 与附录条目 [n] 互为内部链接；
-/// - 首页标题居中 + ECHO LOOP 品牌行，次页起 running header。
+/// - 首页标题居中 + LOOPBACK 品牌行，次页起 running header。
 ///
 /// 版式约束（pdf 包 MultiPage 语义）：
 /// - 只有顶层兄弟块之间可以断页，单个 widget 超一页高会直接抛异常；
@@ -99,7 +99,7 @@ const _inlineHighlightBgColor = PdfColor.fromInt(0xFFF0F0F0);
 const _maxHighlightChars = 48;
 
 /// 品牌字样（首页标题上方 + 次页起 running header）
-const _brandText = 'ECHO LOOP';
+const _brandText = 'LOOPBACK';
 
 /// 正文左右栏 flex 比例（学术旁注版式，左栏 ~71%）
 const _bodyFlex = 5;
@@ -159,7 +159,7 @@ Future<Uint8List> buildStudyPdfBytes(StudyPdfBuildRequest request) async {
   return doc.save();
 }
 
-/// 品牌角标：应用图标 + `ECHO LOOP` 文字（图标缺失时只渲染文字）
+/// 品牌角标：应用图标 + `LOOPBACK` 文字（图标缺失时只渲染文字）
 pw.Widget _brandMark(pw.ImageProvider? appIcon, {double iconSize = 11}) {
   return pw.Row(
     mainAxisSize: pw.MainAxisSize.min,
@@ -630,7 +630,8 @@ pw.Widget _vocabColumn(List<StudyPdfVocabNote> notes) {
                           pw.TextSpan(
                             // 音标可能已自带首尾斜杠（AI 词典 pronunciation
                             // 常含 `/.../`），剥掉后统一补一层，避免双斜线
-                            text: '  /${_stripPhoneticSlashes(_sanitize(note.phonetic))}/',
+                            text:
+                                '  /${_stripPhoneticSlashes(_sanitize(note.phonetic))}/',
                             style: pw.TextStyle(
                               fontSize: 8,
                               fontStyle: pw.FontStyle.italic,

@@ -2,10 +2,10 @@
 library;
 
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart' as db;
-import 'package:echo_loop/features/audio_import/community_directory_import.dart';
-import 'package:echo_loop/features/audio_import/local_audio_file_picker.dart';
-import 'package:echo_loop/features/audio_import/subtitle_pairing.dart';
+import 'package:loop_back/database/app_database.dart' as db;
+import 'package:loop_back/features/audio_import/community_directory_import.dart';
+import 'package:loop_back/features/audio_import/local_audio_file_picker.dart';
+import 'package:loop_back/features/audio_import/subtitle_pairing.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 

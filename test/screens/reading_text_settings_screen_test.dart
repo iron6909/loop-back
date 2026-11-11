@@ -4,10 +4,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import 'package:loop_back/providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
-import 'package:echo_loop/models/reading_text_prefs.dart';
-import 'package:echo_loop/screens/reading_text_settings_screen.dart';
+import 'package:loop_back/models/reading_text_prefs.dart';
+import 'package:loop_back/screens/reading_text_settings_screen.dart';
 
 import '../helpers/test_app.dart';
 

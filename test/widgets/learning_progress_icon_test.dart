@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/widgets/learning_progress_icon.dart';
-import 'package:echo_loop/models/learning_plan.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
+import 'package:loop_back/widgets/learning_progress_icon.dart';
+import 'package:loop_back/models/learning_plan.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
 
 void main() {
   Widget createTestWidget(LearningProgress? progress, {bool isVideo = false}) {

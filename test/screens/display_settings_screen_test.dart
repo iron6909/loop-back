@@ -1,6 +1,6 @@
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
-import 'package:echo_loop/screens/display_settings_screen.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
+import 'package:loop_back/screens/display_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

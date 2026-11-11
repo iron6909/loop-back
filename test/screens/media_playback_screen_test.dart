@@ -3,40 +3,40 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart' hide PlaybackState;
 import 'package:drift/drift.dart' show Value;
-import 'package:echo_loop/database/app_database.dart' hide AudioItem;
-import 'package:echo_loop/database/daos/playback_state_dao.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/listening_practice_state.dart';
-import 'package:echo_loop/models/playback_settings.dart';
-import 'package:echo_loop/models/sentence_focus_reason.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/media_engine/media_engine_provider.dart';
-import 'package:echo_loop/providers/media_playback/media_playback_provider.dart';
-import 'package:echo_loop/providers/favorite_sentence_lifecycle_provider.dart';
-import 'package:echo_loop/router/app_router.dart' show rootRouteObserver;
-import 'package:echo_loop/providers/sentence_ai_provider.dart';
-import 'package:echo_loop/screens/media_playback_screen.dart';
-import 'package:echo_loop/screens/sentence_detail_screen.dart';
-import 'package:echo_loop/services/media_session_router.dart';
-import 'package:echo_loop/services/sentence_ai_api_client.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
-import 'package:echo_loop/widgets/common/paragraph_sentence_list_card.dart';
-import 'package:echo_loop/widgets/common/masked_sentence_tile.dart';
-import 'package:echo_loop/widgets/common/free_player_sentence_pager.dart';
-import 'package:echo_loop/widgets/practice/sentence_explanation_view.dart';
-import 'package:echo_loop/widgets/practice/practice_progress_section.dart';
-import 'package:echo_loop/widgets/dictionary/dictionary_panel_host.dart';
+import 'package:loop_back/database/app_database.dart' hide AudioItem;
+import 'package:loop_back/database/daos/playback_state_dao.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/listening_practice_state.dart';
+import 'package:loop_back/models/playback_settings.dart';
+import 'package:loop_back/models/sentence_focus_reason.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/media_engine/media_engine_provider.dart';
+import 'package:loop_back/providers/media_playback/media_playback_provider.dart';
+import 'package:loop_back/providers/favorite_sentence_lifecycle_provider.dart';
+import 'package:loop_back/router/app_router.dart' show rootRouteObserver;
+import 'package:loop_back/providers/sentence_ai_provider.dart';
+import 'package:loop_back/screens/media_playback_screen.dart';
+import 'package:loop_back/screens/sentence_detail_screen.dart';
+import 'package:loop_back/services/media_session_router.dart';
+import 'package:loop_back/services/sentence_ai_api_client.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
+import 'package:loop_back/widgets/common/paragraph_sentence_list_card.dart';
+import 'package:loop_back/widgets/common/masked_sentence_tile.dart';
+import 'package:loop_back/widgets/common/free_player_sentence_pager.dart';
+import 'package:loop_back/widgets/practice/sentence_explanation_view.dart';
+import 'package:loop_back/widgets/practice/practice_progress_section.dart';
+import 'package:loop_back/widgets/dictionary/dictionary_panel_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/services/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
@@ -76,13 +76,13 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    appDir = await Directory.systemTemp.createTemp('echo-loop-video-screen-');
+    appDir = await Directory.systemTemp.createTemp('loop-back-video-screen-');
     appDataDirectoryOverride = appDir;
     backend = FakeMediaPlayerBackend();
     router = MediaSessionRouter(defaultHandler: BaseAudioHandler());
-    mediaFile = File('${appDir.path}/echo-loop-video-screen.mp4');
+    mediaFile = File('${appDir.path}/loop-back-video-screen.mp4');
     await mediaFile.writeAsBytes(const [0, 1, 2]);
-    audioFile = File('${appDir.path}/echo-loop-audio-screen.mp3');
+    audioFile = File('${appDir.path}/loop-back-audio-screen.mp3');
     await audioFile.writeAsBytes(const [0, 1, 2]);
     audioItemDao = FakeAudioItemDao()
       ..transcriptSrtStore['video-screen'] =
@@ -90,7 +90,7 @@ void main() {
     item = AudioItem(
       id: 'video-screen',
       name: 'Screen Video',
-      audioPath: 'echo-loop-video-screen.mp4',
+      audioPath: 'loop-back-video-screen.mp4',
       addedDate: DateTime(2026, 7, 24),
       transcriptSource: TranscriptSource.local,
     );
@@ -319,7 +319,7 @@ void main() {
     final audioItem = AudioItem(
       id: item.id,
       name: 'Screen Audio',
-      audioPath: 'echo-loop-audio-screen.mp3',
+      audioPath: 'loop-back-audio-screen.mp3',
       addedDate: item.addedDate,
     );
     await tester.pumpWidget(
@@ -693,7 +693,7 @@ void main() {
     final audioItem = AudioItem(
       id: 'audio-screen',
       name: 'Screen Audio',
-      audioPath: 'echo-loop-audio-screen.mp3',
+      audioPath: 'loop-back-audio-screen.mp3',
       addedDate: DateTime(2026, 7, 24),
       transcriptSource: TranscriptSource.local,
     );

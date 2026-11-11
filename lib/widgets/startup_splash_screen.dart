@@ -35,7 +35,7 @@ class StartupSplashScreen extends StatelessWidget {
           key: const ValueKey('startup-splash-logo'),
           width: _startupLogoSize,
           height: _startupLogoSize,
-          semanticsLabel: 'Echo Loop',
+          semanticsLabel: 'LoopBack',
         ),
       ),
     );

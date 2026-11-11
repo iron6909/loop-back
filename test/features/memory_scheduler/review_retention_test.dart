@@ -1,5 +1,5 @@
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/review_retention.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/domain/review_retention.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

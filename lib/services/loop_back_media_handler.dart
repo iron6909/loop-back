@@ -10,8 +10,8 @@ import '../utils/app_data_dir.dart';
 import 'media_player_backend.dart';
 
 /// 视频链路的媒体会话 handler，经 MediaSessionRouter 激活/交还。
-class EchoLoopMediaHandler extends BaseAudioHandler with SeekHandler {
-  EchoLoopMediaHandler(this._backend) {
+class LoopBackMediaHandler extends BaseAudioHandler with SeekHandler {
+  LoopBackMediaHandler(this._backend) {
     _playingSub = _backend.playingStream.listen((_) => _broadcastState());
     _bufferingSub = _backend.bufferingStream.listen((buffering) {
       _buffering = buffering;
@@ -177,7 +177,7 @@ class EchoLoopMediaHandler extends BaseAudioHandler with SeekHandler {
       MediaItem(
         id: id,
         title: title,
-        artist: subtitle ?? 'Echo Loop',
+        artist: subtitle ?? 'LoopBack',
         artUri: _artworkUri,
       ),
     );

@@ -2,7 +2,7 @@
 // 测试纯函数 listenAndRepeatPauseCalculator / targetPlayCountForDifficulty，
 // 以及 SentencePlaybackEngine 的 cleanup 和 invalidateSession 生命周期行为。
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/providers/learning_session/sentence_playback_engine.dart';
+import 'package:loop_back/providers/learning_session/sentence_playback_engine.dart';
 
 import '../../helpers/mock_providers.dart';
 

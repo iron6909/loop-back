@@ -6,8 +6,8 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/listening_practice/sleep_timer_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/listening_practice/sleep_timer_provider.dart';
 
 /// 测试替身：记录 pause 调用次数，build 跳过真实 I/O。
 class _TestListeningPractice extends ListeningPractice {

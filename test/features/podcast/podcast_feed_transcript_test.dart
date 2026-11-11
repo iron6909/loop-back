@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/features/podcast/podcast_feed_parser.dart';
+import 'package:loop_back/features/podcast/podcast_feed_parser.dart';
 
 /// 构造只含一个 episode 的 RSS，[transcriptTags] 原样插入 item 中。
 String _feedWithTranscripts(String transcriptTags) =>

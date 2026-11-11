@@ -12,10 +12,7 @@ import '../resource_archive_spec.dart';
 
 /// 内置离线发音包资源规格。
 class PronunciationSpec extends SingleFileArchiveSpec {
-  const PronunciationSpec({
-    required super.resourceId,
-    required super.resource,
-  });
+  const PronunciationSpec({required super.resourceId, required super.resource});
 }
 
 /// 当前发布的离线发音包资源。

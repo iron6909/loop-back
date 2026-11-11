@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/recording_service.dart';
-import 'package:echo_loop/services/speech_practice_platform.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/recording_service.dart';
+import 'package:loop_back/services/speech_practice_platform.dart';
 
 class _Backend implements SpeechPracticeBackend {
   final eventsController = StreamController<SpeechPracticeEvent>.broadcast();

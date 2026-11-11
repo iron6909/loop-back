@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-BUNDLE_ID="top.echo-loop"
+BUNDLE_ID="top.loop-back"
 APP_PATH="build/ios/iphonesimulator/Runner.app"
 # 编译期环境变量统一从 .dev.env 读取（API 地址、Supabase、Google 等）
 ENV_FILE=".dev.env"

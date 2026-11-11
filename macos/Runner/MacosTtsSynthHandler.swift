@@ -10,7 +10,7 @@ import FlutterMacOS
 /// 文件到调用方给定的**绝对路径**，使 macOS 平台 TTS 也能像 iOS/Android 一样缓存、
 /// 且口音正确。
 ///
-/// 通道：`top.echo-loop/tts_synth`，方法 `synthesizeToFile`。
+/// 通道：`top.loop-back/tts_synth`，方法 `synthesizeToFile`。
 /// 入参：text / filePath(绝对) / languageTag / rate / pitch / volume。
 /// 返回：成功产出非空文件 → true；否则 false / FlutterError。
 final class MacosTtsSynthHandler: NSObject {
@@ -25,7 +25,7 @@ final class MacosTtsSynthHandler: NSObject {
 
   init(binaryMessenger: FlutterBinaryMessenger) {
     channel = FlutterMethodChannel(
-      name: "top.echo-loop/tts_synth",
+      name: "top.loop-back/tts_synth",
       binaryMessenger: binaryMessenger
     )
     super.init()

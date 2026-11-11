@@ -5,10 +5,10 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/services/tts/tts_cache_store.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:echo_loop/utils/text_normalize.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/services/tts/tts_cache_store.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
+import 'package:loop_back/utils/text_normalize.dart';
 
 AppDatabase _createTestDb() {
   return AppDatabase(NativeDatabase.memory());

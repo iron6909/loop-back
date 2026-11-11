@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/features/community_collections/widgets/community_badge.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/features/community_collections/widgets/community_badge.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/theme/app_theme.dart';
 
 import '../../helpers/test_app.dart';
 

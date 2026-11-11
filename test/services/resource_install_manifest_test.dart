@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/services/resource_install_manifest.dart';
+import 'package:loop_back/services/resource_install_manifest.dart';
 
 void main() {
   test('ResourceInstallManifest round trips the install schema', () {

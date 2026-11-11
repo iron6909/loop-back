@@ -6,8 +6,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/common/settings_section_card.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/common/settings_section_card.dart';
 
 void main() {
   Widget wrap(Widget child, {ThemeData? theme}) => MaterialApp(

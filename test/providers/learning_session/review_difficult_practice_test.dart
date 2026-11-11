@@ -4,8 +4,8 @@
 // Provider 的播放逻辑依赖 SentencePlaybackEngine，
 // 集成测试在 integration_test 中覆盖。
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/difficult_practice_settings.dart';
-import 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart';
+import 'package:loop_back/models/difficult_practice_settings.dart';
+import 'package:loop_back/providers/learning_session/review_difficult_practice_provider.dart';
 
 void main() {
   group('ReviewDifficultPracticeState', () {

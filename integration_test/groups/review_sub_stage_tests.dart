@@ -8,16 +8,16 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/database/app_database.dart' show BookmarksCompanion;
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/main.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/screens/review_difficult_practice_screen.dart';
-import 'package:echo_loop/widgets/practice/practice_progress_section.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/database/app_database.dart' show BookmarksCompanion;
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/main.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_session/review_difficult_practice_provider.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/screens/review_difficult_practice_screen.dart';
+import 'package:loop_back/widgets/practice/practice_progress_section.dart';
 
 import '../helpers/test_notifiers.dart';
 
@@ -39,7 +39,7 @@ void reviewSubStageTests() {
     /// 导航到学习计划页的辅助方法
     Future<void> navigateToLearningPlan(WidgetTester tester) async {
       await safeSettle(tester);
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
       container
           .read(appRouterProvider)
@@ -53,7 +53,7 @@ void reviewSubStageTests() {
       String audioItemId,
       LearningStage currentStage,
     ) {
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
       final progressNotifier = container
           .read(learningProgressNotifierProvider.notifier)
@@ -114,7 +114,7 @@ void reviewSubStageTests() {
       await navigateToLearningPlan(tester);
 
       // 预置书签数据（难句补练需要 bookmarked 句子）
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
       final bookmarkDao =
           container.read(bookmarkDaoProvider) as TestBookmarkDao;
@@ -150,7 +150,7 @@ void reviewSubStageTests() {
 
       // 如果正常导航未生效，直接通过路由进入（兜底）
       if (find.byType(ReviewDifficultPracticeScreen).evaluate().isEmpty) {
-        final appCtx = tester.element(find.byType(EchoLoopApp));
+        final appCtx = tester.element(find.byType(LoopBackApp));
         ProviderScope.containerOf(appCtx).read(appRouterProvider).push(
           AppRoutes.reviewDifficultPractice('test-collection-1', 'test-audio-1'),
         );
@@ -238,7 +238,7 @@ void reviewSubStageTests() {
       );
       await safeSettle(tester);
 
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       final session =
@@ -286,7 +286,7 @@ void reviewSubStageTests() {
       );
       await safeSettle(tester);
 
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       final session =

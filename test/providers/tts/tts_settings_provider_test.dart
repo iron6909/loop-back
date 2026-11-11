@@ -4,9 +4,9 @@
 /// languageTag / toSpeechConfig 派生、copyWith / ==。
 library;
 
-import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
-import 'package:echo_loop/services/tts/piper_model_catalog.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/providers/tts/tts_settings_provider.dart';
+import 'package:loop_back/services/tts/piper_model_catalog.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,7 +25,7 @@ void main() {
   }
 
   group('TtsSettings.fromPrefsSync', () {
-    test('SP 缺失 → 默认 Echo Loop AI Advanced + 美音', () async {
+    test('SP 缺失 → 默认 LoopBack AI Advanced + 美音', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final s = TtsSettings.fromPrefsSync(prefs);
@@ -56,7 +56,7 @@ void main() {
       expect(s.accent, TtsAccent.us);
     });
 
-    test('Android 历史系统语音偏好迁移为 Echo Loop AI Advanced', () async {
+    test('Android 历史系统语音偏好迁移为 LoopBack AI Advanced', () async {
       SharedPreferences.setMockInitialValues({
         TtsSettingsKeys.engine: TtsEngineKind.platform.name,
       });

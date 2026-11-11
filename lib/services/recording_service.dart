@@ -97,7 +97,7 @@ class RecordingService {
   ///
   /// [requirePlatformSpeechRecognition]：是否要求 iOS/macOS 平台原生
   /// `SFSpeechRecognizer` 权限。仅当用户启用 ASR 且 backend 为
-  /// `AsrBackend.platform` 时为 true；关闭 ASR / Echo Loop 离线后端时为 false。
+  /// `AsrBackend.platform` 时为 true；关闭 ASR / LoopBack 离线后端时为 false。
   /// 为 false 时只检查麦克风权限，speech recognition 状态被忽略。
   ///
   /// 每次都查询原生层获取实时权限状态，防止用户在系统设置中撤销权限后
@@ -192,7 +192,7 @@ class RecordingService {
       // 权限检查（必须在 warmup 之前，否则 iOS/macOS 原生 warmup
       // 会把 notDetermined 当作 denied 直接返回错误）。
       // 仅在启用平台原生 ASR（recognitionEnabled == true）时才要求
-      // speech recognition 权限；纯录音 / Echo Loop 离线 ASR 只需 mic。
+      // speech recognition 权限；纯录音 / LoopBack 离线 ASR 只需 mic。
       final granted = await ensurePermissions(
         requirePlatformSpeechRecognition: recognitionEnabled,
       );

@@ -8,10 +8,10 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/provider_http_client.dart';
-import 'package:echo_loop/services/provider/usage_models.dart';
-import 'package:echo_loop/services/provider/usage_query_service.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/provider_http_client.dart';
+import 'package:loop_back/services/provider/usage_models.dart';
+import 'package:loop_back/services/provider/usage_query_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 按队列返回预设响应的 adapter，支持用闸门控制完成时机。

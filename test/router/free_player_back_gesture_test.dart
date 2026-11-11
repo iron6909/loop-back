@@ -5,13 +5,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/media_load_result.dart';
-import 'package:echo_loop/models/media_playback_state.dart';
-import 'package:echo_loop/providers/media_playback/media_playback_provider.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/router/main_shell.dart';
-import 'package:echo_loop/screens/media_playback_screen.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/media_load_result.dart';
+import 'package:loop_back/models/media_playback_state.dart';
+import 'package:loop_back/providers/media_playback/media_playback_provider.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/router/main_shell.dart';
+import 'package:loop_back/screens/media_playback_screen.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';

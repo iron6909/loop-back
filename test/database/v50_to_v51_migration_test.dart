@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_namespaces.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_namespaces.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
@@ -18,7 +18,7 @@ void main() {
     addTearDown(() {
       if (dir.existsSync()) dir.deleteSync(recursive: true);
     });
-    final file = File([dir.path, 'echo_loop.db'].join('/'));
+    final file = File([dir.path, 'loop_back.db'].join('/'));
     await _seedV50(file);
     var db = _open(file);
     var rows = await db.select(db.memorySchedules).get();

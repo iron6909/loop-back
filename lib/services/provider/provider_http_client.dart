@@ -102,7 +102,7 @@ class ProviderHttpClient {
   Map<String, String> get _headers => {
     'Authorization': 'Bearer $_apiKey',
     'Content-Type': 'application/json',
-    'User-Agent': _appVersion.isEmpty ? 'EchoLoop' : 'EchoLoop/$_appVersion',
+    'User-Agent': _appVersion.isEmpty ? 'LoopBack' : 'LoopBack/$_appVersion',
     // OpenCode Go 要求稳定的会话标识以识别同一客户端；其他主机不发送。
     if (_isOpenCodeHost) 'x-opencode-session': _sessionId,
   };

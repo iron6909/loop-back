@@ -9,18 +9,18 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/app_database.dart' show TtsCacheData;
-import 'package:echo_loop/database/daos/tts_cache_dao.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/providers/tts/kokoro_model_provider.dart';
-import 'package:echo_loop/providers/tts/tts_controller_provider.dart';
-import 'package:echo_loop/providers/short_audio_player_provider.dart';
-import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
-import 'package:echo_loop/services/tts/kokoro_model_manager.dart'
+import 'package:loop_back/database/app_database.dart' show TtsCacheData;
+import 'package:loop_back/database/daos/tts_cache_dao.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/providers/tts/kokoro_model_provider.dart';
+import 'package:loop_back/providers/tts/tts_controller_provider.dart';
+import 'package:loop_back/providers/short_audio_player_provider.dart';
+import 'package:loop_back/providers/tts/tts_settings_provider.dart';
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/services/tts/kokoro_model_manager.dart'
     show AsrModelDownloadStatus;
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 
 /// 受控 Kokoro notifier：注入初值，下载方法占位。
 class _FixedKokoroNotifier extends KokoroModelNotifier {

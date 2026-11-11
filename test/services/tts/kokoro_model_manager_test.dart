@@ -7,10 +7,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/services/asr/asr_model_catalog.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
-import 'package:echo_loop/services/tts/kokoro_model_catalog.dart';
-import 'package:echo_loop/services/tts/kokoro_model_manager.dart';
+import 'package:loop_back/services/asr/asr_model_catalog.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/tts/kokoro_model_catalog.dart';
+import 'package:loop_back/services/tts/kokoro_model_manager.dart';
 
 /// 返回预置归档字节的 mock dio adapter（按 URL 末段文件名匹配）。
 class _MockArchiveAdapter implements HttpClientAdapter {

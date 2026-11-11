@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
+import 'package:loop_back/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
@@ -16,7 +16,7 @@ void main() {
         if (directory.existsSync()) directory.deleteSync(recursive: true);
       });
 
-      final file = File('${directory.path}/echo_loop.db');
+      final file = File('${directory.path}/loop_back.db');
       await seedCurrentSchema(file);
 
       final raw = sqlite.sqlite3.open(file.path);

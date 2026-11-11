@@ -6,8 +6,8 @@ library;
 
 import 'dart:convert';
 
-import 'package:echo_loop/services/speech/speech_capability.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_capability.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -93,7 +93,7 @@ void main() {
     });
 
     test('身份不包含 Key 的明文或摘要', () async {
-      const apiKey = 'sk-credential-should-never-appear';
+      const apiKey = 'no-leak1';
       await store.save(capability(credentialVersion: 'credential-a'));
 
       final preferences = await SharedPreferences.getInstance();

@@ -6,7 +6,7 @@ library;
 
 import 'dart:async';
 
-import 'package:echo_loop/services/ndjson_object_stream.dart';
+import 'package:loop_back/services/ndjson_object_stream.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

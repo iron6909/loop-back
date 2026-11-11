@@ -103,7 +103,7 @@ if [[ -x "scripts/preflight.sh" ]]; then
 fi
 
 TEAM_ID="${IOS_TEAM_ID:-S8S968QAV3}"
-# 全球/中国 API 可用 API_BASE_URL 和 API_CHINA_BASE_URL 覆盖。
+# 无自有后端 API；环境文件仅携带渠道/分析等必要 dart-define。
 ENV_FILE=".prod.env"
 API_KEY_ID="${APP_STORE_API_KEY_ID:-5GB5KL75VZ}"
 API_ISSUER_ID="${APP_STORE_API_ISSUER_ID:-3ec439fe-b66c-4034-b8c2-16e133fc4d6b}"
@@ -220,7 +220,7 @@ log "Artifacts kept in: $WORK_DIR"
 RELEASE_DIR="$ROOT_DIR/build/release"
 # 安装包名字统一包含构建号
 IPA_VERSION="${BUILD_NAME}+${BUILD_NUMBER}"
-IPA_NAME="Echo-Loop-${IPA_VERSION}-ios.ipa"
+IPA_NAME="LoopBack-${IPA_VERSION}-ios.ipa"
 mkdir -p "$RELEASE_DIR"
 cp "$IPA_PATH" "$RELEASE_DIR/$IPA_NAME"
 log "Copied to: build/release/$IPA_NAME"

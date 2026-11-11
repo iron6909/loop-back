@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/services/asr/sherpa_onnx_engine.dart';
+import 'package:loop_back/services/asr/sherpa_onnx_engine.dart';
 
 void main() {
   group('SherpaOnnxEngine', () {

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:echo_loop/services/subtitle_parser.dart';
-import 'package:echo_loop/utils/transcript_picker.dart';
+import 'package:loop_back/services/subtitle_parser.dart';
+import 'package:loop_back/utils/transcript_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 

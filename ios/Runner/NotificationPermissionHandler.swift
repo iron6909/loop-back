@@ -11,7 +11,7 @@ final class NotificationPermissionHandler: NSObject {
 
   init(binaryMessenger: FlutterBinaryMessenger) {
     methodChannel = FlutterMethodChannel(
-      name: "top.echo-loop/notification_permission",
+      name: "top.loop-back/notification_permission",
       binaryMessenger: binaryMessenger
     )
     super.init()

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import 'package:loop_back/providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/providers/saved_word_provider.dart';
-import 'package:echo_loop/utils/saved_text_index.dart';
-import 'package:echo_loop/widgets/common/masked_sentence_tile.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/providers/saved_word_provider.dart';
+import 'package:loop_back/utils/saved_text_index.dart';
+import 'package:loop_back/widgets/common/masked_sentence_tile.dart';
 
 import '../helpers/test_app.dart';
 

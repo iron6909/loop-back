@@ -4,8 +4,8 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../config/regional_service_endpoints.dart';
 import '../../services/app_logger.dart';
+import 'user_region.dart';
 
 /// 服务地区的手动覆盖选项；[auto] 表示按系统 Region + Config API 自动判定。
 enum UserRegionOverride {
@@ -14,10 +14,10 @@ enum UserRegionOverride {
   global;
 
   /// 覆盖对应的固定区域；[auto] 返回 null。
-  ServiceEndpointRegion? get forcedRegion => switch (this) {
+  AppRegion? get forcedRegion => switch (this) {
     UserRegionOverride.auto => null,
-    UserRegionOverride.china => ServiceEndpointRegion.china,
-    UserRegionOverride.global => ServiceEndpointRegion.global,
+    UserRegionOverride.china => AppRegion.china,
+    UserRegionOverride.global => AppRegion.global,
   };
 }
 

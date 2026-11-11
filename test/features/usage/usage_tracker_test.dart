@@ -1,14 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/analytics/analytics_channel.dart';
-import 'package:echo_loop/analytics/analytics_service.dart';
-import 'package:echo_loop/analytics/consent_manager.dart';
-import 'package:echo_loop/analytics/models/event_names.dart';
-import 'package:echo_loop/features/usage/usage_counter_store.dart';
-import 'package:echo_loop/features/usage/usage_counters.dart';
-import 'package:echo_loop/features/usage/usage_event.dart';
-import 'package:echo_loop/features/usage/usage_storage_keys.dart';
-import 'package:echo_loop/features/usage/usage_tracker.dart';
+import 'package:loop_back/analytics/analytics_channel.dart';
+import 'package:loop_back/analytics/analytics_service.dart';
+import 'package:loop_back/analytics/consent_manager.dart';
+import 'package:loop_back/analytics/models/event_names.dart';
+import 'package:loop_back/features/usage/usage_counter_store.dart';
+import 'package:loop_back/features/usage/usage_counters.dart';
+import 'package:loop_back/features/usage/usage_event.dart';
+import 'package:loop_back/features/usage/usage_storage_keys.dart';
+import 'package:loop_back/features/usage/usage_tracker.dart';
 
 class _RecordingChannel implements AnalyticsChannel {
   final List<({String name, Map<String, Object>? params})> events = [];

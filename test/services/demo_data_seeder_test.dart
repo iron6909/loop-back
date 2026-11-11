@@ -4,10 +4,10 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/data/demo_content.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/services/demo_data_seeder.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/data/demo_content.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/services/demo_data_seeder.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 
 /// 创建内存数据库用于测试
 AppDatabase _createTestDatabase() {
@@ -186,14 +186,14 @@ void main() {
         await demoDir.create(recursive: true);
         await File(p.join(demoDir.path, 'test.srt')).writeAsString('test');
         await File(
-          p.join(tempDir.path, 'echo_loop_demo.db'),
+          p.join(tempDir.path, 'loop_back_demo.db'),
         ).writeAsString('db');
 
         await DemoDataSeeder.cleanupFiles();
 
         expect(demoDir.existsSync(), isFalse);
         expect(
-          File(p.join(tempDir.path, 'echo_loop_demo.db')).existsSync(),
+          File(p.join(tempDir.path, 'loop_back_demo.db')).existsSync(),
           isFalse,
         );
       });

@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/orphan_file_cleanup_service.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/services/orphan_file_cleanup_service.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

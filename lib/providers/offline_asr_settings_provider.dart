@@ -14,7 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
@@ -401,7 +401,7 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
     await _downloadAndInitialize(modelId);
   }
 
-  /// 删除本地模型。Echo Loop AI 当前使用的模型不可删除；Apple Speech 下可删任意模型。
+  /// 删除本地模型。LoopBack AI 当前使用的模型不可删除；Apple Speech 下可删任意模型。
   Future<void> deleteModel([String? modelId]) async {
     final targetId = modelId ?? state.selectedModel.id;
     if (state.backend == AsrBackend.offline &&

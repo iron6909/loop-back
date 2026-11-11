@@ -1,10 +1,10 @@
 /// 用量卡九态：只读展示，任何状态都不显示 0 或虚构数字（ui-spec S2）。
 library;
 
-import 'package:echo_loop/features/provider_settings/widgets/usage_card.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/services/provider/usage_models.dart';
-import 'package:echo_loop/services/provider/usage_query_service.dart';
+import 'package:loop_back/features/provider_settings/widgets/usage_card.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/services/provider/usage_models.dart';
+import 'package:loop_back/services/provider/usage_query_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

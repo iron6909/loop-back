@@ -5,9 +5,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
-import 'package:echo_loop/services/notification_tap_router_bridge.dart';
-import 'package:echo_loop/services/review_reminder_service.dart';
-import 'package:echo_loop/services/review_reminder_time_calculator.dart';
+import 'package:loop_back/services/notification_tap_router_bridge.dart';
+import 'package:loop_back/services/review_reminder_service.dart';
+import 'package:loop_back/services/review_reminder_time_calculator.dart';
 
 // --- Mocks ---
 
@@ -220,7 +220,7 @@ void main() {
         (_) async => [
           const PendingNotificationRequest(
             5000,
-            'Echo Loop',
+            'LoopBack',
             'old',
             'old_payload',
           ),
@@ -466,7 +466,7 @@ void main() {
         (_) async => [
           const PendingNotificationRequest(
             5000,
-            'Echo Loop',
+            'LoopBack',
             'old',
             'old_payload',
           ),
@@ -487,7 +487,7 @@ void main() {
         (_) async => [
           const PendingNotificationRequest(
             1001,
-            'Echo Loop',
+            'LoopBack',
             'daily',
             'open_study_tasks',
           ),
@@ -510,19 +510,19 @@ void main() {
         (_) async => [
           const PendingNotificationRequest(
             3000,
-            'Echo Loop',
+            'LoopBack',
             'a',
             'open_audio:a',
           ),
           const PendingNotificationRequest(
             4000,
-            'Echo Loop',
+            'LoopBack',
             'b',
             'open_audio:b',
           ),
           const PendingNotificationRequest(
             1001,
-            'Echo Loop',
+            'LoopBack',
             'daily',
             'open_study_tasks',
           ),

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/word_timestamp.dart';
-import 'package:echo_loop/utils/word_highlight.dart';
+import 'package:loop_back/models/word_timestamp.dart';
+import 'package:loop_back/utils/word_highlight.dart';
 
 void main() {
   final timestamps = [

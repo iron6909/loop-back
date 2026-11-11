@@ -13,16 +13,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/playback_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/study_activity_gate.dart';
-import 'package:echo_loop/services/study_time_service.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/playback_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/study_activity_gate.dart';
+import 'package:loop_back/services/study_time_service.dart';
 import '../../helpers/mock_providers.dart';
 
 /// 可控 AudioEngine：真实 session 计数 + position/playerState 流 + 调用记录。

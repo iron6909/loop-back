@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/services/download/download_failure.dart';
-import 'package:echo_loop/services/download/download_resource.dart';
-import 'package:echo_loop/services/download/download_task_coordinator.dart';
-import 'package:echo_loop/services/download/download_task_store.dart';
+import 'package:loop_back/services/download/download_failure.dart';
+import 'package:loop_back/services/download/download_resource.dart';
+import 'package:loop_back/services/download/download_task_coordinator.dart';
+import 'package:loop_back/services/download/download_task_store.dart';
 
 class _MemoryStore implements DownloadTaskStore {
   final values = <String, DownloadTaskRecord>{};

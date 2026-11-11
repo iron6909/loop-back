@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/mock_providers.dart';

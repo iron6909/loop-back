@@ -1,19 +1,19 @@
-import 'package:echo_loop/providers/study_duration_provider.dart';
+import 'package:loop_back/providers/study_duration_provider.dart';
 import 'dart:async';
-import 'package:echo_loop/widgets/common/app_segmented_button.dart';
-import 'package:echo_loop/widgets/study/study_duration_chart.dart';
+import 'package:loop_back/widgets/common/app_segmented_button.dart';
+import 'package:loop_back/widgets/study/study_duration_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/daos/study_statistics_dao.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/services/study_time_service.dart';
-import 'package:echo_loop/widgets/study/day_stage_breakdown_sheet.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/daos/study_statistics_dao.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/services/study_time_service.dart';
+import 'package:loop_back/widgets/study/day_stage_breakdown_sheet.dart';
 
 void main() {
   late AppDatabase db;

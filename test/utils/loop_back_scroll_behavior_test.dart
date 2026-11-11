@@ -1,4 +1,4 @@
-import 'package:echo_loop/utils/echo_loop_scroll_behavior.dart';
+import 'package:loop_back/utils/loop_back_scroll_behavior.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,7 +20,7 @@ void main() {
         ),
       ),
     );
-    return EchoLoopScrollBehavior().velocityTrackerBuilder(context)(
+    return LoopBackScrollBehavior().velocityTrackerBuilder(context)(
       const PointerPanZoomStartEvent(),
     );
   }

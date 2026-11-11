@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/widgets/practice/sense_group_text.dart';
+import 'package:loop_back/widgets/practice/sense_group_text.dart';
 
 void main() {
   group('normalizeSenseGroupPhrase', () {

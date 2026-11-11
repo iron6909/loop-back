@@ -6,8 +6,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
 
 /// 按 URI 返回固定内容的假 HTTP adapter，用于构造公开资源安装流程。
 class _ServingAdapter implements HttpClientAdapter {
@@ -178,7 +178,7 @@ void main() {
     );
   });
 
-  test('安装流程只访问公开来源，不请求 EchoLoop 资源服务', () async {
+  test('安装流程只访问公开来源，不请求 LoopBack 资源服务', () async {
     final harness = await _createHarness();
 
     await harness.manager.downloadModel(

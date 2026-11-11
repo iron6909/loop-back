@@ -1,11 +1,11 @@
 /// SentenceChatButton 测试：开关显隐规则 + 组件渲染 + onBeforeOpen 回调。
 library;
 
-import 'package:echo_loop/features/chatbot/widgets/sentence_chat_button.dart';
-import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
-import 'package:echo_loop/features/chatbot/sentence_passage.dart';
-import 'package:echo_loop/features/remote_config/remote_config.dart';
-import 'package:echo_loop/features/remote_config/remote_config_providers.dart';
+import 'package:loop_back/features/chatbot/widgets/sentence_chat_button.dart';
+import 'package:loop_back/features/chatbot/models/chatbot_config.dart';
+import 'package:loop_back/features/chatbot/sentence_passage.dart';
+import 'package:loop_back/features/remote_config/remote_config.dart';
+import 'package:loop_back/features/remote_config/remote_config_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/media_kit_duration_probe.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/media_kit_duration_probe.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeDurationProbePlayer implements DurationProbePlayer {

@@ -4,8 +4,8 @@
 /// Base URL 不接受非 http(s) 与内嵌账号密码。
 library;
 
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/provider_config_store.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/provider_config_store.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -16,7 +16,7 @@ class _MockSecureStorage extends Mock implements FlutterSecureStorage {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const sentinelKey = 'sk-test-sentinel-9f3a';
+  const sentinelKey = 'cfg-9f3a';
 
   late _MockSecureStorage secureStorage;
   late ProviderConfigStore store;

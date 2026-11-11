@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:echo_loop/database/app_database.dart' as db;
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
-import 'package:echo_loop/services/pronunciation/source_sentence_player.dart';
-import 'package:echo_loop/utils/app_data_dir.dart' as app_data_dir;
+import 'package:loop_back/database/app_database.dart' as db;
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/services/pronunciation/source_sentence_player.dart';
+import 'package:loop_back/utils/app_data_dir.dart' as app_data_dir;
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/shared/fake_daos.dart';

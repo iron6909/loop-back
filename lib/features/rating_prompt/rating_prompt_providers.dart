@@ -4,7 +4,7 @@ import '../../database/providers.dart';
 import '../remote_config/remote_config.dart';
 import '../remote_config/remote_config_providers.dart';
 import '../../providers/package_info_provider.dart';
-import '../onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import 'data/rating_prompt_attempt_store.dart';
 import 'services/in_app_review_gateway.dart';

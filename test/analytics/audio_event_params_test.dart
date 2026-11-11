@@ -1,9 +1,9 @@
 /// audioEventParams 帮助函数与 Ref 扩展的单元测试
 library;
 
-import 'package:echo_loop/analytics/audio_event_params.dart';
-import 'package:echo_loop/analytics/models/event_names.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
+import 'package:loop_back/analytics/audio_event_params.dart';
+import 'package:loop_back/analytics/models/event_names.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/app_database.dart' as db;
-import 'package:echo_loop/database/daos/audio_item_dao.dart';
-import 'package:echo_loop/models/audio_item.dart' show TranscriptSource;
-import 'package:echo_loop/models/word_timestamp.dart';
-import 'package:echo_loop/utils/sense_group_service.dart';
+import 'package:loop_back/database/app_database.dart' as db;
+import 'package:loop_back/database/daos/audio_item_dao.dart';
+import 'package:loop_back/models/audio_item.dart' show TranscriptSource;
+import 'package:loop_back/models/word_timestamp.dart';
+import 'package:loop_back/utils/sense_group_service.dart';
 
 import '../helpers/mock_providers.dart';
 

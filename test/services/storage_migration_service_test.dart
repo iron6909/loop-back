@@ -5,8 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/services/resource_install_manifest.dart';
-import 'package:echo_loop/services/storage_migration_service.dart';
+import 'package:loop_back/services/resource_install_manifest.dart';
+import 'package:loop_back/services/storage_migration_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -49,22 +49,22 @@ void main() {
 
   group('migrateToAppSupportDirectory', () {
     test('迁移数据库文件到 Application Support', () async {
-      File('${fakeDocsDir.path}/echo_loop.db').writeAsStringSync('db-data');
-      File('${fakeDocsDir.path}/echo_loop.db-wal').writeAsStringSync('wal');
+      File('${fakeDocsDir.path}/loop_back.db').writeAsStringSync('db-data');
+      File('${fakeDocsDir.path}/loop_back.db-wal').writeAsStringSync('wal');
 
       await migrateToAppSupportDirectory();
 
-      expect(File('${fakeDocsDir.path}/echo_loop.db').existsSync(), isFalse);
+      expect(File('${fakeDocsDir.path}/loop_back.db').existsSync(), isFalse);
       expect(
-        File('${fakeDocsDir.path}/echo_loop.db-wal').existsSync(),
+        File('${fakeDocsDir.path}/loop_back.db-wal').existsSync(),
         isFalse,
       );
       expect(
-        File('${fakeAppSupportDir.path}/echo_loop.db').readAsStringSync(),
+        File('${fakeAppSupportDir.path}/loop_back.db').readAsStringSync(),
         'db-data',
       );
       expect(
-        File('${fakeAppSupportDir.path}/echo_loop.db-wal').readAsStringSync(),
+        File('${fakeAppSupportDir.path}/loop_back.db-wal').readAsStringSync(),
         'wal',
       );
     });
@@ -93,29 +93,29 @@ void main() {
     });
 
     test('目标文件已存在时保持幂等', () async {
-      File('${fakeDocsDir.path}/echo_loop.db').writeAsStringSync('db');
-      File('${fakeAppSupportDir.path}/echo_loop.db').writeAsStringSync('new');
+      File('${fakeDocsDir.path}/loop_back.db').writeAsStringSync('db');
+      File('${fakeAppSupportDir.path}/loop_back.db').writeAsStringSync('new');
 
       await migrateToAppSupportDirectory();
 
-      expect(File('${fakeDocsDir.path}/echo_loop.db').existsSync(), isTrue);
+      expect(File('${fakeDocsDir.path}/loop_back.db').existsSync(), isTrue);
       expect(
-        File('${fakeAppSupportDir.path}/echo_loop.db').readAsStringSync(),
+        File('${fakeAppSupportDir.path}/loop_back.db').readAsStringSync(),
         'new',
       );
     });
 
     test('目标已存在时不覆盖', () async {
-      File('${fakeDocsDir.path}/echo_loop.db').writeAsStringSync('old');
-      File('${fakeAppSupportDir.path}/echo_loop.db').writeAsStringSync('new');
+      File('${fakeDocsDir.path}/loop_back.db').writeAsStringSync('old');
+      File('${fakeAppSupportDir.path}/loop_back.db').writeAsStringSync('new');
 
       await migrateToAppSupportDirectory();
 
       expect(
-        File('${fakeAppSupportDir.path}/echo_loop.db').readAsStringSync(),
+        File('${fakeAppSupportDir.path}/loop_back.db').readAsStringSync(),
         'new',
       );
-      expect(File('${fakeDocsDir.path}/echo_loop.db').existsSync(), isTrue);
+      expect(File('${fakeDocsDir.path}/loop_back.db').existsSync(), isTrue);
     });
 
     test('全新安装无文件时正常完成', () async {

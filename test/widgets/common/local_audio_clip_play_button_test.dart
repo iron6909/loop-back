@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
-import 'package:echo_loop/widgets/common/local_audio_clip_play_button.dart';
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/widgets/common/local_audio_clip_play_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

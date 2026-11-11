@@ -3,7 +3,7 @@
 /// 统一管线下的本期主引擎实现：
 /// - [synthesize] 产文件供缓存复用：iOS/Android 走 flutter_tts `synthesizeToFile`
 ///   （Android `wav` / iOS `caf`，两端均正确设 voice）；**macOS** 走自家原生通道
-///   `top.echo-loop/tts_synth`（flutter_tts 4.2.5 的 macOS `synthesizeToFile` 漏设
+///   `top.loop-back/tts_synth`（flutter_tts 4.2.5 的 macOS `synthesizeToFile` 漏设
 ///   voice、口音失效，见 §7.15/§7.20），由 `MacosTtsSynthHandler` 用
 ///   `AVSpeechSynthesizer.write` 正确设 voice 后产 `wav`。
 /// - [speakLive] 实时朗读兜底，沿用旧 `TtsService` 的 §7.2 防竞态方案
@@ -34,7 +34,7 @@ typedef SynthFormatResolver = String Function();
 typedef NativeMacosSynthResolver = bool Function();
 
 /// macOS 原生合成：把文本按口音合成 wav 到给定**绝对路径**，返回是否成功产出。
-/// 默认走 `top.echo-loop/tts_synth` 方法通道；测试可注入 fake 不碰平台。
+/// 默认走 `top.loop-back/tts_synth` 方法通道；测试可注入 fake 不碰平台。
 typedef NativeMacosSynthesize =
     Future<bool> Function({
       required String text,
@@ -81,7 +81,7 @@ class PlatformTtsEngine implements TtsEngine {
 
   /// macOS 原生合成方法通道（与 `MacosTtsSynthHandler` 对接）。
   static const MethodChannel _macosSynthChannel = MethodChannel(
-    'top.echo-loop/tts_synth',
+    'top.loop-back/tts_synth',
   );
 
   /// 所有平台的文件合成都使用 WAV，供统一播放链路读取。
@@ -95,7 +95,7 @@ class PlatformTtsEngine implements TtsEngine {
     return Platform.isMacOS;
   }
 
-  /// 默认 macOS 原生合成：调 `top.echo-loop/tts_synth` 的 `synthesizeToFile`。
+  /// 默认 macOS 原生合成：调 `top.loop-back/tts_synth` 的 `synthesizeToFile`。
   static Future<bool> _defaultNativeMacosSynth({
     required String text,
     required String filePath,

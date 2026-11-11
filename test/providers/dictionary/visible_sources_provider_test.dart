@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
-import 'package:echo_loop/providers/dictionary/dictionary_registry.dart';
-import 'package:echo_loop/providers/dictionary/dictionary_settings_provider.dart';
-import 'package:echo_loop/providers/dictionary/visible_sources_provider.dart';
-import 'package:echo_loop/services/dictionary/dictionary_source.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
+import 'package:loop_back/providers/dictionary/dictionary_registry.dart';
+import 'package:loop_back/providers/dictionary/dictionary_settings_provider.dart';
+import 'package:loop_back/providers/dictionary/visible_sources_provider.dart';
+import 'package:loop_back/services/dictionary/dictionary_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

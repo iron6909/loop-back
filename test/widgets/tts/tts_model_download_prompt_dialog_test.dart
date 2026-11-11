@@ -1,10 +1,10 @@
-import 'package:echo_loop/providers/tts/kokoro_model_provider.dart';
-import 'package:echo_loop/providers/tts/piper_model_provider.dart';
-import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/services/tts/kokoro_model_manager.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:echo_loop/widgets/tts/tts_model_download_prompt_dialog.dart';
+import 'package:loop_back/providers/tts/kokoro_model_provider.dart';
+import 'package:loop_back/providers/tts/piper_model_provider.dart';
+import 'package:loop_back/providers/tts/tts_settings_provider.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/services/tts/kokoro_model_manager.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
+import 'package:loop_back/widgets/tts/tts_model_download_prompt_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

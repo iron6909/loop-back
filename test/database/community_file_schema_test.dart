@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
+import 'package:loop_back/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 社区文件不可用状态的 schema 契约测试。

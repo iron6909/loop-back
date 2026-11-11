@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/providers/study_duration_provider.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/providers/study_duration_provider.dart';
 
 void main() {
   DailyStudyRecord record(DateTime date, int total, int input, int output) =>

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lemmatizerx/lemmatizerx.dart';
-import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/services/speech_practice_matcher.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/services/speech_practice_matcher.dart';
 
 /// 词形还原测试替身。
 ///

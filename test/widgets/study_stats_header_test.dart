@@ -6,12 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:drift/native.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/widgets/study/study_stats_header.dart';
-import 'package:echo_loop/providers/study_stats_provider.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/widgets/study/study_stats_header.dart';
+import 'package:loop_back/providers/study_stats_provider.dart';
+import 'package:loop_back/theme/app_theme.dart';
 
 // ========== 测试用 Mock ==========
 

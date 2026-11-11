@@ -3,7 +3,7 @@ library;
 
 import 'dart:async';
 
-import 'package:echo_loop/features/chatbot/services/ndjson_text_stream.dart';
+import 'package:loop_back/features/chatbot/services/ndjson_text_stream.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

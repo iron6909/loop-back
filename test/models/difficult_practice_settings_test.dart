@@ -1,8 +1,8 @@
 // DifficultPracticeSettings 模型单元测试。
 // 验证默认值、copyWith、JSON 序列化和 pause 计算逻辑。
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/difficult_practice_settings.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/difficult_practice_settings.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
 
 void main() {
   group('DifficultPracticeSettings', () {

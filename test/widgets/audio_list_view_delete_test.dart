@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/widgets/audio_list_view.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/widgets/audio_list_view.dart';
 
 /// 轻量构造，允许显式指定 audioPath 以模拟共享文件场景。
 AudioItem _item({required String id, String? audioPath = 'audios/x.m4a'}) {

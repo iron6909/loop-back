@@ -30,8 +30,6 @@
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		64A8CFF4A779B20674977433 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06460A42932B1EAAE83B39C9 /* Pods_Runner.framework */; };
-		B2E63C0C2FE985F600D83DA7 /* EchoLoop.storekit in Resources */ = {isa = PBXBuildFile; fileRef = B2E63C0B2FE985F600D83DA7 /* EchoLoop.storekit */; };
-		B3E06EA7562C42894B58B0B7 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DB2852EF44C1F13072EFC52B /* GoogleService-Info.plist */; };
 		DF01A2B3C4D5E6F7A8B90002 /* NotificationPermissionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF01A2B3C4D5E6F7A8B90001 /* NotificationPermissionHandler.swift */; };
 		AD4A7E0C1B2D3E4F5A6B8002 /* AdaptiveVadThreshold.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD4A7E0C1B2D3E4F5A6B8001 /* AdaptiveVadThreshold.swift */; };
 		DF01A2B3C4D5E6F7A8B90004 /* MacosTtsSynthHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF01A2B3C4D5E6F7A8B90003 /* MacosTtsSynthHandler.swift */; };
@@ -76,7 +74,7 @@
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		333000ED22D3DE5D00554162 /* Warnings.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Warnings.xcconfig; sourceTree = "<group>"; };
 		335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GeneratedPluginRegistrant.swift; sourceTree = "<group>"; };
-		33CC10ED2044A3C60003C045 /* Echo Loop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Echo Loop.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		33CC10ED2044A3C60003C045 /* LoopBack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LoopBack.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		33CC10F02044A3C60003C045 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		33CC10F22044A3C60003C045 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Runner/Assets.xcassets; sourceTree = "<group>"; };
 		33CC10F52044A3C60003C045 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
@@ -100,9 +98,7 @@
 		8C4120E57DC4D0F2E9C7253C /* Pods-RunnerTests.debug-prod.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug-prod.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug-prod.xcconfig"; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		9C1A8DDC9986F251AB0CAC9D /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
-		B2E63C0B2FE985F600D83DA7 /* EchoLoop.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = EchoLoop.storekit; sourceTree = "<group>"; };
 		D707EE21A876AAC4587311EA /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
-		DB2852EF44C1F13072EFC52B /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		DF01A2B3C4D5E6F7A8B90001 /* NotificationPermissionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationPermissionHandler.swift; sourceTree = "<group>"; };
 		AD4A7E0C1B2D3E4F5A6B8001 /* AdaptiveVadThreshold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveVadThreshold.swift; sourceTree = "<group>"; };
 		DF01A2B3C4D5E6F7A8B90003 /* MacosTtsSynthHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacosTtsSynthHandler.swift; sourceTree = "<group>"; };
@@ -155,21 +151,19 @@
 		33CC10E42044A3C60003C045 = {
 			isa = PBXGroup;
 			children = (
-				B2E63C0B2FE985F600D83DA7 /* EchoLoop.storekit */,
 				33FAB671232836740065AC1E /* Runner */,
 				33CEB47122A05771004F2AC0 /* Flutter */,
 				331C80D6294CF71000263BE5 /* RunnerTests */,
 				33CC10EE2044A3C60003C045 /* Products */,
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				E5CFE5E3FBA293741FF41230 /* Pods */,
-				DB2852EF44C1F13072EFC52B /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
 		33CC10EE2044A3C60003C045 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				33CC10ED2044A3C60003C045 /* Echo Loop.app */,
+				33CC10ED2044A3C60003C045 /* LoopBack.app */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
 			);
 			name = Products;
@@ -287,7 +281,7 @@
 			);
 			name = Runner;
 			productName = Runner;
-			productReference = 33CC10ED2044A3C60003C045 /* Echo Loop.app */;
+			productReference = 33CC10ED2044A3C60003C045 /* LoopBack.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -354,9 +348,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
-				B2E63C0C2FE985F600D83DA7 /* EchoLoop.storekit in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
-				B3E06EA7562C42894B58B0B7 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -542,10 +534,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.RunnerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.RunnerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Echo Loop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Echo Loop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LoopBack";
 			};
 			name = "Debug-prod";
 		};
@@ -557,10 +549,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.dev.RunnerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.dev.RunnerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Echo Loop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Echo Loop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LoopBack";
 			};
 			name = "Release-dev";
 		};
@@ -580,10 +572,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.RunnerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.RunnerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Echo Loop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Echo Loop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LoopBack";
 			};
 			name = Debug;
 		};
@@ -595,10 +587,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.RunnerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.RunnerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Echo Loop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Echo Loop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LoopBack";
 			};
 			name = Release;
 		};
@@ -610,10 +602,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.RunnerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.RunnerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Echo Loop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Echo Loop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LoopBack";
 			};
 			name = Profile;
 		};
@@ -867,10 +859,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.RunnerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.RunnerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Echo Loop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Echo Loop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LoopBack";
 			};
 			name = "Release-prod";
 		};
@@ -890,8 +882,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.dev";
-				PRODUCT_NAME = "Echo Loop Dev";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.dev";
+				PRODUCT_NAME = "LoopBack Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -906,10 +898,10 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.dev.RunnerTests";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.dev.RunnerTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Echo Loop.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Echo Loop";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LoopBack.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LoopBack";
 			};
 			name = "Debug-dev";
 		};
@@ -1077,8 +1069,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "top.echo-loop.dev";
-				PRODUCT_NAME = "Echo Loop Dev";
+				PRODUCT_BUNDLE_IDENTIFIER = "top.loop-back.dev";
+				PRODUCT_NAME = "LoopBack Dev";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};

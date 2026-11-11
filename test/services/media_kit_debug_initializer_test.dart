@@ -1,4 +1,4 @@
-import 'package:echo_loop/services/media_kit_debug_initializer.dart';
+import 'package:loop_back/services/media_kit_debug_initializer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

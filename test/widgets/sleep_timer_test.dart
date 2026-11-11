@@ -7,9 +7,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/sleep_timer.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/sleep_timer.dart';
 
 Widget _buildTestApp() {
   return ProviderScope(

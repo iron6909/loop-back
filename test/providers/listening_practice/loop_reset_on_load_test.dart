@@ -10,13 +10,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/app_database.dart' hide AudioItem;
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/playback_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/database/app_database.dart' hide AudioItem;
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/playback_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
 import '../../helpers/mock_providers.dart';
 
 /// 测试用引擎：loadAudio/loadTranscript 不触碰真实文件，直接返回预置句子。

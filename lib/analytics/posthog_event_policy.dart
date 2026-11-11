@@ -17,7 +17,6 @@ abstract final class PostHogEventPolicy {
     Events.firstLearnComplete,
     Events.collectionCreate,
     Events.communityCollectionEnroll,
-    Events.onboardingSurveyCompleted,
     Events.notificationSystemResult,
     Events.asrInferenceCrashSuspected,
     Events.stageAdvance,

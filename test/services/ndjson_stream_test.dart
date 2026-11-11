@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:echo_loop/services/ndjson_stream.dart';
+import 'package:loop_back/services/ndjson_stream.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 把字符串按给定分片切成字节 chunk 流（模拟网络分片）

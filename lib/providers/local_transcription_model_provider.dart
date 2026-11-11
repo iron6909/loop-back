@@ -7,7 +7,7 @@ library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart';
+import '../providers/shared_preferences_provider.dart';
 import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
 import 'offline_asr_settings_provider.dart';

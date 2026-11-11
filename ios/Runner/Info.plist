@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Echo Loop</string>
+	<string>LoopBack</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -65,9 +65,9 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>top.echo-loop.backup</string>
+			<string>top.loop-back.backup</string>
 			<key>UTTypeDescription</key>
-			<string>Echo Loop Backup</string>
+			<string>LoopBack Backup</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.zip-archive</string>
@@ -85,7 +85,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>top.echo-loop.subrip-subtitle</string>
+			<string>top.loop-back.subrip-subtitle</string>
 			<key>UTTypeDescription</key>
 			<string>SubRip Subtitle</string>
 			<key>UTTypeConformsTo</key>
@@ -105,7 +105,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>top.echo-loop.webvtt</string>
+			<string>top.loop-back.webvtt</string>
 			<key>UTTypeDescription</key>
 			<string>WebVTT Subtitle</string>
 			<key>UTTypeConformsTo</key>
@@ -125,7 +125,7 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>top.echo-loop.lrc-lyrics</string>
+			<string>top.loop-back.lrc-lyrics</string>
 			<key>UTTypeDescription</key>
 			<string>LRC Lyrics</string>
 			<key>UTTypeConformsTo</key>
@@ -148,12 +148,12 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Echo Loop Backup</string>
+			<string>LoopBack Backup</string>
 			<key>LSHandlerRank</key>
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>top.echo-loop.backup</string>
+				<string>top.loop-back.backup</string>
 			</array>
 		</dict>
 		<dict>
@@ -163,7 +163,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>top.echo-loop.subrip-subtitle</string>
+				<string>top.loop-back.subrip-subtitle</string>
 			</array>
 		</dict>
 		<dict>
@@ -173,7 +173,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>top.echo-loop.webvtt</string>
+				<string>top.loop-back.webvtt</string>
 			</array>
 		</dict>
 		<dict>
@@ -183,7 +183,7 @@
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>top.echo-loop.lrc-lyrics</string>
+				<string>top.loop-back.lrc-lyrics</string>
 			</array>
 		</dict>
 	</array>

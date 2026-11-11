@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/providers/repeat_flow/repeat_flow_engine.dart';
-import 'package:echo_loop/providers/repeat_flow/repeat_flow_phase.dart';
-import 'package:echo_loop/providers/repeat_flow/repeat_flow_state.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/providers/repeat_flow/repeat_flow_engine.dart';
+import 'package:loop_back/providers/repeat_flow/repeat_flow_phase.dart';
+import 'package:loop_back/providers/repeat_flow/repeat_flow_state.dart';
 
 void main() {
   test('暂停后的恢复使用精确位置且不增加重复次数或更换 prompt', () async {

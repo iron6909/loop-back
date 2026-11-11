@@ -2,7 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/app_database.dart';
+import 'package:loop_back/database/app_database.dart';
 
 /// 创建内存数据库（启用外键约束，junction 插入需要合集/音频行先存在）。
 AppDatabase _createTestDatabase() {

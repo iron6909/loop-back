@@ -176,9 +176,6 @@ abstract class Events {
   /// 查看某天阶段明细
   static const dayBreakdownViewed = 'day_breakdown_viewed';
 
-  /// 点击学习 Tab 的「加入学习社群」邀请卡片
-  static const communityInviteTapped = 'community_invite_tapped';
-
   // ── 收藏复习按钮 ──
   /// 点击句子复习按钮
   static const bookmarkReviewButtonTapped = 'bookmark_review_button_tapped';
@@ -210,17 +207,6 @@ abstract class Events {
   /// 手动提前解锁当前复习轮（学习计划页「立即解锁」按钮）
   /// params: audioId, stage
   static const reviewUnlockEarly = 'review_unlock_early';
-
-  // ── Onboarding 问卷（首启 2 题，只采集不消费） ──
-  /// 进入问卷页
-  static const onboardingSurveyShown = 'onboarding_survey_shown';
-
-  /// 单题选择（每题答完打一次）
-  static const onboardingSurveyQuestionAnswered =
-      'onboarding_survey_question_answered';
-
-  /// 问卷全部完成
-  static const onboardingSurveyCompleted = 'onboarding_survey_completed';
 
   // ── 系统授权 ──
   /// 冷启动时上报 4 类系统授权状态快照（mic / speech / notification / network）
@@ -261,20 +247,6 @@ abstract class Events {
 abstract class UserProperties {
   /// 应用分发渠道（app_store / play / direct）
   static const installSource = 'install_source';
-
-  /// 学习目标（exam / daily / work / travel / other）
-  static const englishGoal = 'english_goal';
-
-  /// 考试类型（仅 goal == exam 时设置；gaokao / cet / tem / ielts / toefl / other）
-  static const examType = 'exam_type';
-
-  /// 每日学习时长（"5" / "10" / "20" / "30" / "flexible"）
-  static const dailyMinutesTarget = 'daily_minutes_target';
-
-  /// 来源渠道（xiaohongshu / wechat / douyin / kuaishou / bilibili /
-  /// baidu_search / youtube / reddit / x_twitter / tiktok / instagram /
-  /// google_search / github / app_store / google_play / friend / other）
-  static const referralSource = 'referral_source';
 }
 
 /// 事件参数名常量
@@ -374,31 +346,6 @@ abstract class EventParams {
   static const newLanguage = 'new_language';
   static const bytesFreed = 'bytes_freed';
 
-  // ── Onboarding 问卷 ──
-  /// 是否首启触发（即每次进入问卷，都为 true；保留参数便于后期扩展）
-  static const isFirstLaunch = 'is_first_launch';
-
-  /// 题目 ID（goal / exam_type / daily_minutes）
-  static const questionId = 'question_id';
-
-  /// 答案编码
-  static const answerCode = 'answer_code';
-
-  /// Q1 学习目标
-  static const goal = 'goal';
-
-  /// Q1.5 考试类型（仅 goal == exam 时上报）
-  static const examType = 'exam_type';
-
-  /// Q2 每日学习时长
-  static const dailyMinutes = 'daily_minutes';
-
-  /// Q3 来源渠道（user property 同名）
-  static const referralSource = 'referral_source';
-
-  /// 完成耗时（秒）
-  static const elapsedSeconds = 'elapsed_seconds';
-
   // ── 系统授权状态（冷启动快照 + 用户画像） ──
   /// 麦克风权限
   static const microphoneStatus = 'microphone_status';
@@ -408,9 +355,6 @@ abstract class EventParams {
 
   /// 通知权限
   static const notificationStatus = 'notification_status';
-
-  /// 网络授权（仅 iOS 有意义；其他平台填 not_applicable）
-  static const networkStatus = 'network_status';
 
   // ── 通知权限 pre-prompt ──
   /// pre-prompt 被跳过的原因

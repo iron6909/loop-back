@@ -6,14 +6,14 @@ library;
 
 import 'dart:async';
 
-import 'package:echo_loop/analytics/analytics_providers.dart';
-import 'package:echo_loop/analytics/analytics_service.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import 'package:loop_back/analytics/analytics_providers.dart';
+import 'package:loop_back/analytics/analytics_service.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/notification_permission_provider.dart';
-import 'package:echo_loop/services/notification_permission_service.dart';
-import 'package:echo_loop/widgets/notification_permission_dialog.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/notification_permission_provider.dart';
+import 'package:loop_back/services/notification_permission_service.dart';
+import 'package:loop_back/widgets/notification_permission_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

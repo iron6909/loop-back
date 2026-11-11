@@ -6,20 +6,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/providers/intensive_annotation/intensive_annotation_phase.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_playback_driver.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/providers/intensive_annotation/intensive_annotation_phase.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_playback_driver.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
 import '../helpers/mock_providers.dart';
 
 class _ReplayTestAudioEngine extends TestAudioEngine {

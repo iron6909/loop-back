@@ -6,9 +6,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/download/download_failure.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/services/download/download_failure.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
 
 /// 按 URI 返回固定内容或注入网络失败的假 HTTP adapter。
 class _ServingAdapter implements HttpClientAdapter {

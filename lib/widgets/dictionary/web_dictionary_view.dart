@@ -119,7 +119,7 @@ class _WebDictionaryViewState extends State<WebDictionaryView> {
         : '';
     return '''
     (() => {
-      const styleId = '__echo_loop_web_dictionary_styles__';
+      const styleId = '__loop_back_web_dictionary_styles__';
       if (document.getElementById(styleId)) return;
       const style = document.createElement('style');
       style.id = styleId;

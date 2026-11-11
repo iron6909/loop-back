@@ -20,7 +20,7 @@ class WindowFullscreenService implements WindowFullscreenController {
     _channel.setMethodCallHandler(_handlePlatformCall);
   }
 
-  static const _defaultChannel = MethodChannel('top.echo-loop/window');
+  static const _defaultChannel = MethodChannel('top.loop-back/window');
 
   final MethodChannel _channel;
   final _changes = StreamController<bool>.broadcast(sync: true);

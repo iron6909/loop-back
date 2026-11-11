@@ -1,5 +1,5 @@
-import 'package:echo_loop/features/subtitle_editor/subtitle_waveform_view.dart';
-import 'package:echo_loop/models/sentence.dart';
+import 'package:loop_back/features/subtitle_editor/subtitle_waveform_view.dart';
+import 'package:loop_back/models/sentence.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_waveform/just_waveform.dart';

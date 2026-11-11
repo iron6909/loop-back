@@ -1,5 +1,5 @@
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/utils/blind_listen_duration_estimator.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/utils/blind_listen_duration_estimator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Sentence _s(int i, int startSec, int endSec) => Sentence(

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/word_timestamp.dart';
-import 'package:echo_loop/utils/synthetic_word_timestamps.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/word_timestamp.dart';
+import 'package:loop_back/utils/synthetic_word_timestamps.dart';
 
 void main() {
   group('generateSyntheticWordTimestamps', () {

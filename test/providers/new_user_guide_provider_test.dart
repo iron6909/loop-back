@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import 'package:loop_back/providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
-import 'package:echo_loop/providers/new_user_guide_provider.dart';
+import 'package:loop_back/providers/new_user_guide_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/widgets/practice/practice_sentence_pager.dart';
+import 'package:loop_back/widgets/practice/practice_sentence_pager.dart';
 
 void main() {
   testWidgets('非索引状态重建不会中断正在进行的用户滑动', (tester) async {

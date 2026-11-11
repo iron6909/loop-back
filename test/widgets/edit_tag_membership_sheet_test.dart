@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/providers/tag_provider.dart';
-import 'package:echo_loop/widgets/edit_tag_membership_sheet.dart';
-import 'package:echo_loop/models/tag.dart';
+import 'package:loop_back/providers/tag_provider.dart';
+import 'package:loop_back/widgets/edit_tag_membership_sheet.dart';
+import 'package:loop_back/models/tag.dart';
 
 import '../helpers/test_app.dart';
 import '../helpers/mock_providers.dart';

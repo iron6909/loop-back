@@ -1,6 +1,6 @@
 // 精听设置模型测试
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
 
 void main() {
   group('IntensiveListenSettings', () {

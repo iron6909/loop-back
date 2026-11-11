@@ -4,7 +4,7 @@
 /// 后是否自动播放本次录音、是否计算复述评级。
 ///
 /// 采用手动 Notifier 模式（不走 riverpod_generator），对齐
-/// [lib/features/onboarding_survey/providers/onboarding_survey_provider.dart]。
+/// [lib/providers/shared_preferences_provider.dart]。
 /// `build()` 从 [initialLearningSettingsProvider] 同步读 SP 注入的快照，
 /// 避免 router redirect / 学习计划页 initState 在异步加载完成前拿不到状态。
 library;
@@ -12,12 +12,12 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import '../services/app_logger.dart';
 import '../features/user_preferences/domain/user_preferences_sync_events.dart';
 
-export '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+export '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 
 /// 同步从 SP 预读的学习设置初值，由 main() 通过 override 注入。

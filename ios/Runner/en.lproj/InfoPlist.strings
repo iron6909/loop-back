@@ -1,3 +1,3 @@
-"CFBundleName" = "Echo Loop";
+"CFBundleName" = "LoopBack";
 "NSMicrophoneUsageDescription" = "This app needs microphone access so you can record your spoken English practice.";
 "NSSpeechRecognitionUsageDescription" = "This app needs speech recognition access to compare your spoken English with the target sentence.";

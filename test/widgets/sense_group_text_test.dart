@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/providers/saved_word_provider.dart';
-import 'package:echo_loop/utils/saved_text_index.dart';
-import 'package:echo_loop/widgets/practice/sense_group_text.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/providers/saved_word_provider.dart';
+import 'package:loop_back/utils/saved_text_index.dart';
+import 'package:loop_back/widgets/practice/sense_group_text.dart';
 
 import '../helpers/test_app.dart';
 

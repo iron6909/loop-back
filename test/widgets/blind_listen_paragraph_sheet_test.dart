@@ -1,8 +1,8 @@
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/widgets/blind_listen_paragraph_sheet.dart';
-import 'package:echo_loop/widgets/study/study_stage_visuals.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/widgets/blind_listen_paragraph_sheet.dart';
+import 'package:loop_back/widgets/study/study_stage_visuals.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

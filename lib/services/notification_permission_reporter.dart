@@ -67,7 +67,7 @@ abstract class NotificationPermissionReporter {
 class MacOSNotificationPermissionReporter
     implements NotificationPermissionReporter {
   static const _channel = MethodChannel(
-    'top.echo-loop/notification_permission',
+    'top.loop-back/notification_permission',
   );
 
   @override
@@ -120,7 +120,7 @@ class MacOSNotificationPermissionReporter
 class IOSNotificationPermissionReporter
     implements NotificationPermissionReporter {
   static const _channel = MethodChannel(
-    'top.echo-loop/notification_permission',
+    'top.loop-back/notification_permission',
   );
 
   @override

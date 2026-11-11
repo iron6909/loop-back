@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/providers/blind_flow/blind_practice_flow_engine.dart';
-import 'package:echo_loop/providers/blind_flow/blind_practice_flow_phase.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/providers/blind_flow/blind_practice_flow_engine.dart';
+import 'package:loop_back/providers/blind_flow/blind_practice_flow_phase.dart';
 
 void main() {
   test('恢复句子时传递精确位置且保留当前重复轮次', () async {

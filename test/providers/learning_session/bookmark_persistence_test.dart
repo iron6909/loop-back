@@ -5,11 +5,11 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/providers/favorite_sentence_lifecycle_provider.dart';
-import 'package:echo_loop/providers/listening_practice/bookmark_manager.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/providers/favorite_sentence_lifecycle_provider.dart';
+import 'package:loop_back/providers/listening_practice/bookmark_manager.dart';
 
 /// 创建内存数据库用于测试
 AppDatabase _createTestDb() {

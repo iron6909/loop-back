@@ -1,6 +1,6 @@
 {
-    "name": "Echo Loop",
-    "short_name": "Echo Loop",
+    "name": "LoopBack",
+    "short_name": "LoopBack",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

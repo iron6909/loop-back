@@ -15,9 +15,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startupLocalDataErrorMessage => '数据暂时无法正常加载。请重试；如果问题持续，请联系我们。';
 
   @override
-  String get startupLocalDataContactUs => '联系我们';
-
-  @override
   String get startupLocalDataViewLogs => '查看日志';
 
   @override
@@ -25,12 +22,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playbackFailedMessage => '请稍后重试。';
-
-  @override
-  String get appTitle => 'Echo Loop';
-
-  @override
-  String get premiumTitle => 'Echo Loop 会员';
 
   @override
   String get premiumTagline => '无限 AI，学习更高效。';
@@ -205,10 +196,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get premiumPurchaseFailed => '购买失败，请重试。';
-
-  @override
-  String get premiumRestoreAccountMismatch =>
-      '此订阅已绑定到另一个 Echo Loop 账号。请登录原账号后重试。';
 
   @override
   String get premiumRestoreNone => '未找到可恢复的购买。';
@@ -1949,12 +1936,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get asrBackendPlatformDescription => '使用系统自带的语音识别，无需下载';
 
   @override
-  String get asrBackendOffline => 'Echo Loop AI';
-
-  @override
-  String get asrBackendOfflineDescription => '使用应用自带的 AI 模型，支持离线使用，需下载';
-
-  @override
   String get asrBackendLocalWhisper => 'Whisper（本机）';
 
   @override
@@ -2914,27 +2895,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoCompletedNoDifficultReview => '0 个难句，已跳过';
 
   @override
-  String get termsOfService => '服务条款';
-
-  @override
-  String get privacyPolicy => '隐私政策';
-
-  @override
-  String get writeFeedback => '意见反馈';
-
-  @override
-  String get rateUs => '评价我们';
-
-  @override
-  String get joinCommunity => '加入学习社群';
-
-  @override
-  String get aboutCommunity => '加入社区';
-
-  @override
-  String get joinCommunityInviteSubtitle => '找资源，找搭子，反馈建议';
-
-  @override
   String get networkError => '无法连接，请检查网络后重试';
 
   @override
@@ -3772,7 +3732,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get guidePlanStartLearningDescription =>
-      '点击这里即可按照学习计划逐步学习。Echo Loop 会自动引导你学习，并及时提醒你复习。';
+      '点击这里即可按照学习计划逐步学习。LoopBack 会自动引导你学习，并及时提醒你复习。';
 
   @override
   String get guidePlanPauseLearningTitle => '暂停学习';
@@ -3844,12 +3804,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get resetNewUserGuideDone => '新手引导已重置';
-
-  @override
-  String get resetOnboarding => '重置 Onboarding 问卷';
-
-  @override
-  String get resetOnboardingDone => 'Onboarding 已重置，请重启 App 以重新进入问卷';
 
   @override
   String get discoverCommunityCollections => '发现资源';
@@ -4043,182 +3997,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get audioListColumnDuration => '时长';
 
   @override
-  String get onboardingTitle => '先聊两句';
-
-  @override
-  String get onboardingSubtitle => '10 秒帮你定制学习节奏';
-
-  @override
-  String get onboardingBack => '上一步';
-
-  @override
-  String get onboardingContinue => '继续';
-
-  @override
-  String get onboardingExamPrompt => '你当前在备考哪一类考试？';
-
-  @override
-  String get onboardingExamGaokao => '中高考';
-
-  @override
-  String get onboardingExamCet => '大学四六级';
-
-  @override
-  String get onboardingExamTem => '专四专八';
-
-  @override
-  String get onboardingExamIelts => '雅思 IELTS';
-
-  @override
-  String get onboardingExamToefl => '托福 TOEFL';
-
-  @override
-  String get onboardingExamOther => '其他';
-
-  @override
-  String onboardingProgress(int current, int total) {
-    return '第 $current 题 / 共 $total 题';
-  }
-
-  @override
-  String get onboardingNext => '下一题';
-
-  @override
-  String get onboardingDone => '完成';
-
-  @override
-  String get onboardingFinishedTitle => '记下了，准备好出发';
-
-  @override
-  String get onboardingFinishedHint => '我们会按你的目标和节奏来安排练习。';
-
-  @override
-  String get onboardingSummaryEyebrow => '你知道么？';
-
-  @override
-  String get onboardingSummaryHeadline => '提升英语听说，\n关键不在听得更多，\n而在练得更透';
-
-  @override
-  String get onboardingSummaryPoint1 => '选择适合你水平的音频反复练习';
-
-  @override
-  String get onboardingSummaryPoint2 => '按意群理解内容，在语境中掌握词汇';
-
-  @override
-  String get onboardingSummaryPoint3 => '通过大量精听和跟读积累输入与语感';
-
-  @override
-  String get onboardingSummaryPoint4 => '通过复述练习口语，把听懂变成会说';
-
-  @override
-  String get onboardingStart => '开始学习';
-
-  @override
-  String get onboardingQ1Prompt => '你练习英语听说的主要目标是什么？';
-
-  @override
-  String get onboardingQ1OptionExam => '应对考试';
-
-  @override
-  String get onboardingQ1OptionDaily => '日常交流';
-
-  @override
-  String get onboardingQ1OptionWork => '工作沟通';
-
-  @override
-  String get onboardingQ1OptionTravel => '出国旅行';
-
-  @override
-  String get onboardingQ1OptionContent => '听懂影视播客';
-
-  @override
-  String get onboardingQ1OptionOther => '其他';
-
-  @override
-  String get onboardingQ2Prompt => '你计划每天练习多久？';
-
-  @override
-  String get onboardingQ2Option5 => '约 5 分钟';
-
-  @override
-  String get onboardingQ2Option10 => '约 10 分钟';
-
-  @override
-  String get onboardingQ2Option20 => '约 20 分钟';
-
-  @override
-  String get onboardingQ2Option30 => '30 分钟以上';
-
-  @override
-  String get onboardingQ2OptionFlexible => '不固定';
-
-  @override
-  String get onboardingQ3Prompt => '你是从哪里知道我们的？';
-
-  @override
-  String get onboardingQ3OptionAppStore => '应用商店';
-
-  @override
-  String get onboardingQ3OptionGooglePlay => 'Google Play';
-
-  @override
-  String get onboardingQ3OptionYoutube => 'YouTube';
-
-  @override
-  String get onboardingQ3OptionReddit => 'Reddit';
-
-  @override
-  String get onboardingQ3OptionXTwitter => 'X';
-
-  @override
-  String get onboardingQ3OptionTiktok => 'TikTok';
-
-  @override
-  String get onboardingQ3OptionInstagram => 'Instagram';
-
-  @override
-  String get onboardingQ3OptionXiaohongshu => '小红书';
-
-  @override
-  String get onboardingQ3OptionWechat => '微信';
-
-  @override
-  String get onboardingQ3OptionDouyin => '抖音';
-
-  @override
-  String get onboardingQ3OptionKuaishou => '快手';
-
-  @override
-  String get onboardingQ3OptionBilibili => 'B 站';
-
-  @override
-  String get onboardingQ3OptionBaiduSearch => '百度搜索';
-
-  @override
-  String get onboardingQ3OptionGoogleSearch => 'Google 搜索';
-
-  @override
-  String get onboardingQ3OptionGithub => 'GitHub';
-
-  @override
-  String get onboardingQ3OptionFriend => '朋友推荐';
-
-  @override
-  String get onboardingQ3OptionOther => '其他';
-
-  @override
-  String get onboardingPermissionsHint => '为了保证体验我们将请求以下权限';
-
-  @override
-  String get onboardingPermissionsNotification => '系统通知';
-
-  @override
-  String get onboardingPermissionsMicrophone => '录音';
-
-  @override
-  String get onboardingPermissionsSpeech => '语音识别';
-
-  @override
   String get playbackSection => '播放';
 
   @override
@@ -4387,9 +4165,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get speechPermUnsupportedToast => '当前平台不支持录音';
-
-  @override
-  String get authSignInTitle => '登录 Echo Loop';
 
   @override
   String get authChooseMethod => '选择一种方式继续。';
@@ -4687,76 +4462,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudDriveSourceShort => '网盘';
 
   @override
-  String get baiduNetdisk => '百度网盘';
-
-  @override
-  String get baiduNetdiskAllFiles => '全部文件';
-
-  @override
-  String get baiduNetdiskWaitingAuthorization => '等待百度授权...';
-
-  @override
-  String get baiduNetdiskLoadingFiles => '正在加载百度网盘文件...';
-
-  @override
-  String get baiduNetdiskImportFailed => '百度网盘导入失败。';
-
-  @override
-  String get baiduNetdiskConnectTitle => '连接百度网盘';
-
-  @override
-  String get baiduNetdiskConnectDescription =>
-      '授权 Echo Loop 浏览你的百度网盘，并导入选中的素材文件。';
-
-  @override
-  String get baiduNetdiskConnectAction => '连接百度网盘';
-
-  @override
-  String get baiduNetdiskLogoutTooltip => '退出百度网盘登录';
-
-  @override
-  String get baiduNetdiskSelectAllAction => '全选';
-
-  @override
-  String get baiduNetdiskClearSelectionAction => '取消';
-
-  @override
-  String get baiduNetdiskLogoutTitle => '退出百度网盘登录？';
-
-  @override
-  String get baiduNetdiskLogoutMessage => 'Echo Loop 会清除当前设备上保存的百度网盘授权。';
-
-  @override
-  String get baiduNetdiskLogoutConfirm => '退出登录';
-
-  @override
-  String get baiduNetdiskAccountTooltip => '百度网盘账户';
-
-  @override
-  String get baiduNetdiskAccountTitle => '百度网盘账户';
-
-  @override
-  String get baiduNetdiskUsername => '百度用户名';
-
-  @override
-  String get baiduNetdiskNetdiskName => '网盘昵称';
-
-  @override
-  String get baiduNetdiskMembership => '会员状态';
-
-  @override
-  String get baiduNetdiskUserId => '用户 ID';
-
-  @override
-  String get baiduNetdiskUnavailable => '未提供';
-
-  @override
-  String get baiduNetdiskDisconnect => '断开百度网盘连接';
-
-  @override
-  String get baiduNetdiskNoSupportedAudio => '此文件夹中没有支持的素材文件。';
-
-  @override
   String get importAudioShort => '导入';
 
   @override
@@ -4785,24 +4490,6 @@ class AppLocalizationsZh extends AppLocalizations {
       zero: '',
     );
     return '导入（$_temp0$_temp1）';
-  }
-
-  @override
-  String get baiduNetdiskImporting => '正在导入...';
-
-  @override
-  String baiduNetdiskImportingFile(String name) {
-    return '正在导入 $name...';
-  }
-
-  @override
-  String baiduNetdiskImportedCount(int count) {
-    return '已从百度网盘导入 $count 个';
-  }
-
-  @override
-  String baiduNetdiskSkippedSummary(int duplicates, int failures) {
-    return '跳过重复项：$duplicates · 失败：$failures';
   }
 
   @override
@@ -5095,7 +4782,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ttsKokoroLicense => 'Apache-2.0 · espeak-ng-data GPL-3.0-or-later';
 
   @override
-  String get asrDeleteAllModelsConfirm => '删除所有已下载的 Echo Loop 语音识别模型？可随时重新下载。';
+  String get asrDeleteAllModelsConfirm => '删除所有已下载的 LoopBack 语音识别模型？可随时重新下载。';
 
   @override
   String get asrDownloadedModelsTitle => '已下载的语音识别模型';
@@ -5876,7 +5563,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String speechUploadNoticeBody(String host, String provider) {
-    return 'Echo Loop 会把随包的 4 秒英语样本上传到 $host，下游推理供应商为 $provider。该服务可能为此向你收费；测试不会使用你自己的录音。';
+    return 'LoopBack 会把随包的 4 秒英语样本上传到 $host，下游推理供应商为 $provider。该服务可能为此向你收费；测试不会使用你自己的录音。';
   }
 
   @override

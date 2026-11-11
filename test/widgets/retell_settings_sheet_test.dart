@@ -1,5 +1,5 @@
-import 'package:echo_loop/providers/learning_session/retell_player_provider.dart';
-import 'package:echo_loop/widgets/retell/retell_settings_sheet.dart';
+import 'package:loop_back/providers/learning_session/retell_player_provider.dart';
+import 'package:loop_back/widgets/retell/retell_settings_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

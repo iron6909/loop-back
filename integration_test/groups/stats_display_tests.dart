@@ -10,13 +10,13 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/main.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/screens/intensive_listen_player_screen.dart';
+import 'package:loop_back/main.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/screens/intensive_listen_player_screen.dart';
 
 import '../helpers/test_notifiers.dart';
 
@@ -38,7 +38,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 导航到精听播放器
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       final session =
@@ -91,7 +91,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 验证进度已更新
-      final appContext2 = tester.element(find.byType(EchoLoopApp));
+      final appContext2 = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(appContext2);
       final progressState = container2.read(learningProgressNotifierProvider);
       final progress = progressState.progressMap['test-audio-1'];
@@ -116,7 +116,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 导航到精听播放器
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       final session =
@@ -160,7 +160,7 @@ void statsDisplayTests() {
       expect(find.byType(IntensiveListenPlayerScreen), findsNothing);
 
       // 验证难句数快照已保存
-      final appContext2 = tester.element(find.byType(EchoLoopApp));
+      final appContext2 = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(appContext2);
       final progressState = container2.read(learningProgressNotifierProvider);
       final progress = progressState.progressMap['test-audio-1'];
@@ -184,7 +184,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 导航到精听播放器（自由练习模式）
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       final session =
@@ -238,7 +238,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 验证进度
-      final appContext2 = tester.element(find.byType(EchoLoopApp));
+      final appContext2 = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(appContext2);
       final progressState = container2.read(learningProgressNotifierProvider);
       final progress = progressState.progressMap['test-audio-1'];
@@ -281,7 +281,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 导航到学习计划页
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
       container
           .read(appRouterProvider)
@@ -310,7 +310,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 导航到精听播放器
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       final session =
@@ -363,7 +363,7 @@ void statsDisplayTests() {
       await safeSettle(tester);
 
       // 验证 Provider 中遍数递增（1 → 2）
-      final appContext2 = tester.element(find.byType(EchoLoopApp));
+      final appContext2 = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(appContext2);
       final progressState = container2.read(learningProgressNotifierProvider);
       final updatedProgress = progressState.progressMap['test-audio-1'];

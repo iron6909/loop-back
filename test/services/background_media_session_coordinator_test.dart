@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:echo_loop/services/background_audio_handler.dart';
-import 'package:echo_loop/services/media_session_router.dart';
+import 'package:loop_back/services/background_audio_handler.dart';
+import 'package:loop_back/services/media_session_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -22,7 +22,7 @@ void main() {
 
     expect(attempts, 1);
     expect(coordinator.isSystemSessionReady, isFalse);
-    expect(coordinator.handler, isA<EchoLoopAudioHandler>());
+    expect(coordinator.handler, isA<LoopBackAudioHandler>());
     expect(coordinator.router, isA<MediaSessionRouter>());
   });
 

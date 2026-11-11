@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_model_adapter.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_schedule.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_results.dart';
-import 'package:echo_loop/features/scheduled_flashcard/widgets/memory_rating_bar.dart';
-import 'package:echo_loop/features/scheduled_flashcard/widgets/flashcard_rating_action_bar.dart';
-import 'package:echo_loop/features/scheduled_flashcard/widgets/scheduled_flashcard_scaffold.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_model_adapter.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_schedule.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_results.dart';
+import 'package:loop_back/features/scheduled_flashcard/widgets/memory_rating_bar.dart';
+import 'package:loop_back/features/scheduled_flashcard/widgets/flashcard_rating_action_bar.dart';
+import 'package:loop_back/features/scheduled_flashcard/widgets/scheduled_flashcard_scaffold.dart';
 
 void main() {
   final now = DateTime.utc(2026, 1, 1);

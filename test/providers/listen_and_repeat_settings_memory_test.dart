@@ -5,11 +5,11 @@
 /// initialize 注入完整设置不持久、按「子阶段×轮次」分轮独立。
 library;
 
-import 'package:echo_loop/models/intensive_listen_settings.dart';
-import 'package:echo_loop/providers/intensive_listen_prefs_provider.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart'
+import 'package:loop_back/models/intensive_listen_settings.dart';
+import 'package:loop_back/providers/intensive_listen_prefs_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart'
     show sharedPreferencesProvider;
-import 'package:echo_loop/providers/listen_and_repeat/listen_and_repeat_settings_provider.dart';
+import 'package:loop_back/providers/listen_and_repeat/listen_and_repeat_settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

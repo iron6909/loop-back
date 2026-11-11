@@ -4,7 +4,7 @@
 /// 不是用实现再算一遍，避免自证式断言。
 library;
 
-import 'package:echo_loop/services/provider/provider_cache_key.dart';
+import 'package:loop_back/services/provider/provider_cache_key.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

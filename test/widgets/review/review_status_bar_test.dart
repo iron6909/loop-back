@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/widgets/review/review_status_bar.dart';
+import 'package:loop_back/widgets/review/review_status_bar.dart';
 
 void main() {
   testWidgets('renders elapsed time and reviewed count', (tester) async {

@@ -1,4 +1,4 @@
-import 'package:echo_loop/features/rating_prompt/domain/rating_prompt_policy.dart';
+import 'package:loop_back/features/rating_prompt/domain/rating_prompt_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -14,7 +14,7 @@ import '../models/study_stage.dart';
 
 /// 演示数据种子服务
 ///
-/// 负责在 `echo_loop_demo.db` 中写入精心设计的演示数据，
+/// 负责在 `loop_back_demo.db` 中写入精心设计的演示数据，
 /// 以及在 documents/demo/ 目录下生成 SRT 字幕文件。
 class DemoDataSeeder {
   final AppDatabase db;
@@ -445,7 +445,7 @@ class DemoDataSeeder {
     }
 
     // 删除演示数据库文件
-    final dbFile = File(p.join(docsDir.path, 'echo_loop_demo.db'));
+    final dbFile = File(p.join(docsDir.path, 'loop_back_demo.db'));
     if (await dbFile.exists()) {
       await dbFile.delete();
     }

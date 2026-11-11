@@ -3,15 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:mocktail/mocktail.dart';
 
-import 'package:echo_loop/services/background_audio_handler.dart';
+import 'package:loop_back/services/background_audio_handler.dart';
 
-/// just_audio 播放器的最小 mock：仅满足 [EchoLoopAudioHandler] 构造与
+/// just_audio 播放器的最小 mock：仅满足 [LoopBackAudioHandler] 构造与
 /// `_broadcastState` 读取的接口，不做真实播放。
 class _MockAudioPlayer extends Mock implements ja.AudioPlayer {}
 
 void main() {
   late _MockAudioPlayer player;
-  late EchoLoopAudioHandler handler;
+  late LoopBackAudioHandler handler;
 
   setUp(() {
     player = _MockAudioPlayer();
@@ -30,7 +30,7 @@ void main() {
     when(() => player.speed).thenReturn(1.0);
     when(() => player.play()).thenAnswer((_) async {});
     when(() => player.pause()).thenAnswer((_) async {});
-    handler = EchoLoopAudioHandler(player: player);
+    handler = LoopBackAudioHandler(player: player);
   });
 
   group('skip 回调', () {

@@ -3,7 +3,7 @@
 /// 验证词级时间戳仅依赖单词和时间范围，转录服务的额外字段会被忽略。
 library;
 
-import 'package:echo_loop/models/word_timestamp.dart';
+import 'package:loop_back/models/word_timestamp.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

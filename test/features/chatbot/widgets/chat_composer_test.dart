@@ -1,7 +1,7 @@
 /// ChatComposer 测试：发送清空 / 空文本禁用 / 停止切换 / 桌面 Enter。
 library;
 
-import 'package:echo_loop/features/chatbot/widgets/chat_composer.dart';
+import 'package:loop_back/features/chatbot/widgets/chat_composer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

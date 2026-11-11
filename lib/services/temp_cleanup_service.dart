@@ -72,9 +72,9 @@ Future<CleanupResult> cleanupStalePdfExportTemp({
 /// `study_pdf_export_service.dart`、`log_viewer_screen.dart` 的临时导出。
 const _ownCacheTempPrefixes = <String>[
   'audio_export_',
-  'echoloop_export_',
-  'echoloop_import_',
-  'echoloop_backup_',
+  'loopback_export_',
+  'loopback_import_',
+  'loopback_backup_',
   'pdf_export_',
   'log_export_',
 ];

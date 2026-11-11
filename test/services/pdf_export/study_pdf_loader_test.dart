@@ -4,10 +4,10 @@ import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/models/dict_entry.dart';
-import 'package:echo_loop/services/pdf_export/study_pdf_loader.dart';
-import 'package:echo_loop/utils/text_normalize.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/models/dict_entry.dart';
+import 'package:loop_back/services/pdf_export/study_pdf_loader.dart';
+import 'package:loop_back/utils/text_normalize.dart';
 
 /// 创建内存数据库用于测试
 AppDatabase _createTestDb() {

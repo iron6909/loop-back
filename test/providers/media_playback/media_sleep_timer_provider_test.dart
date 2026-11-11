@@ -2,9 +2,9 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/media_playback_state.dart';
-import 'package:echo_loop/providers/media_playback/media_playback_provider.dart';
-import 'package:echo_loop/providers/media_playback/media_sleep_timer_provider.dart';
+import 'package:loop_back/models/media_playback_state.dart';
+import 'package:loop_back/providers/media_playback/media_playback_provider.dart';
+import 'package:loop_back/providers/media_playback/media_sleep_timer_provider.dart';
 
 class _TestMediaPlayback extends MediaPlayback {
   int pauseCount = 0;

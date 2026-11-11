@@ -121,7 +121,7 @@ fi
 echo "[maestro-android] Installing dev APK on $DEVICE..."
 adb -s "$DEVICE" install -r -t "$APK_PATH"
 
-MAESTRO_APP_ID=app.echoloop.dev \
+MAESTRO_APP_ID=app.loopback.dev \
   MAESTRO_BIN="$MAESTRO_BIN" \
   MAESTRO_DEVICE_ID="$DEVICE" \
   scripts/test_maestro.sh "$FLOW_TARGET"

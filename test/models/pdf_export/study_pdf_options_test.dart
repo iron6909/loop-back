@@ -6,8 +6,8 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/pdf_export/study_pdf_data.dart';
-import 'package:echo_loop/models/pdf_export/study_pdf_options.dart';
+import 'package:loop_back/models/pdf_export/study_pdf_data.dart';
+import 'package:loop_back/models/pdf_export/study_pdf_options.dart';
 
 /// 构造一份三类内容齐全的测试文档
 StudyPdfDocument _fullDocument() {

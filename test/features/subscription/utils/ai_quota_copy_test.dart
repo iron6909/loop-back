@@ -1,11 +1,11 @@
 /// AI 额度提示文案映射测试。
 library;
 
-import 'package:echo_loop/features/subscription/models/premium_feature.dart';
-import 'package:echo_loop/features/subscription/models/ai_quota_rejection.dart';
-import 'package:echo_loop/features/subscription/utils/ai_quota_copy.dart';
-import 'package:echo_loop/l10n/app_localizations_en.dart';
-import 'package:echo_loop/l10n/app_localizations_zh.dart';
+import 'package:loop_back/features/subscription/models/premium_feature.dart';
+import 'package:loop_back/features/subscription/models/ai_quota_rejection.dart';
+import 'package:loop_back/features/subscription/utils/ai_quota_copy.dart';
+import 'package:loop_back/l10n/app_localizations_en.dart';
+import 'package:loop_back/l10n/app_localizations_zh.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

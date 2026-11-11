@@ -1,4 +1,4 @@
-package app.echoloop
+package app.loopback
 
 import android.Manifest
 import android.app.Activity
@@ -31,8 +31,8 @@ class AndroidSpeechPracticeHandler(
     EventChannel.StreamHandler,
     PluginRegistry.RequestPermissionsResultListener {
 
-    private val methodChannel = MethodChannel(binaryMessenger, "top.echo-loop/speech_practice")
-    private val eventChannel = EventChannel(binaryMessenger, "top.echo-loop/speech_practice/events")
+    private val methodChannel = MethodChannel(binaryMessenger, "top.loop-back/speech_practice")
+    private val eventChannel = EventChannel(binaryMessenger, "top.loop-back/speech_practice/events")
     private val mainHandler = Handler(Looper.getMainLooper())
 
     private var eventSink: EventChannel.EventSink? = null

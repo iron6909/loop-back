@@ -110,12 +110,6 @@ abstract class AppLocalizations {
   /// **'Your data couldn\'t load normally. Please retry. If the problem persists, contact us.'**
   String get startupLocalDataErrorMessage;
 
-  /// No description provided for @startupLocalDataContactUs.
-  ///
-  /// In en, this message translates to:
-  /// **'Contact us'**
-  String get startupLocalDataContactUs;
-
   /// No description provided for @startupLocalDataViewLogs.
   ///
   /// In en, this message translates to:
@@ -133,18 +127,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please try again later.'**
   String get playbackFailedMessage;
-
-  /// No description provided for @appTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Echo Loop'**
-  String get appTitle;
-
-  /// No description provided for @premiumTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Echo Loop Premium'**
-  String get premiumTitle;
 
   /// No description provided for @premiumTagline.
   ///
@@ -469,12 +451,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Purchase failed. Please try again.'**
   String get premiumPurchaseFailed;
-
-  /// No description provided for @premiumRestoreAccountMismatch.
-  ///
-  /// In en, this message translates to:
-  /// **'This subscription is linked to another Echo Loop account. Sign in to the original account and try again.'**
-  String get premiumRestoreAccountMismatch;
 
   /// No description provided for @premiumRestoreNone.
   ///
@@ -3590,18 +3566,6 @@ abstract class AppLocalizations {
   /// **'Use the built-in system speech recognition.No download needed'**
   String get asrBackendPlatformDescription;
 
-  /// No description provided for @asrBackendOffline.
-  ///
-  /// In en, this message translates to:
-  /// **'Echo Loop AI'**
-  String get asrBackendOffline;
-
-  /// No description provided for @asrBackendOfflineDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Use the app\'s AI model. It works offline after downloading'**
-  String get asrBackendOfflineDescription;
-
   /// No description provided for @asrBackendLocalWhisper.
   ///
   /// In en, this message translates to:
@@ -5330,48 +5294,6 @@ abstract class AppLocalizations {
   /// **'0 saved sentence, skipped'**
   String get autoCompletedNoDifficultReview;
 
-  /// No description provided for @termsOfService.
-  ///
-  /// In en, this message translates to:
-  /// **'Terms of Service'**
-  String get termsOfService;
-
-  /// No description provided for @privacyPolicy.
-  ///
-  /// In en, this message translates to:
-  /// **'Privacy Policy'**
-  String get privacyPolicy;
-
-  /// No description provided for @writeFeedback.
-  ///
-  /// In en, this message translates to:
-  /// **'Write Feedback'**
-  String get writeFeedback;
-
-  /// No description provided for @rateUs.
-  ///
-  /// In en, this message translates to:
-  /// **'Rate Us'**
-  String get rateUs;
-
-  /// No description provided for @joinCommunity.
-  ///
-  /// In en, this message translates to:
-  /// **'Join Community'**
-  String get joinCommunity;
-
-  /// No description provided for @aboutCommunity.
-  ///
-  /// In en, this message translates to:
-  /// **'Join Community'**
-  String get aboutCommunity;
-
-  /// No description provided for @joinCommunityInviteSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Learn, ask, and share'**
-  String get joinCommunityInviteSubtitle;
-
   /// No description provided for @networkError.
   ///
   /// In en, this message translates to:
@@ -6881,7 +6803,7 @@ abstract class AppLocalizations {
   /// No description provided for @guidePlanStartLearningDescription.
   ///
   /// In en, this message translates to:
-  /// **'Tap here to follow the default practice plan step by step. Echo Loop will guide you and remind you to review at the right time.'**
+  /// **'Tap here to follow the default practice plan step by step. LoopBack will guide you and remind you to review at the right time.'**
   String get guidePlanStartLearningDescription;
 
   /// No description provided for @guidePlanPauseLearningTitle.
@@ -7015,18 +6937,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New user guide has been reset'**
   String get resetNewUserGuideDone;
-
-  /// No description provided for @resetOnboarding.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset Onboarding Survey'**
-  String get resetOnboarding;
-
-  /// No description provided for @resetOnboardingDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Onboarding reset; please restart the app to retake the survey'**
-  String get resetOnboardingDone;
 
   /// No description provided for @discoverCommunityCollections.
   ///
@@ -7376,354 +7286,6 @@ abstract class AppLocalizations {
   /// **'Duration'**
   String get audioListColumnDuration;
 
-  /// No description provided for @onboardingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Quick chat'**
-  String get onboardingTitle;
-
-  /// No description provided for @onboardingSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'10 seconds to tailor your practice'**
-  String get onboardingSubtitle;
-
-  /// No description provided for @onboardingBack.
-  ///
-  /// In en, this message translates to:
-  /// **'Back'**
-  String get onboardingBack;
-
-  /// No description provided for @onboardingContinue.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue'**
-  String get onboardingContinue;
-
-  /// No description provided for @onboardingExamPrompt.
-  ///
-  /// In en, this message translates to:
-  /// **'Which exam are you currently preparing for?'**
-  String get onboardingExamPrompt;
-
-  /// No description provided for @onboardingExamGaokao.
-  ///
-  /// In en, this message translates to:
-  /// **'the Gaokao'**
-  String get onboardingExamGaokao;
-
-  /// No description provided for @onboardingExamCet.
-  ///
-  /// In en, this message translates to:
-  /// **'CET-4 / CET-6'**
-  String get onboardingExamCet;
-
-  /// No description provided for @onboardingExamTem.
-  ///
-  /// In en, this message translates to:
-  /// **'TEM-4 / TEM-8'**
-  String get onboardingExamTem;
-
-  /// No description provided for @onboardingExamIelts.
-  ///
-  /// In en, this message translates to:
-  /// **'IELTS'**
-  String get onboardingExamIelts;
-
-  /// No description provided for @onboardingExamToefl.
-  ///
-  /// In en, this message translates to:
-  /// **'TOEFL'**
-  String get onboardingExamToefl;
-
-  /// No description provided for @onboardingExamOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get onboardingExamOther;
-
-  /// No description provided for @onboardingProgress.
-  ///
-  /// In en, this message translates to:
-  /// **'{current} of {total}'**
-  String onboardingProgress(int current, int total);
-
-  /// No description provided for @onboardingNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get onboardingNext;
-
-  /// No description provided for @onboardingDone.
-  ///
-  /// In en, this message translates to:
-  /// **'Done'**
-  String get onboardingDone;
-
-  /// No description provided for @onboardingFinishedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'All set'**
-  String get onboardingFinishedTitle;
-
-  /// No description provided for @onboardingFinishedHint.
-  ///
-  /// In en, this message translates to:
-  /// **'We\'ll tailor practice to your goals and pace.'**
-  String get onboardingFinishedHint;
-
-  /// No description provided for @onboardingSummaryEyebrow.
-  ///
-  /// In en, this message translates to:
-  /// **'Did you know?'**
-  String get onboardingSummaryEyebrow;
-
-  /// No description provided for @onboardingSummaryHeadline.
-  ///
-  /// In en, this message translates to:
-  /// **'Improving listening & speaking\nisn\'t about practicing with more materials,\nit\'s about practicing more thoroughly.'**
-  String get onboardingSummaryHeadline;
-
-  /// No description provided for @onboardingSummaryPoint1.
-  ///
-  /// In en, this message translates to:
-  /// **'Practice with audio that matches your level'**
-  String get onboardingSummaryPoint1;
-
-  /// No description provided for @onboardingSummaryPoint2.
-  ///
-  /// In en, this message translates to:
-  /// **'Understand what you hear in chunks and master vocabulary in context.'**
-  String get onboardingSummaryPoint2;
-
-  /// No description provided for @onboardingSummaryPoint3.
-  ///
-  /// In en, this message translates to:
-  /// **'Develop a natural feel for English through extensive close listening and repetition.'**
-  String get onboardingSummaryPoint3;
-
-  /// No description provided for @onboardingSummaryPoint4.
-  ///
-  /// In en, this message translates to:
-  /// **'Practice speaking through retelling, and turn what you hear into what you can say.'**
-  String get onboardingSummaryPoint4;
-
-  /// No description provided for @onboardingStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Start Practicing'**
-  String get onboardingStart;
-
-  /// No description provided for @onboardingQ1Prompt.
-  ///
-  /// In en, this message translates to:
-  /// **'What\'s your main goal for improving your English listening & speaking?'**
-  String get onboardingQ1Prompt;
-
-  /// No description provided for @onboardingQ1OptionExam.
-  ///
-  /// In en, this message translates to:
-  /// **'For an exam'**
-  String get onboardingQ1OptionExam;
-
-  /// No description provided for @onboardingQ1OptionDaily.
-  ///
-  /// In en, this message translates to:
-  /// **'Daily conversation'**
-  String get onboardingQ1OptionDaily;
-
-  /// No description provided for @onboardingQ1OptionWork.
-  ///
-  /// In en, this message translates to:
-  /// **'Work'**
-  String get onboardingQ1OptionWork;
-
-  /// No description provided for @onboardingQ1OptionTravel.
-  ///
-  /// In en, this message translates to:
-  /// **'Travel abroad'**
-  String get onboardingQ1OptionTravel;
-
-  /// No description provided for @onboardingQ1OptionContent.
-  ///
-  /// In en, this message translates to:
-  /// **'Understanding videos & podcasts'**
-  String get onboardingQ1OptionContent;
-
-  /// No description provided for @onboardingQ1OptionOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get onboardingQ1OptionOther;
-
-  /// No description provided for @onboardingQ2Prompt.
-  ///
-  /// In en, this message translates to:
-  /// **'How long do you plan to practice each day?'**
-  String get onboardingQ2Prompt;
-
-  /// No description provided for @onboardingQ2Option5.
-  ///
-  /// In en, this message translates to:
-  /// **'About 5 min'**
-  String get onboardingQ2Option5;
-
-  /// No description provided for @onboardingQ2Option10.
-  ///
-  /// In en, this message translates to:
-  /// **'About 10 min'**
-  String get onboardingQ2Option10;
-
-  /// No description provided for @onboardingQ2Option20.
-  ///
-  /// In en, this message translates to:
-  /// **'About 20 min'**
-  String get onboardingQ2Option20;
-
-  /// No description provided for @onboardingQ2Option30.
-  ///
-  /// In en, this message translates to:
-  /// **'30 min or more'**
-  String get onboardingQ2Option30;
-
-  /// No description provided for @onboardingQ2OptionFlexible.
-  ///
-  /// In en, this message translates to:
-  /// **'It varies'**
-  String get onboardingQ2OptionFlexible;
-
-  /// No description provided for @onboardingQ3Prompt.
-  ///
-  /// In en, this message translates to:
-  /// **'How did you hear about us?'**
-  String get onboardingQ3Prompt;
-
-  /// No description provided for @onboardingQ3OptionAppStore.
-  ///
-  /// In en, this message translates to:
-  /// **'App Store'**
-  String get onboardingQ3OptionAppStore;
-
-  /// No description provided for @onboardingQ3OptionGooglePlay.
-  ///
-  /// In en, this message translates to:
-  /// **'Google Play'**
-  String get onboardingQ3OptionGooglePlay;
-
-  /// No description provided for @onboardingQ3OptionYoutube.
-  ///
-  /// In en, this message translates to:
-  /// **'YouTube'**
-  String get onboardingQ3OptionYoutube;
-
-  /// No description provided for @onboardingQ3OptionReddit.
-  ///
-  /// In en, this message translates to:
-  /// **'Reddit'**
-  String get onboardingQ3OptionReddit;
-
-  /// No description provided for @onboardingQ3OptionXTwitter.
-  ///
-  /// In en, this message translates to:
-  /// **'X / Twitter'**
-  String get onboardingQ3OptionXTwitter;
-
-  /// No description provided for @onboardingQ3OptionTiktok.
-  ///
-  /// In en, this message translates to:
-  /// **'TikTok'**
-  String get onboardingQ3OptionTiktok;
-
-  /// No description provided for @onboardingQ3OptionInstagram.
-  ///
-  /// In en, this message translates to:
-  /// **'Instagram'**
-  String get onboardingQ3OptionInstagram;
-
-  /// No description provided for @onboardingQ3OptionXiaohongshu.
-  ///
-  /// In en, this message translates to:
-  /// **'Xiaohongshu'**
-  String get onboardingQ3OptionXiaohongshu;
-
-  /// No description provided for @onboardingQ3OptionWechat.
-  ///
-  /// In en, this message translates to:
-  /// **'WeChat'**
-  String get onboardingQ3OptionWechat;
-
-  /// No description provided for @onboardingQ3OptionDouyin.
-  ///
-  /// In en, this message translates to:
-  /// **'Douyin'**
-  String get onboardingQ3OptionDouyin;
-
-  /// No description provided for @onboardingQ3OptionKuaishou.
-  ///
-  /// In en, this message translates to:
-  /// **'Kuaishou'**
-  String get onboardingQ3OptionKuaishou;
-
-  /// No description provided for @onboardingQ3OptionBilibili.
-  ///
-  /// In en, this message translates to:
-  /// **'Bilibili'**
-  String get onboardingQ3OptionBilibili;
-
-  /// No description provided for @onboardingQ3OptionBaiduSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Baidu search'**
-  String get onboardingQ3OptionBaiduSearch;
-
-  /// No description provided for @onboardingQ3OptionGoogleSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Google search'**
-  String get onboardingQ3OptionGoogleSearch;
-
-  /// No description provided for @onboardingQ3OptionGithub.
-  ///
-  /// In en, this message translates to:
-  /// **'GitHub'**
-  String get onboardingQ3OptionGithub;
-
-  /// No description provided for @onboardingQ3OptionFriend.
-  ///
-  /// In en, this message translates to:
-  /// **'word of mouth'**
-  String get onboardingQ3OptionFriend;
-
-  /// No description provided for @onboardingQ3OptionOther.
-  ///
-  /// In en, this message translates to:
-  /// **'Other'**
-  String get onboardingQ3OptionOther;
-
-  /// No description provided for @onboardingPermissionsHint.
-  ///
-  /// In en, this message translates to:
-  /// **'To ensure the best experience, we\'ll request these permissions'**
-  String get onboardingPermissionsHint;
-
-  /// No description provided for @onboardingPermissionsNotification.
-  ///
-  /// In en, this message translates to:
-  /// **'Notifications'**
-  String get onboardingPermissionsNotification;
-
-  /// No description provided for @onboardingPermissionsMicrophone.
-  ///
-  /// In en, this message translates to:
-  /// **'Microphone'**
-  String get onboardingPermissionsMicrophone;
-
-  /// No description provided for @onboardingPermissionsSpeech.
-  ///
-  /// In en, this message translates to:
-  /// **'Speech recognition'**
-  String get onboardingPermissionsSpeech;
-
   /// No description provided for @playbackSection.
   ///
   /// In en, this message translates to:
@@ -8053,12 +7615,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recording is not supported on this platform'**
   String get speechPermUnsupportedToast;
-
-  /// No description provided for @authSignInTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to Echo Loop'**
-  String get authSignInTitle;
 
   /// No description provided for @authChooseMethod.
   ///
@@ -8642,144 +8198,6 @@ abstract class AppLocalizations {
   /// **'Cloud Storage'**
   String get cloudDriveSourceShort;
 
-  /// No description provided for @baiduNetdisk.
-  ///
-  /// In en, this message translates to:
-  /// **'Baidu Netdisk'**
-  String get baiduNetdisk;
-
-  /// No description provided for @baiduNetdiskAllFiles.
-  ///
-  /// In en, this message translates to:
-  /// **'All Files'**
-  String get baiduNetdiskAllFiles;
-
-  /// No description provided for @baiduNetdiskWaitingAuthorization.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting for Baidu authorization...'**
-  String get baiduNetdiskWaitingAuthorization;
-
-  /// No description provided for @baiduNetdiskLoadingFiles.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading Baidu Netdisk files...'**
-  String get baiduNetdiskLoadingFiles;
-
-  /// No description provided for @baiduNetdiskImportFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Baidu Netdisk import failed.'**
-  String get baiduNetdiskImportFailed;
-
-  /// No description provided for @baiduNetdiskConnectTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect Baidu Netdisk'**
-  String get baiduNetdiskConnectTitle;
-
-  /// No description provided for @baiduNetdiskConnectDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Authorize Echo Loop to browse your Baidu Netdisk and import selected media files.'**
-  String get baiduNetdiskConnectDescription;
-
-  /// No description provided for @baiduNetdiskConnectAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Connect Baidu Netdisk'**
-  String get baiduNetdiskConnectAction;
-
-  /// No description provided for @baiduNetdiskLogoutTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign out of Baidu Netdisk'**
-  String get baiduNetdiskLogoutTooltip;
-
-  /// No description provided for @baiduNetdiskSelectAllAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Select'**
-  String get baiduNetdiskSelectAllAction;
-
-  /// No description provided for @baiduNetdiskClearSelectionAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear'**
-  String get baiduNetdiskClearSelectionAction;
-
-  /// No description provided for @baiduNetdiskLogoutTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign out of Baidu Netdisk?'**
-  String get baiduNetdiskLogoutTitle;
-
-  /// No description provided for @baiduNetdiskLogoutMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Echo Loop will clear the saved Baidu Netdisk authorization on this device.'**
-  String get baiduNetdiskLogoutMessage;
-
-  /// No description provided for @baiduNetdiskLogoutConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign Out'**
-  String get baiduNetdiskLogoutConfirm;
-
-  /// No description provided for @baiduNetdiskAccountTooltip.
-  ///
-  /// In en, this message translates to:
-  /// **'Baidu Netdisk account'**
-  String get baiduNetdiskAccountTooltip;
-
-  /// No description provided for @baiduNetdiskAccountTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Baidu Netdisk account'**
-  String get baiduNetdiskAccountTitle;
-
-  /// No description provided for @baiduNetdiskUsername.
-  ///
-  /// In en, this message translates to:
-  /// **'Baidu username'**
-  String get baiduNetdiskUsername;
-
-  /// No description provided for @baiduNetdiskNetdiskName.
-  ///
-  /// In en, this message translates to:
-  /// **'Netdisk nickname'**
-  String get baiduNetdiskNetdiskName;
-
-  /// No description provided for @baiduNetdiskMembership.
-  ///
-  /// In en, this message translates to:
-  /// **'Membership'**
-  String get baiduNetdiskMembership;
-
-  /// No description provided for @baiduNetdiskUserId.
-  ///
-  /// In en, this message translates to:
-  /// **'User ID'**
-  String get baiduNetdiskUserId;
-
-  /// No description provided for @baiduNetdiskUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Not provided'**
-  String get baiduNetdiskUnavailable;
-
-  /// No description provided for @baiduNetdiskDisconnect.
-  ///
-  /// In en, this message translates to:
-  /// **'Disconnect Baidu Netdisk'**
-  String get baiduNetdiskDisconnect;
-
-  /// No description provided for @baiduNetdiskNoSupportedAudio.
-  ///
-  /// In en, this message translates to:
-  /// **'No supported media files found in this folder.'**
-  String get baiduNetdiskNoSupportedAudio;
-
   /// No description provided for @importAudioShort.
   ///
   /// In en, this message translates to:
@@ -8809,30 +8227,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Import ({audioCount, plural, =0{} =1{1 item} other{{audioCount} items}}{subtitleCount, plural, =0{} =1{, 1 subtitle} other{, {subtitleCount} subtitles}})'**
   String importAudioAndSubtitleCount(int audioCount, int subtitleCount);
-
-  /// No description provided for @baiduNetdiskImporting.
-  ///
-  /// In en, this message translates to:
-  /// **'Importing...'**
-  String get baiduNetdiskImporting;
-
-  /// No description provided for @baiduNetdiskImportingFile.
-  ///
-  /// In en, this message translates to:
-  /// **'Importing {name}...'**
-  String baiduNetdiskImportingFile(String name);
-
-  /// No description provided for @baiduNetdiskImportedCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Imported {count} from Baidu Netdisk'**
-  String baiduNetdiskImportedCount(int count);
-
-  /// No description provided for @baiduNetdiskSkippedSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Skipped duplicates: {duplicates} · Failed: {failures}'**
-  String baiduNetdiskSkippedSummary(int duplicates, int failures);
 
   /// No description provided for @audioUrlLabel.
   ///
@@ -9365,7 +8759,7 @@ abstract class AppLocalizations {
   /// No description provided for @asrDeleteAllModelsConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.'**
+  /// **'Delete all downloaded LoopBack speech recognition models? You can re-download them anytime.'**
   String get asrDeleteAllModelsConfirm;
 
   /// No description provided for @asrDownloadedModelsTitle.
@@ -10817,7 +10211,7 @@ abstract class AppLocalizations {
   /// No description provided for @speechUploadNoticeBody.
   ///
   /// In en, this message translates to:
-  /// **'Echo Loop will upload the bundled 4-second English sample to {host}. Downstream inference provider: {provider}. The service may charge your account for this request. Your own recordings are not used.'**
+  /// **'LoopBack will upload the bundled 4-second English sample to {host}. Downstream inference provider: {provider}. The service may charge your account for this request. Your own recordings are not used.'**
   String speechUploadNoticeBody(String host, String provider);
 
   /// No description provided for @speechUploadProviderOpenRouter.

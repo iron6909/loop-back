@@ -7,80 +7,41 @@ import 'dart:io' show File;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher_platform_interface/link.dart';
-import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
-import 'package:echo_loop/providers/developer_options_provider.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
-import 'package:echo_loop/screens/settings_screen.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/features/user_region/user_region_providers.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/package_info_provider.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/providers/developer_options_provider.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/providers/tts/tts_settings_provider.dart';
+import 'package:loop_back/screens/settings_screen.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/features/user_region/user_region_providers.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/package_info_provider.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
+import 'package:loop_back/theme/app_theme.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
 
-class _FakeUrlLauncher extends UrlLauncherPlatform
-    with MockPlatformInterfaceMixin {
-  final List<LaunchOptions> options = [];
-  final List<String> urls = [];
-
-  @override
-  LinkDelegate? get linkDelegate => null;
-
-  @override
-  Future<bool> canLaunch(String url) async => true;
-
-  @override
-  Future<bool> launchUrl(String url, LaunchOptions launchOptions) async {
-    urls.add(url);
-    options.add(launchOptions);
-    return true;
-  }
-
-  @override
-  // ignore: deprecated_member_use
-  Future<bool> launch(
-    String url, {
-    required bool useSafariVC,
-    required bool useWebView,
-    required bool enableJavaScript,
-    required bool enableDomStorage,
-    required bool universalLinksOnly,
-    required Map<String, String> headers,
-    String? webOnlyWindowName,
-  }) async => true;
-}
-
 void main() {
   final testPackageInfo = PackageInfo(
-    appName: 'Echo Loop',
-    packageName: 'top.echo-loop',
+    appName: 'LoopBack',
+    packageName: 'top.loop-back',
     version: '1.0.0',
     buildNumber: '1',
   );
 
   // 词典设置等同步读取 SharedPreferences 的 provider 需注入实例
   late SharedPreferences prefs;
-  late _FakeUrlLauncher urlLauncher;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
-    urlLauncher = _FakeUrlLauncher();
-    UrlLauncherPlatform.instance = urlLauncher;
   });
 
   List<Override> buildOverrides({
@@ -162,11 +123,11 @@ void main() {
           createTestScreen(const SettingsScreen(), overrides: buildOverrides()),
         );
         await tester.pumpAndSettle();
-        await tester.ensureVisible(find.text('Review Reminder'));
+        await tester.ensureVisible(find.text('Playback Settings'));
         await tester.pumpAndSettle();
         expect(
           tester.getTopLeft(find.text('AI service')).dx,
-          tester.getTopLeft(find.text('Review Reminder')).dx,
+          tester.getTopLeft(find.text('Playback Settings')).dx,
         );
       });
 
@@ -280,11 +241,6 @@ void main() {
 
         await tester.scrollUntilVisible(find.text('About'), 200);
         await tester.pumpAndSettle();
-        expect(findSvgAsset('assets/icon/documents.svg'), findsOneWidget);
-        expect(findSvgAsset('assets/icon/lock.svg'), findsOneWidget);
-        expect(findSvgAsset('assets/icon/feedback.svg'), findsOneWidget);
-        expect(findSvgAsset('assets/icon/help.svg'), findsOneWidget);
-        expect(findSvgAsset('assets/icon/group.svg'), findsOneWidget);
 
         await tester.scrollUntilVisible(find.text('Backup & Restore'), 200);
         await tester.pumpAndSettle();
@@ -344,12 +300,6 @@ void main() {
         await tester.scrollUntilVisible(find.text('Open Source Project'), 200);
         await tester.pumpAndSettle();
 
-        final groupIcon = tester.widget<SvgPicture>(
-          findSvgAsset('assets/icon/group.svg'),
-        );
-        expect(groupIcon.width, 26);
-        expect(groupIcon.height, 26);
-
         final githubIcons = tester.widgetList<FaIcon>(find.byType(FaIcon));
         expect(githubIcons, hasLength(1));
         expect(githubIcons.single.size, 20);
@@ -377,10 +327,6 @@ void main() {
           'assets/icon/speak.svg',
           'assets/icon/microphone.svg',
           'assets/icon/play-pause.svg',
-          'assets/icon/lock.svg',
-          'assets/icon/feedback.svg',
-          'assets/icon/group.svg',
-          'assets/icon/help.svg',
           'assets/icon/trash-bin.svg',
         ];
 
@@ -405,52 +351,17 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('About'), findsOneWidget);
-        expect(find.text('Terms of Service'), findsOneWidget);
-        expect(find.text('Privacy Policy'), findsOneWidget);
-        expect(find.text('FAQ'), findsOneWidget);
-        expect(find.text('Write Feedback'), findsOneWidget);
-        expect(find.text('Join Community'), findsOneWidget);
+        expect(find.text('Terms of Service'), findsNothing);
+        expect(find.text('Privacy Policy'), findsNothing);
+        expect(find.text('FAQ'), findsNothing);
+        expect(find.text('Write Feedback'), findsNothing);
+        expect(find.text('Join Community'), findsNothing);
         expect(find.text('Open Source Project'), findsOneWidget);
-        expect(find.text('github.com/echo-loop/Echo-Loop'), findsNothing);
+        expect(find.text('github.com/iron6909/loop-back'), findsNothing);
         // 版本标签在页面底部，需要滚动到可见
         await tester.scrollUntilVisible(find.textContaining('Version'), 200);
         await tester.pumpAndSettle();
         expect(find.text('Version 1.0.0 (Debug)'), findsOneWidget);
-      });
-
-      testWidgets('iOS 显示评价我们入口', (tester) async {
-        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
-        try {
-          await tester.pumpWidget(
-            createTestScreen(
-              const SettingsScreen(),
-              overrides: buildOverrides(),
-            ),
-          );
-          await tester.pumpAndSettle();
-          await tester.scrollUntilVisible(find.text('Rate Us'), 200);
-
-          expect(find.text('Rate Us'), findsOneWidget);
-        } finally {
-          debugDefaultTargetPlatformOverride = null;
-        }
-      });
-
-      testWidgets('非 iOS 不显示评价我们入口', (tester) async {
-        debugDefaultTargetPlatformOverride = TargetPlatform.android;
-        try {
-          await tester.pumpWidget(
-            createTestScreen(
-              const SettingsScreen(),
-              overrides: buildOverrides(),
-            ),
-          );
-          await tester.pumpAndSettle();
-
-          expect(find.text('Rate Us'), findsNothing);
-        } finally {
-          debugDefaultTargetPlatformOverride = null;
-        }
       });
 
       testWidgets('显示外观标题', (tester) async {
@@ -475,7 +386,29 @@ void main() {
         expect(find.text('Speech Recognition'), findsOneWidget);
       });
 
-      testWidgets('语音合成入口显示当前 Echo Loop 引擎，不显示口音', (tester) async {
+      testWidgets('学习分组顺序：AI 服务在语音识别上方，播放设置在显示设置下方', (tester) async {
+        await tester.pumpWidget(
+          createTestScreen(
+            const SettingsScreen(),
+            overrides: buildOverrides(showOfflineAsrSection: true),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.ensureVisible(find.text('AI service'));
+        await tester.pumpAndSettle();
+
+        final aiY = tester.getTopLeft(find.text('AI service')).dy;
+        final asrY = tester.getTopLeft(find.text('Speech Recognition')).dy;
+        final displayY = tester.getTopLeft(find.text('Display Settings')).dy;
+        final playbackY = tester.getTopLeft(find.text('Playback Settings')).dy;
+
+        expect(aiY, lessThan(asrY));
+        expect(playbackY, greaterThan(displayY));
+        // 播放设置紧随显示设置之后，且位于 AI 服务上方
+        expect(playbackY, lessThan(aiY));
+      });
+
+      testWidgets('语音合成入口显示当前 LoopBack 引擎，不显示口音', (tester) async {
         await tester.pumpWidget(
           createTestScreen(const SettingsScreen(), overrides: buildOverrides()),
         );
@@ -486,7 +419,7 @@ void main() {
         expect(find.text('American'), findsNothing);
       });
 
-      testWidgets('语音合成入口显示 Echo Loop 引擎', (tester) async {
+      testWidgets('语音合成入口显示 LoopBack 引擎', (tester) async {
         await tester.pumpWidget(
           createTestScreen(
             const SettingsScreen(),
@@ -539,7 +472,6 @@ void main() {
             'Time Machine',
             '日志',
             'Reset New User Guide',
-            'Reset Onboarding Survey',
             'Demo Mode',
             '词典查询',
             '偏好设置',
@@ -599,26 +531,6 @@ void main() {
     });
 
     group('交互', () {
-      testWidgets('点击 FAQ 后使用系统外部浏览器打开帮助文档', (tester) async {
-        await tester.pumpWidget(
-          createTestScreen(const SettingsScreen(), overrides: buildOverrides()),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.drag(find.byType(ListView), const Offset(0, -600));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('FAQ'));
-        await tester.pump();
-
-        expect(urlLauncher.urls, [
-          'https://my.feishu.cn/docx/OPZRdXkRvoAW5Bx78LocBUdqn80',
-        ]);
-        expect(
-          urlLauncher.options.single.mode,
-          PreferredLaunchMode.externalApplication,
-        );
-      });
-
       testWidgets('点击主题设置弹出选择对话框', (tester) async {
         await tester.pumpWidget(
           createTestScreen(const SettingsScreen(), overrides: buildOverrides()),

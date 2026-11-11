@@ -43,9 +43,9 @@ const _spPrefixBlacklist = [
   'speech_capability_',
 ];
 
-const _dbFileName = 'echo_loop.db';
+const _dbFileName = 'loop_back.db';
 const _v3DatabaseEntry = 'database.sqlite';
-const _legacyDatabaseEntry = 'echo_loop.db';
+const _legacyDatabaseEntry = 'loop_back.db';
 const _v3SettingsEntry = 'settings.json';
 const _legacySettingsEntry = 'preferences.json';
 const _manifestEntry = 'manifest.json';
@@ -90,7 +90,7 @@ class BackupService {
   }) async {
     final stopwatch = Stopwatch()..start();
     final dataDir = await getAppDataDirectory();
-    final scratchDir = await _createTempDir('echoloop_export');
+    final scratchDir = await _createTempDir('loopback_export');
     final timestamp = DateTime.now()
         .toUtc()
         .toIso8601String()
@@ -101,7 +101,7 @@ class BackupService {
     final finalFile = File(
       p.join(
         outputDirectory.path,
-        'echoloop_backup_$timestamp.$backupFileExtension',
+        'loopback_backup_$timestamp.$backupFileExtension',
       ),
     );
     final partialFile = File('${finalFile.path}.part');
@@ -205,7 +205,7 @@ class BackupService {
   }) async {
     final stopwatch = Stopwatch()..start();
     onProgress?.call(const BackupProgress(stage: 'importingExtracting'));
-    final tempDir = await _createTempDir('echoloop_import');
+    final tempDir = await _createTempDir('loopback_import');
     _log('prepare_import_start zipPath=$zipPath tempDir=${tempDir.path}');
     try {
       final tempPath = tempDir.path;
@@ -918,10 +918,10 @@ String? _tryNormalizeDataPath(String rawPath) {
     return null;
   }
   const reservedRoots = {
-    'echo_loop.db',
-    'echo_loop.db-wal',
-    'echo_loop.db-shm',
-    'echo_loop_demo.db',
+    'loop_back.db',
+    'loop_back.db-wal',
+    'loop_back.db-shm',
+    'loop_back_demo.db',
     'dictionary',
     'tmp',
     'cache',

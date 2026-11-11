@@ -1,9 +1,9 @@
 /// 句内分词与词级选区纯逻辑测试
 library;
 
-import 'package:echo_loop/utils/saved_text_index.dart';
-import 'package:echo_loop/utils/text_normalize.dart';
-import 'package:echo_loop/widgets/practice/sentence_word_selection.dart';
+import 'package:loop_back/utils/saved_text_index.dart';
+import 'package:loop_back/utils/text_normalize.dart';
+import 'package:loop_back/widgets/practice/sentence_word_selection.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

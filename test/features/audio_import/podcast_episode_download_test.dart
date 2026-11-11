@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/features/audio_import/audio_import_models.dart';
-import 'package:echo_loop/features/audio_import/audio_import_provider.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/audio_import/audio_import_service.dart';
-import 'package:echo_loop/features/podcast/podcast_transcript_downloader.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
+import 'package:loop_back/features/audio_import/audio_import_models.dart';
+import 'package:loop_back/features/audio_import/audio_import_provider.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/features/audio_import/audio_import_service.dart';
+import 'package:loop_back/features/podcast/podcast_transcript_downloader.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
 
 import '../../helpers/mock_providers.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/utils/stopwords.dart';
+import 'package:loop_back/utils/stopwords.dart';
 
 void main() {
   group('isStopword', () {

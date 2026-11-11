@@ -4,11 +4,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/common/masked_sentence_tile.dart';
-import 'package:echo_loop/widgets/common/paragraph_sentence_list_card.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/common/masked_sentence_tile.dart';
+import 'package:loop_back/widgets/common/paragraph_sentence_list_card.dart';
 
 import '../../helpers/test_app.dart';
 

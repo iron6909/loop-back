@@ -3,9 +3,9 @@ library;
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:echo_loop/providers/sentence_ai_provider.dart';
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/structured_ai_client.dart';
+import 'package:loop_back/providers/sentence_ai_provider.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/structured_ai_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import '../helpers/provider_fixture.dart';
 

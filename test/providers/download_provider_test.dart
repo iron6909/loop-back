@@ -1,6 +1,6 @@
 import 'dart:ui' show Locale;
 
-import 'package:echo_loop/providers/download_provider.dart';
+import 'package:loop_back/providers/download_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

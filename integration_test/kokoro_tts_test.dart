@@ -1,4 +1,4 @@
-/// Echo Loop TTS（Kokoro）端到端集成测试。
+/// LoopBack TTS（Kokoro）端到端集成测试。
 ///
 /// 从 CDN 下载真实 Kokoro int8 模型（首次较慢，缓存到 app support 跨次复用；
 /// 下载失败则跳过），跑真实 sherpa-onnx native 合成，验证：
@@ -17,13 +17,13 @@ import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/services/tts/kokoro_model_manager.dart';
-import 'package:echo_loop/services/tts/kokoro_tts_engine.dart';
-import 'package:echo_loop/services/tts/tts_cache_store.dart';
-import 'package:echo_loop/services/tts/tts_coordinator.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/services/tts/kokoro_model_manager.dart';
+import 'package:loop_back/services/tts/kokoro_tts_engine.dart';
+import 'package:loop_back/services/tts/tts_cache_store.dart';
+import 'package:loop_back/services/tts/tts_coordinator.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
 
 /// 包装真实引擎，统计 synthesize 调用次数（验证缓存命中不重复合成）。
 class _CountingEngine implements TtsEngine {
@@ -189,7 +189,7 @@ void main() {
       );
       await coordinator.configure(TtsEngineKind.kokoro, config);
 
-      const text = 'Learning English with Echo Loop is really fun.';
+      const text = 'Learning English with LoopBack is really fun.';
 
       // 首次：未命中 → 合成 → 入库 → 播放完成。
       final played1 = await coordinator.speak(text);

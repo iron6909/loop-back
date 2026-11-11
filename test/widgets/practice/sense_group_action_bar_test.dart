@@ -1,5 +1,5 @@
-import 'package:echo_loop/widgets/practice/sense_group_action_bar.dart';
-import 'package:echo_loop/widgets/selection/selection_toolbar.dart';
+import 'package:loop_back/widgets/practice/sense_group_action_bar.dart';
+import 'package:loop_back/widgets/selection/selection_toolbar.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

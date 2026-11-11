@@ -3,17 +3,17 @@ library;
 
 import 'dart:async';
 
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/provider_configuration_provider.dart';
-import 'package:echo_loop/providers/recognition_settings_provider.dart';
-import 'package:echo_loop/providers/speech_configuration_provider.dart';
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/provider_config_store.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_config_store.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/providers/provider_configuration_provider.dart';
+import 'package:loop_back/providers/recognition_settings_provider.dart';
+import 'package:loop_back/providers/speech_configuration_provider.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/provider_config_store.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_config_store.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,8 +31,8 @@ String _secureKeyName(Invocation invocation) {
   return name;
 }
 
-const _sentinelSpeechKey = 'sk-speech-sentinel-4b7d';
-const _sentinelTextKey = 'sk-text-sentinel-0c21';
+const _sentinelSpeechKey = 'spk-4b7d';
+const _sentinelTextKey = 'txt-0c21';
 const _base = 'whisper-base-en-int8';
 
 AsrModelInfo _model(String id) =>

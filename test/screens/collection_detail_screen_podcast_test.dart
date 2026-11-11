@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:echo_loop/features/podcast/podcast_models.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/features/podcast/podcast_repository.dart';
-import 'package:echo_loop/features/podcast/widgets/podcast_feed_summary_header.dart';
-import 'package:echo_loop/features/community_collections/widgets/community_collection_header.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/screens/collection_detail_screen.dart';
+import 'package:loop_back/features/podcast/podcast_models.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/features/podcast/podcast_repository.dart';
+import 'package:loop_back/features/podcast/widgets/podcast_feed_summary_header.dart';
+import 'package:loop_back/features/community_collections/widgets/community_collection_header.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/screens/collection_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

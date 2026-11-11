@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/temp_cleanup_service.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/services/temp_cleanup_service.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 
 /// 设置目录修改时间（Directory 无 setLastModifiedSync，借助系统 touch）
 void setDirMtime(Directory dir, DateTime time) {
@@ -146,7 +146,7 @@ void main() {
   group('cleanupAllTempFiles', () {
     test('清理备份流程遗留的最终备份文件', () async {
       final backup = File(
-        '${fakeCacheDir.path}/echoloop_backup_20260713.elbak',
+        '${fakeCacheDir.path}/loopback_backup_20260713.elbak',
       );
       await backup.writeAsBytes(List<int>.filled(32, 1));
 
@@ -167,10 +167,10 @@ void main() {
     });
 
     test('Library/Caches 只删 app 自建导出/导入临时目录', () async {
-      final exportDir = Directory('${fakeCacheDir.path}/echoloop_export_123')
+      final exportDir = Directory('${fakeCacheDir.path}/loopback_export_123')
         ..createSync();
       File('${exportDir.path}/data.zip').writeAsBytesSync(List.filled(5000, 0));
-      final importDir = Directory('${fakeCacheDir.path}/echoloop_import_9')
+      final importDir = Directory('${fakeCacheDir.path}/loopback_import_9')
         ..createSync();
       File('${importDir.path}/x.bin').writeAsBytesSync(List.filled(100, 0));
       final audioExportDir = Directory('${fakeCacheDir.path}/audio_export_7')
@@ -210,7 +210,7 @@ void main() {
       // 系统 URLCache：<bundleId>/Cache.db* 及散落的 Cache.db 文件
       final cacheDbFile = File('${fakeCacheDir.path}/Cache.db');
       cacheDbFile.writeAsBytesSync(List.filled(1000, 0));
-      final urlCacheDir = Directory('${fakeCacheDir.path}/top.echo-loop.dev')
+      final urlCacheDir = Directory('${fakeCacheDir.path}/top.loop-back.dev')
         ..createSync();
       File(
         '${urlCacheDir.path}/Cache.db',

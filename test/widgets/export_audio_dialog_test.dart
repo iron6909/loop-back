@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/widgets/dialogs/export_audio_dialog.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
+import 'package:loop_back/widgets/dialogs/export_audio_dialog.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 /// 包装测试 Widget，提供 MaterialApp 和国际化支持

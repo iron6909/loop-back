@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/analytics/models/event_names.dart';
+import 'package:loop_back/analytics/models/event_names.dart';
 
 void main() {
   group('Events 常量', () {

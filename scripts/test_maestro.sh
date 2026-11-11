@@ -3,9 +3,9 @@
 # 不在此脚本中构建或启动设备，避免自动化测试意外占用本地开发设备。
 #
 # 用法：
-#   MAESTRO_APP_ID=app.echoloop.dev scripts/test_maestro.sh
-#   MAESTRO_APP_ID=top.echo-loop.dev scripts/test_maestro.sh maestro/smoke/first_launch.yaml
-#   MAESTRO_APP_ID=app.echoloop.dev MAESTRO_DEVICE_ID=<设备序列号> scripts/test_maestro.sh maestro/study
+#   MAESTRO_APP_ID=app.loopback.dev scripts/test_maestro.sh
+#   MAESTRO_APP_ID=top.loop-back.dev scripts/test_maestro.sh maestro/smoke/first_launch.yaml
+#   MAESTRO_APP_ID=app.loopback.dev MAESTRO_DEVICE_ID=<设备序列号> scripts/test_maestro.sh maestro/study
 
 set -euo pipefail
 
@@ -25,7 +25,7 @@ else
 fi
 
 if [[ -z "${MAESTRO_APP_ID:-}" ]]; then
-  echo "[maestro] 请设置 MAESTRO_APP_ID，例如 Android 开发包为 app.echoloop.dev。" >&2
+  echo "[maestro] 请设置 MAESTRO_APP_ID，例如 Android 开发包为 app.loopback.dev。" >&2
   exit 2
 fi
 

@@ -2,9 +2,9 @@ import 'package:drift/native.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/services/study_time_service.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/services/study_time_service.dart';
 
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();

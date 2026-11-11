@@ -4,14 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/models/blind_listen_settings.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart'
+import 'package:loop_back/models/blind_listen_settings.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart'
     show ShadowingControlMode;
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/providers/learning_session/blind_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_session/paragraph_playback_driver.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/providers/learning_session/blind_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_session/paragraph_playback_driver.dart';
 import '../helpers/mock_providers.dart';
 
 /// 测试用段落驱动器：支持 session 管理和模拟播放。

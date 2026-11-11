@@ -8,7 +8,7 @@
 /// - copyWith / == / hashCode
 library;
 
-import 'package:echo_loop/providers/learning_settings_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';

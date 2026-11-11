@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
-import 'package:echo_loop/models/pronunciation/pronunciation_clip.dart';
-import 'package:echo_loop/services/pronunciation/pronunciation_repository.dart';
+import 'package:loop_back/models/pronunciation/pronunciation_clip.dart';
+import 'package:loop_back/services/pronunciation/pronunciation_repository.dart';
 
 void main() {
   test('reason 解析覆盖受控后缀和 interj', () {

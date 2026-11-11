@@ -5,7 +5,6 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
 }
 
 val keystoreProperties = Properties().apply {
@@ -16,7 +15,7 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "app.echoloop"
+    namespace = "app.loopback"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -32,7 +31,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "app.echoloop"
+        applicationId = "app.loopback"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // ffmpeg_kit_flutter_new_audio requires Android API 24+.
@@ -83,8 +82,8 @@ android {
     }
 
     // 与 iOS 的 dev / prod scheme 保持一致：
-    // dev  -> app.echoloop.dev  / "Echo Loop Dev"
-    // prod -> app.echoloop      / "Echo Loop"
+    // dev  -> app.loopback.dev  / "LoopBack Dev"
+    // prod -> app.loopback      / "LoopBack"
     // 这里按 flavor 固定签名：dev 使用 debug 证书，prod 使用 release 证书。
     // 这样同一个 package 的 debug / release 会保持同一把签名，便于 Google 登录配置。
     flavorDimensions += "env"
@@ -92,11 +91,11 @@ android {
         create("dev") {
             dimension = "env"
             applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "Echo Loop Dev")
+            resValue("string", "app_name", "LoopBack Dev")
         }
         create("prod") {
             dimension = "env"
-            resValue("string", "app_name", "Echo Loop")
+            resValue("string", "app_name", "LoopBack")
         }
     }
 }

@@ -8,26 +8,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/features/community_collections/community_collection_routes.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/package_info_provider.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/features/community_collections/community_collection_routes.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/package_info_provider.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/theme/app_theme.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../helpers/mock_providers.dart';
 
 void main() {
   final testPackageInfo = PackageInfo(
-    appName: 'Echo Loop',
-    packageName: 'top.echo-loop',
+    appName: 'LoopBack',
+    packageName: 'top.loop-back',
     version: '1.0.0',
     buildNumber: '1',
   );

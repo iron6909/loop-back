@@ -5,16 +5,16 @@ import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/recognition_settings_provider.dart';
-import 'package:echo_loop/providers/retell_recording_controller_provider.dart';
-import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
-import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech_practice_platform.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/providers/recognition_settings_provider.dart';
+import 'package:loop_back/providers/retell_recording_controller_provider.dart';
+import 'package:loop_back/providers/retell_review_evaluation_provider.dart';
+import 'package:loop_back/services/speech/practice_chunk_transcriber.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech_practice_platform.dart';
 
 import '../helpers/mock_providers.dart';
 

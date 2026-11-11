@@ -7,14 +7,14 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/main.dart';
-import 'package:echo_loop/providers/learning_session/blind_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/screens/blind_listen_player_screen.dart';
-import 'package:echo_loop/widgets/common/countdown_chip.dart';
-import 'package:echo_loop/widgets/common/playback_controls.dart';
-import 'package:echo_loop/widgets/dialogs/step_complete_dialog.dart';
+import 'package:loop_back/main.dart';
+import 'package:loop_back/providers/learning_session/blind_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/screens/blind_listen_player_screen.dart';
+import 'package:loop_back/widgets/common/countdown_chip.dart';
+import 'package:loop_back/widgets/common/playback_controls.dart';
+import 'package:loop_back/widgets/dialogs/step_complete_dialog.dart';
 
 import '../helpers/test_notifiers.dart';
 
@@ -28,7 +28,7 @@ void blindListenTests() {
     /// 导航到盲听播放器的辅助方法
     Future<void> navigateToBlindListen(WidgetTester tester) async {
       await safeSettle(tester);
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
       container.read(appRouterProvider).push(
         '/collections/test-collection-1/test-audio-1/blind-listen',

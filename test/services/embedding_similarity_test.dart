@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:echo_loop/services/embedding_similarity.dart';
-import 'package:echo_loop/services/text_embedding_platform.dart';
+import 'package:loop_back/services/embedding_similarity.dart';
+import 'package:loop_back/services/text_embedding_platform.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

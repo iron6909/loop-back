@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/utils/audio_content_check.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/utils/audio_content_check.dart';
 
 void main() {
   group('evaluateAudioContent', () {

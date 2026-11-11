@@ -5,11 +5,11 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:echo_loop/services/tts/tts_cache_store.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/tts/tts_coordinator.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/services/tts/tts_cache_store.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/tts/tts_coordinator.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
 
 class MockTtsEngine extends Mock implements TtsEngine {}
 
@@ -128,7 +128,7 @@ void main() {
       expect(logs, contains(contains('模型预热完成：目标=platform/system')));
     });
 
-    test('Kokoro 实现日志不暴露 Echo Loop 产品名', () async {
+    test('Kokoro 实现日志不暴露 LoopBack 产品名', () async {
       final c = build();
       await c.configure(TtsEngineKind.kokoro, _config);
       await c.speak('hi');
@@ -547,7 +547,7 @@ void main() {
       verify(() => player.playFile('/tmp/out.wav')).called(1);
     });
 
-    test('当前为平台引擎时，speakWith Echo Loop 会切到 Echo Loop 引擎合成', () async {
+    test('当前为平台引擎时，speakWith LoopBack 会切到 LoopBack 引擎合成', () async {
       final platformEngine = MockTtsEngine();
       final echoEngine = MockTtsEngine();
       _stubEngine(platformEngine, filePath: '/tmp/platform.wav');

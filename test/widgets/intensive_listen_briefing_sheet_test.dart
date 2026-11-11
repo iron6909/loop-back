@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/stage_settings_overrides.dart'
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/stage_settings_overrides.dart'
     show BriefingPauseChoice;
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/widgets/intensive_listen/intensive_listen_briefing_sheet.dart';
-import 'package:echo_loop/widgets/common/briefing_action_row.dart';
-import 'package:echo_loop/widgets/study/study_stage_visuals.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/widgets/intensive_listen/intensive_listen_briefing_sheet.dart';
+import 'package:loop_back/widgets/common/briefing_action_row.dart';
+import 'package:loop_back/widgets/study/study_stage_visuals.dart';
 
 import '../helpers/test_app.dart';
 

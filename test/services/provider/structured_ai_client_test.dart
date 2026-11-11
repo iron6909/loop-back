@@ -9,12 +9,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/models/sentence_ai_result.dart';
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/provider_http_client.dart';
-import 'package:echo_loop/services/provider/structured_ai_client.dart';
-import 'package:echo_loop/services/provider/structured_prompts.dart';
-import 'package:echo_loop/services/provider/structured_result_validator.dart';
+import 'package:loop_back/models/sentence_ai_result.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/provider_http_client.dart';
+import 'package:loop_back/services/provider/structured_ai_client.dart';
+import 'package:loop_back/services/provider/structured_prompts.dart';
+import 'package:loop_back/services/provider/structured_result_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 记录请求、按队列回放响应，并支持挂起以模拟在途请求。

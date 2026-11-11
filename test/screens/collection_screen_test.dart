@@ -5,14 +5,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/screens/library_screen.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/features/user_region/user_region_providers.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/screens/library_screen.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/features/user_region/user_region_providers.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
@@ -404,7 +404,7 @@ void main() {
 
     group('交互', () {
       testWidgets('从创建菜单导入文件夹，可取消、重选和返回', (tester) async {
-        const channel = MethodChannel('top.echo-loop/local_audio_picker');
+        const channel = MethodChannel('top.loop-back/local_audio_picker');
         final messenger =
             TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
         Object? directory;

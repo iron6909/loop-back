@@ -8,13 +8,13 @@ library;
 
 import 'dart:async';
 
-import 'package:echo_loop/database/app_database.dart'
+import 'package:loop_back/database/app_database.dart'
     show AudioItem, Bookmark, BookmarksCompanion, SavedWord;
-import 'package:echo_loop/database/daos/audio_item_dao.dart';
-import 'package:echo_loop/database/daos/bookmark_dao.dart'
+import 'package:loop_back/database/daos/audio_item_dao.dart';
+import 'package:loop_back/database/daos/bookmark_dao.dart'
     show BookmarkDao, BookmarkWithAudio;
-import 'package:echo_loop/database/daos/saved_word_dao.dart';
-import 'package:echo_loop/database/daos/stage_completion_dao.dart'
+import 'package:loop_back/database/daos/saved_word_dao.dart';
+import 'package:loop_back/database/daos/stage_completion_dao.dart'
     show StageCompletionDao, RecentCompletion;
 
 // ========== FakeAudioItemDao ==========

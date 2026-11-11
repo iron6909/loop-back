@@ -15,71 +15,71 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 
 // Re-export types used by wrapper classes (needed because Dart doesn't re-export transitive imports)
-export 'package:echo_loop/providers/settings_provider.dart'
+export 'package:loop_back/providers/settings_provider.dart'
     show AppSettingsState;
-export 'package:echo_loop/providers/audio_library_provider.dart'
+export 'package:loop_back/providers/audio_library_provider.dart'
     show AudioLibraryState;
-export 'package:echo_loop/providers/collection_provider.dart'
+export 'package:loop_back/providers/collection_provider.dart'
     show CollectionState;
-export 'package:echo_loop/providers/tag_provider.dart' show TagState;
-export 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart'
+export 'package:loop_back/providers/tag_provider.dart' show TagState;
+export 'package:loop_back/providers/listening_practice/listening_practice_provider.dart'
     show ListeningPracticeState;
-export 'package:echo_loop/providers/learning_progress_provider.dart'
+export 'package:loop_back/providers/learning_progress_provider.dart'
     show LearningProgressState;
-export 'package:echo_loop/providers/learning_session/learning_session_provider.dart'
+export 'package:loop_back/providers/learning_session/learning_session_provider.dart'
     show LearningSessionState;
-export 'package:echo_loop/providers/learning_session/blind_listen_player_provider.dart'
+export 'package:loop_back/providers/learning_session/blind_listen_player_provider.dart'
     show BlindListenPlayerState;
-export 'package:echo_loop/providers/learning_session/intensive_listen_player_provider.dart'
+export 'package:loop_back/providers/learning_session/intensive_listen_player_provider.dart'
     show IntensiveListenState;
-export 'package:echo_loop/providers/learning_session/retell_player_provider.dart'
+export 'package:loop_back/providers/learning_session/retell_player_provider.dart'
     show RetellPlayerState;
-export 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart'
+export 'package:loop_back/providers/learning_session/review_difficult_practice_provider.dart'
     show ReviewDifficultPracticeState;
-export 'package:echo_loop/providers/offline_asr_settings_provider.dart'
+export 'package:loop_back/providers/offline_asr_settings_provider.dart'
     show OfflineAsrSettingsState, AsrBackend;
-export 'package:echo_loop/services/asr/offline_asr_engine.dart'
+export 'package:loop_back/services/asr/offline_asr_engine.dart'
     show AsrModelInfo, AsrModelType;
-export 'package:echo_loop/database/app_database.dart' show SavedWord;
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/audio_engine_state.dart';
-import 'package:echo_loop/providers/intensive_annotation/intensive_annotation_phase.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/blind_listen_settings.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/models/difficult_practice_settings.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
-import 'package:echo_loop/models/media_load_result.dart';
-import 'package:echo_loop/models/learning_plan.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_playback_driver.dart';
-import 'package:echo_loop/providers/learning_session/paragraph_playback_driver.dart';
-import 'package:echo_loop/models/playback_settings.dart';
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/models/sense_group_range_playback.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/models/tag.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_audio_engine_provider.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/providers/daily_study_time_provider.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/blind_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_session/retell_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/repeat_flow/repeat_flow_engine.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/tag_provider.dart';
-import 'package:echo_loop/providers/time_provider.dart';
-import 'package:echo_loop/services/asr/offline_asr_engine.dart';
-import 'package:echo_loop/services/study_time_service.dart';
+export 'package:loop_back/database/app_database.dart' show SavedWord;
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/audio_engine_state.dart';
+import 'package:loop_back/providers/intensive_annotation/intensive_annotation_phase.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/blind_listen_settings.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/models/difficult_practice_settings.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/media_load_result.dart';
+import 'package:loop_back/models/learning_plan.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_playback_driver.dart';
+import 'package:loop_back/providers/learning_session/paragraph_playback_driver.dart';
+import 'package:loop_back/models/playback_settings.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/models/sense_group_range_playback.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/models/tag.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/audio_engine/foreground_audio_engine_provider.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/providers/daily_study_time_provider.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/blind_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_session/retell_player_provider.dart';
+import 'package:loop_back/providers/learning_session/review_difficult_practice_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/providers/repeat_flow/repeat_flow_engine.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/tag_provider.dart';
+import 'package:loop_back/providers/time_provider.dart';
+import 'package:loop_back/services/asr/offline_asr_engine.dart';
+import 'package:loop_back/services/study_time_service.dart';
 
 // ========== FakeAppSettings ==========
 

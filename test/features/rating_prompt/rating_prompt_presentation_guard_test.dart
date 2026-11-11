@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:echo_loop/features/rating_prompt/rating_prompt_presentation_guard.dart';
+import 'package:loop_back/features/rating_prompt/rating_prompt_presentation_guard.dart';
 
 void main() {
   testWidgets('保留挂载的计划页在切 Tab、后台、root 覆盖及卸载时不可展示', (tester) async {

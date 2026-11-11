@@ -3,18 +3,18 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/daos/stage_completion_dao.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
-import 'package:echo_loop/providers/study_task_provider.dart';
-import 'package:echo_loop/screens/study_screen.dart';
-import 'package:echo_loop/widgets/learning_progress_icon.dart';
-import 'package:echo_loop/providers/time_provider.dart';
+import 'package:loop_back/database/daos/stage_completion_dao.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
+import 'package:loop_back/providers/study_task_provider.dart';
+import 'package:loop_back/screens/study_screen.dart';
+import 'package:loop_back/widgets/learning_progress_icon.dart';
+import 'package:loop_back/providers/time_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -676,51 +676,6 @@ void main() {
     expect(find.text('🌱'), findsNothing);
     expect(_findSvgAsset('assets/icon/refresh.svg'), findsOneWidget);
     expect(_findSvgAsset('assets/icon/reading.svg'), findsNothing);
-  });
-
-  testWidgets('学习社群入口保持紧凑高度并使用发现入口青蓝色系', (tester) async {
-    final now = DateTime(2026, 2, 25, 12, 0);
-    final audioItems = [
-      AudioItem(
-        id: 'audio-1',
-        name: 'First Study Audio',
-        audioPath: 'audios/test.mp3',
-        addedDate: now,
-      ),
-    ];
-
-    await tester.pumpWidget(
-      createTestWidget(
-        audioItems: audioItems,
-        progressState: const LearningProgressState(isLoading: false),
-        fixedNow: now,
-        recommendedMaterial: audioItems.first,
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Join Community'), findsOneWidget);
-    expect(find.text('Learn, ask, and share'), findsOneWidget);
-
-    final communityDecoration = tester
-        .widgetList<DecoratedBox>(find.byType(DecoratedBox))
-        .map((box) => box.decoration)
-        .whereType<BoxDecoration>()
-        .firstWhere((decoration) {
-          final gradient = decoration.gradient;
-          return gradient is LinearGradient &&
-              gradient.colors.length == 2 &&
-              gradient.colors.first == const Color(0xFFEAF8FA) &&
-              gradient.colors.last == const Color(0xFFDDEFFA);
-        });
-
-    expect(communityDecoration.borderRadius, BorderRadius.circular(12));
-    expect(
-      (communityDecoration.border! as Border).top.color,
-      const Color(0xFFA9D5DF),
-    );
-    expect(tester.widget<Icon>(find.byIcon(Icons.group_rounded)).size, 20);
-    expect(tester.widget<Icon>(find.byIcon(Icons.chevron_right)).size, 20);
   });
 
   testWidgets('任务卡片中显示 LearningProgressIcon', (tester) async {

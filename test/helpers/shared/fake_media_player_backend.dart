@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:echo_loop/services/media_player_backend.dart';
+import 'package:loop_back/services/media_player_backend.dart';
 import 'package:flutter/widgets.dart';
 
 /// 测试用 media backend：纯 Dart 状态机，不触达 media_kit 原生层。

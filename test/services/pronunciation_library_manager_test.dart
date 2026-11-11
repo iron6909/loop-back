@@ -8,10 +8,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
-import 'package:echo_loop/services/asr/asr_model_catalog.dart';
-import 'package:echo_loop/services/pronunciation/pronunciation_library_manager.dart';
-import 'package:echo_loop/services/pronunciation/pronunciation_catalog.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/asr/asr_model_catalog.dart';
+import 'package:loop_back/services/pronunciation/pronunciation_library_manager.dart';
+import 'package:loop_back/services/pronunciation/pronunciation_catalog.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
 
 class _BytesDownloader implements ReliableHttpDownloader {
   _BytesDownloader(this.bytes);

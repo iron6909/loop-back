@@ -9,18 +9,18 @@ import 'package:path_provider_platform_interface/path_provider_platform_interfac
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/app_database.dart' show TtsCacheData;
-import 'package:echo_loop/database/daos/tts_cache_dao.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/providers/tts/kokoro_model_provider.dart';
-import 'package:echo_loop/providers/tts/piper_model_provider.dart';
-import 'package:echo_loop/providers/tts/tts_controller_provider.dart';
-import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
-import 'package:echo_loop/services/tts/kokoro_model_manager.dart'
+import 'package:loop_back/database/app_database.dart' show TtsCacheData;
+import 'package:loop_back/database/daos/tts_cache_dao.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/providers/tts/kokoro_model_provider.dart';
+import 'package:loop_back/providers/tts/piper_model_provider.dart';
+import 'package:loop_back/providers/tts/tts_controller_provider.dart';
+import 'package:loop_back/providers/tts/tts_settings_provider.dart';
+import 'package:loop_back/services/tts/kokoro_model_manager.dart'
     show AsrModelDownloadStatus;
-import 'package:echo_loop/services/tts/kokoro_voices.dart';
-import 'package:echo_loop/services/tts/piper_model_catalog.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/kokoro_voices.dart';
+import 'package:loop_back/services/tts/piper_model_catalog.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 
 /// 受控 Kokoro notifier：注入初值，下载相关方法仅占位（不做真实下载）。
 class _FixedKokoroNotifier extends KokoroModelNotifier {

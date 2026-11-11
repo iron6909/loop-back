@@ -1,7 +1,7 @@
-import 'package:echo_loop/analytics/analytics_service.dart';
-import 'package:echo_loop/analytics/models/event_names.dart';
-import 'package:echo_loop/services/notification_permission_reporter.dart';
-import 'package:echo_loop/services/notification_permission_service.dart';
+import 'package:loop_back/analytics/analytics_service.dart';
+import 'package:loop_back/analytics/models/event_names.dart';
+import 'package:loop_back/services/notification_permission_reporter.dart';
+import 'package:loop_back/services/notification_permission_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';

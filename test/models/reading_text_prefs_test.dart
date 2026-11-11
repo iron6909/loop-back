@@ -3,7 +3,7 @@
 // 验证：持久化值解析回退、字号吸附到档位、样式叠加规则。
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/reading_text_prefs.dart';
+import 'package:loop_back/models/reading_text_prefs.dart';
 
 void main() {
   group('ReadingTextPrefs.fromStored 解析', () {

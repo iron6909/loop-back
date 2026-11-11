@@ -15,7 +15,7 @@ final class MacosWindowHandler: NSObject {
   init(binaryMessenger: FlutterBinaryMessenger, window: NSWindow) {
     self.window = window
     channel = FlutterMethodChannel(
-      name: "top.echo-loop/window",
+      name: "top.loop-back/window",
       binaryMessenger: binaryMessenger
     )
     super.init()

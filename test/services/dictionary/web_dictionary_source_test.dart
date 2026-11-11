@@ -1,6 +1,6 @@
-import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
-import 'package:echo_loop/services/dictionary/dictionary_source.dart';
-import 'package:echo_loop/services/dictionary/web_dictionary_source.dart';
+import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
+import 'package:loop_back/services/dictionary/dictionary_source.dart';
+import 'package:loop_back/services/dictionary/web_dictionary_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 配置驱动网页词典源的纯逻辑测试：

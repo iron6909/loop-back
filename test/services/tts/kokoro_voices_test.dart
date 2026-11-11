@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/tts/kokoro_voices.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/kokoro_voices.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 
 void main() {
   group('kokoroVoices 目录', () {

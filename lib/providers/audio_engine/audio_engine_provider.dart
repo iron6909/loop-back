@@ -41,7 +41,7 @@ class AudioEngine extends _$AudioEngine {
     return const AudioEngineState();
   }
 
-  EchoLoopAudioHandler get _handler => echoLoopAudioHandler;
+  LoopBackAudioHandler get _handler => loopBackAudioHandler;
   ja.AudioPlayer get audioPlayer => _handler.player;
 
   // --- Streams ---
@@ -178,7 +178,7 @@ class AudioEngine extends _$AudioEngine {
     _wordHighlightObservedPlayingSessionId = null;
     _wordHighlightPlaybackStatus.reset();
     // AudioService 仅负责系统媒体会话；失败时后台能力降级，前台播放器继续工作。
-    retryEchoLoopAudioServiceOnPlayback();
+    retryLoopBackAudioServiceOnPlayback();
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -229,7 +229,7 @@ class AudioEngine extends _$AudioEngine {
     required double speed,
   }) async {
     // 分段播放也要触发后台服务重试，避免复用已加载音频时错过重试机会。
-    retryEchoLoopAudioServiceOnPlayback();
+    retryLoopBackAudioServiceOnPlayback();
     if (state.currentAudioId != audioItemId) {
       await _ensureAudioLoaded(audioItemId, speed);
     }
@@ -318,7 +318,7 @@ class AudioEngine extends _$AudioEngine {
   // 留给系统命令（锁屏/耳机/中断）转交业务回调，避免「controller → engine → handler →
   // controller」回环。
   Future<void> play() async {
-    retryEchoLoopAudioServiceOnPlayback();
+    retryLoopBackAudioServiceOnPlayback();
     await _playPlayerForWordHighlight(state.sessionId);
   }
 

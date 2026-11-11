@@ -1,23 +1,23 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:echo_loop/database/app_database.dart' as db;
-import 'package:echo_loop/database/daos/bookmark_dao.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/config/memory_profiles.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_namespaces.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_commands.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_subject_ref.dart';
-import 'package:echo_loop/features/memory_scheduler/providers/memory_scheduler_providers.dart';
-import 'package:echo_loop/models/favorite_review_settings.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_audio_engine_provider.dart';
-import 'package:echo_loop/providers/favorite_review_settings_provider.dart';
-import 'package:echo_loop/providers/learning_session/bookmark_review_provider.dart';
-import 'package:echo_loop/providers/short_audio_player_provider.dart';
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
-import 'package:echo_loop/utils/app_data_dir.dart' as app_data_dir;
+import 'package:loop_back/database/app_database.dart' as db;
+import 'package:loop_back/database/daos/bookmark_dao.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/config/memory_profiles.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_namespaces.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_commands.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_subject_ref.dart';
+import 'package:loop_back/features/memory_scheduler/providers/memory_scheduler_providers.dart';
+import 'package:loop_back/models/favorite_review_settings.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/audio_engine/foreground_audio_engine_provider.dart';
+import 'package:loop_back/providers/favorite_review_settings_provider.dart';
+import 'package:loop_back/providers/learning_session/bookmark_review_provider.dart';
+import 'package:loop_back/providers/short_audio_player_provider.dart';
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/utils/app_data_dir.dart' as app_data_dir;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
@@ -286,7 +286,7 @@ late Directory _testAppDataDirectory;
 void main() {
   setUpAll(() async {
     _testAppDataDirectory = await Directory.systemTemp.createTemp(
-      'echo_loop_bookmark_review_test-',
+      'loop_back_bookmark_review_test-',
     );
     app_data_dir.appDataDirectoryOverride = _testAppDataDirectory;
   });

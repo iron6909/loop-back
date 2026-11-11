@@ -192,8 +192,6 @@ jobs:
         if: matrix.platform == 'ios'
         run: |
           flutter build ios --release --no-codesign --flavor=prod \
-            --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }} \
-            --dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }} \
             --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }}
 
       - name: Setup Java
@@ -226,6 +224,4 @@ jobs:
           flutter clean
           flutter build apk --release --flavor=prod \
             --target-platform android-arm64 \
-            --dart-define=API_BASE_URL=${{ vars.API_BASE_URL }} \
-            --dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }} \
             --dart-define=POSTHOG_HOST=${{ vars.POSTHOG_HOST }}

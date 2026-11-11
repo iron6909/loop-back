@@ -7,12 +7,12 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:echo_loop/widgets/settings_dialog.dart';
-import 'package:echo_loop/models/playback_settings.dart';
-import 'package:echo_loop/models/repeat_count_options.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/widgets/settings_dialog.dart';
+import 'package:loop_back/models/playback_settings.dart';
+import 'package:loop_back/models/repeat_count_options.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';

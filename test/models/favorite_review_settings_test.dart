@@ -1,4 +1,4 @@
-import 'package:echo_loop/models/favorite_review_settings.dart';
+import 'package:loop_back/models/favorite_review_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

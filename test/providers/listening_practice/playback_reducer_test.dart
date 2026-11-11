@@ -6,7 +6,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/providers/listening_practice/playback_reducer.dart';
+import 'package:loop_back/providers/listening_practice/playback_reducer.dart';
 
 void main() {
   const sInterval = Duration(seconds: 2);

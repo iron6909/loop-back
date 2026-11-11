@@ -1,11 +1,11 @@
 /// AI 词典源：只负责路由（单词/词组）与逐帧转发；缓存与凭据由统一客户端处理。
 library;
 import 'package:dio/dio.dart';
-import 'package:echo_loop/models/dictionary/dictionary_entry.dart';
-import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
-import 'package:echo_loop/services/dictionary/ai_dictionary_source.dart';
-import 'package:echo_loop/services/dictionary/dictionary_source.dart';
-import 'package:echo_loop/services/sentence_ai_api_client.dart';
+import 'package:loop_back/models/dictionary/dictionary_entry.dart';
+import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
+import 'package:loop_back/services/dictionary/ai_dictionary_source.dart';
+import 'package:loop_back/services/dictionary/dictionary_source.dart';
+import 'package:loop_back/services/sentence_ai_api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

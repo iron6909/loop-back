@@ -15,46 +15,46 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 
-import 'package:echo_loop/database/app_database.dart'
+import 'package:loop_back/database/app_database.dart'
     hide AudioItem, Collection;
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/features/remote_config/remote_config.dart';
-import 'package:echo_loop/features/user_region/user_region_bootstrapper.dart';
-import 'package:echo_loop/features/user_region/user_region_providers.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/main.dart';
-import 'package:echo_loop/models/audio_engine_state.dart';
-import 'package:echo_loop/models/audio_item.dart' show AudioItem;
-import 'package:echo_loop/models/collection.dart' show Collection;
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/database/enums.dart' show LearningStage;
-import 'package:echo_loop/providers/new_user_guide_provider.dart';
-import 'package:echo_loop/providers/package_info_provider.dart';
-import 'package:echo_loop/providers/startup_bootstrap_provider.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/providers/saved_word_provider.dart';
-import 'package:echo_loop/providers/saved_sense_group_provider.dart';
-import 'package:echo_loop/providers/study_task_provider.dart';
-import 'package:echo_loop/providers/tag_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_audio_engine_provider.dart';
-import 'package:echo_loop/providers/media_engine/media_engine_provider.dart';
-import 'package:echo_loop/providers/media_playback/media_playback_provider.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_session/blind_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/retell_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/utils/saved_text_index.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/features/remote_config/remote_config.dart';
+import 'package:loop_back/features/user_region/user_region_bootstrapper.dart';
+import 'package:loop_back/features/user_region/user_region_providers.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/main.dart';
+import 'package:loop_back/models/audio_engine_state.dart';
+import 'package:loop_back/models/audio_item.dart' show AudioItem;
+import 'package:loop_back/models/collection.dart' show Collection;
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/database/enums.dart' show LearningStage;
+import 'package:loop_back/providers/new_user_guide_provider.dart';
+import 'package:loop_back/providers/package_info_provider.dart';
+import 'package:loop_back/providers/startup_bootstrap_provider.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/providers/saved_word_provider.dart';
+import 'package:loop_back/providers/saved_sense_group_provider.dart';
+import 'package:loop_back/providers/study_task_provider.dart';
+import 'package:loop_back/providers/tag_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/audio_engine/foreground_audio_engine_provider.dart';
+import 'package:loop_back/providers/media_engine/media_engine_provider.dart';
+import 'package:loop_back/providers/media_playback/media_playback_provider.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_session/blind_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/retell_player_provider.dart';
+import 'package:loop_back/providers/learning_session/review_difficult_practice_provider.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/utils/saved_text_index.dart';
 
 import 'mock_providers.dart';
 
@@ -206,7 +206,7 @@ Widget createTestScreen(
   );
 }
 
-/// 在 flutter_test 中渲染完整 [EchoLoopApp]，注入与集成测试一致的 Provider 替身。
+/// 在 flutter_test 中渲染完整 [LoopBackApp]，注入与集成测试一致的 Provider 替身。
 ///
 /// 用于把原本写在 `integration_test/` 里的「app shell」级用例（Tab 切换、主题切换、
 /// 语言切换等）下沉到 `flutter_test`，绕开 LiveTest binding 的 8 分钟冷启动成本。
@@ -223,8 +223,8 @@ Future<void> pumpFullApp(
   List<Override> overrides = const [],
 }) async {
   final packageInfo = PackageInfo(
-    appName: 'Echo Loop',
-    packageName: 'top.echo-loop',
+    appName: 'LoopBack',
+    packageName: 'top.loop-back',
     version: '1.0.0',
     buildNumber: '1',
   );
@@ -242,7 +242,6 @@ Future<void> pumpFullApp(
       overrides: [
         isFirstLaunchProvider.overrideWithValue(false),
         sharedPreferencesProvider.overrideWithValue(prefs),
-        initialOnboardingCompletedProvider.overrideWithValue(true),
         guideEnabledProvider.overrideWith(
           () => _DisabledGuideEnabledNotifier(),
         ),
@@ -284,7 +283,7 @@ Future<void> pumpFullApp(
         ),
         ...overrides,
       ],
-      child: const EchoLoopApp(),
+      child: const LoopBackApp(),
     ),
   );
 }
@@ -338,7 +337,7 @@ class _EmptySavedSenseGroupList extends SavedSenseGroupList {
   Stream<List<SavedSenseGroup>> build() => Stream.value(const []);
 }
 
-/// 在 flutter_test 中渲染完整 [EchoLoopApp] 并预置一份音频学习数据。
+/// 在 flutter_test 中渲染完整 [LoopBackApp] 并预置一份音频学习数据。
 ///
 /// 对应 integration_test 中的 `createTestAppWithAudio`：注入 1 个 AudioItem +
 /// 1 个 Collection（含音频关联）+ N 句 Sentence + LearningProgress（默认 firstLearn/

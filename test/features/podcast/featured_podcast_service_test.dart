@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/features/podcast/data/featured_podcast_service.dart';
+import 'package:loop_back/features/podcast/data/featured_podcast_service.dart';
 
 class _CatalogBundle extends CachingAssetBundle {
   _CatalogBundle(this.content);

@@ -1,4 +1,6 @@
 /// 系统 Region 的读取入口与中国区判定。
+///
+/// 地区结论仅用于分析侧标记，不再关联任何远程服务端点。
 library;
 
 import 'dart:ui' show PlatformDispatcher;
@@ -7,9 +9,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../remote_config/remote_config.dart';
-import '../../config/regional_service_endpoints.dart';
 import '../../services/app_logger.dart';
-import '../../services/runtime_endpoint_router.dart';
 import 'user_region.dart';
 import 'user_region_bootstrapper.dart';
 import 'user_region_override.dart';
@@ -20,24 +20,17 @@ final userRegionDeviceCountryCodeProvider = Provider<String? Function()>(
       () => PlatformDispatcher.instance.locale.countryCode,
 );
 
-/// 当前服务端点路由器；测试可注入隔离的路由状态。
-final userRegionEndpointRouterProvider = Provider<RuntimeEndpointRouter>(
-  (ref) => runtimeEndpointRouter,
-);
-
-/// 首帧后按系统地区和本机覆盖值固定模型 CDN，不访问地区 API。
+/// 首帧后按系统地区和本机覆盖值固定地区结论，不访问任何远程服务。
 final userRegionBootstrapProvider = FutureProvider<UserRegionBootstrapResult>((
   ref,
 ) async {
   final readCountryCode = ref.watch(userRegionDeviceCountryCodeProvider);
-  final router = ref.watch(userRegionEndpointRouterProvider);
   await WidgetsBinding.instance.endOfFrame;
   final override = await _readOverride(ref);
   final forcedRegion = override.forcedRegion;
   final isChinaUser = forcedRegion == null
       ? _readSystemRegionIsChina(readCountryCode)
-      : forcedRegion == ServiceEndpointRegion.china;
-  router.updateFromUserRegion(isChinaUser: isChinaUser);
+      : forcedRegion == AppRegion.china;
   return UserRegionBootstrapResult(
     isChinaUser: isChinaUser,
     source: forcedRegion == null

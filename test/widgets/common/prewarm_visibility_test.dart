@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/widgets/common/prewarm_visibility.dart';
+import 'package:loop_back/widgets/common/prewarm_visibility.dart';
 
 void main() {
   testWidgets('root route 被覆盖时停止，返回后恢复预热', (tester) async {

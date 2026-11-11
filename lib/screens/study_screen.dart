@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
 import '../features/usage/usage_event.dart';
 import '../features/usage/usage_providers.dart';
-import '../services/runtime_endpoint_router.dart';
 import '../database/daos/stage_completion_dao.dart';
 import '../database/enums.dart';
 import '../l10n/app_localizations.dart';
@@ -213,10 +211,6 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
                   vertical: AppSpacing.s,
                 ),
                 children: [
-                  // 加入学习社群邀请（置顶，保持单行紧凑高度，颜色对齐发现入口）
-                  const _CommunityInviteCard(),
-                  const SizedBox(height: AppSpacing.s),
-
                   // 统计 Chips + 柱状图
                   GuideTarget(
                     step: stepStatsHeader,
@@ -298,8 +292,6 @@ class _StudyScreenState extends ConsumerState<StudyScreen> {
         vertical: AppSpacing.s,
       ),
       children: [
-        const _CommunityInviteCard(),
-        const SizedBox(height: AppSpacing.s),
         GuideTarget(step: stepStatsHeader, child: const StudyStatsHeader()),
         const SizedBox(height: AppSpacing.xl),
         const _EmptyState(type: _EmptyStateType.allDone),
@@ -939,152 +931,6 @@ String _timeAgo(AppLocalizations l10n, DateTime now, DateTime completedAt) {
 // ============================================================
 // Community Invite Card
 // ============================================================
-
-/// 学习社群邀请条。
-///
-/// 学习 Tab 顶部置顶，保持单行紧凑样式：
-/// 图标 + 标题 + 副标题 + chevron，颜色对齐发现入口。
-/// 点击行为与设置页「加入社区」一致：按 locale 打开对应社群页面。
-class _CommunityInviteCard extends ConsumerWidget {
-  const _CommunityInviteCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    final palette = _CommunityInvitePalette.resolve(theme.brightness);
-    const radius = BorderRadius.all(Radius.circular(12));
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [palette.backgroundStart, palette.backgroundEnd],
-        ),
-        border: Border.all(color: palette.border),
-        boxShadow: palette.shadow,
-      ),
-      child: ClipRRect(
-        borderRadius: radius,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            splashColor: palette.inkSplash,
-            highlightColor: palette.inkHighlight,
-            onTap: () async {
-              ref
-                  .read(analyticsServiceProvider)
-                  .track(Events.communityInviteTapped);
-              final isZh = Localizations.localeOf(context).languageCode == 'zh';
-              final path = isZh ? '/zh-CN/social' : '/en/social';
-              final uri = runtimeEndpointRouter.apiUri(path);
-              await launchUrl(uri);
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.m,
-                vertical: 8,
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.group_rounded, size: 20, color: palette.icon),
-                  const SizedBox(width: 10),
-                  Text(
-                    l10n.aboutCommunity,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: palette.title,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.joinCommunityInviteSubtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: palette.subtitle,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.chevron_right, size: 20, color: palette.chevron),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CommunityInvitePalette {
-  final Color backgroundStart;
-  final Color backgroundEnd;
-  final Color border;
-  final Color icon;
-  final Color title;
-  final Color subtitle;
-  final Color chevron;
-  final Color inkSplash;
-  final Color inkHighlight;
-  final List<BoxShadow> shadow;
-
-  const _CommunityInvitePalette({
-    required this.backgroundStart,
-    required this.backgroundEnd,
-    required this.border,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.chevron,
-    required this.inkSplash,
-    required this.inkHighlight,
-    required this.shadow,
-  });
-
-  static _CommunityInvitePalette resolve(Brightness brightness) {
-    if (brightness == Brightness.dark) {
-      return _CommunityInvitePalette(
-        backgroundStart: const Color(0xFF102A36),
-        backgroundEnd: const Color(0xFF172D46),
-        border: const Color(0x6672C7D6),
-        icon: const Color(0xFF8AD8E4),
-        title: const Color(0xFFE7F4F8),
-        subtitle: const Color(0xFFB8CBD4),
-        chevron: const Color(0xCC79D6E6),
-        inkSplash: const Color(0x3379D6E6),
-        inkHighlight: const Color(0x1A79D6E6),
-        shadow: const [],
-      );
-    }
-
-    return _CommunityInvitePalette(
-      backgroundStart: const Color(0xFFEAF8FA),
-      backgroundEnd: const Color(0xFFDDEFFA),
-      border: const Color(0xFFA9D5DF),
-      icon: const Color(0xFF32758D),
-      title: const Color(0xFF17384A),
-      subtitle: const Color(0xFF587080),
-      chevron: const Color(0xCC3B7F94),
-      inkSplash: const Color(0x26256B86),
-      inkHighlight: const Color(0x14256B86),
-      shadow: const [
-        BoxShadow(
-          color: Color(0x1A256B86),
-          blurRadius: 16,
-          offset: Offset(0, 7),
-        ),
-      ],
-    );
-  }
-}
 
 // ============================================================
 // Empty States

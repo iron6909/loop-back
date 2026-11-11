@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/time_format.dart';
-import 'utils/echo_loop_scroll_behavior.dart';
+import 'utils/loop_back_scroll_behavior.dart';
 import 'database/app_database.dart';
 import 'database/providers.dart';
 import 'config/client_distribution.dart';
@@ -39,8 +39,6 @@ import 'services/media_kit_debug_initializer.dart';
 import 'services/user_id_service.dart';
 import 'widgets/app_notice_presenter.dart';
 import 'widgets/app_startup_gate.dart';
-import 'features/onboarding_survey/data/onboarding_survey_storage.dart';
-import 'features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import 'features/user_region/user_region_providers.dart';
 import 'features/user_region/user_region_bootstrapper.dart';
 
@@ -100,13 +98,6 @@ void main() async {
     );
   }
 
-  // Onboarding 问卷"是否已完成"同步预读：GoRouter redirect 是同步函数，
-  // 必须在 main() 阶段拿到值，否则启动闪屏期间 redirect 失效。
-  // 用 `onboarding_completed_at_ms` 存在性判定，不引入冗余 bool key。
-  final onboardingCompleted = OnboardingSurveyStorage.readIsCompletedSync(
-    prefs,
-  );
-
   // 学习设置（自动跳过复述）同步预读：plan / progress 启动期就需要拿到值。
   final initialLearningSettings = LearningSettings.fromPrefsSync(prefs);
 
@@ -131,7 +122,7 @@ void main() async {
       readInitialAiTranscriptionAutoMergeEnabledSync(prefs);
 
   // 初始化数据库（演示模式使用独立数据库文件）
-  final dbFileName = isDemoMode ? 'echo_loop_demo.db' : 'echo_loop.db';
+  final dbFileName = isDemoMode ? 'loop_back_demo.db' : 'loop_back.db';
   final database = AppDatabase(openConnectionWithName(dbFileName));
   initAppDatabase(database);
   startupTrace.mark(
@@ -150,9 +141,6 @@ void main() async {
           packageInfoProvider.overrideWithValue(packageInfo),
           isFirstLaunchProvider.overrideWithValue(isFirstLaunch),
           sharedPreferencesProvider.overrideWithValue(prefs),
-          initialOnboardingCompletedProvider.overrideWithValue(
-            onboardingCompleted,
-          ),
           initialLearningSettingsProvider.overrideWithValue(
             initialLearningSettings,
           ),
@@ -173,7 +161,7 @@ void main() async {
           ),
           startupDemoModeProvider.overrideWithValue(isDemoMode),
         ],
-        child: const EchoLoopApp(),
+        child: const LoopBackApp(),
       ),
     ),
   );
@@ -196,14 +184,14 @@ Future<void> _registerAnonymousIdWhenReady(
   }
 }
 
-class EchoLoopApp extends ConsumerStatefulWidget {
-  const EchoLoopApp({super.key});
+class LoopBackApp extends ConsumerStatefulWidget {
+  const LoopBackApp({super.key});
 
   @override
-  ConsumerState<EchoLoopApp> createState() => _EchoLoopAppState();
+  ConsumerState<LoopBackApp> createState() => _LoopBackAppState();
 }
 
-class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
+class _LoopBackAppState extends ConsumerState<LoopBackApp>
     with WidgetsBindingObserver {
   StreamSubscription<NotificationIntent>? _intentSubscription;
   ProviderSubscription<AsyncValue<StartupReport>>? _localStartupSubscription;
@@ -343,9 +331,9 @@ class _EchoLoopAppState extends ConsumerState<EchoLoopApp>
     }
 
     return MaterialApp.router(
-      title: 'Echo Loop',
+      title: 'LoopBack',
       debugShowCheckedModeBanner: false,
-      scrollBehavior: const EchoLoopScrollBehavior(),
+      scrollBehavior: const LoopBackScrollBehavior(),
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: settings.themeMode,

@@ -10,11 +10,11 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/providers/tts/tts_settings_provider.dart';
-import 'package:echo_loop/services/backup/backup_service.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/providers/tts/tts_settings_provider.dart';
+import 'package:loop_back/services/backup/backup_service.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 // ignore: depend_on_referenced_packages
@@ -90,7 +90,7 @@ void main() {
       TtsSettingsKeys.piperVoiceUk: 'en_GB-cori-medium',
     });
     database = AppDatabase(
-      NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+      NativeDatabase(File(p.join(dataDir.path, 'loop_back.db'))),
     );
     await database.customSelect('SELECT 1').get();
     service = BackupService(

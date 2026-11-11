@@ -4,8 +4,8 @@
 /// 本测试只验证 header 菜单的 UI 存在与文案（避免驱动 send 引入实时定时器/动画）。
 library;
 
-import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
-import 'package:echo_loop/features/chatbot/widgets/chat_header_actions.dart';
+import 'package:loop_back/features/chatbot/models/chatbot_config.dart';
+import 'package:loop_back/features/chatbot/widgets/chat_header_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

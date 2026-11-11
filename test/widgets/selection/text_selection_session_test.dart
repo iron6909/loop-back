@@ -6,7 +6,7 @@ library;
 
 import 'dart:ui';
 
-import 'package:echo_loop/widgets/selection/text_selection_session.dart';
+import 'package:loop_back/widgets/selection/text_selection_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

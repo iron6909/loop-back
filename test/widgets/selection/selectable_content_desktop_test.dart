@@ -4,9 +4,9 @@
 /// 用 [AppSelectableText] 直接测内核，不牵扯查词业务；分词注入最简空白切分。
 library;
 
-import 'package:echo_loop/widgets/selection/app_selectable_text.dart';
-import 'package:echo_loop/widgets/selection/selection_toolbar.dart';
-import 'package:echo_loop/widgets/selection/selection_toolbar_host.dart';
+import 'package:loop_back/widgets/selection/app_selectable_text.dart';
+import 'package:loop_back/widgets/selection/selection_toolbar.dart';
+import 'package:loop_back/widgets/selection/selection_toolbar_host.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

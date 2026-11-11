@@ -1,12 +1,12 @@
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_namespaces.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_schedule.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_subject_ref.dart';
-import 'package:echo_loop/features/memory_scheduler/providers/memory_scheduler_providers.dart';
-import 'package:echo_loop/providers/favorite_vocabulary_lifecycle_provider.dart';
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_namespaces.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_schedule.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_subject_ref.dart';
+import 'package:loop_back/features/memory_scheduler/providers/memory_scheduler_providers.dart';
+import 'package:loop_back/providers/favorite_vocabulary_lifecycle_provider.dart';
+import 'package:loop_back/services/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

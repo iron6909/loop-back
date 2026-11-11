@@ -36,9 +36,9 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>top.echo-loop.backup</string>
+			<string>top.loop-back.backup</string>
 			<key>UTTypeDescription</key>
-			<string>Echo Loop Backup</string>
+			<string>LoopBack Backup</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.zip-archive</string>
@@ -59,12 +59,12 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Echo Loop Backup</string>
+			<string>LoopBack Backup</string>
 			<key>LSHandlerRank</key>
 			<string>Alternate</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>top.echo-loop.backup</string>
+				<string>top.loop-back.backup</string>
 			</array>
 		</dict>
 	</array>

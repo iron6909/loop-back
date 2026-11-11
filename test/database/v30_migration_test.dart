@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
+import 'package:loop_back/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// v30 schema 基线行为验证：

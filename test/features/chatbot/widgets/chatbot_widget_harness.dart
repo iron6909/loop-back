@@ -1,8 +1,8 @@
 /// chatbot widget 测试共用脚手架：轻量 ProviderScope + MaterialApp（含 l10n）。
 library;
 
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

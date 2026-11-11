@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/audio_engine_state.dart';
+import 'package:loop_back/models/audio_engine_state.dart';
 
 void main() {
   group('AudioEngineState', () {

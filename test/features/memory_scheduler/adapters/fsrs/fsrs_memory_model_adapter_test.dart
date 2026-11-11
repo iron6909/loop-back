@@ -1,13 +1,13 @@
 /// FSRS adapter 的确定性与状态边界回归测试。
 library;
 
-import 'package:echo_loop/features/memory_scheduler/adapters/fsrs/fsrs_memory_model_adapter.dart';
-import 'package:echo_loop/features/memory_scheduler/adapters/fsrs/fsrs_state_codec.dart';
-import 'package:echo_loop/features/memory_scheduler/config/memory_profiles.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_model_adapter.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_schedule.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_exceptions.dart';
+import 'package:loop_back/features/memory_scheduler/adapters/fsrs/fsrs_memory_model_adapter.dart';
+import 'package:loop_back/features/memory_scheduler/adapters/fsrs/fsrs_state_codec.dart';
+import 'package:loop_back/features/memory_scheduler/config/memory_profiles.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_model_adapter.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_schedule.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_exceptions.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/daos/stage_completion_dao.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/study_task_provider.dart';
-import 'package:echo_loop/providers/time_provider.dart';
+import 'package:loop_back/database/daos/stage_completion_dao.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/study_task_provider.dart';
+import 'package:loop_back/providers/time_provider.dart';
 
 import '../helpers/mock_providers.dart';
 

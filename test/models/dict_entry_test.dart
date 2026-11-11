@@ -2,7 +2,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/dict_entry.dart';
+import 'package:loop_back/models/dict_entry.dart';
 
 void main() {
   group('DictEntry', () {

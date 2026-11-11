@@ -5,7 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../features/user_preferences/domain/user_preferences_sync_events.dart';
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 
 part 'audio_list_settings_provider.g.dart';

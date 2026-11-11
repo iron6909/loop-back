@@ -5,11 +5,8 @@
 library;
 
 import 'dart:async';
-import 'dart:io';
 
-import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,18 +17,15 @@ import '../analytics/analytics_service.dart';
 import '../analytics/permission_snapshot.dart';
 import '../database/app_database.dart';
 import '../database/providers.dart';
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import '../features/user_region/user_region_providers.dart';
-import '../firebase_options.dart';
 import '../services/app_logger.dart';
 import '../services/asr/asr_model_manager.dart';
 import '../services/background_audio_handler.dart';
 import '../services/bundled_example_installer.dart';
-import '../services/network_permission_trigger.dart';
 import '../services/speech_practice_platform.dart';
 import '../services/startup_trace.dart';
-import '../services/runtime_endpoint_router.dart';
 import '../services/temp_cleanup_service.dart';
 import '../services/tts/tts_cache_store.dart';
 import '../utils/app_data_dir.dart';
@@ -182,38 +176,8 @@ class DefaultStartupBootstrapper implements StartupBootstrapper {
     await _runBestEffort(
       issues,
       'background_audio_handler_initialize',
-      initEchoLoopAudioHandler,
+      initLoopBackAudioHandler,
     );
-
-    if (!kIsWeb && Platform.isIOS) {
-      activeStartupTrace?.mark(
-        'detached_scheduled',
-        fields: {'step': 'ios_network_permission_trigger'},
-      );
-      unawaited(
-        NetworkPermissionTrigger.trigger(
-          _prefs,
-          runtimeEndpointRouter.apiBaseUrl,
-        ),
-      );
-    }
-
-    var firebaseReady = false;
-    try {
-      await _trace('firebase_initialize', () {
-        return Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-      });
-      firebaseReady = true;
-    } catch (error, stackTrace) {
-      _recordIssue(issues, 'firebase_initialize', error, stackTrace);
-    }
-    if (firebaseReady && !kDebugMode && !Platform.isMacOS) {
-      await _runBestEffort(issues, 'firebase_analytics_disable', () {
-        return FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(false);
-      });
-    }
 
     await _runBestEffort(issues, 'permission_snapshot_report', () async {
       final snapshot = await PermissionSnapshot.capture(_prefs);

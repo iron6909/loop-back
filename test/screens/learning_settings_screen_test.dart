@@ -6,10 +6,10 @@
 /// - 说明文字渲染
 library;
 
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
-import 'package:echo_loop/providers/new_user_guide_provider.dart';
-import 'package:echo_loop/screens/learning_settings_screen.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
+import 'package:loop_back/providers/new_user_guide_provider.dart';
+import 'package:loop_back/screens/learning_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

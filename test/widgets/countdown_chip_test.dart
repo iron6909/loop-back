@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/widgets/common/countdown_chip.dart';
+import 'package:loop_back/widgets/common/countdown_chip.dart';
 
 void main() {
   Widget buildChip({

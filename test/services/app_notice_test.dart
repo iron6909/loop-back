@@ -1,4 +1,4 @@
-import 'package:echo_loop/services/app_notice.dart';
+import 'package:loop_back/services/app_notice.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
+import 'package:loop_back/database/app_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
@@ -15,7 +15,7 @@ void main() {
 
     setUp(() async {
       tempDir = await Directory.systemTemp.createTemp('backup_snapshot_test_');
-      databaseFile = File(p.join(tempDir.path, 'echo_loop.db'));
+      databaseFile = File(p.join(tempDir.path, 'loop_back.db'));
       database = AppDatabase(NativeDatabase(databaseFile));
       await database.customSelect('SELECT 1').get();
     });

@@ -54,7 +54,7 @@ import 'daos/favorite_review_dao.dart';
 
 part 'app_database.g.dart';
 
-/// Echo Loop 应用数据库
+/// LoopBack 应用数据库
 /// 包含 14 张表：audio_items, collections, collection_audio_items, bookmarks,
 /// playback_states, learning_progresses, stage_completions, tags, audio_item_tags,
 /// sentence_ai_cache, saved_words, learned_word_forms, daily_study_records,
@@ -1588,12 +1588,12 @@ class AppDatabase extends _$AppDatabase {
 
 /// 创建数据库连接（生产环境使用）
 LazyDatabase openConnection() {
-  return openConnectionWithName('echo_loop.db');
+  return openConnectionWithName('loop_back.db');
 }
 
 /// 创建指定文件名的数据库连接。
 ///
-/// 用于运行时切换数据库（如演示模式使用 `echo_loop_demo.db`）。
+/// 用于运行时切换数据库（如演示模式使用 `loop_back_demo.db`）。
 LazyDatabase openConnectionWithName(String fileName) {
   return LazyDatabase(() async {
     final dbFolder = await getAppDataDirectory();

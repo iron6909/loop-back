@@ -1,4 +1,4 @@
-import 'package:echo_loop/services/media_subtitle_style.dart';
+import 'package:loop_back/services/media_subtitle_style.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 

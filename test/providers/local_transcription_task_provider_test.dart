@@ -12,19 +12,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/app_database.dart' as db;
-import 'package:echo_loop/database/daos/audio_item_dao.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/local_transcription_task_provider.dart';
-import 'package:echo_loop/providers/recognition_settings_provider.dart';
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/providers/asr_engine_provider.dart';
-import 'package:echo_loop/services/asr/offline_asr_engine.dart';
+import 'package:loop_back/database/app_database.dart' as db;
+import 'package:loop_back/database/daos/audio_item_dao.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/features/audio_import/audio_transcode_service.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/local_transcription_task_provider.dart';
+import 'package:loop_back/providers/recognition_settings_provider.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/providers/asr_engine_provider.dart';
+import 'package:loop_back/services/asr/offline_asr_engine.dart';
 
 import '../helpers/mock_providers.dart';
 

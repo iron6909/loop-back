@@ -1,8 +1,8 @@
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/daos/audio_item_dao.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/daos/audio_item_dao.dart';
 
 void main() {
   late AppDatabase db;

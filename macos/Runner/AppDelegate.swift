@@ -55,11 +55,11 @@ final class MacSpeechPracticeHandler: NSObject, FlutterStreamHandler {
 
   init(binaryMessenger: FlutterBinaryMessenger) {
     methodChannel = FlutterMethodChannel(
-      name: "top.echo-loop/speech_practice",
+      name: "top.loop-back/speech_practice",
       binaryMessenger: binaryMessenger
     )
     eventChannel = FlutterEventChannel(
-      name: "top.echo-loop/speech_practice/events",
+      name: "top.loop-back/speech_practice/events",
       binaryMessenger: binaryMessenger
     )
     super.init()
@@ -148,7 +148,7 @@ final class MacSpeechPracticeHandler: NSObject, FlutterStreamHandler {
   /// 依次请求麦克风权限和语音识别权限（先麦克风，更符合用户直觉）。
   ///
   /// `onlyMic=true` 时只请求麦克风，不触发 SFSpeechRecognizer 系统弹窗——
-  /// 用户关闭 ASR / 选择 Echo Loop 离线后端时不需要平台语音识别权限，
+  /// 用户关闭 ASR / 选择 LoopBack 离线后端时不需要平台语音识别权限，
   /// 遵循 App Store 5.1.1 数据最小化原则。
   private func requestPermissions(onlyMic: Bool, result: @escaping FlutterResult) {
     AVCaptureDevice.requestAccess(for: .audio) { [weak self] _ in
@@ -983,7 +983,7 @@ final class MacTextEmbeddingHandler: NSObject {
 
   init(binaryMessenger: FlutterBinaryMessenger) {
     methodChannel = FlutterMethodChannel(
-      name: "top.echo-loop/text_embedding",
+      name: "top.loop-back/text_embedding",
       binaryMessenger: binaryMessenger
     )
     super.init()
@@ -1050,7 +1050,7 @@ final class MacAudioDecodeHandler: NSObject {
 
   init(binaryMessenger: FlutterBinaryMessenger) {
     methodChannel = FlutterMethodChannel(
-      name: "top.echo-loop/audio_decode",
+      name: "top.loop-back/audio_decode",
       binaryMessenger: binaryMessenger
     )
     super.init()
@@ -1282,7 +1282,7 @@ final class MacDeviceInfoHandler {
 
   init(binaryMessenger: FlutterBinaryMessenger) {
     methodChannel = FlutterMethodChannel(
-      name: "top.echo-loop/device_info",
+      name: "top.loop-back/device_info",
       binaryMessenger: binaryMessenger
     )
     methodChannel.setMethodCallHandler(handle)

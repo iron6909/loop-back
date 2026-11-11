@@ -4,7 +4,7 @@
 // 通过覆盖 wakelockPlusPlatformInstance 来 mock 平台调用。
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/utils/wakelock_mixin.dart';
+import 'package:loop_back/utils/wakelock_mixin.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:wakelock_plus_platform_interface/wakelock_plus_platform_interface.dart';
 

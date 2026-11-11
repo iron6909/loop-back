@@ -13,7 +13,7 @@ void main() {
     final firstDetail = details.first as Map<String, Object?>;
     final appIds = firstDetail['appIDs'] as List<Object?>;
 
-    expect(appIds, contains('S8S968QAV3.top.echo-loop'));
+    expect(appIds, contains('S8S968QAV3.top.loop-back'));
     expect(appIds, isNot(contains('S8S968QAV3.top.valuespot.fluency')));
   });
 }

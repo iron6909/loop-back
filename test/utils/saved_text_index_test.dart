@@ -3,7 +3,7 @@
 /// 覆盖：key 统一归一化、单词/词组分桶、词数集合、空 key 跳过、isEmpty。
 library;
 
-import 'package:echo_loop/utils/saved_text_index.dart';
+import 'package:loop_back/utils/saved_text_index.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

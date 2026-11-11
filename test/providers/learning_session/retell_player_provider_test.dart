@@ -6,24 +6,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:just_audio/just_audio.dart' as ja;
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/audio_engine_state.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart'
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/audio_engine_state.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart'
     show ShadowingControlMode;
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_audio_engine_provider.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_session/paragraph_playback_driver.dart';
-import 'package:echo_loop/providers/learning_session/retell_player_provider.dart';
-import 'package:echo_loop/providers/retell_recording_controller_provider.dart';
-import 'package:echo_loop/services/study_activity_gate.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/providers/audio_engine/foreground_audio_engine_provider.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_session/paragraph_playback_driver.dart';
+import 'package:loop_back/providers/learning_session/retell_player_provider.dart';
+import 'package:loop_back/providers/retell_recording_controller_provider.dart';
+import 'package:loop_back/services/study_activity_gate.dart';
 
 import '../../helpers/mock_providers.dart';
 

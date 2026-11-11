@@ -6,8 +6,8 @@
 /// 「不做某类子阶段」的语义通过 `LearningProgress.skippedSubStageKeys` 承载。
 library;
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/learning_plan.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/learning_plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _mid = [

@@ -20,7 +20,7 @@ class MethodChannelAndroidUpdateBridge implements AndroidUpdateBridge {
   const MethodChannelAndroidUpdateBridge();
 
   @visibleForTesting
-  static const channel = MethodChannel('top.echo-loop/app_update');
+  static const channel = MethodChannel('top.loop-back/app_update');
 
   @override
   Future<String?> installerPackageName() async {

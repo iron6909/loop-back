@@ -4,9 +4,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import 'package:loop_back/providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
-import 'package:echo_loop/providers/reading_text_prefs_provider.dart';
+import 'package:loop_back/providers/reading_text_prefs_provider.dart';
 
 Future<ProviderContainer> _container(Map<String, Object> initial) async {
   SharedPreferences.setMockInitialValues(initial);

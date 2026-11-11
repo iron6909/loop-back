@@ -1,8 +1,8 @@
-import 'package:echo_loop/database/daos/learned_word_form_dao.dart';
+import 'package:loop_back/database/daos/learned_word_form_dao.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/database/app_database.dart';
+import 'package:loop_back/database/app_database.dart';
 
 AppDatabase _createTestDb() {
   return AppDatabase(

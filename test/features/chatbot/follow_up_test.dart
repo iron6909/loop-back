@@ -1,7 +1,7 @@
 /// composeFollowUp 纯逻辑测试：指令 + <quote> 标签 + 问题 拼装。
 library;
 
-import 'package:echo_loop/features/chatbot/follow_up.dart';
+import 'package:loop_back/features/chatbot/follow_up.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

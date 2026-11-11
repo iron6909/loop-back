@@ -8,21 +8,21 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/models/retell_review_evaluation.dart';
-import 'package:echo_loop/providers/local_transcription_task_provider.dart';
-import 'package:echo_loop/providers/recognition_settings_provider.dart';
-import 'package:echo_loop/providers/retell_review_evaluation_provider.dart';
-import 'package:echo_loop/providers/speech_capability_provider.dart';
-import 'package:echo_loop/providers/speech_configuration_provider.dart';
-import 'package:echo_loop/services/sentence_ai_api_client.dart';
-import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
-import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
-import 'package:echo_loop/services/speech/speech_capability.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_config_store.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/features/audio_import/audio_transcode_service.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/models/retell_review_evaluation.dart';
+import 'package:loop_back/providers/local_transcription_task_provider.dart';
+import 'package:loop_back/providers/recognition_settings_provider.dart';
+import 'package:loop_back/providers/retell_review_evaluation_provider.dart';
+import 'package:loop_back/providers/speech_capability_provider.dart';
+import 'package:loop_back/providers/speech_configuration_provider.dart';
+import 'package:loop_back/services/sentence_ai_api_client.dart';
+import 'package:loop_back/services/speech/practice_chunk_transcriber.dart';
+import 'package:loop_back/services/speech/practice_online_transcriber.dart';
+import 'package:loop_back/services/speech/speech_capability.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_config_store.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -31,7 +31,7 @@ class _Api extends Mock implements SentenceAiApiClient {}
 
 const _baseUrl = 'https://openrouter.ai/api/v1';
 const _retellOnlineModel = 'openai/whisper-retell';
-const _apiKey = 'sk-shadowing-online-test';
+const _apiKey = 'shadow1';
 const _onlineText = 'My online retelling';
 
 /// 记录请求参数并返回预设结果的语音客户端替身。

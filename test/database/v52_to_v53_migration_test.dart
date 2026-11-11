@@ -2,16 +2,16 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/models/study_stage.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/models/study_stage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 void main() {
   test('v52→v53 按列回填毫秒并保留旧秒字段', () async {
-    final directory = await Directory.systemTemp.createTemp('echo_loop_v53_');
+    final directory = await Directory.systemTemp.createTemp('loop_back_v53_');
     addTearDown(() => directory.delete(recursive: true));
-    final file = File('${directory.path}/echo_loop.db');
+    final file = File('${directory.path}/loop_back.db');
 
     var db = _open(file);
     await db
@@ -63,9 +63,9 @@ void main() {
   });
 
   test('v51 旧秒级 schema 升级后可正常补齐毫秒字段', () async {
-    final directory = await Directory.systemTemp.createTemp('echo_loop_v51_');
+    final directory = await Directory.systemTemp.createTemp('loop_back_v51_');
     addTearDown(() => directory.delete(recursive: true));
-    final file = File('${directory.path}/echo_loop.db');
+    final file = File('${directory.path}/loop_back.db');
 
     var db = _open(file);
     await db

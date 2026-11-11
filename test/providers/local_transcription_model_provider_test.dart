@@ -2,11 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/providers/local_transcription_model_provider.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/asr/offline_asr_engine.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/providers/local_transcription_model_provider.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/services/asr/offline_asr_engine.dart';
 
 /// 构建带 override 的容器。
 Future<ProviderContainer> buildContainer({

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/tts/piper_model_catalog.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/piper_model_catalog.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 
 void main() {
   test('目录包含 7 个 Piper 音色，且许可与资源完整', () {

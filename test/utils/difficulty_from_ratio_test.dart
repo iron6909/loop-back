@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/utils/difficulty_from_ratio.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/utils/difficulty_from_ratio.dart';
 
 void main() {
   group('difficultyFromDifficultRatio', () {

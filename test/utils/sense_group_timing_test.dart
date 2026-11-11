@@ -4,8 +4,8 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/word_timestamp.dart';
-import 'package:echo_loop/utils/sense_group_timing.dart';
+import 'package:loop_back/models/word_timestamp.dart';
+import 'package:loop_back/utils/sense_group_timing.dart';
 
 /// 构造 WordTimestamp 的辅助方法，时间单位为毫秒
 WordTimestamp _word(String text, int startMs, int endMs) {

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:echo_loop/models/media_load_result.dart';
-import 'package:echo_loop/widgets/common/managed_media_visual_surface.dart';
+import 'package:loop_back/models/media_load_result.dart';
+import 'package:loop_back/widgets/common/managed_media_visual_surface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

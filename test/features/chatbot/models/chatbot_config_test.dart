@@ -1,7 +1,7 @@
 /// ChatbotConfig 相等性测试：比 sessionId + endpoint，context 排除。
 library;
 
-import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
+import 'package:loop_back/features/chatbot/models/chatbot_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

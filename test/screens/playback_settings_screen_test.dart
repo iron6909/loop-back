@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/screens/playback_settings_screen.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/screens/playback_settings_screen.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';

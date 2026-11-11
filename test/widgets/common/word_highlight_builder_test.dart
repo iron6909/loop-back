@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/word_highlight_binding.dart';
-import 'package:echo_loop/models/word_timestamp.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/word_highlight_provider.dart';
-import 'package:echo_loop/widgets/common/word_highlight_builder.dart';
+import 'package:loop_back/models/word_highlight_binding.dart';
+import 'package:loop_back/models/word_timestamp.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/word_highlight_provider.dart';
+import 'package:loop_back/widgets/common/word_highlight_builder.dart';
 
 const _timestamps = [
   WordTimestamp(

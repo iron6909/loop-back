@@ -5,11 +5,11 @@ import 'package:archive/archive.dart';
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/services/backup/backup_manifest.dart';
-import 'package:echo_loop/services/backup/backup_service.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/services/backup/backup_manifest.dart';
+import 'package:loop_back/services/backup/backup_service.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 // ignore: depend_on_referenced_packages
@@ -19,8 +19,8 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
-import 'package:echo_loop/services/app_update_migration.dart';
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/services/app_update_migration.dart';
+import 'package:loop_back/services/app_logger.dart';
 
 class _FakePathProvider extends PathProviderPlatform
     with MockPlatformInterfaceMixin {
@@ -90,7 +90,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       appDataDirectoryOverride = dataDir;
       database = AppDatabase(
-        NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+        NativeDatabase(File(p.join(dataDir.path, 'loop_back.db'))),
       );
       await database.customSelect('SELECT 1').get();
       service = BackupService(
@@ -137,7 +137,7 @@ void main() {
           if (progress.stage != 'exportingPacking') return;
           checkedPackingStage = true;
           final scratchDirs = root.listSync().whereType<Directory>().where(
-            (dir) => p.basename(dir.path).startsWith('echoloop_export_'),
+            (dir) => p.basename(dir.path).startsWith('loopback_export_'),
           );
           for (final dir in scratchDirs) {
             expect(Directory(p.join(dir.path, 'media')).existsSync(), isFalse);
@@ -159,7 +159,7 @@ void main() {
         expect(entry, isNotNull, reason: name);
         expect(entry?.compression, CompressionType.none, reason: name);
       }
-      expect(archive.findFile('echo_loop.db'), isNull);
+      expect(archive.findFile('loop_back.db'), isNull);
       expect(archive.findFile('preferences.json'), isNull);
       expect(archive.findFile('resources/'), isNull);
       expect(
@@ -312,7 +312,7 @@ void main() {
       databaseClosed = true;
       final applied = await service.applyPreparedImport(prepared);
       final restored = AppDatabase(
-        NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+        NativeDatabase(File(p.join(dataDir.path, 'loop_back.db'))),
       );
       final version = await restored
           .customSelect('PRAGMA user_version')
@@ -362,7 +362,7 @@ void main() {
       databaseClosed = true;
       final applied = await service.applyPreparedImport(prepared);
       final restored = AppDatabase(
-        NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+        NativeDatabase(File(p.join(dataDir.path, 'loop_back.db'))),
       );
 
       final row = await restored.audioItemDao.getById('online');
@@ -448,7 +448,7 @@ void main() {
         final applied = await service.applyPreparedImport(prepared);
 
         final restoredDb = AppDatabase(
-          NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+          NativeDatabase(File(p.join(dataDir.path, 'loop_back.db'))),
         );
         final row = await restoredDb
             .customSelect("SELECT name FROM audio_items WHERE id = 'legacy'")
@@ -519,7 +519,7 @@ void main() {
       await applied.rollback();
 
       final restoredCurrent = AppDatabase(
-        NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+        NativeDatabase(File(p.join(dataDir.path, 'loop_back.db'))),
       );
       final row = await restoredCurrent
           .customSelect("SELECT name FROM audio_items WHERE id = 'rollback'")
@@ -578,7 +578,7 @@ void main() {
       );
 
       final restoredCurrent = AppDatabase(
-        NativeDatabase(File(p.join(dataDir.path, 'echo_loop.db'))),
+        NativeDatabase(File(p.join(dataDir.path, 'loop_back.db'))),
       );
       final row = await restoredCurrent
           .customSelect(
@@ -810,7 +810,7 @@ Future<File> _createLegacyBackup({
         ).toJson(),
       ),
     )..compression = compression,
-    ArchiveFile.stream('echo_loop.db', InputFileStream(snapshot.path))
+    ArchiveFile.stream('loop_back.db', InputFileStream(snapshot.path))
       ..compression = compression,
     ArchiveFile.string(
       'preferences.json',

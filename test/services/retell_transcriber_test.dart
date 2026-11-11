@@ -2,9 +2,9 @@
 library;
 
 import 'dart:io';
-import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
-import 'package:echo_loop/services/asr/offline_asr_engine.dart';
-import 'package:echo_loop/services/retell_transcriber.dart';
+import 'package:loop_back/features/audio_import/audio_transcode_service.dart';
+import 'package:loop_back/services/asr/offline_asr_engine.dart';
+import 'package:loop_back/services/retell_transcriber.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

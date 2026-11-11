@@ -7,16 +7,16 @@ library;
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/providers/speech_capability_provider.dart';
-import 'package:echo_loop/providers/speech_configuration_provider.dart';
-import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
-import 'package:echo_loop/services/speech/speech_capability.dart';
-import 'package:echo_loop/services/speech/speech_capability_probe.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_config_store.dart';
-import 'package:echo_loop/services/speech/speech_model_catalog.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/providers/speech_capability_provider.dart';
+import 'package:loop_back/providers/speech_configuration_provider.dart';
+import 'package:loop_back/services/speech/practice_online_transcriber.dart';
+import 'package:loop_back/services/speech/speech_capability.dart';
+import 'package:loop_back/services/speech/speech_capability_probe.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_config_store.dart';
+import 'package:loop_back/services/speech/speech_model_catalog.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

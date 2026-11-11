@@ -1,9 +1,9 @@
 /// ChatGateBanner + ChatContextChip 测试。
 library;
 
-import 'package:echo_loop/features/chatbot/state/chat_session_state.dart';
-import 'package:echo_loop/features/chatbot/widgets/chat_gate_banner.dart';
-import 'package:echo_loop/features/chatbot/widgets/context_chip.dart';
+import 'package:loop_back/features/chatbot/state/chat_session_state.dart';
+import 'package:loop_back/features/chatbot/widgets/chat_gate_banner.dart';
+import 'package:loop_back/features/chatbot/widgets/context_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

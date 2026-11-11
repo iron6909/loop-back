@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/word_timestamp.dart';
-import 'package:echo_loop/services/native_audio_decoder.dart';
-import 'package:echo_loop/services/subtitle_auto_align_service.dart';
-import 'package:echo_loop/utils/srt_generator.dart';
+import 'package:loop_back/models/word_timestamp.dart';
+import 'package:loop_back/services/native_audio_decoder.dart';
+import 'package:loop_back/services/subtitle_auto_align_service.dart';
+import 'package:loop_back/utils/srt_generator.dart';
 
 class _FakeNativeAudioDecoder implements NativeAudioDecoder {
   final bool supported;

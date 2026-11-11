@@ -4,18 +4,18 @@ library;
 import 'dart:async';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:echo_loop/features/audio_import/local_audio_file_picker.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
-import 'package:echo_loop/widgets/add_audio_dialog.dart';
-import 'package:echo_loop/screens/collection_screen.dart';
-import 'package:echo_loop/features/audio_import/audio_import_models.dart';
-import 'package:echo_loop/features/audio_import/audio_import_provider.dart';
-import 'package:echo_loop/features/remote_config/remote_config.dart';
-import 'package:echo_loop/features/remote_config/remote_config_providers.dart';
-import 'package:echo_loop/widgets/import_audio_selection_list.dart';
-import 'package:echo_loop/widgets/import_audio_sheet.dart';
+import 'package:loop_back/features/audio_import/local_audio_file_picker.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
+import 'package:loop_back/widgets/add_audio_dialog.dart';
+import 'package:loop_back/screens/collection_screen.dart';
+import 'package:loop_back/features/audio_import/audio_import_models.dart';
+import 'package:loop_back/features/audio_import/audio_import_provider.dart';
+import 'package:loop_back/features/remote_config/remote_config.dart';
+import 'package:loop_back/features/remote_config/remote_config_providers.dart';
+import 'package:loop_back/widgets/import_audio_selection_list.dart';
+import 'package:loop_back/widgets/import_audio_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,7 +29,7 @@ class _IdleImport extends AudioImportController {
 }
 
 void main() {
-  const channel = MethodChannel('top.echo-loop/local_audio_picker');
+  const channel = MethodChannel('top.loop-back/local_audio_picker');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   Object? directory;

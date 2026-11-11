@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/utils/transcript_stats.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/utils/transcript_stats.dart';
 
 /// 纯逻辑测试：统计句子数和单词数
 ///

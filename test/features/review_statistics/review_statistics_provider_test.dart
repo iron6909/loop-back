@@ -1,8 +1,8 @@
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/review_statistics/review_statistics_provider.dart';
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/features/review_statistics/review_statistics_provider.dart';
+import 'package:loop_back/services/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

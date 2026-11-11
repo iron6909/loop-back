@@ -5,7 +5,6 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   charset_converter
   ffmpeg_kit_flutter_new_min
-  firebase_core
   flutter_inappwebview_windows
   flutter_secure_storage_windows
   flutter_timezone

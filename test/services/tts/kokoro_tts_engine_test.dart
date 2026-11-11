@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/services/tts/kokoro_model_manager.dart'
+import 'package:loop_back/services/tts/kokoro_model_manager.dart'
     show KokoroModelPaths;
-import 'package:echo_loop/services/tts/kokoro_synthesizer.dart';
-import 'package:echo_loop/services/tts/kokoro_tts_engine.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/kokoro_synthesizer.dart';
+import 'package:loop_back/services/tts/kokoro_tts_engine.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 
 /// 记录调用并按需写假 wav 的 fake 合成器。
 class _FakeSynth implements KokoroNativeSynthesizer {

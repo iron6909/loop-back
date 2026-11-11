@@ -1,4 +1,4 @@
-package app.echoloop
+package app.loopback
 
 import android.media.AudioFormat
 import android.media.AudioRecord

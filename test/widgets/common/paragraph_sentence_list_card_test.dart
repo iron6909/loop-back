@@ -11,12 +11,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/models/sentence_focus_reason.dart';
-import 'package:echo_loop/providers/saved_word_provider.dart';
-import 'package:echo_loop/utils/saved_text_index.dart';
-import 'package:echo_loop/widgets/common/masked_sentence_tile.dart';
-import 'package:echo_loop/widgets/common/paragraph_sentence_list_card.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/models/sentence_focus_reason.dart';
+import 'package:loop_back/providers/saved_word_provider.dart';
+import 'package:loop_back/utils/saved_text_index.dart';
+import 'package:loop_back/widgets/common/masked_sentence_tile.dart';
+import 'package:loop_back/widgets/common/paragraph_sentence_list_card.dart';
 
 import '../../helpers/shared/test_fixtures.dart';
 

@@ -7,12 +7,12 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/services/asr/asr_model_catalog.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
-import 'package:echo_loop/services/tts/piper_model_manager.dart';
-import 'package:echo_loop/services/tts/piper_model_catalog.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
-import 'package:echo_loop/services/tts/tts_shared_resource_catalog.dart';
+import 'package:loop_back/services/asr/asr_model_catalog.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/tts/piper_model_manager.dart';
+import 'package:loop_back/services/tts/piper_model_catalog.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/tts_shared_resource_catalog.dart';
 
 /// 按文件名返回预置字节的 mock adapter；未知文件返回 404。
 class _MockResourceAdapter implements HttpClientAdapter {

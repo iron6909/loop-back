@@ -6,7 +6,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart';
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/services/app_logger.dart';
 
 /// 面向真实 App 集成测试的最小交互封装。
 final class AppInteractionSimulator {

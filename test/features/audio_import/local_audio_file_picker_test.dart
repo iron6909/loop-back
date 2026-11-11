@@ -1,15 +1,15 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/audio_import/local_audio_file_picker.dart';
-import 'package:echo_loop/features/audio_import/subtitle_pairing.dart';
+import 'package:loop_back/features/audio_import/local_audio_file_picker.dart';
+import 'package:loop_back/features/audio_import/subtitle_pairing.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const channel = MethodChannel('top.echo-loop/local_audio_picker');
+  const channel = MethodChannel('top.loop-back/local_audio_picker');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
 

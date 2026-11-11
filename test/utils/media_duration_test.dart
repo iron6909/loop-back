@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/utils/media_duration.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/utils/media_duration.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 

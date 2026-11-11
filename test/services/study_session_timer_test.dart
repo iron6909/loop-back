@@ -3,12 +3,12 @@ import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart';
 import 'package:clock/clock.dart';
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/services/study_activity_gate.dart';
-import 'package:echo_loop/services/study_session_timer.dart';
-import 'package:echo_loop/services/study_time_service.dart';
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/services/study_activity_gate.dart';
+import 'package:loop_back/services/study_session_timer.dart';
+import 'package:loop_back/services/study_time_service.dart';
+import 'package:loop_back/services/app_logger.dart';
 
 class _RecordingStudyTimeService extends StudyTimeService {
   _RecordingStudyTimeService(AppDatabase db)

@@ -10,9 +10,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/services/speech/practice_online_transcriber.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 记录请求并按队列返回预设响应的 adapter。

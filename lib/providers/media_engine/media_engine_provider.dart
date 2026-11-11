@@ -10,7 +10,7 @@ import '../../models/media_engine_state.dart';
 import '../../models/sentence_playback_result.dart';
 import '../../models/word_highlight_binding.dart';
 import '../../services/background_audio_handler.dart';
-import '../../services/echo_loop_media_handler.dart';
+import '../../services/loop_back_media_handler.dart';
 import '../../services/app_logger.dart';
 import '../../services/media_kit_player_backend.dart';
 import '../../services/media_kit_debug_initializer.dart';
@@ -28,13 +28,13 @@ MediaPlayerBackend Function() mediaBackendFactory(Ref ref) {
 
 /// 测试缝：默认读全局 router，测试 override 成纯 Dart router。
 @Riverpod(keepAlive: true)
-MediaSessionRouter mediaSessionRouter(Ref ref) => echoLoopMediaSessionRouter;
+MediaSessionRouter mediaSessionRouter(Ref ref) => loopBackMediaSessionRouter;
 
 @Riverpod(keepAlive: true)
 class MediaEngine extends _$MediaEngine {
   MediaPlayerBackend? _backend;
   Stream<Duration>? _wordHighlightPositionStream;
-  EchoLoopMediaHandler? _handler;
+  LoopBackMediaHandler? _handler;
   MediaSessionRouter? _router;
   bool _disposingChain = false;
   int _rangeRequestId = 0;
@@ -85,7 +85,7 @@ class MediaEngine extends _$MediaEngine {
     if (backend is MediaKitPlayerBackend) {
       ensureMediaKitInitialized();
     }
-    final handler = EchoLoopMediaHandler(backend);
+    final handler = LoopBackMediaHandler(backend);
     final router = ref.read(mediaSessionRouterProvider);
     _backend = backend;
     _wordHighlightPositionStream = backend.positionStream.map(
@@ -294,7 +294,7 @@ class MediaEngine extends _$MediaEngine {
     // media_kit 前台播放不依赖 AudioService；测试 fake backend 也不应触发
     // 真实平台媒体会话初始化，否则 flutter_tester 会访问不存在的平台插件。
     if (publishToSystemMediaSession && _backend is MediaKitPlayerBackend) {
-      retryEchoLoopAudioServiceOnPlayback();
+      retryLoopBackAudioServiceOnPlayback();
     }
     state = state.copyWith(
       isLoading: true,

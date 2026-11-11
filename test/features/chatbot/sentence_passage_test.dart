@@ -1,5 +1,5 @@
-import 'package:echo_loop/features/chatbot/sentence_passage.dart';
-import 'package:echo_loop/models/sentence.dart';
+import 'package:loop_back/features/chatbot/sentence_passage.dart';
+import 'package:loop_back/models/sentence.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Sentence sentence(int index, String text) => Sentence(

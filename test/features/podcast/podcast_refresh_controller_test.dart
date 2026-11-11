@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:echo_loop/features/podcast/podcast_refresh_controller.dart';
-import 'package:echo_loop/features/podcast/podcast_repository.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
+import 'package:loop_back/features/podcast/podcast_refresh_controller.dart';
+import 'package:loop_back/features/podcast/podcast_repository.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/providers/collection_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';

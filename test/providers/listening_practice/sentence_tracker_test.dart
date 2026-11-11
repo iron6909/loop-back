@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/providers/listening_practice/sentence_tracker.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/providers/listening_practice/sentence_tracker.dart';
 
 void main() {
   group('SentenceTracker', () {

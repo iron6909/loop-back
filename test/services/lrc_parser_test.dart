@@ -1,5 +1,5 @@
-import 'package:echo_loop/services/lrc_parser.dart';
-import 'package:echo_loop/services/subtitle_parser.dart';
+import 'package:loop_back/services/lrc_parser.dart';
+import 'package:loop_back/services/subtitle_parser.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

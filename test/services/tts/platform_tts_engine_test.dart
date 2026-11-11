@@ -6,8 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:echo_loop/services/tts/platform_tts_engine.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/platform_tts_engine.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 
 class MockFlutterTts extends Mock implements FlutterTts {}
 

@@ -4,10 +4,10 @@
 /// 句子必须保留估算值，并让整份来源如实落在 estimated / mixed。
 library;
 
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
-import 'package:echo_loop/utils/model_word_timestamps.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/utils/model_word_timestamps.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Sentence _sentence(String text, int startMs, int endMs) => Sentence(

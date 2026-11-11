@@ -1,4 +1,4 @@
-import 'package:echo_loop/features/subscription/models/ai_quota_rejection.dart';
+import 'package:loop_back/features/subscription/models/ai_quota_rejection.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

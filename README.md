@@ -3,44 +3,36 @@
 </div>
 
 <div align="center">
-  <img src="assets/icon/app-icon-1024-rounded.png" alt="Echo Loop" width="128" />
+  <img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="128" />
 
-  <h1>Echo Loop — 高效的英语听说训练 App</h1>
+  <h1>LoopBack — 高效的英语听说训练 App</h1>
 
   <p><strong>从此不必自己摸索怎么练好英语。</strong></p>
 
-  <p>精听 · 跟读 · 盲听 · 复述 · 复习，Echo Loop 按科学节奏推你走完。</p>
+  <p>精听 · 跟读 · 盲听 · 复述 · 复习，LoopBack 按科学节奏推你走完。</p>
 
   <p><sub><em>本项目由中央民族大学外国语学院 <a href="https://sfs.muc.edu.cn/info/1063/3729.htm">杨艳老师</a> 指导设计。</em></sub></p>
 
   <p>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" /></a>
     <img src="https://img.shields.io/badge/Platform-iOS%20%C2%B7%20Android%20%C2%B7%20macOS%20%C2%B7%20Windows-brightgreen.svg" alt="Platform" />
-    <a href="https://github.com/echo-loop/Echo-Loop/releases/latest"><img src="https://img.shields.io/github/v/release/echo-loop/Echo-Loop?label=release&color=orange" alt="Latest release" /></a>
-    <a href="https://github.com/echo-loop/Echo-Loop/releases"><img src="https://img.shields.io/github/downloads/echo-loop/Echo-Loop/total?label=downloads" alt="Total release downloads" /></a>
-    <a href="https://github.com/echo-loop/Echo-Loop/commits/main"><img src="https://img.shields.io/github/last-commit/echo-loop/Echo-Loop" alt="Last commit" /></a>
+    <a href="https://github.com/iron6909/loop-back/releases/latest"><img src="https://img.shields.io/github/v/release/iron6909/loop-back?label=release&color=orange" alt="Latest release" /></a>
+    <a href="https://github.com/iron6909/loop-back/releases"><img src="https://img.shields.io/github/downloads/iron6909/loop-back/total?label=downloads" alt="Total release downloads" /></a>
+    <a href="https://github.com/iron6909/loop-back/commits/main"><img src="https://img.shields.io/github/last-commit/iron6909/loop-back" alt="Last commit" /></a>
   </p>
 
-  <p>
-    <a href="https://trendshift.io/repositories/41519?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-41519" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/41519/weekly?language=Dart" alt="echo-loop%2FEcho-Loop | Trendshift" width="250" height="55" /></a>
-  </p>
-
-  <p>
-    <a href="https://apps.apple.com/app/id6760324074"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" height="48" /></a>
-    <a href="https://play.google.com/store/apps/details?id=app.echoloop"><img src="assets/badges/google-play-en.png" alt="Get it on Google Play" height="40" /></a>
-  </p>
 </div>
 
 
 ---
 
-## 📖 Echo Loop 是什么
+## 📖 LoopBack 是什么
 
 本分支将 AI 改为用户自行配置的供应商直连，当前验收目标为 Android。首次使用请到「设置 → AI 服务」选择 DeepSeek、OpenRouter 或自定义 OpenAI 兼容地址，填写模型与 API Key，再手动验证连接。Base URL 会直接追加 `/chat/completions`，不会自动补 `/v1`。密钥仅存设备安全存储，备份恢复后需要重新填写。
 
 字幕与复述转写在本机用英语模型完成；学习助手与讲解请求由当前供应商处理。账号、会员、云端字幕、社区同步、网盘导入与自更新已停用；历史学习数据保留，本地目录可导入为合集，精选播客随包提供。
 
-**若英语听说也有一卷无上内功心法，Echo Loop 便是一部现代学习者的 E筋经**。这个 E，既是 Echo，也是 English，更是 Ear 与 Expression。它不传花拳绣腿，不教临场取巧，而是带你:
+**若英语听说也有一卷无上内功心法，LoopBack 便是一部现代学习者的英语听说心法**。它听进去的是 English，说出来的是 Expression。它不传花拳绣腿，不教临场取巧，而是带你:
 
 - 先精听通脉，打通语音、词义与句意经脉
 - 再跟读运功，校准发音、节奏和语感
@@ -50,7 +42,7 @@
 初练之后，八阶回环自成周天，间隔复习固本培元，难句与生词也在一次次回炉中融会贯通，化为己用。
 练到深处，听力不再靠猜，口语不再硬憋，真正生出一身可持续增长的英语听说内功。
 
-说得直白一点，Echo Loop 是一款科学高效的英语听说训练 App。它帮助你把一段音频从陌生练到真正听懂，再通过跟读和复述实现听说闭环，逐步练到脱口而出。系统会自动安排间隔复习和提醒，逐步推进训练节奏。你不用自己摸索方法，也不用手动控制流程，只需专注练习本身。
+说得直白一点，LoopBack 是一款科学高效的英语听说训练 App。它帮助你把一段音频从陌生练到真正听懂，再通过跟读和复述实现听说闭环，逐步练到脱口而出。系统会自动安排间隔复习和提醒，逐步推进训练节奏。你不用自己摸索方法，也不用手动控制流程，只需专注练习本身。
 
 ---
 
@@ -69,7 +61,7 @@
     <td align="center"><img src="assets/screenshots/07-favorites.png" alt="难句收藏" width="180" /><br/><sub>难句收藏，熟中生巧</sub></td>
     <td align="center"><img src="assets/screenshots/08-flashcard.png" alt="闪卡复习" width="180" /><br/><sub>闪卡复习，原句再现</sub></td>
     <td align="center"><img src="assets/screenshots/09-freestyle.png" alt="自由练习" width="180" /><br/><sub>按你的节奏，自由练习</sub></td>
-    <td align="center"><img src="assets/icon/app-icon-1024-rounded.png" alt="Echo Loop" width="120" /></td>
+    <td align="center"><img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="120" /></td>
   </tr>
 </table>
 
@@ -102,17 +94,17 @@
 
 **这些决策本身才是最消耗意志力的地方**：不是听不懂，是不知道下一步该做什么。
 
-Echo Loop 想做的，就是在不违背人性的前提下，用更科学的训练流程降低重复练习的执行成本。它把精听、跟读、盲听、复述和间隔复习串成一个自动推进的闭环：选一段你想听懂的音频，按下开始，从精听到通关，每一步它都会告诉你"现在做什么"。
+LoopBack 想做的，就是在不违背人性的前提下，用更科学的训练流程降低重复练习的执行成本。它把精听、跟读、盲听、复述和间隔复习串成一个自动推进的闭环：选一段你想听懂的音频，按下开始，从精听到通关，每一步它都会告诉你"现在做什么"。
 
-你只需要坚持打开 App，剩下交给 Echo Loop。把一段材料练透，强过泛听 100 个音频。
+你只需要坚持打开 App，剩下交给 LoopBack。把一段材料练透，强过泛听 100 个音频。
 
 ---
 
 ## 🆚 和其他方案的差异
 
-挑了四款国内学习者最熟的 App 对比。单看每一项功能，其它 App 也或多或少有；但 Echo Loop 真正的不同在于：**它把每一步串起来自动驱动你走完，你不需要自己摸索方法、控制遍数、掌握复习节奏。**
+挑了四款国内学习者最熟的 App 对比。单看每一项功能，其它 App 也或多或少有；但 LoopBack 真正的不同在于：**它把每一步串起来自动驱动你走完，你不需要自己摸索方法、控制遍数、掌握复习节奏。**
 
-| 功能 | Echo Loop | 每日英语听力 | 可可英语 | 英语流利说 | Anki |
+| 功能 | LoopBack | 每日英语听力 | 可可英语 | 英语流利说 | Anki |
 |---|---|---|---|---|---|
 | **学习节奏由 App 驱动** | ✅ 全自动 | ❌ | ❌ | ❌ | ❌ |
 | 听 → 说闭环（精听 + 跟读 + **复述**） | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 | ❌ |
@@ -142,7 +134,7 @@ flowchart LR
   E --> F[通关<br/>完成本轮学习任务]
 ```
 
-**以上每一步，由 Echo Loop 自动驱动，不需要你判断。**
+**以上每一步，由 LoopBack 自动驱动，不需要你判断。**
 
 你不需要管"现在该听几遍"、"上次那个素材该不该复习了"。打开 App，今天该做什么会直接呈现在你眼前。
 
@@ -170,35 +162,14 @@ flowchart LR
 
 ## 📥 下载与试用
 
-<table>
-  <tr>
-    <td valign="middle">
-      <p>
-        <a href="https://apps.apple.com/app/id6760324074"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" height="48" /></a>
-        &nbsp;
-        <a href="https://play.google.com/store/apps/details?id=app.echoloop"><img src="assets/badges/google-play-en.png" alt="Get it on Google Play" height="40" /></a>
-        &nbsp;
-        <a href="https://github.com/echo-loop/Echo-Loop/releases"><img src="https://img.shields.io/badge/Android-下载%20APK-3DDC84?logo=android&logoColor=white&style=for-the-badge" alt="Android APK" height="48" /></a>
-      </p>
-      <p><sub>桌面端：macOS 开发中 · Windows 规划中 · Web 暂无计划</sub></p>
-    </td>
-    <td valign="middle" align="center" width="120">
-      <img src="assets/qr/app-store.png" alt="App Store 二维码" width="110" /><br/>
-      <sub>App Store</sub>
-    </td>
-    <td valign="middle" align="center" width="120">
-      <img src="assets/qr/google-play.png" alt="Google Play 二维码" width="110" /><br/>
-      <sub>Google Play</sub>
-    </td>
-  </tr>
-</table>
+本分支不上架应用商店。Android 请从 GitHub [Releases](https://github.com/iron6909/loop-back/releases) 下载 APK 侧载安装；iOS/macOS/Windows 目前以源码构建为准（桌面端开发中，Web 暂无计划）。
 
 ---
 
 ## ❓ 常见问题
 
 <details>
-<summary><strong>Echo Loop 免费吗？</strong></summary>
+<summary><strong>LoopBack 免费吗？</strong></summary>
 
 基础功能完全免费，不限次数、不限数量：
 
@@ -210,7 +181,7 @@ flowchart LR
 - **本地离线转录字幕**：下载模型后在本机生成字幕，不用登录
 - **离线词典、学习数据统计、导出 PDF 笔记、备份与恢复**
 
-AI 讲解与学习助手使用你配置的供应商接口，由该供应商按其套餐或用量计费；本分支不提供 Echo Loop 免费 AI 额度或会员结账。
+AI 讲解与学习助手使用你配置的供应商接口，由该供应商按其套餐或用量计费；本分支不提供 LoopBack 免费 AI 额度或会员结账。
 
 </details>
 
@@ -238,19 +209,14 @@ AI 翻译、句子解析、意群拆分、词汇解析、AI 学习助手与复�
 <details>
 <summary><strong>支持哪些平台？</strong></summary>
 
-目前主力是 **iOS 和 Android**，在 App Store、Google Play 下载，或者在 [Releases](https://github.com/echo-loop/Echo-Loop/releases) 下载 Android APK。macOS 和 Windows 的桌面版正在开发中，以后会正式发布。
-
-想现在就在电脑上用，可以这样装：
-
-- **Mac（M 系列芯片）**：打开 Mac App Store 搜索 Echo Loop，直接安装 iOS 版
-- **Windows**：先安装腾讯应用宝，再在应用宝里安装 Echo Loop 的 Android APK
+目前主力是 **Android**，从 GitHub [Releases](https://github.com/iron6909/loop-back/releases) 下载 APK 侧载安装；iOS 与 macOS/Windows 桌面版以源码构建为准，后续完善发布。
 
 </details>
 
 <details>
 <summary><strong>和其他英语 App 有什么不同？</strong></summary>
 
-其他 App 主要提供材料和工具，怎么练要靠你自己安排。Echo Loop 管的是「怎么练」：精听、跟读、盲听、复述、间隔复习串成一个流程，每一步都由 App 告诉你接下来做什么，你不用自己定计划、数遍数、记复习时间。详细对比见上方「🆚 和其他方案的差异」。
+其他 App 主要提供材料和工具，怎么练要靠你自己安排。LoopBack 管的是「怎么练」：精听、跟读、盲听、复述、间隔复习串成一个流程，每一步都由 App 告诉你接下来做什么，你不用自己定计划、数遍数、记复习时间。详细对比见上方「🆚 和其他方案的差异」。
 
 </details>
 
@@ -296,17 +262,6 @@ AI 翻译、句子解析、意群拆分、词汇解析、AI 学习助手与复�
 
 ---
 
-## 💬 加入社群
-
-和其他认真练英语的伙伴一起：交流学习方法、分享学习资源、反馈使用体验、第一时间收到新功能更新。
-
-- [加入 QQ 群（1109595757）](https://qm.qq.com/q/f4YeczPPUc)：和其他认真练英语的伙伴交流学习方法、分享学习资源。
-- [微信联系我们](https://i.postimg.cc/P5tVpPTV/echo-loop-wecom.jpg)：扫描二维码联系 Echo Loop。
-- [关注 B 站](https://space.bilibili.com/509449049/upload/video)：获取英语学习内容和功能更新。
-- [关注小红书](https://xhslink.cn/m/4zOdGUcDH4N)：获取使用技巧、功能更新和英语学习内容。
-
----
-
 ## 🗺️ Roadmap
 
 ### ✅ 1 · 核心功能
@@ -343,11 +298,11 @@ AI 翻译、句子解析、意群拆分、词汇解析、AI 学习助手与复�
 
 ## ⭐ Star History
 
-<a href="https://www.star-history.com/?repos=echo-loop%2FEcho-Loop&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=iron6909%2Floop-back&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=echo-loop/Echo-Loop&type=date&theme=dark&legend=top-left&sealed_token=Yn1CvBygp-TANTMrrjOoIPcBqfBW4dJBno9qMlDVPTRaqlNZEvy5k6QNjheAb8AxwJ3ygwow4Zszp0Z5XCtxf7OP4MOtE_fCjKTjyBALH5gvoX-6BOLIIQ" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=echo-loop/Echo-Loop&type=date&legend=top-left&sealed_token=Yn1CvBygp-TANTMrrjOoIPcBqfBW4dJBno9qMlDVPTRaqlNZEvy5k6QNjheAb8AxwJ3ygwow4Zszp0Z5XCtxf7OP4MOtE_fCjKTjyBALH5gvoX-6BOLIIQ" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=echo-loop/Echo-Loop&type=date&legend=top-left&sealed_token=Yn1CvBygp-TANTMrrjOoIPcBqfBW4dJBno9qMlDVPTRaqlNZEvy5k6QNjheAb8AxwJ3ygwow4Zszp0Z5XCtxf7OP4MOtE_fCjKTjyBALH5gvoX-6BOLIIQ" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
  </picture>
 </a>
 
@@ -374,27 +329,18 @@ AI 翻译、句子解析、意群拆分、词汇解析、AI 学习助手与复�
 <summary><strong>🚀 快速开始</strong></summary>
 
 ```bash
-git clone git@github.com:echo-loop/Echo-Loop.git
-cd Echo-Loop
-cp .dev.env.template .dev.env   # 填入 Supabase / Google 等编译期变量
+git clone git@github.com:iron6909/loop-back.git
+cd loop-back
+cp .dev.env.template .dev.env   # 填入渠道/分析等编译期变量（无自有后端 API）
 flutter pub get
 dart run build_runner build
 flutter run -d <ios|android|macos> --dart-define-from-file=.dev.env
 ```
 
-> Supabase 与 Google 等编译期配置放在 `.dev.env`（调试）/ `.prod.env`（发布），通过
+> 编译期配置放在 `.dev.env`（调试）/ `.prod.env`（发布），通过
 > `--dart-define-from-file` 注入。这两个文件已被 `.gitignore`，请勿提交。
-> 全球 API 默认地址与中国 API 地址可用编译期变量覆盖；全球和中国模型 CDN 地址配置在
-> `lib/config/regional_service_endpoints.dart`；
-> 全球 API 默认地址为 `https://www.echo-loop.top`，可通过 `API_BASE_URL` 编译期变量覆盖；
-> 中国 API 默认地址为 `https://www.echo-loop.cn`，可通过 `API_CHINA_BASE_URL` 编译期变量覆盖，
-> 本地构建可在 `.prod.env` 中覆盖；GitHub Actions CI/Release 会直接将对应 GitHub Variables 传给构建命令；
-> release 包通过统一的 `isChinaUser` 结论选择区域：中国 Apple Storefront、设备国家码或
-> `/api/v1/client/config` 的 `context.countryCode` 任一返回 `CN`/`CHN` 即选择中国，
-> 不需要按地区构建。同一个 release 包包含全球与中国 API 候选地址。首次没有中国地区证据时先使用全球 API；
-> 地区结论变化后先保留当前 API，并立即用配置请求探测新的首选区域；遇到网络错误或 5xx
-> 时尝试另一区域一次。探测成功后切换到首选区域；备用成功后当前会话 API 暂用可用地址，
-> 后续配置刷新会重新探测首选区域。模型 CDN 始终跟随 `isChinaUser`；未设置 API 覆盖变量时使用源码默认地址。
+> 项目已无自有后端 API 与资源 CDN，无需配置任何服务端点。
+
 
 </details>
 
@@ -481,7 +427,7 @@ flutter analyze                          # 静态分析
 flutter test                             # 全部测试
 flutter test integration_test -d macos   # 集成测试
 # Maestro UI 烟测（先启动设备并安装开发包；Android 开发包示例）
-MAESTRO_APP_ID=app.echoloop.dev scripts/test_maestro.sh
+MAESTRO_APP_ID=app.loopback.dev scripts/test_maestro.sh
 # Android 真机：自动构建、安装 dev 包并运行 Study 测试
 scripts/test_maestro_android.sh
 # 多台设备时，显式指定目标；也可一次性 export MAESTRO_ANDROID_DEVICE=<adb-serial>
@@ -490,7 +436,7 @@ dart format .                            # 格式化
 ```
 
 > Maestro CLI 安装：`curl -fsSL https://get.maestro.mobile.dev | bash`。iOS 开发包请将
-> `MAESTRO_APP_ID` 改为 `top.echo-loop.dev`；测试流存放在 `maestro/`。
+> `MAESTRO_APP_ID` 改为 `top.loop-back.dev`；测试流存放在 `maestro/`。
 
 **代码生成**（修改 Riverpod Provider 后）
 
@@ -523,7 +469,7 @@ flutter run --release -d <DEVICE_ID> --dart-define-from-file=.dev.env
 
 ---
 
-国内 AtomGit 托管：<a href="https://atomgit.com/echo-loop/Echo-Loop">Echo Loop AtomGit 项目主页</a>
+国内 AtomGit 托管：<a href="https://atomgit.com/iron6909/loop-back">LoopBack AtomGit 项目主页</a>
 
 ## 📄 License
 

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/services/review_reminder_time_calculator.dart';
+import 'package:loop_back/services/review_reminder_time_calculator.dart';
 
 void main() {
   group('FixedTimeReminderCalculator', () {

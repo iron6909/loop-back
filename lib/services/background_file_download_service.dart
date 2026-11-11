@@ -550,7 +550,7 @@ class PluginBackgroundDownloadRunner
        _resolveNotificationLabels =
            resolveNotificationLabels ?? _englishNotificationLabels;
 
-  static const _group = 'echo-loop-user-files';
+  static const _group = 'loop-back-user-files';
 
   final Future<Directory> Function() _resolveDataDir;
   final FileDownloader _downloader;
@@ -942,9 +942,9 @@ class _MethodChannelMacOSSystemDownloadClient
     implements MacOSSystemDownloadClient {
   const _MethodChannelMacOSSystemDownloadClient();
 
-  static const _methodChannel = MethodChannel('top.echo-loop/system_download');
+  static const _methodChannel = MethodChannel('top.loop-back/system_download');
   static const _eventChannel = EventChannel(
-    'top.echo-loop/system_download/events',
+    'top.loop-back/system_download/events',
   );
 
   static final _uuid = const Uuid();

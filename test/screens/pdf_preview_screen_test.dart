@@ -13,11 +13,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:echo_loop/models/pdf_export/study_pdf_data.dart';
-import 'package:echo_loop/screens/pdf_preview_screen.dart';
-import 'package:echo_loop/widgets/common/anchored_bubble.dart';
-import 'package:echo_loop/services/pdf_export/study_pdf_export_service.dart';
-import 'package:echo_loop/services/pdf_export/study_pdf_loader.dart';
+import 'package:loop_back/models/pdf_export/study_pdf_data.dart';
+import 'package:loop_back/screens/pdf_preview_screen.dart';
+import 'package:loop_back/widgets/common/anchored_bubble.dart';
+import 'package:loop_back/services/pdf_export/study_pdf_export_service.dart';
+import 'package:loop_back/services/pdf_export/study_pdf_loader.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';

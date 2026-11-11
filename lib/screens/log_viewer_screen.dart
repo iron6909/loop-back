@@ -178,7 +178,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
       );
       await share(
         [XFile(path, mimeType: 'application/zip')],
-        subject: 'Echo Loop Logs',
+        subject: 'LoopBack Logs',
         sharePositionOrigin: box == null
             ? Rect.zero
             : box.localToGlobal(Offset.zero) & box.size,
@@ -204,7 +204,7 @@ class _LogViewerScreenState extends State<LogViewerScreen> {
     );
     final dir = Directory(p.join(tempDir.path, 'log_export_$timestamp'));
     await dir.create(recursive: true);
-    final archivePath = p.join(dir.path, 'echo_loop_logs_$timestamp.zip');
+    final archivePath = p.join(dir.path, 'loop_back_logs_$timestamp.zip');
     final logDirectory = await appLogDirectoryPath();
     final fallbackLog = AppLogger.instance.entries
         .map((entry) => entry.toString())

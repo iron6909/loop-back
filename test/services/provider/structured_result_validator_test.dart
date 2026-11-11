@@ -5,11 +5,11 @@
 /// 容错（它会对非数组抛 `TypeError`）。
 library;
 
-import 'package:echo_loop/models/dictionary/dictionary_entry.dart';
-import 'package:echo_loop/models/retell_review_evaluation.dart';
-import 'package:echo_loop/models/sense_group_result.dart';
-import 'package:echo_loop/models/sentence_ai_result.dart';
-import 'package:echo_loop/services/provider/structured_result_validator.dart';
+import 'package:loop_back/models/dictionary/dictionary_entry.dart';
+import 'package:loop_back/models/retell_review_evaluation.dart';
+import 'package:loop_back/models/sense_group_result.dart';
+import 'package:loop_back/models/sentence_ai_result.dart';
+import 'package:loop_back/services/provider/structured_result_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

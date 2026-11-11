@@ -1,4 +1,4 @@
-import 'package:echo_loop/models/retell_review_evaluation.dart';
+import 'package:loop_back/models/retell_review_evaluation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

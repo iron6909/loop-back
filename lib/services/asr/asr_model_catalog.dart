@@ -2,7 +2,7 @@
 ///
 /// 本文件是 ASR 资源身份的唯一来源：模型 ID、固定公开 revision、逐文件
 /// SHA-256、字节数、许可与共享依赖。三个 Whisper 英语模型与共享 Silero VAD
-/// 都从固定公开来源逐文件下载，ASR 安装流程不再请求 EchoLoop 资源服务。
+/// 都从固定公开来源逐文件下载，ASR 安装流程不再请求 LoopBack 资源服务。
 ///
 /// 摘要与大小于 2026-11-07 通过独立下载核对：Hugging Face 与 hf-mirror.com
 /// 返回同一 revision 的相同字节（逐文件 SHA-256 一致），VAD 取自 k2-fsa/
@@ -118,7 +118,7 @@ class AsrPublicResourceSpec {
 
 /// 三档 Whisper 英语 INT8 ONNX 模型与共享 Silero VAD 的固定公开来源。
 ///
-/// Base、Small 的公开文件与旧 EchoLoop 归档内的文件字节完全一致（逐文件
+/// Base、Small 的公开文件与旧 LoopBack 归档内的文件字节完全一致（逐文件
 /// SHA-256 相同），因此旧归档安装与更早的逐文件安装仍被视为同一身份，
 /// 升级后不会重下已安装的模型。
 ///

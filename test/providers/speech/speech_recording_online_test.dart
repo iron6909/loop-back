@@ -10,21 +10,21 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/providers/local_transcription_task_provider.dart'
+import 'package:loop_back/features/audio_import/audio_transcode_service.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/providers/local_transcription_task_provider.dart'
     show localTranscriptionTranscodeServiceProvider;
-import 'package:echo_loop/providers/recognition_settings_provider.dart';
-import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
-import 'package:echo_loop/providers/speech_capability_provider.dart';
-import 'package:echo_loop/providers/speech_configuration_provider.dart';
-import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
-import 'package:echo_loop/services/speech/speech_capability.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_config_store.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
-import 'package:echo_loop/services/speech_practice_platform.dart';
+import 'package:loop_back/providers/recognition_settings_provider.dart';
+import 'package:loop_back/providers/speech/speech_recording_controller.dart';
+import 'package:loop_back/providers/speech_capability_provider.dart';
+import 'package:loop_back/providers/speech_configuration_provider.dart';
+import 'package:loop_back/services/speech/practice_online_transcriber.dart';
+import 'package:loop_back/services/speech/speech_capability.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_config_store.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/services/speech_practice_platform.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -33,7 +33,7 @@ import '../../helpers/mock_providers.dart';
 
 const _baseUrl = 'https://openrouter.ai/api/v1';
 const _modelId = 'openai/whisper-1';
-const _apiKey = 'sk-shadowing-online-test';
+const _apiKey = 'shadow1';
 const _onlineText = 'the quick brown fox jumps';
 
 /// 记录请求并按队列返回预设响应的 adapter。

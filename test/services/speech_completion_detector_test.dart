@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/services/speech_completion_detector.dart';
+import 'package:loop_back/services/speech_completion_detector.dart';
 
 /// 快速构建 SpeechMatchContext
 SpeechMatchContext buildCtx(String reference, String transcript) {

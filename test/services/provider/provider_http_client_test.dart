@@ -8,8 +8,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/provider/provider_config.dart';
-import 'package:echo_loop/services/provider/provider_http_client.dart';
+import 'package:loop_back/services/provider/provider_config.dart';
+import 'package:loop_back/services/provider/provider_http_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 记录请求并按队列返回预设响应的 adapter。
@@ -132,7 +132,7 @@ void main() {
 
       final headers = adapter.requests.single.headers;
       expect(headers['Authorization'], 'Bearer fixture-key');
-      expect('${headers['User-Agent']}', contains('EchoLoop'));
+      expect('${headers['User-Agent']}', contains('LoopBack'));
       expect(
         headers.keys.where((k) => k.toLowerCase().startsWith('x-')),
         isEmpty,

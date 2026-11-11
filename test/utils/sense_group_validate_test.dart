@@ -4,7 +4,7 @@
 library;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/utils/sense_group_validate.dart';
+import 'package:loop_back/utils/sense_group_validate.dart';
 
 void main() {
   group('validateSenseGroupChunks', () {

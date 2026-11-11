@@ -5,15 +5,12 @@
 /// 获取 [AnalyticsService] 实例。
 library;
 
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analytics_channel.dart';
 import 'analytics_service.dart';
-import 'channels/firebase_channel.dart';
 import 'channels/log_only_channel.dart';
 import 'channels/posthog_channel.dart';
 import 'channels/umeng_channel.dart';
@@ -83,16 +80,10 @@ AnalyticsChannel _createChannel() {
   return LogOnlyChannel();
 }
 
-// 以下通道备用，当前未启用
+// 以下通道备用，当前未启用（Firebase 已随去品牌化移除）。
 // ignore: unused_element
 AnalyticsChannel _createChannelLegacy(bool isChina) {
   if (kDebugMode) return LogOnlyChannel();
-  if (Platform.isAndroid) {
-    if (isChina && UmengChannel.isConfigured) return UmengChannel();
-    return FirebaseChannel();
-  }
-  if (!Platform.isMacOS && isChina && UmengChannel.isConfigured) {
-    return UmengChannel();
-  }
-  return FirebaseChannel();
+  if (isChina && UmengChannel.isConfigured) return UmengChannel();
+  return LogOnlyChannel();
 }

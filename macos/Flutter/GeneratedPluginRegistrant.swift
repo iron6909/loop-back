@@ -10,8 +10,6 @@ import audio_session
 import charset_converter
 import ffmpeg_kit_flutter_new_min
 import file_picker
-import firebase_analytics
-import firebase_core
 import flutter_inappwebview_macos
 import flutter_local_notifications
 import flutter_secure_storage_darwin
@@ -38,8 +36,6 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   CharsetConverterPlugin.register(with: registry.registrar(forPlugin: "CharsetConverterPlugin"))
   FFmpegKitFlutterPlugin.register(with: registry.registrar(forPlugin: "FFmpegKitFlutterPlugin"))
   FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))
-  FirebaseAnalyticsPlugin.register(with: registry.registrar(forPlugin: "FirebaseAnalyticsPlugin"))
-  FLTFirebaseCorePlugin.register(with: registry.registrar(forPlugin: "FLTFirebaseCorePlugin"))
   InAppWebViewFlutterPlugin.register(with: registry.registrar(forPlugin: "InAppWebViewFlutterPlugin"))
   FlutterLocalNotificationsPlugin.register(with: registry.registrar(forPlugin: "FlutterLocalNotificationsPlugin"))
   FlutterSecureStorageDarwinPlugin.register(with: registry.registrar(forPlugin: "FlutterSecureStorageDarwinPlugin"))

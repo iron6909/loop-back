@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/analytics/analytics_channel.dart';
-import 'package:echo_loop/analytics/analytics_service.dart';
-import 'package:echo_loop/analytics/consent_manager.dart';
-import 'package:echo_loop/analytics/models/event_names.dart';
+import 'package:loop_back/analytics/analytics_channel.dart';
+import 'package:loop_back/analytics/analytics_service.dart';
+import 'package:loop_back/analytics/consent_manager.dart';
+import 'package:loop_back/analytics/models/event_names.dart';
 
 /// 记录所有调用的 Mock Channel
 class MockChannel implements AnalyticsChannel {

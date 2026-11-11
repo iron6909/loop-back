@@ -1,4 +1,4 @@
-package app.echoloop
+package app.loopback
 
 import android.content.Intent
 import android.os.Build
@@ -18,7 +18,7 @@ class MainActivity : AudioServiceActivity() {
         super.configureFlutterEngine(flutterEngine)
         appUpdateChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "top.echo-loop/app_update",
+            "top.loop-back/app_update",
         ).also { channel ->
             channel.setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -29,7 +29,7 @@ class MainActivity : AudioServiceActivity() {
         }
         deviceInfoChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "top.echo-loop/device_info",
+            "top.loop-back/device_info",
         ).also { channel ->
             channel.setMethodCallHandler { call, result ->
                 when (call.method) {

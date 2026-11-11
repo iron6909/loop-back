@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
-import 'package:echo_loop/services/native_audio_decoder.dart';
+import 'package:loop_back/services/native_audio_decoder.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

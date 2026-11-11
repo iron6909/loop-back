@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/widgets/common/playback_controls.dart';
-import 'package:echo_loop/widgets/common/practice_playback_footer.dart';
-import 'package:echo_loop/widgets/practice/practice_play_count_label.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/widgets/common/playback_controls.dart';
+import 'package:loop_back/widgets/common/practice_playback_footer.dart';
+import 'package:loop_back/widgets/practice/practice_play_count_label.dart';
 
 import '../helpers/test_app.dart';
 

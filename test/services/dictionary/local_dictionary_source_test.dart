@@ -1,8 +1,8 @@
-import 'package:echo_loop/models/dict_entry.dart';
-import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
-import 'package:echo_loop/services/dictionary/dictionary_source.dart';
-import 'package:echo_loop/services/dictionary/local_dictionary_source.dart';
-import 'package:echo_loop/services/dictionary_service.dart';
+import 'package:loop_back/models/dict_entry.dart';
+import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
+import 'package:loop_back/services/dictionary/dictionary_source.dart';
+import 'package:loop_back/services/dictionary/local_dictionary_source.dart';
+import 'package:loop_back/services/dictionary_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 

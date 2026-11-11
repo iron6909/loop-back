@@ -4,8 +4,8 @@
 /// 脏数据防御性回退、copyWith 细粒度叠加。
 library;
 
-import 'package:echo_loop/models/intensive_listen_prefs.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/intensive_listen_prefs.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

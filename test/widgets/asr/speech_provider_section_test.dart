@@ -4,19 +4,19 @@ library;
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/providers/recognition_settings_provider.dart';
-import 'package:echo_loop/providers/speech_capability_provider.dart';
-import 'package:echo_loop/providers/speech_configuration_provider.dart';
-import 'package:echo_loop/services/speech/speech_capability.dart';
-import 'package:echo_loop/services/speech/speech_capability_probe.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_config_store.dart';
-import 'package:echo_loop/services/speech/speech_model_catalog.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/screens/speech_provider_settings_screen.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/providers/recognition_settings_provider.dart';
+import 'package:loop_back/providers/speech_capability_provider.dart';
+import 'package:loop_back/providers/speech_configuration_provider.dart';
+import 'package:loop_back/services/speech/speech_capability.dart';
+import 'package:loop_back/services/speech/speech_capability_probe.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_config_store.dart';
+import 'package:loop_back/services/speech/speech_model_catalog.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/screens/speech_provider_settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -220,7 +220,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfig,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
       ),
     );
@@ -275,7 +275,7 @@ void main() {
   testWidgets('手填模型 ID 始终可编辑', (tester) async {
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store));
     await tester.pumpAndSettle();
@@ -295,7 +295,7 @@ void main() {
   testWidgets('获取转写模型只在点击后拉取一次，三个用途共用同一份列表', (tester) async {
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     final catalog = _FakeCatalog()
       ..models = const ['openai/whisper-large-v3', 'openai/whisper-small'];
@@ -351,7 +351,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfig,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         catalog: catalog,
       ),
@@ -415,7 +415,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfig,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         catalog: catalog,
       ),
@@ -466,7 +466,7 @@ void main() {
         kind: SpeechProviderKind.custom,
         baseUrl: 'https://speech.example.com/stt',
       ),
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     final catalog = _FakeCatalog();
     await tester.pumpWidget(app(store, catalog: catalog));
@@ -494,7 +494,7 @@ void main() {
       );
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -526,7 +526,7 @@ void main() {
     final catalog = _FakeCatalog()..models = const [];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -558,7 +558,7 @@ void main() {
       ..models = const ['openai/whisper-large-v3', 'openai/whisper-small'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfigWithModels,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -587,7 +587,7 @@ void main() {
       ..models = [for (var i = 0; i < 30; i++) 'openai/whisper-model-$i'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfigWithModels,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -609,7 +609,7 @@ void main() {
       ..models = const ['z/model', 'A/model', 'm/model'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfigWithModels,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -634,7 +634,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfig,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         capabilityStore: capabilityStore,
         probe: probe,
@@ -655,7 +655,7 @@ void main() {
     final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -684,7 +684,7 @@ void main() {
     final catalog = _FakeCatalog()..models = const ['openai/whisper-large-v3'];
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -707,7 +707,7 @@ void main() {
     final pending = catalog.hold();
     final store = _InMemorySpeechConfigStore(
       config: _openRouterConfig,
-      apiKey: 'sk-speech-sentinel-4b7d',
+      apiKey: 'spk-4b7d',
     );
     await tester.pumpWidget(app(store, catalog: catalog));
     await tester.pumpAndSettle();
@@ -746,7 +746,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfig,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         catalog: catalog,
       ),
@@ -784,7 +784,7 @@ void main() {
       registry.register(task);
       final store = _InMemorySpeechConfigStore(
         config: _openRouterConfigWithModels,
-        apiKey: 'sk-speech-sentinel-4b7d',
+        apiKey: 'spk-4b7d',
       );
       await tester.pumpWidget(app(store, inFlightRegistry: registry));
       await tester.pumpAndSettle();
@@ -828,7 +828,7 @@ void main() {
       registry.register(shadowingTask);
       final store = _InMemorySpeechConfigStore(
         config: _openRouterConfigWithModels,
-        apiKey: 'sk-speech-sentinel-4b7d',
+        apiKey: 'spk-4b7d',
       );
       await tester.pumpWidget(app(store, inFlightRegistry: registry));
       await tester.pumpAndSettle();
@@ -876,7 +876,7 @@ void main() {
       registry.register(localSubtitleTask);
       final store = _InMemorySpeechConfigStore(
         config: _openRouterConfigWithModels,
-        apiKey: 'sk-speech-sentinel-4b7d',
+        apiKey: 'spk-4b7d',
       );
       await tester.pumpWidget(app(store, inFlightRegistry: registry));
       await tester.pumpAndSettle();
@@ -915,7 +915,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfigWithModels,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         capabilityStore: _InMemoryCapabilityStore(),
         probe: probe,
@@ -953,7 +953,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfigWithModels,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         capabilityStore: capabilityStore,
         probe: probe,
@@ -997,7 +997,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfigWithModels,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         capabilityStore: capabilityStore,
       ),
@@ -1019,7 +1019,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfigWithModels,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         capabilityStore: capabilityStore,
         probe: probe,
@@ -1049,7 +1049,7 @@ void main() {
       app(
         _InMemorySpeechConfigStore(
           config: _openRouterConfigWithModels,
-          apiKey: 'sk-speech-sentinel-4b7d',
+          apiKey: 'spk-4b7d',
         ),
         capabilityStore: capabilityStore,
         probe: probe,

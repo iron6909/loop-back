@@ -1,4 +1,4 @@
-package app.echoloop
+package app.loopback
 
 import android.media.MediaCodec
 import android.media.MediaExtractor
@@ -19,7 +19,7 @@ import kotlin.math.min
  * Android 原生音频解码桥接，为 Flutter 字幕自动校准提供低采样率 PCM 数据。
  *
  * 协议与 iOS (`IOSAudioDecodeHandler`) / macOS (`MacAudioDecodeHandler`) 完全一致：
- * - MethodChannel：`top.echo-loop/audio_decode`
+ * - MethodChannel：`top.loop-back/audio_decode`
  * - 方法：`decode`，参数 `{audioPath: String}`
  * - 返回：`{sampleRate: Int, pcmBytes: ByteArray}`（单声道 Float32 LE，目标 1000 Hz）
  * - 失败错误码：`invalidArguments` / `fileNotFound` / `notAvailable` / `decodeFailed`
@@ -234,7 +234,7 @@ class AndroidAudioDecodeHandler(binaryMessenger: BinaryMessenger) :
     }
 
     companion object {
-        const val CHANNEL_NAME = "top.echo-loop/audio_decode"
+        const val CHANNEL_NAME = "top.loop-back/audio_decode"
         // 与 iOS / macOS 对齐：最终输出 1000 Hz 单声道，供字幕自动校准使用。
         private const val TARGET_SAMPLE_RATE = 1000.0
         private const val DEQUEUE_TIMEOUT_US = 10_000L

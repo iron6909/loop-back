@@ -1,6 +1,6 @@
-import 'package:echo_loop/features/subscription/models/premium_feature.dart';
-import 'package:echo_loop/features/subscription/providers/feature_access_provider.dart';
-import 'package:echo_loop/features/subscription/services/free_allowance_policy.dart';
+import 'package:loop_back/features/subscription/models/premium_feature.dart';
+import 'package:loop_back/features/subscription/providers/feature_access_provider.dart';
+import 'package:loop_back/features/subscription/services/free_allowance_policy.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

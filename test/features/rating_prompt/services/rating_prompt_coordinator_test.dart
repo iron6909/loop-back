@@ -5,13 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/daos/study_statistics_dao.dart';
-import 'package:echo_loop/features/rating_prompt/data/rating_prompt_attempt_store.dart';
-import 'package:echo_loop/features/rating_prompt/domain/rating_prompt_policy.dart';
-import 'package:echo_loop/features/rating_prompt/services/in_app_review_gateway.dart';
-import 'package:echo_loop/features/rating_prompt/services/rating_prompt_coordinator.dart';
-import 'package:echo_loop/models/study_stage.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/daos/study_statistics_dao.dart';
+import 'package:loop_back/features/rating_prompt/data/rating_prompt_attempt_store.dart';
+import 'package:loop_back/features/rating_prompt/domain/rating_prompt_policy.dart';
+import 'package:loop_back/features/rating_prompt/services/in_app_review_gateway.dart';
+import 'package:loop_back/features/rating_prompt/services/rating_prompt_coordinator.dart';
+import 'package:loop_back/models/study_stage.dart';
 
 class _FakeReviewGateway implements InAppReviewGateway {
   _FakeReviewGateway(this.onRequest);
@@ -67,8 +67,8 @@ void main() {
       );
 
   PackageInfo packageInfo({DateTime? installedAt}) => PackageInfo(
-    appName: 'Echo Loop',
-    packageName: 'test.echo.loop',
+    appName: 'LoopBack',
+    packageName: 'test.loop.back',
     version: '1.0.0',
     buildNumber: '1',
     installerStore: 'com.android.vending',

@@ -4,22 +4,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/audio_engine_state.dart';
-import 'package:echo_loop/models/difficult_practice_settings.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/models/study_stage.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_audio_engine_provider.dart';
-import 'package:echo_loop/providers/blind_flow/blind_practice_flow_phase.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_playback_driver.dart';
-import 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart';
-import 'package:echo_loop/providers/repeat_flow/repeat_flow_phase.dart';
-import 'package:echo_loop/providers/speech/speech_recording_controller.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/audio_engine_state.dart';
+import 'package:loop_back/models/difficult_practice_settings.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/models/study_stage.dart';
+import 'package:loop_back/providers/audio_engine/foreground_audio_engine_provider.dart';
+import 'package:loop_back/providers/blind_flow/blind_practice_flow_phase.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_playback_driver.dart';
+import 'package:loop_back/providers/learning_session/review_difficult_practice_provider.dart';
+import 'package:loop_back/providers/repeat_flow/repeat_flow_phase.dart';
+import 'package:loop_back/providers/speech/speech_recording_controller.dart';
 
 import '../helpers/mock_providers.dart';
 

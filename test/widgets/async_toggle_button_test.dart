@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/widgets/common/async_toggle_button.dart';
+import 'package:loop_back/widgets/common/async_toggle_button.dart';
 
 import '../helpers/test_app.dart';
 

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/utils/version_compare.dart';
+import 'package:loop_back/utils/version_compare.dart';
 
 void main() {
   group('parseVersion', () {

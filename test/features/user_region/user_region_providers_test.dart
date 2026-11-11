@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:echo_loop/features/user_region/user_region.dart';
-import 'package:echo_loop/features/remote_config/remote_config.dart';
-import 'package:echo_loop/features/user_region/user_region_bootstrapper.dart';
-import 'package:echo_loop/features/user_region/user_region_providers.dart';
+import 'package:loop_back/features/user_region/user_region.dart';
+import 'package:loop_back/features/remote_config/remote_config.dart';
+import 'package:loop_back/features/user_region/user_region_bootstrapper.dart';
+import 'package:loop_back/features/user_region/user_region_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

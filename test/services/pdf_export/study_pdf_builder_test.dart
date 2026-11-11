@@ -3,8 +3,8 @@ import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/models/pdf_export/study_pdf_data.dart';
-import 'package:echo_loop/services/pdf_export/study_pdf_builder.dart';
+import 'package:loop_back/models/pdf_export/study_pdf_data.dart';
+import 'package:loop_back/services/pdf_export/study_pdf_builder.dart';
 
 /// 统计 PDF 字节里的页对象数量（附录另起一页的断言用）
 int _pageCount(Uint8List bytes) =>

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart' as db;
-import 'package:echo_loop/features/community_collections/data/community_collection_repository.dart';
+import 'package:loop_back/database/app_database.dart' as db;
+import 'package:loop_back/features/community_collections/data/community_collection_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 

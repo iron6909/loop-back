@@ -3,7 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/features/podcast/podcast_transcript_downloader.dart';
+import 'package:loop_back/features/podcast/podcast_transcript_downloader.dart';
 
 /// 按 [status] / [body] 返回字幕字节的假 Dio，并记录请求地址。
 class _FakeTranscriptDio extends Fake implements Dio {

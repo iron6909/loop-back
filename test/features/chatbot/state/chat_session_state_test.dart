@@ -1,9 +1,9 @@
 /// ChatSessionState 测试：initial 含 greeting、gate 语义、canSend/isStreaming。
 library;
 
-import 'package:echo_loop/features/chatbot/models/chat_message.dart';
-import 'package:echo_loop/features/chatbot/models/chatbot_config.dart';
-import 'package:echo_loop/features/chatbot/state/chat_session_state.dart';
+import 'package:loop_back/features/chatbot/models/chat_message.dart';
+import 'package:loop_back/features/chatbot/models/chatbot_config.dart';
+import 'package:loop_back/features/chatbot/state/chat_session_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

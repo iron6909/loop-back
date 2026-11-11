@@ -1,4 +1,4 @@
-package app.echoloop
+package app.loopback
 
 import android.app.Activity
 import android.content.Intent
@@ -44,14 +44,14 @@ class AndroidLocalAudioPicker(
 ) : MethodChannel.MethodCallHandler {
     companion object {
         /** 与 Dart 侧 `local_audio_file_picker.dart` 约定的通道名。 */
-        private const val CHANNEL_NAME = "top.echo-loop/local_audio_picker"
+        private const val CHANNEL_NAME = "top.loop-back/local_audio_picker"
 
         /**
          * 旧版本在选择阶段落盘用的缓存子目录，现已不再写入，仅在启动时清理残留。
-         * 前缀 `echoloop_import_` 同时也在设置页「清除缓存」的白名单里
+         * 前缀 `loopback_import_` 同时也在设置页「清除缓存」的白名单里
          * （`temp_cleanup_service.dart`）。
          */
-        private const val LEGACY_CACHE_DIRECTORY = "echoloop_import_picker"
+        private const val LEGACY_CACHE_DIRECTORY = "loopback_import_picker"
 
         private const val LOG_TAG = "LocalAudioPicker"
 

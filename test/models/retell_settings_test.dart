@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
-import 'package:echo_loop/models/retell_settings.dart';
-import 'package:echo_loop/widgets/retell/retell_briefing_sheet.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/retell_settings.dart';
+import 'package:loop_back/widgets/retell/retell_briefing_sheet.dart';
 
 void main() {
   group('RetellSettings', () {

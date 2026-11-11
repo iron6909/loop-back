@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:echo_loop/features/community_collections/providers/community_media_available_provider.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/features/community_collections/providers/community_media_available_provider.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:echo_loop/services/refresh_coordinator.dart';
+import 'package:loop_back/services/refresh_coordinator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

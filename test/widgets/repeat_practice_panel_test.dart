@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
-import 'package:echo_loop/services/speech/practice_online_transcriber.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/common/recording_button.dart';
-import 'package:echo_loop/widgets/common/repeat_practice_panel.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/services/speech/practice_chunk_transcriber.dart';
+import 'package:loop_back/services/speech/practice_online_transcriber.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/common/recording_button.dart';
+import 'package:loop_back/widgets/common/repeat_practice_panel.dart';
 
 /// 验证 panel 不再承担权限引导职责（已交给入口前置弹窗）。
 ///

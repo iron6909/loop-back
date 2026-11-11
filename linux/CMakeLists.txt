@@ -4,12 +4,12 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "echo_loop")
+set(BINARY_NAME "loop_back")
 # Application display name
-set(APPLICATION_NAME "Echo Loop")
+set(APPLICATION_NAME "LoopBack")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "app.echoloop")
+set(APPLICATION_ID "app.loopback")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.

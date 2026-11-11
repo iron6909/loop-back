@@ -38,7 +38,7 @@ class TextEmbeddingPlatform implements TextEmbeddingBackend {
 
   static TextEmbeddingPlatform _instance = TextEmbeddingPlatform();
   static const MethodChannel _channel = MethodChannel(
-    'top.echo-loop/text_embedding',
+    'top.loop-back/text_embedding',
   );
 
   /// 全局单例。

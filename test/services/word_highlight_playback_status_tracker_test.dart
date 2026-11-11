@@ -1,5 +1,5 @@
-import 'package:echo_loop/models/word_highlight_binding.dart';
-import 'package:echo_loop/services/word_highlight_playback_status_tracker.dart';
+import 'package:loop_back/models/word_highlight_binding.dart';
+import 'package:loop_back/services/word_highlight_playback_status_tracker.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

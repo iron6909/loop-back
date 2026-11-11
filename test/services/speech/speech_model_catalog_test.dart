@@ -7,9 +7,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_model_catalog.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_model_catalog.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeAdapter implements HttpClientAdapter {

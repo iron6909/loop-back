@@ -14,45 +14,45 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/analytics/analytics_channel.dart';
-import 'package:echo_loop/analytics/analytics_providers.dart';
-import 'package:echo_loop/analytics/analytics_service.dart';
-import 'package:echo_loop/analytics/consent_manager.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/database/daos/sentence_ai_cache_dao.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/main.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/models/learning_progress.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/speech_practice_models.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
-import 'package:echo_loop/providers/daily_study_time_provider.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/blind_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/providers/learning_session/retell_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/review_difficult_practice_provider.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
-import 'package:echo_loop/providers/new_user_guide_provider.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart'
+import 'package:loop_back/analytics/analytics_channel.dart';
+import 'package:loop_back/analytics/analytics_providers.dart';
+import 'package:loop_back/analytics/analytics_service.dart';
+import 'package:loop_back/analytics/consent_manager.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/database/daos/sentence_ai_cache_dao.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/main.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/models/learning_progress.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
+import 'package:loop_back/providers/daily_study_time_provider.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/blind_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/providers/learning_session/retell_player_provider.dart';
+import 'package:loop_back/providers/learning_session/review_difficult_practice_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/providers/new_user_guide_provider.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart'
     show showOfflineAsrSectionProvider, offlineAsrSettingsProvider;
-import 'package:echo_loop/providers/package_info_provider.dart';
-import 'package:echo_loop/providers/review_reminder_provider.dart';
-import 'package:echo_loop/providers/saved_word_provider.dart';
-import 'package:echo_loop/providers/sentence_ai_provider.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/study_stats_provider.dart';
-import 'package:echo_loop/providers/tag_provider.dart';
-import 'package:echo_loop/services/review_reminder_service.dart';
-import 'package:echo_loop/services/sentence_ai_api_client.dart';
-import 'package:echo_loop/services/speech_practice_platform.dart';
+import 'package:loop_back/providers/package_info_provider.dart';
+import 'package:loop_back/providers/review_reminder_provider.dart';
+import 'package:loop_back/providers/saved_word_provider.dart';
+import 'package:loop_back/providers/sentence_ai_provider.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/study_stats_provider.dart';
+import 'package:loop_back/providers/tag_provider.dart';
+import 'package:loop_back/services/review_reminder_service.dart';
+import 'package:loop_back/services/sentence_ai_api_client.dart';
+import 'package:loop_back/services/speech_practice_platform.dart';
 
 // 共享替身
 import '../../test/helpers/shared/fake_notifiers.dart';
@@ -326,21 +326,20 @@ Future<void> initTestAnalytics() async {
 
 // ========== Override 工厂 ==========
 
-/// Onboarding 问卷相关的 provider 测试 override
+/// 基础测试 override（分析服务 + 首启标记 + SharedPreferences）。
+/// Onboarding 问卷已移除，不再需要问卷相关 override。
 List<Override> onboardingTestOverrides() {
   final prefs = _testPrefsCache;
   final analyticsService = _testAnalyticsService;
   if (prefs == null || analyticsService == null) {
     throw StateError(
-      'initTestAnalytics() must be called before createTestApp() '
-      'to initialize SharedPreferences for onboarding overrides',
+      'initTestAnalytics() must be called before createTestApp() ',
     );
   }
   return [
     analyticsServiceProvider.overrideWithValue(analyticsService),
     isFirstLaunchProvider.overrideWithValue(false),
     sharedPreferencesProvider.overrideWithValue(prefs),
-    initialOnboardingCompletedProvider.overrideWithValue(true),
   ];
 }
 
@@ -356,8 +355,8 @@ List<Override> learningSettingsTestOverrides({bool autoSkipRetell = false}) {
 // ========== App 工厂 ==========
 
 final _testPackageInfo = PackageInfo(
-  appName: 'Echo Loop',
-  packageName: 'top.echo-loop',
+  appName: 'LoopBack',
+  packageName: 'top.loop-back',
   version: '1.0.0',
   buildNumber: '1',
 );
@@ -410,7 +409,7 @@ Widget createTestApp() {
       ),
       savedWordDaoProvider.overrideWithValue(TestSavedWordDao()),
     ],
-    child: const EchoLoopApp(),
+    child: const LoopBackApp(),
   );
 }
 
@@ -558,6 +557,6 @@ class _AudioPreloadWrapperState extends ConsumerState<_AudioPreloadWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return const EchoLoopApp();
+    return const LoopBackApp();
   }
 }

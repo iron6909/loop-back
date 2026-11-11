@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:echo_loop/providers/settings_provider.dart';
-import 'package:echo_loop/providers/time_provider.dart';
+import 'package:loop_back/providers/settings_provider.dart';
+import 'package:loop_back/providers/time_provider.dart';
 
 import '../helpers/mock_providers.dart';
 

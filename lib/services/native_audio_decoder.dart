@@ -1,7 +1,7 @@
 /// 原生音频解码桥接。
 ///
 /// 为字幕自动校准提供平台侧解码后的单声道 PCM 数据。
-/// 当前支持 iOS / macOS / Android（均走 `top.echo-loop/audio_decode` MethodChannel），
+/// 当前支持 iOS / macOS / Android（均走 `top.loop-back/audio_decode` MethodChannel），
 /// 其他平台返回 null 或抛出受控异常，由上层决定是否降级回退。
 library;
 
@@ -84,7 +84,7 @@ class PlatformNativeAudioDecoder implements NativeAudioDecoder {
   const PlatformNativeAudioDecoder();
 
   static const MethodChannel _channel = MethodChannel(
-    'top.echo-loop/audio_decode',
+    'top.loop-back/audio_decode',
   );
 
   @override

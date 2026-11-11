@@ -7,7 +7,7 @@ import '../services/background_file_download_service.dart';
 import '../services/download/download_resource.dart';
 import '../services/download/download_task_coordinator.dart';
 import '../services/download/download_task_store.dart';
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart'
+import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import 'settings_provider.dart';
 

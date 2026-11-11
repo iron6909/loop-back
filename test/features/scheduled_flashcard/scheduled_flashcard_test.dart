@@ -3,18 +3,18 @@ import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/features/memory_scheduler/domain/memory_profile.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_model_adapter.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_review_event.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_schedule.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_exceptions.dart';
-import 'package:echo_loop/features/memory_scheduler/application/memory_scheduler.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_results.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_subject_ref.dart';
-import 'package:echo_loop/features/scheduled_flashcard/application/scheduled_flashcard_controller.dart';
-import 'package:echo_loop/features/scheduled_flashcard/application/scheduled_flashcard_engine.dart';
-import 'package:echo_loop/features/scheduled_flashcard/domain/scheduled_flashcard.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_profile.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_model_adapter.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_review_event.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_schedule.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_exceptions.dart';
+import 'package:loop_back/features/memory_scheduler/application/memory_scheduler.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_results.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_subject_ref.dart';
+import 'package:loop_back/features/scheduled_flashcard/application/scheduled_flashcard_controller.dart';
+import 'package:loop_back/features/scheduled_flashcard/application/scheduled_flashcard_engine.dart';
+import 'package:loop_back/features/scheduled_flashcard/domain/scheduled_flashcard.dart';
 
 void main() {
   final now = DateTime.utc(2026, 8, 22, 12);

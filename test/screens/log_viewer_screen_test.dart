@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
-import 'package:echo_loop/screens/log_viewer_screen.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/device_diagnostics_service.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/screens/log_viewer_screen.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/device_diagnostics_service.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -63,8 +63,8 @@ void main() {
     appDataDirectoryOverride = tempDir;
     AppLogger.instance.clear();
     PackageInfo.setMockInitialValues(
-      appName: 'Echo Loop',
-      packageName: 'app.echoloop',
+      appName: 'LoopBack',
+      packageName: 'app.loopback',
       version: '1.2.3',
       buildNumber: '45',
       buildSignature: '',
@@ -195,7 +195,7 @@ void main() {
     await tester.pump();
 
     expect(sharedPaths, hasLength(1));
-    expect(sharedSubjects.single, 'Echo Loop Logs');
+    expect(sharedSubjects.single, 'LoopBack Logs');
     expect(sharedOrigins.single, isNotNull);
     expect(sharedMimeTypes.single, 'application/zip');
     expect(sharedPaths.single, endsWith('.zip'));

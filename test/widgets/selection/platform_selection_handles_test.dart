@@ -1,7 +1,7 @@
 /// 平台文本选择手柄几何回归测试。
 library;
 
-import 'package:echo_loop/widgets/selection/platform_selection_handles.dart';
+import 'package:loop_back/widgets/selection/platform_selection_handles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -15,11 +15,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart' as ja;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/models/playback_settings.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/providers/listening_practice/listening_practice_provider.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/models/playback_settings.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
 import '../../helpers/mock_providers.dart';
 
 /// 测试用 AudioEngine：真实 session 计数 + 可控位置/状态流。

@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/providers/audio_list_settings_provider.dart';
-import 'package:echo_loop/widgets/audio_list_view.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/providers/audio_list_settings_provider.dart';
+import 'package:loop_back/widgets/audio_list_view.dart';
 
 /// 本地轻量构造，避免引入 `../helpers/mock_providers.dart`（pre-existing
 /// 编译错误会让整个文件无法 load）。

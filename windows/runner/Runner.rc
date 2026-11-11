@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "top.valuespot" "\0"
-            VALUE "FileDescription", "Echo Loop" "\0"
+            VALUE "FileDescription", "LoopBack" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "echo_loop" "\0"
+            VALUE "InternalName", "loop_back" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 top.valuespot. All rights reserved." "\0"
-            VALUE "OriginalFilename", "echo_loop.exe" "\0"
-            VALUE "ProductName", "Echo Loop" "\0"
+            VALUE "OriginalFilename", "loop_back.exe" "\0"
+            VALUE "ProductName", "LoopBack" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

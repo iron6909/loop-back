@@ -1,7 +1,7 @@
 /// 品牌启动页视觉回归测试。
 library;
 
-import 'package:echo_loop/widgets/startup_splash_screen.dart';
+import 'package:loop_back/widgets/startup_splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';

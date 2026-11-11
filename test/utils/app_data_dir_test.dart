@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 
 void main() {
   test('ASR crash marker 位于 logs 目录并创建目录', () async {

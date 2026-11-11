@@ -29,11 +29,9 @@ import '../providers/new_user_guide_provider.dart';
 import '../providers/tag_provider.dart';
 import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
-import '../config/app_store_config.dart';
 import '../features/user_region/user_region_override.dart';
 import '../features/user_region/widgets/user_region_override_tile.dart';
 import '../router/app_router.dart';
-import '../features/onboarding_survey/providers/onboarding_survey_provider.dart';
 import '../services/app_network_image_cache.dart';
 import '../services/tts/tts_cache_store.dart';
 import '../services/dictionary_download_manager.dart';
@@ -58,13 +56,11 @@ import 'reading_text_settings_screen.dart';
 import 'preferences_viewer_screen.dart';
 import 'storage_browser_screen.dart';
 import 'reminder_settings_screen.dart';
-import '../services/runtime_endpoint_router.dart';
 
 const double _settingsLeadingIconExtent = 32;
 const double _settingsSvgIconExtent = 26;
 const double _settingsBrandIconExtent = 20;
 const double _settingsMaterialIconExtent = 26;
-const _faqUrl = 'https://my.feishu.cn/docx/OPZRdXkRvoAW5Bx78LocBUdqn80';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -156,7 +152,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  /// 构建「学习」分组：提醒、学习、语音识别、语音合成、播放、词典等入口合并到同一张卡片中。
+  /// 构建「学习」分组：提醒、学习、显示、播放、AI 服务、语音识别、语音合成、词典等入口合并到同一张卡片中。
   Widget _buildStudySection(
     BuildContext context,
     WidgetRef ref,
@@ -170,12 +166,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context,
       title: l10n.learningSection,
       children: [
-        ListTile(
-          leading: _settingsMaterialIcon(Icons.auto_awesome_outlined),
-          title: Text(l10n.aiServiceTitle),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => context.push('/settings/ai-service'),
-        ),
         ListTile(
           leading: _settingsSvgIcon('assets/icon/bell.svg'),
           title: Text(l10n.reminderSettings),
@@ -216,6 +206,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               builder: (_) => const DisplaySettingsScreen(),
             ),
           ),
+        ),
+        ListTile(
+          leading: _settingsThemedSvgIcon(
+            context,
+            'assets/icon/play-pause.svg',
+          ),
+          title: Text(l10n.playbackSettings),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const PlaybackSettingsScreen(),
+            ),
+          ),
+        ),
+        ListTile(
+          leading: _settingsMaterialIcon(Icons.auto_awesome_outlined),
+          title: Text(l10n.aiServiceTitle),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => context.push('/settings/ai-service'),
         ),
         if (showAsr)
           ListTile(
@@ -260,19 +269,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const TtsSettingsScreen()),
-          ),
-        ),
-        ListTile(
-          leading: _settingsThemedSvgIcon(
-            context,
-            'assets/icon/play-pause.svg',
-          ),
-          title: Text(l10n.playbackSettings),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => const PlaybackSettingsScreen(),
-            ),
           ),
         ),
         ListTile(
@@ -473,55 +469,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       title: l10n.about,
       children: [
         ListTile(
-          leading: _settingsThemedSvgIcon(context, 'assets/icon/group.svg'),
-          title: Text(l10n.aboutCommunity),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () async {
-            final isZh = Localizations.localeOf(context).languageCode == 'zh';
-            final path = isZh ? '/zh-CN/social' : '/en/social';
-            final uri = runtimeEndpointRouter.apiUri(path);
-            await launchUrl(uri);
-          },
-        ),
-        ListTile(
-          leading: _settingsThemedSvgIcon(context, 'assets/icon/feedback.svg'),
-          title: Text(l10n.writeFeedback),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => launchUrl(Uri.parse('mailto:support@echo-loop.top')),
-        ),
-        if (defaultTargetPlatform == TargetPlatform.iOS)
-          ListTile(
-            leading: _settingsMaterialIcon(Icons.star_rounded),
-            title: Text(l10n.rateUs),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => launchUrl(
-              appStoreReviewUri,
-              mode: LaunchMode.externalApplication,
-            ),
-          ),
-        ListTile(
-          leading: _settingsThemedSvgIcon(context, 'assets/icon/help.svg'),
-          title: const Text('FAQ'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => launchUrl(
-            Uri.parse(_faqUrl),
-            mode: LaunchMode.externalApplication,
-          ),
-        ),
-        ListTile(
-          leading: _settingsSvgIcon('assets/icon/documents.svg'),
-          title: Text(l10n.termsOfService),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => launchUrl(Uri.parse('https://www.echo-loop.top/terms')),
-        ),
-        ListTile(
-          leading: _settingsThemedSvgIcon(context, 'assets/icon/lock.svg'),
-          title: Text(l10n.privacyPolicy),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () =>
-              launchUrl(Uri.parse('https://www.echo-loop.top/privacy')),
-        ),
-        ListTile(
           leading: SizedBox(
             width: _settingsLeadingIconExtent,
             height: _settingsLeadingIconExtent,
@@ -535,7 +482,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           title: Text(l10n.viewSourceCode),
           trailing: const Icon(Icons.chevron_right),
           onTap: () =>
-              launchUrl(Uri.parse('https://github.com/echo-loop/Echo-Loop/')),
+              launchUrl(Uri.parse('https://github.com/iron6909/loop-back/')),
         ),
       ],
     );
@@ -660,11 +607,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           onTap: () => _resetNewUserGuide(context, ref, l10n),
         ),
         ListTile(
-          leading: _emojiIcon('📝'),
-          title: Text(l10n.resetOnboarding),
-          onTap: () => _resetOnboarding(context, ref, l10n),
-        ),
-        ListTile(
           leading: _emojiIcon('🎭'),
           title: Text(l10n.demoMode),
           trailing: settings.isDemoModeLoading
@@ -723,29 +665,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ).showSnackBar(SnackBar(content: Text(l10n.resetNewUserGuideDone)));
   }
 
-  /// 重置 Onboarding 问卷状态：清空问卷答案 SP key，便于开发调试。
-  ///
-  /// 故意**不动**用户的界面语言（`locale` SP key）和其它设置——老用户
-  /// 已经选过中文，重置 onboarding 不应把他们的偏好一起抹掉，否则热重启后
-  /// 会回退到"跟随系统"。
-  ///
-  /// `initialOnboardingCompletedProvider` 在 `main()` 通过
-  /// `overrideWithValue` 注入，运行期不可改写，因此重置后必须重启 App
-  /// 才能再次进入问卷。
-  Future<void> _resetOnboarding(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l10n,
-  ) async {
-    final storage = ref.read(onboardingStorageProvider);
-    await storage.clear();
-
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(l10n.resetOnboardingDone)));
-  }
-
   /// 显示词典查询对话框
   void _showDictionaryLookupDialog(BuildContext context) {
     showDialog<void>(
@@ -767,7 +686,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     controller.setDemoModeLoading(true);
 
     // 记住当前数据库名称，异常时用于恢复连接
-    final currentDbName = enabled ? 'echo_loop.db' : 'echo_loop_demo.db';
+    final currentDbName = enabled ? 'loop_back.db' : 'loop_back_demo.db';
 
     try {
       // Step 1: 关闭旧数据库（避免 Drift "multiple databases" 警告）
@@ -777,13 +696,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       if (enabled) {
         // Step 2a: 创建并 seed demo 库（幂等）
-        final demoDb = AppDatabase(openConnectionWithName('echo_loop_demo.db'));
+        final demoDb = AppDatabase(openConnectionWithName('loop_back_demo.db'));
         await DemoDataSeeder(demoDb).seedIfEmpty();
         // Step 3a: 切换指向
         switchAppDatabase(demoDb, ref);
       } else {
         // Step 2b: 创建 prod 库
-        final prodDb = AppDatabase(openConnectionWithName('echo_loop.db'));
+        final prodDb = AppDatabase(openConnectionWithName('loop_back.db'));
         // Step 3b: 切换指向
         switchAppDatabase(prodDb, ref);
         // 清理演示文件（demo 数据库已关闭）

@@ -3,19 +3,19 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/speech_capability_provider.dart';
-import 'package:echo_loop/providers/speech_configuration_provider.dart';
-import 'package:echo_loop/screens/asr_settings_screen.dart';
-import 'package:echo_loop/services/speech/speech_capability.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_config_store.dart';
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/asr/offline_asr_engine.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/providers/speech_capability_provider.dart';
+import 'package:loop_back/providers/speech_configuration_provider.dart';
+import 'package:loop_back/screens/asr_settings_screen.dart';
+import 'package:loop_back/services/speech/speech_capability.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_config_store.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/services/asr/offline_asr_engine.dart';
+import 'package:loop_back/theme/app_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// 只保存在内存里的在线语音服务配置：本页测试只关心入口状态，不触发真实存储。
@@ -465,7 +465,7 @@ void main() {
 
     expect(
       find.text(
-        'Delete all downloaded Echo Loop speech recognition models? You can '
+        'Delete all downloaded LoopBack speech recognition models? You can '
         're-download them anytime.',
       ),
       findsOneWidget,
@@ -560,7 +560,7 @@ void main() {
               kind: SpeechProviderKind.openrouter,
               baseUrl: 'https://openrouter.ai/api/v1',
             ),
-            apiKey: 'sk-speech-sentinel-4b7d',
+            apiKey: 'spk-4b7d',
           ),
         ),
       );
@@ -595,7 +595,7 @@ void main() {
           notifier(),
           speechStore: _StaticSpeechConfigStore(
             config: config,
-            apiKey: 'sk-speech-sentinel-4b7d',
+            apiKey: 'spk-4b7d',
           ),
           capabilityStore: _StaticCapabilityStore({
             capability.identity: capability,

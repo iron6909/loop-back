@@ -2,15 +2,15 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_playback_result.dart';
-import 'package:echo_loop/models/word_highlight_binding.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_playback_driver.dart';
-import 'package:echo_loop/providers/media_engine/media_engine_provider.dart';
-import 'package:echo_loop/providers/media_engine/media_sense_group_range_playback.dart';
-import 'package:echo_loop/services/media_session_router.dart';
-import 'package:echo_loop/utils/app_data_dir.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_playback_result.dart';
+import 'package:loop_back/models/word_highlight_binding.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_playback_driver.dart';
+import 'package:loop_back/providers/media_engine/media_engine_provider.dart';
+import 'package:loop_back/providers/media_engine/media_sense_group_range_playback.dart';
+import 'package:loop_back/services/media_session_router.dart';
+import 'package:loop_back/utils/app_data_dir.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -63,7 +63,7 @@ void main() {
 
   setUp(() async {
     backendFactoryCalls = 0;
-    appDir = await Directory.systemTemp.createTemp('echo-loop-media-engine-');
+    appDir = await Directory.systemTemp.createTemp('loop-back-media-engine-');
     appDataDirectoryOverride = appDir;
     backend = FakeMediaPlayerBackend();
     router = MediaSessionRouter(defaultHandler: BaseAudioHandler());
@@ -76,7 +76,7 @@ void main() {
         mediaSessionRouterProvider.overrideWithValue(router),
       ],
     );
-    mediaFile = File('${appDir.path}/echo-loop-video-test.mp4');
+    mediaFile = File('${appDir.path}/loop-back-video-test.mp4');
     await mediaFile.writeAsBytes(const [0, 1, 2]);
   });
 
@@ -89,7 +89,7 @@ void main() {
   AudioItem item() => AudioItem(
     id: 'video-1',
     name: 'Video',
-    audioPath: 'echo-loop-video-test.mp4',
+    audioPath: 'loop-back-video-test.mp4',
     addedDate: DateTime(2026, 7, 24),
   );
 

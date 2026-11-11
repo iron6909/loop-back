@@ -3,7 +3,7 @@ library;
 
 import 'dart:io';
 
-import 'package:echo_loop/services/app_logger.dart';
+import 'package:loop_back/services/app_logger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,6 +1,6 @@
-import 'package:echo_loop/features/user_region/user_region_override.dart';
-import 'package:echo_loop/features/user_region/user_region_providers.dart';
-import 'package:echo_loop/features/user_region/widgets/user_region_override_tile.dart';
+import 'package:loop_back/features/user_region/user_region_override.dart';
+import 'package:loop_back/features/user_region/user_region_providers.dart';
+import 'package:loop_back/features/user_region/widgets/user_region_override_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,9 +1,9 @@
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/dict_entry.dart';
-import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
-import 'package:echo_loop/providers/dictionary/lookup_controller.dart';
-import 'package:echo_loop/services/dictionary_service.dart';
-import 'package:echo_loop/widgets/dictionary/local_dict_result_view.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/dict_entry.dart';
+import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
+import 'package:loop_back/providers/dictionary/lookup_controller.dart';
+import 'package:loop_back/services/dictionary_service.dart';
+import 'package:loop_back/widgets/dictionary/local_dict_result_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

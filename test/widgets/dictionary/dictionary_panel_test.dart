@@ -5,17 +5,17 @@
 library;
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/onboarding_survey/providers/onboarding_survey_provider.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/dict_entry.dart';
-import 'package:echo_loop/models/dictionary/dictionary_lookup_result.dart';
-import 'package:echo_loop/providers/dictionary/dictionary_registry.dart';
-import 'package:echo_loop/providers/dictionary/lookup_controller.dart';
-import 'package:echo_loop/providers/dictionary/visible_sources_provider.dart';
-import 'package:echo_loop/services/dictionary/dictionary_source.dart';
-import 'package:echo_loop/services/dictionary_service.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/dictionary/dictionary_panel_host.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/dict_entry.dart';
+import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
+import 'package:loop_back/providers/dictionary/dictionary_registry.dart';
+import 'package:loop_back/providers/dictionary/lookup_controller.dart';
+import 'package:loop_back/providers/dictionary/visible_sources_provider.dart';
+import 'package:loop_back/services/dictionary/dictionary_source.dart';
+import 'package:loop_back/services/dictionary_service.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/dictionary/dictionary_panel_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

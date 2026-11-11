@@ -16,9 +16,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your data couldn\'t load normally. Please retry. If the problem persists, contact us.';
 
   @override
-  String get startupLocalDataContactUs => 'Contact us';
-
-  @override
   String get startupLocalDataViewLogs => 'View logs';
 
   @override
@@ -26,12 +23,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playbackFailedMessage => 'Please try again later.';
-
-  @override
-  String get appTitle => 'Echo Loop';
-
-  @override
-  String get premiumTitle => 'Echo Loop Premium';
 
   @override
   String get premiumTagline => 'Unlimited AI to power your learning';
@@ -215,10 +206,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get premiumPurchaseFailed => 'Purchase failed. Please try again.';
-
-  @override
-  String get premiumRestoreAccountMismatch =>
-      'This subscription is linked to another Echo Loop account. Sign in to the original account and try again.';
 
   @override
   String get premiumRestoreNone => 'No purchases found to restore.';
@@ -2027,13 +2014,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the built-in system speech recognition.No download needed';
 
   @override
-  String get asrBackendOffline => 'Echo Loop AI';
-
-  @override
-  String get asrBackendOfflineDescription =>
-      'Use the app\'s AI model. It works offline after downloading';
-
-  @override
   String get asrBackendLocalWhisper => 'Whisper (on-device)';
 
   @override
@@ -3040,27 +3020,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoCompletedNoDifficultReview => '0 saved sentence, skipped';
 
   @override
-  String get termsOfService => 'Terms of Service';
-
-  @override
-  String get privacyPolicy => 'Privacy Policy';
-
-  @override
-  String get writeFeedback => 'Write Feedback';
-
-  @override
-  String get rateUs => 'Rate Us';
-
-  @override
-  String get joinCommunity => 'Join Community';
-
-  @override
-  String get aboutCommunity => 'Join Community';
-
-  @override
-  String get joinCommunityInviteSubtitle => 'Learn, ask, and share';
-
-  @override
   String get networkError =>
       'Unable to connect. Please check your network and try again.';
 
@@ -3940,7 +3899,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guidePlanStartLearningDescription =>
-      'Tap here to follow the default practice plan step by step. Echo Loop will guide you and remind you to review at the right time.';
+      'Tap here to follow the default practice plan step by step. LoopBack will guide you and remind you to review at the right time.';
 
   @override
   String get guidePlanPauseLearningTitle => 'Pause';
@@ -4023,13 +3982,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetNewUserGuideDone => 'New user guide has been reset';
-
-  @override
-  String get resetOnboarding => 'Reset Onboarding Survey';
-
-  @override
-  String get resetOnboardingDone =>
-      'Onboarding reset; please restart the app to retake the survey';
 
   @override
   String get discoverCommunityCollections => 'Discover Resources';
@@ -4237,191 +4189,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get audioListColumnDuration => 'Duration';
 
   @override
-  String get onboardingTitle => 'Quick chat';
-
-  @override
-  String get onboardingSubtitle => '10 seconds to tailor your practice';
-
-  @override
-  String get onboardingBack => 'Back';
-
-  @override
-  String get onboardingContinue => 'Continue';
-
-  @override
-  String get onboardingExamPrompt =>
-      'Which exam are you currently preparing for?';
-
-  @override
-  String get onboardingExamGaokao => 'the Gaokao';
-
-  @override
-  String get onboardingExamCet => 'CET-4 / CET-6';
-
-  @override
-  String get onboardingExamTem => 'TEM-4 / TEM-8';
-
-  @override
-  String get onboardingExamIelts => 'IELTS';
-
-  @override
-  String get onboardingExamToefl => 'TOEFL';
-
-  @override
-  String get onboardingExamOther => 'Other';
-
-  @override
-  String onboardingProgress(int current, int total) {
-    return '$current of $total';
-  }
-
-  @override
-  String get onboardingNext => 'Next';
-
-  @override
-  String get onboardingDone => 'Done';
-
-  @override
-  String get onboardingFinishedTitle => 'All set';
-
-  @override
-  String get onboardingFinishedHint =>
-      'We\'ll tailor practice to your goals and pace.';
-
-  @override
-  String get onboardingSummaryEyebrow => 'Did you know?';
-
-  @override
-  String get onboardingSummaryHeadline =>
-      'Improving listening & speaking\nisn\'t about practicing with more materials,\nit\'s about practicing more thoroughly.';
-
-  @override
-  String get onboardingSummaryPoint1 =>
-      'Practice with audio that matches your level';
-
-  @override
-  String get onboardingSummaryPoint2 =>
-      'Understand what you hear in chunks and master vocabulary in context.';
-
-  @override
-  String get onboardingSummaryPoint3 =>
-      'Develop a natural feel for English through extensive close listening and repetition.';
-
-  @override
-  String get onboardingSummaryPoint4 =>
-      'Practice speaking through retelling, and turn what you hear into what you can say.';
-
-  @override
-  String get onboardingStart => 'Start Practicing';
-
-  @override
-  String get onboardingQ1Prompt =>
-      'What\'s your main goal for improving your English listening & speaking?';
-
-  @override
-  String get onboardingQ1OptionExam => 'For an exam';
-
-  @override
-  String get onboardingQ1OptionDaily => 'Daily conversation';
-
-  @override
-  String get onboardingQ1OptionWork => 'Work';
-
-  @override
-  String get onboardingQ1OptionTravel => 'Travel abroad';
-
-  @override
-  String get onboardingQ1OptionContent => 'Understanding videos & podcasts';
-
-  @override
-  String get onboardingQ1OptionOther => 'Other';
-
-  @override
-  String get onboardingQ2Prompt => 'How long do you plan to practice each day?';
-
-  @override
-  String get onboardingQ2Option5 => 'About 5 min';
-
-  @override
-  String get onboardingQ2Option10 => 'About 10 min';
-
-  @override
-  String get onboardingQ2Option20 => 'About 20 min';
-
-  @override
-  String get onboardingQ2Option30 => '30 min or more';
-
-  @override
-  String get onboardingQ2OptionFlexible => 'It varies';
-
-  @override
-  String get onboardingQ3Prompt => 'How did you hear about us?';
-
-  @override
-  String get onboardingQ3OptionAppStore => 'App Store';
-
-  @override
-  String get onboardingQ3OptionGooglePlay => 'Google Play';
-
-  @override
-  String get onboardingQ3OptionYoutube => 'YouTube';
-
-  @override
-  String get onboardingQ3OptionReddit => 'Reddit';
-
-  @override
-  String get onboardingQ3OptionXTwitter => 'X / Twitter';
-
-  @override
-  String get onboardingQ3OptionTiktok => 'TikTok';
-
-  @override
-  String get onboardingQ3OptionInstagram => 'Instagram';
-
-  @override
-  String get onboardingQ3OptionXiaohongshu => 'Xiaohongshu';
-
-  @override
-  String get onboardingQ3OptionWechat => 'WeChat';
-
-  @override
-  String get onboardingQ3OptionDouyin => 'Douyin';
-
-  @override
-  String get onboardingQ3OptionKuaishou => 'Kuaishou';
-
-  @override
-  String get onboardingQ3OptionBilibili => 'Bilibili';
-
-  @override
-  String get onboardingQ3OptionBaiduSearch => 'Baidu search';
-
-  @override
-  String get onboardingQ3OptionGoogleSearch => 'Google search';
-
-  @override
-  String get onboardingQ3OptionGithub => 'GitHub';
-
-  @override
-  String get onboardingQ3OptionFriend => 'word of mouth';
-
-  @override
-  String get onboardingQ3OptionOther => 'Other';
-
-  @override
-  String get onboardingPermissionsHint =>
-      'To ensure the best experience, we\'ll request these permissions';
-
-  @override
-  String get onboardingPermissionsNotification => 'Notifications';
-
-  @override
-  String get onboardingPermissionsMicrophone => 'Microphone';
-
-  @override
-  String get onboardingPermissionsSpeech => 'Speech recognition';
-
-  @override
   String get playbackSection => 'Playback';
 
   @override
@@ -4606,9 +4373,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get speechPermUnsupportedToast =>
       'Recording is not supported on this platform';
-
-  @override
-  String get authSignInTitle => 'Sign in to Echo Loop';
 
   @override
   String get authChooseMethod => 'Choose how you\'d like to continue.';
@@ -4920,79 +4684,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudDriveSourceShort => 'Cloud Storage';
 
   @override
-  String get baiduNetdisk => 'Baidu Netdisk';
-
-  @override
-  String get baiduNetdiskAllFiles => 'All Files';
-
-  @override
-  String get baiduNetdiskWaitingAuthorization =>
-      'Waiting for Baidu authorization...';
-
-  @override
-  String get baiduNetdiskLoadingFiles => 'Loading Baidu Netdisk files...';
-
-  @override
-  String get baiduNetdiskImportFailed => 'Baidu Netdisk import failed.';
-
-  @override
-  String get baiduNetdiskConnectTitle => 'Connect Baidu Netdisk';
-
-  @override
-  String get baiduNetdiskConnectDescription =>
-      'Authorize Echo Loop to browse your Baidu Netdisk and import selected media files.';
-
-  @override
-  String get baiduNetdiskConnectAction => 'Connect Baidu Netdisk';
-
-  @override
-  String get baiduNetdiskLogoutTooltip => 'Sign out of Baidu Netdisk';
-
-  @override
-  String get baiduNetdiskSelectAllAction => 'Select';
-
-  @override
-  String get baiduNetdiskClearSelectionAction => 'Clear';
-
-  @override
-  String get baiduNetdiskLogoutTitle => 'Sign out of Baidu Netdisk?';
-
-  @override
-  String get baiduNetdiskLogoutMessage =>
-      'Echo Loop will clear the saved Baidu Netdisk authorization on this device.';
-
-  @override
-  String get baiduNetdiskLogoutConfirm => 'Sign Out';
-
-  @override
-  String get baiduNetdiskAccountTooltip => 'Baidu Netdisk account';
-
-  @override
-  String get baiduNetdiskAccountTitle => 'Baidu Netdisk account';
-
-  @override
-  String get baiduNetdiskUsername => 'Baidu username';
-
-  @override
-  String get baiduNetdiskNetdiskName => 'Netdisk nickname';
-
-  @override
-  String get baiduNetdiskMembership => 'Membership';
-
-  @override
-  String get baiduNetdiskUserId => 'User ID';
-
-  @override
-  String get baiduNetdiskUnavailable => 'Not provided';
-
-  @override
-  String get baiduNetdiskDisconnect => 'Disconnect Baidu Netdisk';
-
-  @override
-  String get baiduNetdiskNoSupportedAudio =>
-      'No supported media files found in this folder.';
-
-  @override
   String get importAudioShort => 'Import';
 
   @override
@@ -5023,24 +4714,6 @@ class AppLocalizationsEn extends AppLocalizations {
       zero: '',
     );
     return 'Import ($_temp0$_temp1)';
-  }
-
-  @override
-  String get baiduNetdiskImporting => 'Importing...';
-
-  @override
-  String baiduNetdiskImportingFile(String name) {
-    return 'Importing $name...';
-  }
-
-  @override
-  String baiduNetdiskImportedCount(int count) {
-    return 'Imported $count from Baidu Netdisk';
-  }
-
-  @override
-  String baiduNetdiskSkippedSummary(int duplicates, int failures) {
-    return 'Skipped duplicates: $duplicates · Failed: $failures';
   }
 
   @override
@@ -5348,7 +5021,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get asrDeleteAllModelsConfirm =>
-      'Delete all downloaded Echo Loop speech recognition models? You can re-download them anytime.';
+      'Delete all downloaded LoopBack speech recognition models? You can re-download them anytime.';
 
   @override
   String get asrDownloadedModelsTitle => 'Downloaded speech recognition models';
@@ -6154,7 +5827,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String speechUploadNoticeBody(String host, String provider) {
-    return 'Echo Loop will upload the bundled 4-second English sample to $host. Downstream inference provider: $provider. The service may charge your account for this request. Your own recordings are not used.';
+    return 'LoopBack will upload the bundled 4-second English sample to $host. Downstream inference provider: $provider. The service may charge your account for this request. Your own recordings are not used.';
   }
 
   @override

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/router/route_transition_observer.dart';
+import 'package:loop_back/router/route_transition_observer.dart';
 
 void main() {
   testWidgets('等待 root Navigator 退场动画，不依赖分支路由动画', (tester) async {

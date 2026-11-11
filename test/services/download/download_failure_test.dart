@@ -3,8 +3,8 @@ import 'dart:io' show FileSystemException, OSError;
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/services/download/download_failure.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/download/download_failure.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
 
 void main() {
   group('classifyDownloadFailure', () {

@@ -7,16 +7,16 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/main.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/providers/learning_progress_provider.dart';
-import 'package:echo_loop/providers/learning_session/intensive_listen_player_provider.dart';
-import 'package:echo_loop/providers/learning_session/learning_session_provider.dart';
-import 'package:echo_loop/router/app_router.dart';
-import 'package:echo_loop/screens/intensive_listen_player_screen.dart';
-import 'package:echo_loop/widgets/practice/sentence_annotation_card.dart';
-import 'package:echo_loop/widgets/practice/practice_progress_section.dart';
+import 'package:loop_back/main.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/providers/learning_progress_provider.dart';
+import 'package:loop_back/providers/learning_session/intensive_listen_player_provider.dart';
+import 'package:loop_back/providers/learning_session/learning_session_provider.dart';
+import 'package:loop_back/router/app_router.dart';
+import 'package:loop_back/screens/intensive_listen_player_screen.dart';
+import 'package:loop_back/widgets/practice/sentence_annotation_card.dart';
+import 'package:loop_back/widgets/practice/practice_progress_section.dart';
 
 import '../helpers/test_notifiers.dart';
 
@@ -41,7 +41,7 @@ void intensiveListenTests() {
     /// 并初始化 IntensiveListenPlayer 句子数据。
     Future<void> navigateToIntensiveListen(WidgetTester tester) async {
       await safeSettle(tester);
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(context);
 
       // 设置学习会话为精听模式
@@ -219,7 +219,7 @@ void intensiveListenTests() {
       expect(find.byType(SentenceAnnotationCard), findsWidgets);
 
       // 通过 provider 退出标注模式（按钮 tap 在 LiveTest 下可能不生效）
-      final ctx2 = tester.element(find.byType(EchoLoopApp));
+      final ctx2 = tester.element(find.byType(LoopBackApp));
       final c2 = ProviderScope.containerOf(ctx2);
       final p = c2.read(intensiveListenPlayerProvider.notifier)
           as TestIntensiveListenPlayer;
@@ -305,7 +305,7 @@ void intensiveListenTests() {
       expect(find.byType(IntensiveListenPlayerScreen), findsNothing);
 
       // 验证断点已保存（通过检查进度 state）
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(context);
       final progressState = container2.read(learningProgressNotifierProvider);
       final progress = progressState.progressMap['test-audio-1'];
@@ -348,7 +348,7 @@ void intensiveListenTests() {
       expect(find.byType(IntensiveListenPlayerScreen), findsNothing);
 
       // 验证书签已持久化到数据库
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(context);
       final bookmarkDao =
           container2.read(bookmarkDaoProvider) as TestBookmarkDao;
@@ -373,7 +373,7 @@ void intensiveListenTests() {
 
       // 导航到精听并设置为 freePlay 模式
       await safeSettle(tester);
-      final ctx = tester.element(find.byType(EchoLoopApp));
+      final ctx = tester.element(find.byType(LoopBackApp));
       final container = ProviderScope.containerOf(ctx);
 
       final session =
@@ -421,7 +421,7 @@ void intensiveListenTests() {
 
       // 验证书签已持久化到数据库
       final container2 = ProviderScope.containerOf(
-        tester.element(find.byType(EchoLoopApp)),
+        tester.element(find.byType(LoopBackApp)),
       );
       final bookmarkDao =
           container2.read(bookmarkDaoProvider) as TestBookmarkDao;
@@ -469,7 +469,7 @@ void intensiveListenTests() {
       await safeSettle(tester);
 
       // 验证两个书签都已持久化
-      final context = tester.element(find.byType(EchoLoopApp));
+      final context = tester.element(find.byType(LoopBackApp));
       final container2 = ProviderScope.containerOf(context);
       final bookmarkDao =
           container2.read(bookmarkDaoProvider) as TestBookmarkDao;

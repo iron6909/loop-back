@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/providers/tts/kokoro_model_provider.dart';
-import 'package:echo_loop/services/asr/asr_model_catalog.dart';
-import 'package:echo_loop/services/download/download_failure.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
-import 'package:echo_loop/services/resource_install_manifest.dart';
-import 'package:echo_loop/services/tts/kokoro_model_manager.dart';
+import 'package:loop_back/providers/tts/kokoro_model_provider.dart';
+import 'package:loop_back/services/asr/asr_model_catalog.dart';
+import 'package:loop_back/services/download/download_failure.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/resource_install_manifest.dart';
+import 'package:loop_back/services/tts/kokoro_model_manager.dart';
 
 const _fp32 = KokoroModelVariant.fp32;
 

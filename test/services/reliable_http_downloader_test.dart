@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 

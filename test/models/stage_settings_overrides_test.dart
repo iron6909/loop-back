@@ -4,9 +4,9 @@
 /// 槽位 key 拼装 [stageSlotKey] 与入口停顿值类型 [BriefingPauseChoice]。
 library;
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart' show PauseMode;
-import 'package:echo_loop/models/stage_settings_overrides.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart' show PauseMode;
+import 'package:loop_back/models/stage_settings_overrides.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -8,13 +8,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/asr/asr_model_catalog.dart';
-import 'package:echo_loop/services/dictionary/dictionary_catalog.dart';
-import 'package:echo_loop/services/dictionary_download_manager.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
-import 'package:echo_loop/services/resource_archive_spec.dart';
-import 'package:echo_loop/services/resource_install_manifest.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/asr/asr_model_catalog.dart';
+import 'package:loop_back/services/dictionary/dictionary_catalog.dart';
+import 'package:loop_back/services/dictionary_download_manager.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
+import 'package:loop_back/services/resource_archive_spec.dart';
+import 'package:loop_back/services/resource_install_manifest.dart';
 
 /// 按固定下载 URL 返回预置 ZIP；其余请求 404。
 class _MockAdapter implements HttpClientAdapter {

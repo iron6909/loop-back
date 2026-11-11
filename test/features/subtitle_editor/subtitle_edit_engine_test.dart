@@ -1,5 +1,5 @@
-import 'package:echo_loop/features/subtitle_editor/subtitle_edit_engine.dart';
-import 'package:echo_loop/models/sentence.dart';
+import 'package:loop_back/features/subtitle_editor/subtitle_edit_engine.dart';
+import 'package:loop_back/models/sentence.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

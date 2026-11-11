@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/features/podcast/podcast_repository.dart';
-import 'package:echo_loop/features/podcast/podcast_url_resolver.dart';
-import 'package:echo_loop/features/podcast/podcast_feed_parser.dart';
-import 'package:echo_loop/features/podcast/podcast_models.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/collection.dart';
-import 'package:echo_loop/providers/audio_library_provider.dart';
-import 'package:echo_loop/providers/collection_provider.dart';
+import 'package:loop_back/features/podcast/podcast_repository.dart';
+import 'package:loop_back/features/podcast/podcast_url_resolver.dart';
+import 'package:loop_back/features/podcast/podcast_feed_parser.dart';
+import 'package:loop_back/features/podcast/podcast_models.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/collection.dart';
+import 'package:loop_back/providers/audio_library_provider.dart';
+import 'package:loop_back/providers/collection_provider.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/mock_providers.dart';

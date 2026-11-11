@@ -3,12 +3,12 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/services/tts/piper_model_manager.dart'
+import 'package:loop_back/services/tts/piper_model_manager.dart'
     show PiperModelPaths;
-import 'package:echo_loop/services/tts/piper_synthesizer.dart';
-import 'package:echo_loop/services/tts/piper_tts_engine.dart';
-import 'package:echo_loop/services/tts/piper_model_catalog.dart';
-import 'package:echo_loop/services/tts/tts_engine.dart';
+import 'package:loop_back/services/tts/piper_synthesizer.dart';
+import 'package:loop_back/services/tts/piper_tts_engine.dart';
+import 'package:loop_back/services/tts/piper_model_catalog.dart';
+import 'package:loop_back/services/tts/tts_engine.dart';
 
 /// 记录调用并按需写假 wav 的 fake 合成器。
 class _FakeSynth implements PiperNativeSynthesizer {

@@ -20,7 +20,7 @@ class DeviceDiagnosticsService {
   /// 原生设备信息通道。
   @visibleForTesting
   static const MethodChannel channel = MethodChannel(
-    'top.echo-loop/device_info',
+    'top.loop-back/device_info',
   );
 
   final MethodChannel _channel;

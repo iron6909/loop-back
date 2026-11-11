@@ -8,8 +8,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
-import 'package:echo_loop/features/audio_import/transcription_audio_extractor.dart';
+import 'package:loop_back/features/audio_import/audio_transcode_service.dart';
+import 'package:loop_back/features/audio_import/transcription_audio_extractor.dart';
 
 /// 转码桩：按预设结果返回，记录传入的 source/output。
 class _FakeTranscodeService extends AudioTranscodeService {

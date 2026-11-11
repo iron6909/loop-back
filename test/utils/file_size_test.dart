@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/utils/file_size.dart';
+import 'package:loop_back/utils/file_size.dart';
 
 void main() {
   group('formatBytes', () {

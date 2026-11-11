@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/utils/playback_speed_default.dart';
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/utils/playback_speed_default.dart';
 
 void main() {
   group('defaultPlaybackSpeedFor', () {

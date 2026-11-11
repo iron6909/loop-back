@@ -1,4 +1,4 @@
-import 'package:echo_loop/services/device_diagnostics_service.dart';
+import 'package:loop_back/services/device_diagnostics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,8 +11,8 @@ void main() {
 
   setUp(() {
     PackageInfo.setMockInitialValues(
-      appName: 'Echo Loop',
-      packageName: 'app.echoloop',
+      appName: 'LoopBack',
+      packageName: 'app.loopback',
       version: '1.2.3',
       buildNumber: '45',
       buildSignature: '',

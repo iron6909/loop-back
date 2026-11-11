@@ -1,4 +1,4 @@
-import 'package:echo_loop/features/community_collections/widgets/community_collection_header.dart';
+import 'package:loop_back/features/community_collections/widgets/community_collection_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';

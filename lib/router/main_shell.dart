@@ -9,14 +9,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/learning_progress.dart';
 import '../models/reminder_settings.dart';
 import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
-import '../services/runtime_endpoint_router.dart';
 import '../database/providers.dart';
 import '../features/podcast/podcast_refresh_controller.dart';
 import '../providers/audio_library_provider.dart';
@@ -148,15 +146,6 @@ class _MainShellState extends ConsumerState<MainShell> with RouteAware {
         MaterialPageRoute<void>(builder: (_) => const LogViewerScreen()),
       ),
     );
-  }
-
-  /// 按社区入口的相同规则打开联系我们页面。
-  Future<void> _openContactUs() async {
-    ref.read(analyticsServiceProvider).track(Events.communityInviteTapped);
-    final isZh = Localizations.localeOf(context).languageCode == 'zh';
-    final path = isZh ? '/zh-CN/social' : '/en/social';
-    final uri = runtimeEndpointRouter.apiUri(path);
-    await launchUrl(uri);
   }
 
   /// 预热学习页首屏所需数据：音频列表 + 学习进度。
@@ -763,11 +752,6 @@ class _MainShellState extends ConsumerState<MainShell> with RouteAware {
                   ),
                   icon: const Icon(Icons.refresh),
                   label: Text(l10n.retry),
-                ),
-                TextButton.icon(
-                  onPressed: _openContactUs,
-                  icon: const Icon(Icons.group_outlined),
-                  label: Text(l10n.startupLocalDataContactUs),
                 ),
                 TextButton.icon(
                   onPressed: _openStartupLogs,

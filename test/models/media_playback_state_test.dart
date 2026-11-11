@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/listening_practice_state.dart';
-import 'package:echo_loop/models/media_playback_state.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/models/sentence_focus_reason.dart';
+import 'package:loop_back/models/listening_practice_state.dart';
+import 'package:loop_back/models/media_playback_state.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/models/sentence_focus_reason.dart';
 
 void main() {
   group('MediaPlaybackState', () {

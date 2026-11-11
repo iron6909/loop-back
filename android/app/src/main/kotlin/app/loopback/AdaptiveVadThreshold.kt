@@ -1,4 +1,4 @@
-package app.echoloop
+package app.loopback
 
 /**
  * 自适应 VAD 门槛：按当前环境底噪动态决定「有声」判定门槛。

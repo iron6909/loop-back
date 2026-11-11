@@ -21,8 +21,8 @@ import 'asr/offline_asr_backend.dart';
 ///
 /// - ASR 关闭 → 平台后端（纯录音）
 /// - Apple Speech → 平台后端（平台 ASR）
-/// - Echo Loop AI + 引擎就绪 → OfflineAsrBackend（离线转录）
-/// - Echo Loop AI + 引擎未就绪 → 平台后端（降级为纯录音）
+/// - LoopBack AI + 引擎就绪 → OfflineAsrBackend（离线转录）
+/// - LoopBack AI + 引擎未就绪 → 平台后端（降级为纯录音）
 final speechPracticeBackendProvider = Provider<SpeechPracticeBackend>((ref) {
   final s = ref.watch(offlineAsrSettingsProvider);
   final platform = SpeechPracticePlatform.instance;
@@ -67,7 +67,7 @@ abstract class SpeechPracticeBackend {
 
   /// 请求权限。
   ///
-  /// `onlyMic=true` 时只请求麦克风（关闭 ASR / Echo Loop 离线后端场景），
+  /// `onlyMic=true` 时只请求麦克风（关闭 ASR / LoopBack 离线后端场景），
   /// 不触发平台原生语音识别系统弹窗，遵循最小权限原则。
   Future<SpeechPracticePermissionState> requestPermissions({
     bool onlyMic = false,
@@ -114,10 +114,10 @@ class SpeechPracticePlatform implements SpeechPracticeBackend {
 
   static SpeechPracticePlatform _instance = SpeechPracticePlatform();
   static const MethodChannel _channel = MethodChannel(
-    'top.echo-loop/speech_practice',
+    'top.loop-back/speech_practice',
   );
   static const EventChannel _eventChannel = EventChannel(
-    'top.echo-loop/speech_practice/events',
+    'top.loop-back/speech_practice/events',
   );
 
   Stream<SpeechPracticeEvent>? _events;

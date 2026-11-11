@@ -6,13 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-import 'package:echo_loop/database/app_database.dart';
-import 'package:echo_loop/database/providers.dart';
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/providers/monthly_study_records_provider.dart';
-import 'package:echo_loop/providers/study_stats_provider.dart';
-import 'package:echo_loop/screens/activity_calendar_screen.dart';
-import 'package:echo_loop/theme/app_theme.dart';
+import 'package:loop_back/database/app_database.dart';
+import 'package:loop_back/database/providers.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/monthly_study_records_provider.dart';
+import 'package:loop_back/providers/study_stats_provider.dart';
+import 'package:loop_back/screens/activity_calendar_screen.dart';
+import 'package:loop_back/theme/app_theme.dart';
 
 AppDatabase _createTestDb() {
   return AppDatabase(

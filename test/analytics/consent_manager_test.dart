@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:echo_loop/analytics/consent_manager.dart';
+import 'package:loop_back/analytics/consent_manager.dart';
 
 void main() {
   group('ConsentManager', () {

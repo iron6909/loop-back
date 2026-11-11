@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:echo_loop/services/app_network_image_cache.dart';
+import 'package:loop_back/services/app_network_image_cache.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';

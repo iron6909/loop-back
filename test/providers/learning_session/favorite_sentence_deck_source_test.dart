@@ -1,21 +1,21 @@
 import 'package:clock/clock.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:echo_loop/database/app_database.dart' hide MemorySchedule;
-import 'package:echo_loop/database/daos/bookmark_dao.dart';
-import 'package:echo_loop/features/memory_scheduler/adapters/fsrs/fsrs_memory_model_adapter.dart';
-import 'package:echo_loop/features/memory_scheduler/application/default_memory_scheduler.dart';
-import 'package:echo_loop/features/memory_scheduler/application/memory_model_registry.dart';
-import 'package:echo_loop/features/memory_scheduler/application/memory_scheduler.dart';
-import 'package:echo_loop/features/memory_scheduler/config/memory_profiles.dart';
-import 'package:echo_loop/features/memory_scheduler/data/drift_memory_schedule_repository.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_schedule.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_scheduler_commands.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_namespaces.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_subject_ref.dart';
-import 'package:echo_loop/models/favorite_review_settings.dart';
-import 'package:echo_loop/providers/learning_session/favorite_sentence_deck_source.dart';
+import 'package:loop_back/database/app_database.dart' hide MemorySchedule;
+import 'package:loop_back/database/daos/bookmark_dao.dart';
+import 'package:loop_back/features/memory_scheduler/adapters/fsrs/fsrs_memory_model_adapter.dart';
+import 'package:loop_back/features/memory_scheduler/application/default_memory_scheduler.dart';
+import 'package:loop_back/features/memory_scheduler/application/memory_model_registry.dart';
+import 'package:loop_back/features/memory_scheduler/application/memory_scheduler.dart';
+import 'package:loop_back/features/memory_scheduler/config/memory_profiles.dart';
+import 'package:loop_back/features/memory_scheduler/data/drift_memory_schedule_repository.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_schedule.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_scheduler_commands.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_namespaces.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_subject_ref.dart';
+import 'package:loop_back/models/favorite_review_settings.dart';
+import 'package:loop_back/providers/learning_session/favorite_sentence_deck_source.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 BookmarkWithAudio _bookmark(String subjectId, int index) => BookmarkWithAudio(

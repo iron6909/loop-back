@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_audio_engine_provider.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_sense_group_range_playback.dart';
+import 'package:loop_back/providers/audio_engine/foreground_audio_engine_provider.dart';
+import 'package:loop_back/providers/audio_engine/foreground_sense_group_range_playback.dart';
 
 void main() {
   group('ForegroundSenseGroupRangePlayback', () {

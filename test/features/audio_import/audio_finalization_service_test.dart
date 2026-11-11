@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:echo_loop/features/audio_import/audio_finalization_service.dart';
-import 'package:echo_loop/features/audio_import/audio_import_cancel.dart';
-import 'package:echo_loop/features/audio_import/audio_import_models.dart';
-import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
+import 'package:loop_back/features/audio_import/audio_finalization_service.dart';
+import 'package:loop_back/features/audio_import/audio_import_cancel.dart';
+import 'package:loop_back/features/audio_import/audio_import_models.dart';
+import 'package:loop_back/features/audio_import/audio_transcode_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 

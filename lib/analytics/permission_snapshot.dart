@@ -1,6 +1,6 @@
 /// 系统授权状态快照（仅供埋点使用）。
 ///
-/// 一次性查询 4 类系统授权状态（麦克风 / 语音识别 / 通知 / 网络），
+/// 一次性查询 3 类系统授权状态（麦克风 / 语音识别 / 通知），
 /// 上报到 PostHog（super properties + person properties + 自定义事件）。
 /// 不参与业务流程判断；状态值是字符串而非 enum，方便直接序列化。
 library;
@@ -17,7 +17,7 @@ import '../services/speech_practice_platform.dart';
 import 'analytics_service.dart';
 import 'models/event_names.dart';
 
-/// 4 类系统授权状态的不可变快照。
+/// 3 类系统授权状态的不可变快照。
 @immutable
 class PermissionSnapshot {
   // ── 状态字符串常量（避免在事件流里出现拼写漂移） ──
@@ -28,21 +28,16 @@ class PermissionSnapshot {
   static const String statusUnknown = 'unknown';
   static const String statusNotApplicable = 'not_applicable';
 
-  /// SP key：上次启动时 iOS 网络 dataTask 是否成功过。
-  /// 首次成功后置 true 且永远不写 false（避免飞行模式 / 弱网误判为 denied）。
-  static const String spKeyNetworkOk = 'network_data_task_succeeded';
   static const String spKeyLastReported = 'analytics_permission_snapshot_v1';
 
   final String microphone;
   final String speech;
   final String notification;
-  final String network;
 
   const PermissionSnapshot({
     required this.microphone,
     required this.speech,
     required this.notification,
-    required this.network,
   });
 
   /// 转成事件参数 / user property map（key 来自 [EventParams]）。
@@ -50,10 +45,9 @@ class PermissionSnapshot {
     EventParams.microphoneStatus: microphone,
     EventParams.speechStatus: speech,
     EventParams.notificationStatus: notification,
-    EventParams.networkStatus: network,
   };
 
-  /// 一次性查询 4 类授权状态。
+  /// 一次性查询 3 类授权状态。
   ///
   /// 任意一类查询失败回退为 [statusUnknown]，不影响其他类。
   /// 测试时通过 [probe] 注入伪造实现，避免触发真实平台插件。
@@ -80,32 +74,7 @@ class PermissionSnapshot {
       // 保持 unknown
     }
 
-    return PermissionSnapshot(
-      microphone: mic,
-      speech: sp,
-      notification: notif,
-      network: mapNetworkSpStatus(
-        prefs.getBool(spKeyNetworkOk),
-        isIOSPlatform: _isIOSPlatform(),
-      ),
-    );
-  }
-
-  /// 网络状态映射：仅 iOS 有意义；
-  /// 其他平台一律 [statusNotApplicable]，
-  /// iOS 上 SP 缺失或 false 视为 notDetermined（避免假 denied）。
-  @visibleForTesting
-  static String mapNetworkSpStatus(
-    bool? hasSucceeded, {
-    required bool isIOSPlatform,
-  }) {
-    if (!isIOSPlatform) return statusNotApplicable;
-    return (hasSucceeded ?? false) ? statusGranted : statusNotDetermined;
-  }
-
-  static bool _isIOSPlatform() {
-    if (kIsWeb) return false;
-    return Platform.isIOS;
+    return PermissionSnapshot(microphone: mic, speech: sp, notification: notif);
   }
 }
 
@@ -127,7 +96,6 @@ extension PermissionSnapshotReporting on AnalyticsService {
       snapshot.microphone,
       snapshot.speech,
       snapshot.notification,
-      snapshot.network,
     ].join('|');
     if (prefs.getString(PermissionSnapshot.spKeyLastReported) == fingerprint) {
       return;

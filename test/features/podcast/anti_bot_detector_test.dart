@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/features/podcast/anti_bot_detector.dart';
+import 'package:loop_back/features/podcast/anti_bot_detector.dart';
 
 void main() {
   group('isAntiBotChallenge', () {

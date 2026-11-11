@@ -1,13 +1,10 @@
 {
   "startupLocalDataErrorTitle": "抱歉，出错了",
   "startupLocalDataErrorMessage": "数据暂时无法正常加载。请重试；如果问题持续，请联系我们。",
-  "startupLocalDataContactUs": "联系我们",
   "startupLocalDataViewLogs": "查看日志",
   "playbackFailedTitle": "播放失败",
   "playbackFailedMessage": "请稍后重试。",
   "@@locale": "zh",
-  "appTitle": "Echo Loop",
-  "premiumTitle": "Echo Loop 会员",
   "premiumTagline": "无限 AI，学习更高效。",
   "aiQuotaExceededGenericTitle": "本月 AI 免费额度已用完",
   "aiQuotaExceededTitle": "本月 {feature}免费额度已用完",
@@ -104,7 +101,6 @@
   "premiumPurchaseLoginRequired": "购买前请先登录。",
   "premiumRestoreLoginRequired": "恢复购买前请先登录。",
   "premiumPurchaseFailed": "购买失败，请重试。",
-  "premiumRestoreAccountMismatch": "此订阅已绑定到另一个 Echo Loop 账号。请登录原账号后重试。",
   "premiumRestoreNone": "未找到可恢复的购买。",
   "premiumRestored": "已恢复购买。",
   "premiumWebCheckoutCta": "查看订阅方案",
@@ -1040,8 +1036,6 @@
   "asrEngine": "语音引擎",
   "asrBackendPlatform": "Apple AI",
   "asrBackendPlatformDescription": "使用系统自带的语音识别，无需下载",
-  "asrBackendOffline": "Echo Loop AI",
-  "asrBackendOfflineDescription": "使用应用自带的 AI 模型，支持离线使用，需下载",
   "asrBackendLocalWhisper": "Whisper（本机）",
   "asrBackendLocalWhisperDescription": "使用应用内置的 Whisper 模型，下载后可离线使用",
   "asrDownloadSourceTitle": "模型来源",
@@ -1461,13 +1455,6 @@
   "clearCacheEmpty": "缓存已为空",
   "confirm": "确认",
   "autoCompletedNoDifficultReview": "0 个难句，已跳过",
-  "termsOfService": "服务条款",
-  "privacyPolicy": "隐私政策",
-  "writeFeedback": "意见反馈",
-  "rateUs": "评价我们",
-  "joinCommunity": "加入学习社群",
-  "aboutCommunity": "加入社区",
-  "joinCommunityInviteSubtitle": "找资源，找搭子，反馈建议",
   "networkError": "无法连接，请检查网络后重试",
   "viewSourceCode": "开源项目",
   "updateAvailable": "发现新版本 v{version}",
@@ -1840,7 +1827,7 @@
   "guidePlanFreePlayTitle": "随心听",
   "guidePlanFreePlayDescription": "这是一个全能、灵活的音频播放器，你可以按照自己的节奏随心听、随心练。",
   "guidePlanStartLearningTitle": "按计划学习",
-  "guidePlanStartLearningDescription": "点击这里即可按照学习计划逐步学习。Echo Loop 会自动引导你学习，并及时提醒你复习。",
+  "guidePlanStartLearningDescription": "点击这里即可按照学习计划逐步学习。LoopBack 会自动引导你学习，并及时提醒你复习。",
   "guidePlanPauseLearningTitle": "暂停学习",
   "guidePlanPauseLearningDescription": "如果你不想继续学这段音频，可以随时在这里暂停。该音频将停止复习提醒，之后可一键恢复。",
   "guideRetellSkipTitle": "跳过本次复述",
@@ -1863,8 +1850,6 @@
   "resetNewUserGuide": "重置新手引导",
   "resetNewUserGuideSubtitle": "清除所有引导已看过状态，方便测试",
   "resetNewUserGuideDone": "新手引导已重置",
-  "resetOnboarding": "重置 Onboarding 问卷",
-  "resetOnboardingDone": "Onboarding 已重置，请重启 App 以重新进入问卷",
   "discoverCommunityCollections": "发现资源",
   "discoverEmpty": "暂无精选合集",
   "discoverLoadFailed": "加载失败，点击重试",
@@ -1965,74 +1950,6 @@
   "backgroundDownloadFailedTitle": "下载失败",
   "audioListColumnName": "名称",
   "audioListColumnDuration": "时长",
-  "onboardingTitle": "先聊两句",
-  "onboardingSubtitle": "10 秒帮你定制学习节奏",
-  "onboardingBack": "上一步",
-  "onboardingContinue": "继续",
-  "onboardingExamPrompt": "你当前在备考哪一类考试？",
-  "onboardingExamGaokao": "中高考",
-  "onboardingExamCet": "大学四六级",
-  "onboardingExamTem": "专四专八",
-  "onboardingExamIelts": "雅思 IELTS",
-  "onboardingExamToefl": "托福 TOEFL",
-  "onboardingExamOther": "其他",
-  "onboardingProgress": "第 {current} 题 / 共 {total} 题",
-  "@onboardingProgress": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "onboardingNext": "下一题",
-  "onboardingDone": "完成",
-  "onboardingFinishedTitle": "记下了，准备好出发",
-  "onboardingFinishedHint": "我们会按你的目标和节奏来安排练习。",
-  "onboardingSummaryEyebrow": "你知道么？",
-  "onboardingSummaryHeadline": "提升英语听说，\n关键不在听得更多，\n而在练得更透",
-  "onboardingSummaryPoint1": "选择适合你水平的音频反复练习",
-  "onboardingSummaryPoint2": "按意群理解内容，在语境中掌握词汇",
-  "onboardingSummaryPoint3": "通过大量精听和跟读积累输入与语感",
-  "onboardingSummaryPoint4": "通过复述练习口语，把听懂变成会说",
-  "onboardingStart": "开始学习",
-  "onboardingQ1Prompt": "你练习英语听说的主要目标是什么？",
-  "onboardingQ1OptionExam": "应对考试",
-  "onboardingQ1OptionDaily": "日常交流",
-  "onboardingQ1OptionWork": "工作沟通",
-  "onboardingQ1OptionTravel": "出国旅行",
-  "onboardingQ1OptionContent": "听懂影视播客",
-  "onboardingQ1OptionOther": "其他",
-  "onboardingQ2Prompt": "你计划每天练习多久？",
-  "onboardingQ2Option5": "约 5 分钟",
-  "onboardingQ2Option10": "约 10 分钟",
-  "onboardingQ2Option20": "约 20 分钟",
-  "onboardingQ2Option30": "30 分钟以上",
-  "onboardingQ2OptionFlexible": "不固定",
-  "onboardingQ3Prompt": "你是从哪里知道我们的？",
-  "onboardingQ3OptionAppStore": "应用商店",
-  "onboardingQ3OptionGooglePlay": "Google Play",
-  "onboardingQ3OptionYoutube": "YouTube",
-  "onboardingQ3OptionReddit": "Reddit",
-  "onboardingQ3OptionXTwitter": "X",
-  "onboardingQ3OptionTiktok": "TikTok",
-  "onboardingQ3OptionInstagram": "Instagram",
-  "onboardingQ3OptionXiaohongshu": "小红书",
-  "onboardingQ3OptionWechat": "微信",
-  "onboardingQ3OptionDouyin": "抖音",
-  "onboardingQ3OptionKuaishou": "快手",
-  "onboardingQ3OptionBilibili": "B 站",
-  "onboardingQ3OptionBaiduSearch": "百度搜索",
-  "onboardingQ3OptionGoogleSearch": "Google 搜索",
-  "onboardingQ3OptionGithub": "GitHub",
-  "onboardingQ3OptionFriend": "朋友推荐",
-  "onboardingQ3OptionOther": "其他",
-  "onboardingPermissionsHint": "为了保证体验我们将请求以下权限",
-  "onboardingPermissionsNotification": "系统通知",
-  "onboardingPermissionsMicrophone": "录音",
-  "onboardingPermissionsSpeech": "语音识别",
   "playbackSection": "播放",
   "learningSection": "学习",
   "learningSettings": "学习设置",
@@ -2102,7 +2019,6 @@
   "speechPermActionGrant": "授权",
   "speechPermActionOpenSettings": "前往设置",
   "speechPermUnsupportedToast": "当前平台不支持录音",
-  "authSignInTitle": "登录 Echo Loop",
   "authChooseMethod": "选择一种方式继续。",
   "authContinueWithEmail": "使用邮箱验证码继续",
   "authContinueWithApple": "使用 Apple 继续",
@@ -2214,29 +2130,6 @@
   "importAudioFromCloudDrive": "从网盘导入",
   "importAudioFromBaiduNetdisk": "从百度网盘导入",
   "cloudDriveSourceShort": "网盘",
-  "baiduNetdisk": "百度网盘",
-  "baiduNetdiskAllFiles": "全部文件",
-  "baiduNetdiskWaitingAuthorization": "等待百度授权...",
-  "baiduNetdiskLoadingFiles": "正在加载百度网盘文件...",
-  "baiduNetdiskImportFailed": "百度网盘导入失败。",
-  "baiduNetdiskConnectTitle": "连接百度网盘",
-  "baiduNetdiskConnectDescription": "授权 Echo Loop 浏览你的百度网盘，并导入选中的素材文件。",
-  "baiduNetdiskConnectAction": "连接百度网盘",
-  "baiduNetdiskLogoutTooltip": "退出百度网盘登录",
-  "baiduNetdiskSelectAllAction": "全选",
-  "baiduNetdiskClearSelectionAction": "取消",
-  "baiduNetdiskLogoutTitle": "退出百度网盘登录？",
-  "baiduNetdiskLogoutMessage": "Echo Loop 会清除当前设备上保存的百度网盘授权。",
-  "baiduNetdiskLogoutConfirm": "退出登录",
-  "baiduNetdiskAccountTooltip": "百度网盘账户",
-  "baiduNetdiskAccountTitle": "百度网盘账户",
-  "baiduNetdiskUsername": "百度用户名",
-  "baiduNetdiskNetdiskName": "网盘昵称",
-  "baiduNetdiskMembership": "会员状态",
-  "baiduNetdiskUserId": "用户 ID",
-  "baiduNetdiskUnavailable": "未提供",
-  "baiduNetdiskDisconnect": "断开百度网盘连接",
-  "baiduNetdiskNoSupportedAudio": "此文件夹中没有支持的素材文件。",
   "importAudioShort": "导入",
   "cancelImport": "取消导入",
   "cancelingImport": "正在取消导入…",
@@ -2255,34 +2148,6 @@
         "type": "int"
       },
       "subtitleCount": {
-        "type": "int"
-      }
-    }
-  },
-  "baiduNetdiskImporting": "正在导入...",
-  "baiduNetdiskImportingFile": "正在导入 {name}...",
-  "@baiduNetdiskImportingFile": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "baiduNetdiskImportedCount": "已从百度网盘导入 {count} 个",
-  "@baiduNetdiskImportedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "baiduNetdiskSkippedSummary": "跳过重复项：{duplicates} · 失败：{failures}",
-  "@baiduNetdiskSkippedSummary": {
-    "placeholders": {
-      "duplicates": {
-        "type": "int"
-      },
-      "failures": {
         "type": "int"
       }
     }
@@ -2424,7 +2289,7 @@
     }
   },
   "ttsKokoroLicense": "Apache-2.0 · espeak-ng-data GPL-3.0-or-later",
-  "asrDeleteAllModelsConfirm": "删除所有已下载的 Echo Loop 语音识别模型？可随时重新下载。",
+  "asrDeleteAllModelsConfirm": "删除所有已下载的 LoopBack 语音识别模型？可随时重新下载。",
   "asrDownloadedModelsTitle": "已下载的语音识别模型",
   "asrDownloadedModelsDesc": "未在使用 · 占用 {size}",
   "dictionarySettings": "词典设置",
@@ -2806,7 +2671,7 @@
   "speechModelRefreshEmpty": "服务没有返回转写模型，仍可手填模型 ID",
   "speechModelRefreshFailed": "无法获取模型目录，仍可手填模型 ID",
   "speechUploadNoticeTitle": "发送测试音频？",
-  "speechUploadNoticeBody": "Echo Loop 会把随包的 4 秒英语样本上传到 {host}，下游推理供应商为 {provider}。该服务可能为此向你收费；测试不会使用你自己的录音。",
+  "speechUploadNoticeBody": "LoopBack 会把随包的 4 秒英语样本上传到 {host}，下游推理供应商为 {provider}。该服务可能为此向你收费；测试不会使用你自己的录音。",
   "@speechUploadNoticeBody": {
     "placeholders": {
       "host": {

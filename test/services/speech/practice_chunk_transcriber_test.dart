@@ -8,11 +8,11 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart' show CancelToken;
-import 'package:echo_loop/features/audio_import/audio_transcode_service.dart';
-import 'package:echo_loop/models/recognition_selection.dart';
-import 'package:echo_loop/services/speech/practice_chunk_transcriber.dart';
-import 'package:echo_loop/services/speech/speech_config.dart';
-import 'package:echo_loop/services/speech/speech_transcription_client.dart';
+import 'package:loop_back/features/audio_import/audio_transcode_service.dart';
+import 'package:loop_back/models/recognition_selection.dart';
+import 'package:loop_back/services/speech/practice_chunk_transcriber.dart';
+import 'package:loop_back/services/speech/speech_config.dart';
+import 'package:loop_back/services/speech/speech_transcription_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _identity = 'openrouter|https://openrouter.ai/api/v1|openai/whisper-1|v1';

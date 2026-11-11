@@ -66,7 +66,7 @@ fi
 # 安装包名字只用 versionName。versionCode 已经隐藏在 .app 元数据里，
 # 对外分发不需要暴露。同 versionName 重发会覆盖。
 VERSION="${BUILD_NAME}"
-APP_NAME="Echo-Loop-${VERSION}-macos"
+APP_NAME="LoopBack-${VERSION}-macos"
 
 log "Version: $VERSION"
 log "Build number: ${BUILD_NUMBER:-1}"
@@ -77,7 +77,7 @@ log "Cleaning..."
 flutter clean
 
 log "Building release app..."
-# 全球/中国 API 可用 API_BASE_URL 和 API_CHINA_BASE_URL 覆盖。
+# 无自有后端 API；环境文件仅携带渠道/分析等必要 dart-define。
 ENV_FILE=".prod.env"
 [[ -f "$ENV_FILE" ]] || fail "$ENV_FILE not found. Copy .dev.env.template to $ENV_FILE and fill in values."
 FLUTTER_ARGS=(
@@ -96,7 +96,7 @@ fi
 flutter "${FLUTTER_ARGS[@]}"
 
 # 找到 .app 产物
-APP_PATH="build/macos/Build/Products/Release-prod/Echo Loop.app"
+APP_PATH="build/macos/Build/Products/Release-prod/LoopBack.app"
 [[ -d "$APP_PATH" ]] || APP_PATH="$(find build/macos -name '*.app' -path '*/Release*/*' | head -1)"
 [[ -d "$APP_PATH" ]] || fail ".app not found in build/macos"
 
@@ -111,12 +111,12 @@ log "Creating DMG..."
 rm -f "$DMG_PATH"
 
 create-dmg \
-  --volname "Echo Loop" \
+  --volname "LoopBack" \
   --volicon "$ICON_PATH" \
   --window-pos 200 120 \
   --window-size 520 280 \
   --icon-size 80 \
-  --icon "Echo Loop.app" 130 140 \
+  --icon "LoopBack.app" 130 140 \
   --app-drop-link 390 140 \
   "$DMG_PATH" \
   "$APP_PATH"

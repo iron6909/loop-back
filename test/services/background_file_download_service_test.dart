@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:background_downloader/background_downloader.dart';
 import 'package:dio/dio.dart';
-import 'package:echo_loop/services/app_logger.dart';
-import 'package:echo_loop/services/background_file_download_service.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:loop_back/services/background_file_download_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -484,7 +484,7 @@ void main() {
               ),
         ),
       );
-      expect(downloader.configuredNotificationGroup, 'echo-loop-user-files');
+      expect(downloader.configuredNotificationGroup, 'loop-back-user-files');
       expect(downloader.runningNotification?.title, 'Downloading');
       expect(downloader.runningNotification?.body, '{displayName}');
       expect(downloader.notificationProgressBar, isTrue);

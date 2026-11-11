@@ -10,14 +10,14 @@
 /// 同一套逻辑。
 library;
 
-import 'package:echo_loop/database/enums.dart';
-import 'package:echo_loop/models/intensive_listen_settings.dart';
-import 'package:echo_loop/models/stage_settings_overrides.dart'
+import 'package:loop_back/database/enums.dart';
+import 'package:loop_back/models/intensive_listen_settings.dart';
+import 'package:loop_back/models/stage_settings_overrides.dart'
     show BriefingPauseChoice, StageSettingsSlots, stageSlotKey;
-import 'package:echo_loop/providers/intensive_listen_prefs_provider.dart';
-import 'package:echo_loop/providers/learning_settings_provider.dart'
+import 'package:loop_back/providers/intensive_listen_prefs_provider.dart';
+import 'package:loop_back/providers/learning_settings_provider.dart'
     show sharedPreferencesProvider;
-import 'package:echo_loop/screens/learning_plan_screen.dart'
+import 'package:loop_back/screens/learning_plan_screen.dart'
     show intensivePauseChoiceFromSettings, intensivePrefsRecorder;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

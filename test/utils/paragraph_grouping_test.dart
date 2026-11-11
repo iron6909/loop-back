@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/utils/paragraph_grouping.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/utils/paragraph_grouping.dart';
 
 /// 辅助：用 (startMs, endMs) 创建带句间空白的句子（不连续）
 Sentence _s(int idx, int startMs, int endMs) => Sentence(

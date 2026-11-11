@@ -1,5 +1,5 @@
 import 'package:audio_service/audio_service.dart';
-import 'package:echo_loop/services/media_session_router.dart';
+import 'package:loop_back/services/media_session_router.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

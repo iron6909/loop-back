@@ -1,4 +1,4 @@
-import 'package:echo_loop/models/dictionary/dictionary_settings.dart';
+import 'package:loop_back/models/dictionary/dictionary_settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

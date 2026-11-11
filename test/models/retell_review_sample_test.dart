@@ -4,8 +4,8 @@
 /// 测试立刻失败，提醒把新情况补进假数据，而不是等到界面上漏了才发现。
 library;
 
-import 'package:echo_loop/models/retell_review_evaluation.dart';
-import 'package:echo_loop/models/retell_review_sample.dart';
+import 'package:loop_back/models/retell_review_evaluation.dart';
+import 'package:loop_back/models/retell_review_sample.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

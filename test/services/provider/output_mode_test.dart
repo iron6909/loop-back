@@ -5,7 +5,7 @@
 /// 变成「成功」。
 library;
 
-import 'package:echo_loop/services/provider/output_mode.dart';
+import 'package:loop_back/services/provider/output_mode.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

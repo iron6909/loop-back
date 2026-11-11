@@ -158,8 +158,6 @@ jobs:
         run: |
           flutter clean
           DART_DEFINES=(
-            "--dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}"
-            "--dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }}"
             "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
           )
           if [[ -n "$POSTHOG_API_KEY" ]]; then
@@ -176,7 +174,7 @@ jobs:
           # 文件名只用 versionName。versionCode 已经隐藏在 APK 元数据里，
           # 对外分发不需要暴露。同 versionName 重发会覆盖。
           cp build/app/outputs/flutter-apk/app-prod-release.apk \
-             "build/release/Echo-Loop-${BUILD_NAME}-arm64.apk"
+             "build/release/LoopBack-${BUILD_NAME}-arm64.apk"
 
       - name: Upload APK to Cloudflare R2
         if: matrix.platform == 'android'
@@ -188,11 +186,11 @@ jobs:
           R2_BUCKET: ${{ vars.R2_BUCKET }}
         run: |
           : "${R2_BUCKET:=public}"
-          APK="build/release/Echo-Loop-${BUILD_NAME}-arm64.apk"
+          APK="build/release/LoopBack-${BUILD_NAME}-arm64.apk"
           aws s3 cp "$APK" "s3://${R2_BUCKET}/android/$(basename "$APK")" \
             --endpoint-url "$R2_ENDPOINT" --region auto \
             --content-type "application/vnd.android.package-archive"
-          aws s3 cp "$APK" "s3://${R2_BUCKET}/android/Echo-Loop-latest.apk" \
+          aws s3 cp "$APK" "s3://${R2_BUCKET}/android/LoopBack-latest.apk" \
             --endpoint-url "$R2_ENDPOINT" --region auto \
             --content-type "application/vnd.android.package-archive"
 
@@ -201,7 +199,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/release/Echo-Loop-*-arm64.apk
+          path: build/release/LoopBack-*-arm64.apk
           retention-days: 30
 
       # Google Play 只接受 AAB 作为上架包（APK 仅用于 R2/GitHub 直装分发）。
@@ -215,8 +213,6 @@ jobs:
           POSTHOG_API_KEY: ${{ vars.POSTHOG_API_KEY }}
         run: |
           DART_DEFINES=(
-            "--dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}"
-            "--dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }}"
             "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
           )
           if [[ -n "$POSTHOG_API_KEY" ]]; then
@@ -236,7 +232,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: >-
             ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: app.echoloop
+          packageName: app.loopback
           releaseFiles: >-
             build/app/outputs/bundle/prodRelease/app-prod-release.aab
           track: internal
@@ -318,7 +314,7 @@ jobs:
             <string>manual</string>
             <key>provisioningProfiles</key>
             <dict>
-              <key>top.echo-loop</key>
+              <key>top.loop-back</key>
               <string>${IOS_PROVISIONING_PROFILE_NAME}</string>
             </dict>
             <key>stripSwiftSymbols</key>
@@ -343,8 +339,6 @@ jobs:
           # 避免 Homebrew rsync 抢占（Apple toolchain 需要系统 rsync）
           export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
           DART_DEFINES=(
-            "--dart-define=API_BASE_URL=${{ vars.API_BASE_URL }}"
-            "--dart-define=API_CHINA_BASE_URL=${{ vars.API_CHINA_BASE_URL }}"
             "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
           )
           if [[ -n "$POSTHOG_API_KEY" ]]; then
@@ -472,7 +466,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          files: ./artifacts/Echo-Loop-*-arm64.apk
+          files: ./artifacts/LoopBack-*-arm64.apk
           generate_release_notes: true
           fail_on_unmatched_files: true
           draft: true

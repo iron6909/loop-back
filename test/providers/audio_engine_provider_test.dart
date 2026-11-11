@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:echo_loop/models/audio_engine_state.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/models/audio_engine_state.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
 
 void main() {
   group('AudioEngine clearClip', () {

@@ -1,8 +1,8 @@
-import 'package:echo_loop/features/scheduled_flashcard/domain/review_session_summary.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/memory_rating.dart';
-import 'package:echo_loop/features/memory_scheduler/domain/review_retention.dart';
-import 'package:echo_loop/theme/app_theme.dart';
-import 'package:echo_loop/widgets/review/review_completion_summary.dart';
+import 'package:loop_back/features/scheduled_flashcard/domain/review_session_summary.dart';
+import 'package:loop_back/features/memory_scheduler/domain/memory_rating.dart';
+import 'package:loop_back/features/memory_scheduler/domain/review_retention.dart';
+import 'package:loop_back/theme/app_theme.dart';
+import 'package:loop_back/widgets/review/review_completion_summary.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lottie/lottie.dart';

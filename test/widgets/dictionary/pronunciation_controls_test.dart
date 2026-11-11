@@ -3,10 +3,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:echo_loop/l10n/app_localizations.dart';
-import 'package:echo_loop/models/pronunciation/pronunciation_clip.dart';
-import 'package:echo_loop/providers/pronunciation/pronunciation_providers.dart';
-import 'package:echo_loop/widgets/dictionary/pronunciation_controls.dart';
+import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/models/pronunciation/pronunciation_clip.dart';
+import 'package:loop_back/providers/pronunciation/pronunciation_providers.dart';
+import 'package:loop_back/widgets/dictionary/pronunciation_controls.dart';
 
 class _FakePlayback extends TextPlaybackController {
   @override

@@ -25,7 +25,7 @@ abstract class SpeechPermissionService {
 
   /// 请求权限。
   ///
-  /// - `onlyMic = true`：仅请求麦克风（用于关闭 ASR 或 Echo Loop 离线后端场景）。
+  /// - `onlyMic = true`：仅请求麦克风（用于关闭 ASR 或 LoopBack 离线后端场景）。
   /// - `onlyMic = false`：同时请求麦克风 + 语音识别（iOS 平台 ASR 场景）。
   Future<SpeechPracticePermissionState> request({required bool onlyMic});
 

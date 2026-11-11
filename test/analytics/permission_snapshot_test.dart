@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/analytics/analytics_channel.dart';
-import 'package:echo_loop/analytics/analytics_service.dart';
-import 'package:echo_loop/analytics/consent_manager.dart';
-import 'package:echo_loop/analytics/models/event_names.dart';
-import 'package:echo_loop/analytics/permission_snapshot.dart';
+import 'package:loop_back/analytics/analytics_channel.dart';
+import 'package:loop_back/analytics/analytics_service.dart';
+import 'package:loop_back/analytics/consent_manager.dart';
+import 'package:loop_back/analytics/models/event_names.dart';
+import 'package:loop_back/analytics/permission_snapshot.dart';
 
 /// 不出错的伪 probe：返回固定值。
 class _FakeProbe implements PermissionProbe {
@@ -110,7 +110,6 @@ void main() {
         microphone: PermissionSnapshot.statusGranted,
         speech: PermissionSnapshot.statusDenied,
         notification: PermissionSnapshot.statusNotDetermined,
-        network: PermissionSnapshot.statusNotApplicable,
       );
 
       final params = snap.toEventParams();
@@ -118,7 +117,6 @@ void main() {
         EventParams.microphoneStatus: PermissionSnapshot.statusGranted,
         EventParams.speechStatus: PermissionSnapshot.statusDenied,
         EventParams.notificationStatus: PermissionSnapshot.statusNotDetermined,
-        EventParams.networkStatus: PermissionSnapshot.statusNotApplicable,
       });
     });
 
@@ -127,7 +125,6 @@ void main() {
         microphone: PermissionSnapshot.statusUnknown,
         speech: PermissionSnapshot.statusUnknown,
         notification: PermissionSnapshot.statusUnknown,
-        network: PermissionSnapshot.statusUnknown,
       );
       final params = snap.toEventParams();
       for (final v in params.values) {
@@ -136,50 +133,12 @@ void main() {
     });
   });
 
-  group('PermissionSnapshot.mapNetworkSpStatus', () {
-    test('非 iOS 平台一律 not_applicable', () {
-      expect(
-        PermissionSnapshot.mapNetworkSpStatus(true, isIOSPlatform: false),
-        PermissionSnapshot.statusNotApplicable,
-      );
-      expect(
-        PermissionSnapshot.mapNetworkSpStatus(false, isIOSPlatform: false),
-        PermissionSnapshot.statusNotApplicable,
-      );
-      expect(
-        PermissionSnapshot.mapNetworkSpStatus(null, isIOSPlatform: false),
-        PermissionSnapshot.statusNotApplicable,
-      );
-    });
-
-    test('iOS 上：曾成功过 → granted', () {
-      expect(
-        PermissionSnapshot.mapNetworkSpStatus(true, isIOSPlatform: true),
-        PermissionSnapshot.statusGranted,
-      );
-    });
-
-    test('iOS 上：SP 缺失 → notDetermined（不引入假 denied）', () {
-      expect(
-        PermissionSnapshot.mapNetworkSpStatus(null, isIOSPlatform: true),
-        PermissionSnapshot.statusNotDetermined,
-      );
-    });
-
-    test('iOS 上：false 也按 notDetermined 处理（保留语义余地）', () {
-      expect(
-        PermissionSnapshot.mapNetworkSpStatus(false, isIOSPlatform: true),
-        PermissionSnapshot.statusNotDetermined,
-      );
-    });
-  });
-
   group('PermissionSnapshot.capture (注入 probe)', () {
     setUp(() {
       SharedPreferences.setMockInitialValues({});
     });
 
-    test('happy path：probe 返回值原样填充，network 按平台映射', () async {
+    test('happy path：probe 返回值原样填充', () async {
       final prefs = await SharedPreferences.getInstance();
       final snap = await PermissionSnapshot.capture(
         prefs,
@@ -192,8 +151,6 @@ void main() {
       expect(snap.microphone, PermissionSnapshot.statusGranted);
       expect(snap.speech, PermissionSnapshot.statusGranted);
       expect(snap.notification, PermissionSnapshot.statusDenied);
-      // 测试在 macOS host 上跑，network 一律 not_applicable
-      expect(snap.network, PermissionSnapshot.statusNotApplicable);
     });
 
     test('mic/speech probe 抛错时，两项均回退为 unknown，notification 不受影响', () async {
@@ -222,22 +179,6 @@ void main() {
       expect(snap.speech, PermissionSnapshot.statusDenied);
       expect(snap.notification, PermissionSnapshot.statusUnknown);
     });
-
-    test('SP 中 network 为 true 时，仍因测试 host 非 iOS 返回 not_applicable', () async {
-      SharedPreferences.setMockInitialValues({
-        PermissionSnapshot.spKeyNetworkOk: true,
-      });
-      final prefs = await SharedPreferences.getInstance();
-      final snap = await PermissionSnapshot.capture(
-        prefs,
-        probe: const _FakeProbe(
-          microphone: PermissionSnapshot.statusGranted,
-          speech: PermissionSnapshot.statusGranted,
-          notification: PermissionSnapshot.statusGranted,
-        ),
-      );
-      expect(snap.network, PermissionSnapshot.statusNotApplicable);
-    });
   });
 
   group('PermissionSnapshotReporting.reportPermissionSnapshot', () {
@@ -254,27 +195,25 @@ void main() {
       service = AnalyticsService(channel: channel, consent: consent);
     });
 
-    test('三路写入：super properties + 4 个 person property + 1 个事件', () async {
+    test('三路写入：super properties + 3 个 person property + 1 个事件', () async {
       const snapshot = PermissionSnapshot(
         microphone: PermissionSnapshot.statusGranted,
         speech: PermissionSnapshot.statusGranted,
         notification: PermissionSnapshot.statusDenied,
-        network: PermissionSnapshot.statusNotApplicable,
       );
 
       await service.reportPermissionSnapshot(snapshot, prefs);
 
-      // super properties 一次性写入 4 类
+      // super properties 一次性写入 3 类
       expect(channel.superPropertiesCalls, hasLength(1));
       expect(channel.superPropertiesCalls.first, snapshot.toEventParams());
 
-      // 4 个 person property（每类一次）
-      expect(channel.userProperties, hasLength(4));
+      // 3 个 person property（每类一次）
+      expect(channel.userProperties, hasLength(3));
       final byKey = {for (final e in channel.userProperties) e.name: e.value};
       expect(byKey[EventParams.microphoneStatus], snapshot.microphone);
       expect(byKey[EventParams.speechStatus], snapshot.speech);
       expect(byKey[EventParams.notificationStatus], snapshot.notification);
-      expect(byKey[EventParams.networkStatus], snapshot.network);
 
       // 1 个 app_permission_snapshot 事件，参数和 snapshot 一致
       expect(channel.events, hasLength(1));
@@ -289,7 +228,6 @@ void main() {
         microphone: PermissionSnapshot.statusGranted,
         speech: PermissionSnapshot.statusGranted,
         notification: PermissionSnapshot.statusGranted,
-        network: PermissionSnapshot.statusGranted,
       );
       await service.reportPermissionSnapshot(snapshot, prefs);
 
@@ -303,13 +241,12 @@ void main() {
         microphone: PermissionSnapshot.statusGranted,
         speech: PermissionSnapshot.statusGranted,
         notification: PermissionSnapshot.statusDenied,
-        network: PermissionSnapshot.statusNotApplicable,
       );
       await service.reportPermissionSnapshot(snapshot, prefs);
       await service.reportPermissionSnapshot(snapshot, prefs);
       expect(channel.events, hasLength(1));
       expect(channel.superPropertiesCalls, hasLength(1));
-      expect(channel.userProperties, hasLength(4));
+      expect(channel.userProperties, hasLength(3));
     });
   });
 

@@ -5,12 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:echo_loop/providers/offline_asr_settings_provider.dart';
-import 'package:echo_loop/providers/asr_engine_provider.dart';
-import 'package:echo_loop/services/asr/asr_model_manager.dart';
-import 'package:echo_loop/services/asr/offline_asr_engine.dart';
-import 'package:echo_loop/services/download/download_failure.dart';
-import 'package:echo_loop/services/reliable_http_downloader.dart';
+import 'package:loop_back/providers/offline_asr_settings_provider.dart';
+import 'package:loop_back/providers/asr_engine_provider.dart';
+import 'package:loop_back/services/asr/asr_model_manager.dart';
+import 'package:loop_back/services/asr/offline_asr_engine.dart';
+import 'package:loop_back/services/download/download_failure.dart';
+import 'package:loop_back/services/reliable_http_downloader.dart';
 
 class _FakeAsrModelManager extends AsrModelManager {
   _FakeAsrModelManager({

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:echo_loop/models/audio_engine_state.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/providers/audio_engine/foreground_audio_engine_provider.dart';
+import 'package:loop_back/models/audio_engine_state.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/providers/audio_engine/foreground_audio_engine_provider.dart';
 
 /// 前台引擎单测：聚焦 session 守卫、loop 计数、clip 状态等编排逻辑
 /// （深层 clip 播放与 AudioEngine 逐方法一致，由步骤 6 的行为测试平移守护）。

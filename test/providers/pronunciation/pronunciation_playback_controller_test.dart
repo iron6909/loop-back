@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:echo_loop/models/pronunciation/pronunciation_clip.dart';
-import 'package:echo_loop/providers/pronunciation/pronunciation_providers.dart';
-import 'package:echo_loop/providers/short_audio_player_provider.dart';
-import 'package:echo_loop/providers/tts/tts_controller_provider.dart';
-import 'package:echo_loop/services/pronunciation/local_audio_clip_player.dart';
+import 'package:loop_back/models/pronunciation/pronunciation_clip.dart';
+import 'package:loop_back/providers/pronunciation/pronunciation_providers.dart';
+import 'package:loop_back/providers/short_audio_player_provider.dart';
+import 'package:loop_back/providers/tts/tts_controller_provider.dart';
+import 'package:loop_back/services/pronunciation/local_audio_clip_player.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 

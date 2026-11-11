@@ -1,9 +1,9 @@
-import 'package:echo_loop/features/subtitle_editor/subtitle_editor_controller.dart';
-import 'package:echo_loop/features/subtitle_editor/subtitle_simple_editor_screen.dart';
-import 'package:echo_loop/models/audio_item.dart';
-import 'package:echo_loop/models/sentence.dart';
-import 'package:echo_loop/providers/audio_engine/audio_engine_provider.dart';
-import 'package:echo_loop/database/providers.dart';
+import 'package:loop_back/features/subtitle_editor/subtitle_editor_controller.dart';
+import 'package:loop_back/features/subtitle_editor/subtitle_simple_editor_screen.dart';
+import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/models/sentence.dart';
+import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
+import 'package:loop_back/database/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

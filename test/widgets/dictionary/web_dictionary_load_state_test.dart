@@ -1,4 +1,4 @@
-import 'package:echo_loop/widgets/dictionary/web_dictionary_load_state.dart';
+import 'package:loop_back/widgets/dictionary/web_dictionary_load_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
