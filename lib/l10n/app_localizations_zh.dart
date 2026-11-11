@@ -5291,13 +5291,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiServicePromptVersion => '提示词版本';
 
   @override
-  String get aiServiceAbout => '关于';
-
-  @override
   String get aiServiceBaseUrlInvalid => '请填写完整的 HTTP 或 HTTPS 地址';
 
   @override
   String get aiServiceKeyHint => '留空并保存即删除已保存的 Key';
+
+  @override
+  String get aiServiceIntro => 'AI 能力直连你配置的供应商，费用由供应商结算。';
+
+  @override
+  String get aiServiceConnectionSection => '连接配置';
+
+  @override
+  String get aiServiceChangeProvider => '更换供应商';
+
+  @override
+  String get aiServiceEmptyDescription => '连接你自己的供应商后，翻译、句子解析、词典与学习助手即可使用。';
+
+  @override
+  String get aiServiceEmptyHint => '支持 DeepSeek、OpenRouter 与任意 OpenAI 兼容服务';
 
   @override
   String get providerKindDeepSeek => 'DeepSeek';

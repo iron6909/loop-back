@@ -5541,14 +5541,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiServicePromptVersion => 'Prompt version';
 
   @override
-  String get aiServiceAbout => 'About';
-
-  @override
   String get aiServiceBaseUrlInvalid =>
       'Enter a complete HTTP or HTTPS address';
 
   @override
   String get aiServiceKeyHint => 'Leave empty to remove the saved key';
+
+  @override
+  String get aiServiceIntro =>
+      'AI features call your own provider directly; billing stays with that provider.';
+
+  @override
+  String get aiServiceConnectionSection => 'Connection';
+
+  @override
+  String get aiServiceChangeProvider => 'Change provider';
+
+  @override
+  String get aiServiceEmptyDescription =>
+      'Connect your own provider to use translation, sentence analysis, the dictionary and the study assistant.';
+
+  @override
+  String get aiServiceEmptyHint =>
+      'Works with DeepSeek, OpenRouter and any OpenAI-compatible service';
 
   @override
   String get providerKindDeepSeek => 'DeepSeek';

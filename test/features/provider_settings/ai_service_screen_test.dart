@@ -69,19 +69,10 @@ void main() {
     await tester.tap(find.text('Test'));
     await tester.pump();
     expect(find.text('Not tested'), findsNothing);
-    final testingRow = tester.widget<ListTile>(
-      find.widgetWithText(ListTile, 'Connection test'),
-    );
-    expect(testingRow.trailing, isA<FilledButton>());
-    final testButton = testingRow.trailing;
-    if (testButton is FilledButton) expect(testButton.onPressed, isNull);
-    expect(
-      find.descendant(
-        of: find.widgetWithText(ListTile, 'Connection test'),
-        matching: find.text('Testing…'),
-      ),
-      findsNWidgets(2),
-    );
+    final testButton = tester.widget<FilledButton>(find.byType(FilledButton));
+    expect(testButton.onPressed, isNull);
+    // 状态行与按钮标签同时显示测试中。
+    expect(find.text('Testing…'), findsNWidgets(2));
     reply.complete(
       ResponseBody.fromString(
         jsonEncode({
@@ -99,13 +90,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(
-      find.descendant(
-        of: find.widgetWithText(ListTile, 'Connection test'),
-        matching: find.text('Connection OK'),
-      ),
-      findsOneWidget,
-    );
+    expect(find.text('Connection OK'), findsOneWidget);
     expect(find.text('Not tested'), findsNothing);
     fixture.adapter.json({
       'balance_infos': [
@@ -176,5 +161,38 @@ void main() {
     await tester.pump();
     expect(find.text('chosen-model'), findsOneWidget);
     expect(fixture.adapter.requests, isEmpty);
+  });
+
+  testWidgets('从未配置：居中空态说明用途与支持的服务，不展示配置行', (tester) async {
+    await pump(tester);
+
+    expect(find.text('AI service is not configured'), findsOneWidget);
+    expect(
+      find.text(
+        'Works with DeepSeek, OpenRouter and any OpenAI-compatible service',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Configure provider'), findsOneWidget);
+    // 空态不应同时渲染可编辑的配置行与连接验证。
+    expect(find.text('Base URL'), findsNothing);
+    expect(find.text('Connection'), findsNothing);
+    expect(find.text('Connection test'), findsNothing);
+  });
+
+  testWidgets('已配置：供应商卡展示身份信息，连接配置单独成组', (tester) async {
+    await pump(tester);
+    await fixture.configure();
+    await tester.pumpAndSettle();
+
+    final card = find.byKey(const Key('ai-service-provider-card'));
+    expect(
+      find.descendant(of: card, matching: find.text('Custom')),
+      findsOneWidget,
+    );
+    expect(find.text('fixture-model · provider.example'), findsOneWidget);
+    expect(find.byTooltip('Change provider'), findsOneWidget);
+    expect(find.text('Connection'), findsOneWidget);
+    expect(find.text('Connection test'), findsOneWidget);
   });
 }

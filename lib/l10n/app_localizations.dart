@@ -9728,12 +9728,6 @@ abstract class AppLocalizations {
   /// **'Prompt version'**
   String get aiServicePromptVersion;
 
-  /// No description provided for @aiServiceAbout.
-  ///
-  /// In en, this message translates to:
-  /// **'About'**
-  String get aiServiceAbout;
-
   /// No description provided for @aiServiceBaseUrlInvalid.
   ///
   /// In en, this message translates to:
@@ -9745,6 +9739,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave empty to remove the saved key'**
   String get aiServiceKeyHint;
+
+  /// No description provided for @aiServiceIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'AI features call your own provider directly; billing stays with that provider.'**
+  String get aiServiceIntro;
+
+  /// No description provided for @aiServiceConnectionSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection'**
+  String get aiServiceConnectionSection;
+
+  /// No description provided for @aiServiceChangeProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Change provider'**
+  String get aiServiceChangeProvider;
+
+  /// No description provided for @aiServiceEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect your own provider to use translation, sentence analysis, the dictionary and the study assistant.'**
+  String get aiServiceEmptyDescription;
+
+  /// No description provided for @aiServiceEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Works with DeepSeek, OpenRouter and any OpenAI-compatible service'**
+  String get aiServiceEmptyHint;
 
   /// No description provided for @providerKindDeepSeek.
   ///

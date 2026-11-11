@@ -38,32 +38,43 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final runtime = ref.watch(providerConfigurationProvider).valueOrNull;
+    final provider = ref.watch(providerConfigurationProvider);
+    final runtime = provider.valueOrNull;
     final saved = ref.watch(savedProviderConfigProvider);
     final config = saved.valueOrNull ?? runtime?.config;
     final usage = ref.watch(usageQueryProvider);
+    // 首帧仍在读配置：先给读中占位，避免把已配置用户瞬时误判为未配置。
+    if (config == null &&
+        runtime == null &&
+        (provider.isLoading || saved.isLoading)) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.aiServiceTitle)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+    // 从未保存过配置：整页空态，不渲染暂时无意义的配置行。
+    if (config == null && runtime == null) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.aiServiceTitle)),
+        body: _empty(l10n),
+      );
+    }
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.aiServiceTitle)),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.m),
         children: [
-          if (runtime == null)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.m),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.aiServiceNotConfigured),
-                    FilledButton(
-                      onPressed: _saving ? null : () => _pick(config),
-                      child: Text(l10n.aiServiceConfigureProvider),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
+          Text(
+            l10n.aiServiceIntro,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.m),
+          if (config != null) _providerCard(l10n, config),
+          if (runtime != null) ...[
+            if (config != null) const SizedBox(height: AppSpacing.m),
             UsageCard(
               view: usage.isReloading
                   ? const UsageView()
@@ -74,31 +85,171 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
               onOpenConsole: () =>
                   launchUrl(Uri.parse(_console(runtime.config))),
             ),
-          const SizedBox(height: AppSpacing.m),
+          ],
+          _sectionTitle(context, l10n.aiServiceConnectionSection),
           _fields(l10n, config, runtime != null),
           const SizedBox(height: AppSpacing.m),
-          Card(
-            child: ListTile(
-              title: Text(l10n.aiServicePromptVersion),
-              subtitle: Text(l10n.aiServiceAbout),
-              trailing: Text(config?.promptVersion ?? 'v1'),
+          _testCard(l10n, runtime != null),
+          const SizedBox(height: AppSpacing.l),
+          Center(
+            child: Text(
+              '${l10n.aiServicePromptVersion} ${config?.promptVersion ?? 'v1'}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
+          const SizedBox(height: AppSpacing.m),
         ],
       ),
     );
   }
 
+  /// 从未配置时的整页空态：说明用途与支持范围，只留一个主操作。
+  Widget _empty(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(AppSpacing.l),
+              ),
+              child: Icon(
+                Icons.hub_outlined,
+                size: 44,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.l),
+            Text(
+              l10n.aiServiceNotConfigured,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s),
+            Text(
+              l10n.aiServiceEmptyDescription,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _saving ? null : () => _pick(null),
+                child: Text(l10n.aiServiceConfigureProvider),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.m),
+            Text(
+              l10n.aiServiceEmptyHint,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 供应商身份卡：名称、模型与主机一眼可见，修改入口在右侧。
+  Widget _providerCard(AppLocalizations l10n, ProviderConfig config) {
+    final theme = Theme.of(context);
+    return Card(
+      key: const Key('ai-service-provider-card'),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.m),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(
+                  AppSpacing.s + AppSpacing.xs,
+                ),
+              ),
+              child: Icon(
+                Icons.hub_outlined,
+                size: 26,
+                color: theme.colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.s),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _kind(l10n, config.kind),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs / 2),
+                  Text(
+                    '${config.model} · ${_host(config)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: l10n.aiServiceChangeProvider,
+              onPressed: _saving ? null : () => _pick(config),
+              icon: const Icon(Icons.edit_outlined),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 分区标题：与设置页分组同款样式。
+  Widget _sectionTitle(BuildContext context, String title) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xs,
+        AppSpacing.l,
+        AppSpacing.xs,
+        AppSpacing.s,
+      ),
+      child: Text(
+        title,
+        style: theme.textTheme.titleSmall?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
   /// 各字段独立编辑，首次选择供应商后不依赖 Key 才能继续操作。
+  /// 供应商入口收在身份卡的编辑按钮上，避免同一信息出现两次。
   Widget _fields(AppLocalizations l10n, ProviderConfig? config, bool hasKey) {
     return Card(
       child: Column(
         children: [
-          _row(
-            l10n.aiServiceProvider,
-            _kind(l10n, config?.kind),
-            () => _pick(config),
-          ),
           _row(
             l10n.aiServiceBaseUrl,
             config?.baseUrl,
@@ -114,40 +265,77 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
             hasKey ? l10n.aiServiceKeySaved : l10n.aiServiceKeyNotSet,
             config == null ? null : () => _key(config),
           ),
-          ListTile(
-            title: Text(l10n.aiServiceConnectionTest),
-            subtitle: Semantics(
-              liveRegion: true,
-              child: Row(
+        ],
+      ),
+    );
+  }
+
+  /// 连接验证卡：结果内联，动作在右；没有 Key 时按钮禁用并说明原因。
+  Widget _testCard(AppLocalizations l10n, bool hasKey) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.m,
+          AppSpacing.s + AppSpacing.xs,
+          AppSpacing.s,
+          AppSpacing.s + AppSpacing.xs,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (_result != null) ...[
-                    const Icon(Icons.info_outline, size: 18),
-                    const SizedBox(width: AppSpacing.s),
-                  ],
-                  Flexible(
-                    child: Text(
-                      _testing
-                          ? l10n.aiServiceTesting
-                          : _result ??
-                                (!hasKey
-                                    ? l10n.aiServiceKeyNotSet
-                                    : l10n.aiServiceUntested),
+                  Text(
+                    l10n.aiServiceConnectionTest,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Semantics(
+                    liveRegion: true,
+                    child: Row(
+                      children: [
+                        if (_result != null) ...[
+                          Icon(
+                            Icons.info_outline,
+                            size: 16,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                        ],
+                        Flexible(
+                          child: Text(
+                            _statusText(l10n, hasKey),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-            trailing: FilledButton.tonal(
+            const SizedBox(width: AppSpacing.s),
+            FilledButton.tonal(
               onPressed: !hasKey || _testing || _saving ? null : _test,
               child: Text(
                 _testing ? l10n.aiServiceTesting : l10n.aiServiceTest,
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
+  /// 验证行的状态文字：测试中优先，其次本次结果，最后回退到 Key 与验证状态。
+  String _statusText(AppLocalizations l10n, bool hasKey) => _testing
+      ? l10n.aiServiceTesting
+      : _result ?? (hasKey ? l10n.aiServiceUntested : l10n.aiServiceKeyNotSet);
 
   Widget _row(String label, String? value, VoidCallback? action) => ListTile(
     enabled: action != null && !_saving,
@@ -166,12 +354,14 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
     null => '—',
   };
 
-  String _console(ProviderConfig config) =>
-      switch (Uri.parse(config.baseUrl).host) {
-        'api.deepseek.com' => 'https://platform.deepseek.com',
-        'openrouter.ai' => 'https://openrouter.ai/settings/keys',
-        _ => 'https://opencode.ai',
-      };
+  String _console(ProviderConfig config) => switch (_host(config)) {
+    'api.deepseek.com' => 'https://platform.deepseek.com',
+    'openrouter.ai' => 'https://openrouter.ai/settings/keys',
+    _ => 'https://opencode.ai',
+  };
+
+  /// 主机名：身份卡与用量快照都只需要这一层。
+  String _host(ProviderConfig config) => Uri.parse(config.baseUrl).host;
 
   Future<void> _pick(ProviderConfig? current) async {
     final l10n = AppLocalizations.of(context)!;
