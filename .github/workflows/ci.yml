@@ -186,9 +186,17 @@ jobs:
 
       - name: Install CocoaPods
         if: matrix.platform == 'ios'
-        # PostHog 等 pod 约束随 pubspec 升级后，先单独更新再 install，
-        # 否则 pod install 会因 lock 里版本不满足约束而失败。
-        run: cd ios && pod update PostHog && pod install
+        # pubspec 升级后 Podfile.lock 里多个 pod 版本过期；一次性全量更新，
+        # 并把新 lock 上传为 artifact 供回写仓库。
+        run: cd ios && pod update && pod install
+
+      - name: Upload updated Podfile.lock
+        if: matrix.platform == 'ios'
+        uses: actions/upload-artifact@v4
+        with:
+          name: podfile-lock
+          path: ios/Podfile.lock
+          retention-days: 7
 
       - name: Build iOS (no codesign)
         if: matrix.platform == 'ios'
