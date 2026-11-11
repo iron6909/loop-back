@@ -1,0 +1,24 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": { "v": 1, "at": "2026-11-11T05:22:27Z" },
+  "title": "LoopBack",
+  "namespace": "LoopBack",
+  "libraries": [],
+  "sections": {},
+  "groups": ["Logos"],
+  "assetGroups": {
+    "Logos": {
+      "name": "Logos",
+      "tile": "l",
+      "order": ["loopback-app-icon.svg", "loopback-mark.svg"],
+      "files": {
+        "loopback-app-icon.svg": { "name": "loopback-app-icon.svg", "blob": "4d24603f618a71acf6229de84f0375b3", "size": 1062, "type": "image/svg+xml" },
+        "loopback-mark.svg": { "name": "loopback-mark.svg", "blob": "9ecc443e7a62b2f371288953398bb556", "size": 625, "type": "image/svg+xml" }
+      }
+    }
+  },
+  "blobs": {},
+  "docs": { "readme": "project/README.md", "sections": [] },
+  "lastChange": { "by": "banko", "via": "Pi", "at": "2026-11-11T05:22:27Z", "note": "LoopBack design system created from lib/theme/app_theme.dart; new app icon." }
+}

@@ -67,5 +67,6 @@ resources/
 .env
 skills-lock.json
 
-# Designs
-designs/
+# Designs（loop-back-design-system 纳入版本管理）
+designs/*
+!designs/loopback-design-system/

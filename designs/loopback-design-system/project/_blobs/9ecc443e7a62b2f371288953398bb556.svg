@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <title>LoopBack mark</title>
+  <!-- monochrome mark: brand blue on transparent, for in-app use -->
+  <path d="M 281.7 110.3 A 148 148 0 1 0 395.1 205.4" stroke="#1976D2" stroke-width="56" stroke-linecap="round" fill="none"/>
+  <path d="M 419.5 196.5 L 370.7 214.3 L 367.7 130.2 Z" fill="#1976D2"/>
+  <rect x="176" y="214" width="44" height="84" rx="22" fill="#1976D2"/>
+  <rect x="234" y="184" width="44" height="144" rx="22" fill="#1976D2"/>
+  <rect x="292" y="204" width="44" height="104" rx="22" fill="#1976D2"/>
+</svg>
