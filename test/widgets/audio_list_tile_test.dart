@@ -1054,8 +1054,8 @@ void main() {
       await tester.tap(find.text('Manage Subtitles'));
       await tester.pumpAndSettle();
 
-      expect(find.text('On-Device Transcription'), findsOneWidget);
-      expect(find.text('English'), findsOneWidget);
+      expect(find.text('Model transcription'), findsOneWidget);
+      expect(find.textContaining('On-device'), findsOneWidget);
       expect(find.text('Cloud Transcription'), findsNothing);
       expect(find.textContaining('Audio too long'), findsNothing);
     });
