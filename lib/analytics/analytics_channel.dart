@@ -1,12 +1,12 @@
 /// 上报通道抽象接口（Strategy Pattern）
 ///
 /// 业务代码不直接依赖 Firebase/友盟，只通过此接口上报事件。
-/// 具体实现见 [FirebaseChannel]、[UmengChannel]、[LogOnlyChannel]。
+/// 具体实现见 [PostHogChannel]、[LogOnlyChannel]。
 library;
 
 /// 分析上报通道
 ///
-/// 每个实现类封装一个第三方 SDK（Firebase Analytics、友盟等）。
+/// 每个实现类封装一个第三方 SDK（PostHog 等）。
 /// [AnalyticsService] 持有一个 Channel 实例，将事件转发到此接口。
 abstract class AnalyticsChannel {
   /// 初始化通道（如 SDK 初始化）

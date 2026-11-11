@@ -13,7 +13,6 @@ import 'analytics_channel.dart';
 import 'analytics_service.dart';
 import 'channels/log_only_channel.dart';
 import 'channels/posthog_channel.dart';
-import 'channels/umeng_channel.dart';
 import 'consent_manager.dart';
 import '../services/app_logger.dart';
 
@@ -72,18 +71,9 @@ Future<AnalyticsService> initializeAnalyticsWithFallback(
 /// 根据配置选择分析通道
 ///
 /// 当前策略：PostHog 全平台统一上报。
-/// 如需切回 Firebase/友盟，修改此函数即可。
 AnalyticsChannel _createChannel() {
   if (kDebugMode) return LogOnlyChannel();
   if (PostHogChannel.isConfigured) return PostHogChannel();
   // PostHog 未配置（缺少 POSTHOG_API_KEY dart-define）时降级到日志
-  return LogOnlyChannel();
-}
-
-// 以下通道备用，当前未启用（Firebase 已随去品牌化移除）。
-// ignore: unused_element
-AnalyticsChannel _createChannelLegacy(bool isChina) {
-  if (kDebugMode) return LogOnlyChannel();
-  if (isChina && UmengChannel.isConfigured) return UmengChannel();
   return LogOnlyChannel();
 }

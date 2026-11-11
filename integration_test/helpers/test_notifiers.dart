@@ -21,7 +21,6 @@ import 'package:loop_back/analytics/consent_manager.dart';
 import 'package:loop_back/database/enums.dart';
 import 'package:loop_back/database/daos/sentence_ai_cache_dao.dart';
 import 'package:loop_back/database/providers.dart';
-import 'package:loop_back/providers/shared_preferences_provider.dart';
 import 'package:loop_back/main.dart';
 import 'package:loop_back/models/audio_item.dart';
 import 'package:loop_back/models/collection.dart';
