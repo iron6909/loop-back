@@ -1,23 +1,25 @@
 name: Release
 
-# Tag 触发自动发布：iOS 上传 App Store Connect、Android 上传 Cloudflare R2，
-# 同时把 APK 作为 GitHub Release 附件挂出（IPA 不公开）。
+# Tag 触发自动发布：构建 Android 签名 APK 并直接发布 GitHub Release。
+#
+# 本分支不上架应用商店，GitHub Releases 是唯一分发渠道。
 #
 # 触发：
-#   - push tag 形如 v1.0.11（推荐，新格式）或 v1.0.8+1（兼容旧格式）
+#   - push tag 形如 v1.0.45（推荐，新格式）或 v1.0.45+N（兼容旧格式）
 #   - 或在 Actions 页面手动 dispatch 选 tag
 #
 # 版本号约定：
-#   - tag 用纯 SemVer（v1.0.11），不带 +N
+#   - tag 用纯 SemVer（v1.0.45），不带 +N
 #   - versionCode 由 CI 自动用 git rev-list --count <tag> 生成，全局单调递增
-#   - 详见 CLAUDE.md "Android versionCode 单调递增" 章节
+#   - 签名使用仓库 secrets：ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PASSWORD /
+#     ANDROID_KEY_PASSWORD / ANDROID_KEY_ALIAS（与本地 android/key.properties 同一把密钥）
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (e.g. v1.0.11)'
+        description: 'Tag to release (e.g. v1.0.45)'
         required: true
 
 env:
@@ -25,18 +27,8 @@ env:
 
 jobs:
   release:
+    runs-on: ubuntu-latest
     timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [ios, android]
-        include:
-          - platform: ios
-            runner: macos-latest
-          - platform: android
-            runner: ubuntu-latest
-
-    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout
@@ -51,12 +43,6 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
           cache-key: flutter-${{ runner.os }}-${{ hashFiles('pubspec.lock') }}
-
-      - name: Select latest Xcode (iOS only)
-        if: matrix.platform == 'ios'
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
 
       - name: Get dependencies
         run: flutter pub get
@@ -122,17 +108,13 @@ jobs:
           printf "Parsed: name=%s number=%s (pubspec OK, max code=%s)\n" \
             "$NAME" "$NUMBER" "$MAX_CODE"
 
-      # ---------- Android ----------
-
       - name: Setup Java
-        if: matrix.platform == 'android'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Restore Android signing config
-        if: matrix.platform == 'android'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -149,7 +131,6 @@ jobs:
           EOF
 
       - name: Build Android APK
-        if: matrix.platform == 'android'
         env:
           BUILD_NAME: ${{ steps.ver.outputs.name }}
           BUILD_NUMBER: ${{ steps.ver.outputs.number }}
@@ -163,7 +144,7 @@ jobs:
           if [[ -n "$POSTHOG_API_KEY" ]]; then
             DART_DEFINES+=("--dart-define=POSTHOG_API_KEY=${POSTHOG_API_KEY}")
           fi
-          # 侧载包声明 direct 渠道，供评分入口和设备诊断使用。
+          # 侧载包声明 direct 渠道，供设备诊断使用。
           DART_DEFINES+=("--dart-define=DISTRIBUTION_CHANNEL=direct")
           flutter build apk --release --flavor=prod \
             --target-platform android-arm64 \
@@ -176,274 +157,12 @@ jobs:
           cp build/app/outputs/flutter-apk/app-prod-release.apk \
              "build/release/LoopBack-${BUILD_NAME}-arm64.apk"
 
-      - name: Upload APK to Cloudflare R2
-        if: matrix.platform == 'android'
-        env:
-          BUILD_NAME: ${{ steps.ver.outputs.name }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
-          R2_BUCKET: ${{ vars.R2_BUCKET }}
-        run: |
-          : "${R2_BUCKET:=public}"
-          APK="build/release/LoopBack-${BUILD_NAME}-arm64.apk"
-          aws s3 cp "$APK" "s3://${R2_BUCKET}/android/$(basename "$APK")" \
-            --endpoint-url "$R2_ENDPOINT" --region auto \
-            --content-type "application/vnd.android.package-archive"
-          aws s3 cp "$APK" "s3://${R2_BUCKET}/android/LoopBack-latest.apk" \
-            --endpoint-url "$R2_ENDPOINT" --region auto \
-            --content-type "application/vnd.android.package-archive"
-
       - name: Upload APK artifact
-        if: matrix.platform == 'android'
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
           path: build/release/LoopBack-*-arm64.apk
           retention-days: 30
-
-      # Google Play 只接受 AAB 作为上架包（APK 仅用于 R2/GitHub 直装分发）。
-      # 单独构建一份 prod release AAB，签名沿用 gradle 中 prod 的 release 配置。
-      - name: Build Android App Bundle (AAB)
-        if: matrix.platform == 'android'
-        env:
-          BUILD_NAME: ${{ steps.ver.outputs.name }}
-          BUILD_NUMBER: ${{ steps.ver.outputs.number }}
-          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
-          POSTHOG_API_KEY: ${{ vars.POSTHOG_API_KEY }}
-        run: |
-          DART_DEFINES=(
-            "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
-          )
-          if [[ -n "$POSTHOG_API_KEY" ]]; then
-            DART_DEFINES+=("--dart-define=POSTHOG_API_KEY=${POSTHOG_API_KEY}")
-          fi
-          # Google Play 包声明 play 渠道，供评分入口和设备诊断使用。
-          DART_DEFINES+=("--dart-define=DISTRIBUTION_CHANNEL=play")
-          # abiFilters 已在 gradle 限定 arm64，AAB 同样只含 arm64
-          flutter build appbundle --release --flavor=prod \
-            --build-name="$BUILD_NAME" \
-            --build-number="$BUILD_NUMBER" \
-            "${DART_DEFINES[@]}"
-
-      - name: Upload AAB to Google Play (internal track)
-        if: matrix.platform == 'android'
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: >-
-            ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: app.loopback
-          releaseFiles: >-
-            build/app/outputs/bundle/prodRelease/app-prod-release.aab
-          track: internal
-          status: completed
-
-      # ---------- iOS ----------
-
-      - name: Import distribution certificate to keychain
-        if: matrix.platform == 'ios'
-        env:
-          IOS_DIST_CERT_BASE64: ${{ secrets.IOS_DIST_CERT_BASE64 }}
-          IOS_DIST_CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
-        run: |
-          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
-          KEYCHAIN_PWD="$(openssl rand -base64 24)"
-          CERT_PATH="$RUNNER_TEMP/dist_cert.p12"
-
-          echo "$IOS_DIST_CERT_BASE64" | base64 -d > "$CERT_PATH"
-
-          security create-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
-          security import "$CERT_PATH" -P "$IOS_DIST_CERT_PASSWORD" \
-            -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-          security set-key-partition-list -S apple-tool:,apple: \
-            -k "$KEYCHAIN_PWD" "$KEYCHAIN_PATH"
-          security list-keychain -d user -s "$KEYCHAIN_PATH" login.keychain
-
-          echo "Available signing identities:"
-          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
-
-      - name: Install provisioning profile
-        if: matrix.platform == 'ios'
-        env:
-          IOS_PROVISIONING_PROFILE_BASE64: >-
-            ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
-        run: |
-          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILES_DIR"
-          echo "$IOS_PROVISIONING_PROFILE_BASE64" | base64 -d \
-            > "$PROFILES_DIR/profile.mobileprovision"
-          ls -la "$PROFILES_DIR"
-
-      - name: Install App Store Connect API Key
-        if: matrix.platform == 'ios'
-        env:
-          APP_STORE_API_KEY_BASE64: ${{ secrets.APP_STORE_API_KEY_BASE64 }}
-          APP_STORE_API_KEY_ID: ${{ vars.APP_STORE_API_KEY_ID }}
-        run: |
-          KEYS_DIR="$HOME/.appstoreconnect/private_keys"
-          mkdir -p "$KEYS_DIR"
-          echo "$APP_STORE_API_KEY_BASE64" | base64 -d \
-            > "$KEYS_DIR/AuthKey_${APP_STORE_API_KEY_ID}.p8"
-
-      - name: CocoaPods install
-        if: matrix.platform == 'ios'
-        run: cd ios && pod install
-
-      - name: Generate ExportOptions.plist
-        if: matrix.platform == 'ios'
-        env:
-          IOS_TEAM_ID: ${{ vars.IOS_TEAM_ID }}
-          IOS_PROVISIONING_PROFILE_NAME: >-
-            ${{ vars.IOS_PROVISIONING_PROFILE_NAME }}
-        run: |
-          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-            "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>destination</key>
-            <string>export</string>
-            <key>manageAppVersionAndBuildNumber</key>
-            <false/>
-            <key>method</key>
-            <string>app-store-connect</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>top.loop-back</key>
-              <string>${IOS_PROVISIONING_PROFILE_NAME}</string>
-            </dict>
-            <key>stripSwiftSymbols</key>
-            <true/>
-            <key>teamID</key>
-            <string>${IOS_TEAM_ID}</string>
-            <key>uploadSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
-          plutil -lint "$RUNNER_TEMP/ExportOptions.plist"
-
-      - name: Build iOS app (no codesign)
-        if: matrix.platform == 'ios'
-        env:
-          BUILD_NAME: ${{ steps.ver.outputs.name }}
-          BUILD_NUMBER: ${{ steps.ver.outputs.number }}
-          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
-          POSTHOG_API_KEY: ${{ vars.POSTHOG_API_KEY }}
-        run: |
-          # 避免 Homebrew rsync 抢占（Apple toolchain 需要系统 rsync）
-          export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-          DART_DEFINES=(
-            "--dart-define=POSTHOG_HOST=${POSTHOG_HOST}"
-          )
-          if [[ -n "$POSTHOG_API_KEY" ]]; then
-            DART_DEFINES+=("--dart-define=POSTHOG_API_KEY=${POSTHOG_API_KEY}")
-          fi
-          DART_DEFINES+=("--dart-define=DISTRIBUTION_CHANNEL=app_store")
-          # 先用 flutter 编译 dart 代码，--no-codesign 跳过签名
-          flutter build ios --release --no-codesign --flavor=prod \
-            --build-name="$BUILD_NAME" \
-            --build-number="$BUILD_NUMBER" \
-            "${DART_DEFINES[@]}"
-
-      - name: Patch Runner pbxproj for manual signing
-        if: matrix.platform == 'ios'
-        env:
-          IOS_TEAM_ID: ${{ vars.IOS_TEAM_ID }}
-          IOS_PROVISIONING_PROFILE_NAME: >-
-            ${{ vars.IOS_PROVISIONING_PROFILE_NAME }}
-        run: |
-          # 用 xcodeproj gem 精确修改 Runner target 的 Release-prod 配置。
-          # 不动 Pods.xcodeproj 和其他 target/config，避免污染。
-          # CocoaPods 依赖 xcodeproj gem，macos-latest 自带 ruby + cocoapods，gem 已就绪。
-          gem list xcodeproj | grep -q xcodeproj || sudo gem install xcodeproj
-          ruby <<'RBEOF'
-          require 'xcodeproj'
-          project = Xcodeproj::Project.open('ios/Runner.xcodeproj')
-          profile = ENV.fetch('IOS_PROVISIONING_PROFILE_NAME')
-          team = ENV.fetch('IOS_TEAM_ID')
-          patched = 0
-          project.targets.each do |target|
-            next unless target.name == 'Runner'
-            target.build_configurations.each do |config|
-              next unless config.name == 'Release-prod'
-              config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
-              config.build_settings['DEVELOPMENT_TEAM'] = team
-              config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'
-              config.build_settings['CODE_SIGN_IDENTITY[sdk=iphoneos*]'] = (
-                'Apple Distribution'
-              )
-              config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = profile
-              puts "Patched #{target.name}/#{config.name}"
-              patched += 1
-            end
-          end
-          project.save
-          raise "Did not find Runner/Release-prod" if patched == 0
-          RBEOF
-
-      - name: Archive iOS app
-        if: matrix.platform == 'ios'
-        run: |
-          export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-          # 签名配置已写进 Runner pbxproj，命令行不传签名 args 避免污染 Pods
-          xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme prod \
-            -configuration Release-prod \
-            -destination 'generic/platform=iOS' \
-            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            archive
-
-      - name: Export IPA from archive
-        if: matrix.platform == 'ios'
-        run: |
-          export PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
-          mkdir -p build/ios/ipa
-          xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/Runner.xcarchive" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
-            -exportPath "$(pwd)/build/ios/ipa"
-
-      - name: Upload IPA to App Store Connect
-        if: matrix.platform == 'ios'
-        env:
-          APP_STORE_API_KEY_ID: ${{ vars.APP_STORE_API_KEY_ID }}
-          APP_STORE_API_ISSUER_ID: ${{ vars.APP_STORE_API_ISSUER_ID }}
-        run: |
-          set -o pipefail
-          IPA="$(find build/ios/ipa -maxdepth 1 -name '*.ipa' | head -n 1)"
-          [[ -n "$IPA" ]] || { echo "No IPA produced" >&2; exit 1; }
-          echo "Uploading: $IPA"
-
-          # altool 在某些失败场景（如 bundle version 重复）会打印 ERROR 但仍以 0 退出。
-          # 这里把 stdout/stderr 都收下并 tee 到日志，结束后扫描 ERROR 关键字强制失败。
-          LOG="$RUNNER_TEMP/altool-upload.log"
-          KEY_PATH="$HOME/.appstoreconnect/private_keys"
-          KEY_PATH="$KEY_PATH/AuthKey_${APP_STORE_API_KEY_ID}.p8"
-          set +e
-          xcrun altool --upload-app --type ios --file "$IPA" \
-            --apiKey "$APP_STORE_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_API_ISSUER_ID" \
-            --p8-file-path "$KEY_PATH" \
-            --show-progress 2>&1 | tee "$LOG"
-          STATUS=${PIPESTATUS[0]}
-          set -e
-
-          if [[ $STATUS -ne 0 ]]; then
-            echo "::error::altool exited with status $STATUS" >&2
-            exit "$STATUS"
-          fi
-          if grep -E '^[0-9-]+ [0-9:.]+ ERROR' "$LOG" >/dev/null; then
-            echo "::error::altool reported ERROR despite exit 0" >&2
-            grep -E '^[0-9-]+ [0-9:.]+ ERROR' "$LOG" >&2 || true
-            exit 1
-          fi
 
   publish:
     needs: release
@@ -459,41 +178,10 @@ jobs:
           name: android-apk
           path: ./artifacts
 
-      - name: Create GitHub Draft Release
-        # 先发草稿，避免 iOS 还在 App Store 审核时 Android 这边就显示成"已正式发布"。
-        # 等 App Store 审核通过并上线后，手动到 GitHub Releases 页面点 Publish；
-        # 或用 `gh release edit <tag> --draft=false` 转正。
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           files: ./artifacts/LoopBack-*-arm64.apk
           generate_release_notes: true
           fail_on_unmatched_files: true
-          draft: true
-
-      - name: Prune old draft releases (keep latest 3)
-        # 仅清理 draft，不会动已发布的 release。按 created_at 倒序保留最近 3 个，其余删除。
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          KEEP: 3
-        run: |
-          set -e
-          mapfile -t OLD < <(
-            gh api --paginate \
-              -H "Accept: application/vnd.github+json" \
-              "/repos/${GH_REPO}/releases" \
-              --jq '
-                [.[] | select(.draft==true)]
-                | sort_by(.created_at) | reverse | .['"$KEEP"':][] | .id
-              '
-          )
-          if [[ ${#OLD[@]} -eq 0 ]]; then
-            echo "No stale draft releases to prune."
-            exit 0
-          fi
-          echo "Will delete ${#OLD[@]} old draft release(s): ${OLD[*]}"
-          for id in "${OLD[@]}"; do
-            gh api -X DELETE "/repos/${GH_REPO}/releases/${id}"
-            echo "Deleted draft release id=${id}"
-          done
