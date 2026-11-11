@@ -5,13 +5,11 @@
 <div align="center">
   <img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="128" />
 
-  <h1>LoopBack — Efficient English Listening & Speaking Training</h1>
+  <h1>LoopBack — English Listening & Speaking Training</h1>
 
-  <p><strong>You no longer have to figure out how to practice English on your own.</strong></p>
+  <p><strong>Pick an audio clip you want to understand, and practice it from comprehension to output.</strong></p>
 
-  <p>Intensive listening · Shadowing · Blind listening · Retelling · Review — LoopBack guides you through every step at a scientifically-paced rhythm.</p>
-
-  <p><sub><em>This project is academically advised by <a href="https://sfs.muc.edu.cn/info/1063/3729.htm"> Yang Yan</a> from the School of Foreign Studies, Minzu University of China.</em></sub></p>
+  <p>Intensive listening · Shadowing · Blind listening · Retelling · Spaced review — LoopBack schedules every step; you just practice.</p>
 
   <p>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" /></a>
@@ -21,10 +19,31 @@
     <a href="https://github.com/iron6909/loop-back/commits/main"><img src="https://img.shields.io/github/last-commit/iron6909/loop-back" alt="Last commit" /></a>
   </p>
 
-  <p>
-  </p>
-
 </div>
+
+---
+
+## ⚖️ Origin & license
+
+LoopBack is a modified version of the open-source project [Echo Loop](https://github.com/echo-loop/Echo-Loop) (GNU AGPL-3.0). Modifications started in November 2026. Key changes:
+
+- Rebranded to LoopBack: app name, package IDs, icon, database and local files all renamed;
+- De-clouded: accounts, membership checkout, cloud subtitles, community sync, cloud-drive import and self-update are disabled;
+- AI now connects directly to a provider configured by the user (OpenAI-compatible API), billed by that provider under its own plans;
+- Speech recognition, speech synthesis, dictionary and pronunciation packs are downloaded from public sources (Hugging Face, etc.) instead of Echo Loop's resource service;
+- Not distributed through app stores; Android APKs ship via GitHub Releases.
+
+Under AGPL-3.0, this project as a whole remains licensed under AGPL-3.0 — see [LICENSE](./LICENSE). All changes to and additions on top of the upstream code are public in this repository. Thanks to the Echo Loop developers and community.
+
+---
+
+## 📖 What is LoopBack
+
+LoopBack is an open-source app for practicing English listening and speaking. Import an audio clip — a podcast, TED talk, TV episode or textbook — and it walks you through **intensive listening → shadowing → blind listening → retelling**, then locks the material in with **spaced review** before you forget it.
+
+Most material apps give you content and tools but leave the *how* to you. LoopBack automates that part: which clip to practice today, how many passes, when to look at subtitles, which sentences need more shadowing, when to review — the app decides. No planning needed; open it and start.
+
+The whole process is quantified: **practice time · input/output ratio · unique vocabulary** — you can see exactly how much you've practiced and spoken.
 
 ---
 
@@ -33,16 +52,16 @@
 <table>
   <tr>
     <td align="center"><img src="assets/screenshots/01-import.png" alt="Import audio" width="180" /><br/><sub>Import audio, start practicing</sub></td>
-    <td align="center"><img src="assets/screenshots/02-loop.png" alt="Scientific practice" width="180" /><br/><sub>Scientific practice, listen-speak loop</sub></td>
-    <td align="center"><img src="assets/screenshots/03-reminder.png" alt="Auto reminders" width="180" /><br/><sub>Auto reminders, visible progress</sub></td>
-    <td align="center"><img src="assets/screenshots/04-intensive.png" alt="Sentence-by-sentence" width="180" /><br/><sub>Sentence-by-sentence intensive listening</sub></td>
-    <td align="center"><img src="assets/screenshots/05-analysis.png" alt="Sense group split" width="180" /><br/><sub>Sense-group split, hard sentence analysis</sub></td>
+    <td align="center"><img src="assets/screenshots/02-loop.png" alt="Learning plan" width="180" /><br/><sub>Learning plan, listen-speak loop</sub></td>
+    <td align="center"><img src="assets/screenshots/03-reminder.png" alt="Review reminders" width="180" /><br/><sub>Review reminders, auto-scheduled</sub></td>
+    <td align="center"><img src="assets/screenshots/04-intensive.png" alt="Intensive listening" width="180" /><br/><sub>Sentence-by-sentence intensive listening</sub></td>
+    <td align="center"><img src="assets/screenshots/05-analysis.png" alt="Sentence explanation" width="180" /><br/><sub>Sentence explanation, sense groups</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/screenshots/06-retell.png" alt="Paragraph retelling" width="180" /><br/><sub>Retelling: turn comprehension into output</sub></td>
-    <td align="center"><img src="assets/screenshots/07-favorites.png" alt="Saved sentences" width="180" /><br/><sub>Saved hard sentences, practice to mastery</sub></td>
-    <td align="center"><img src="assets/screenshots/08-flashcard.png" alt="Flashcard review" width="180" /><br/><sub>Flashcard review with original context</sub></td>
-    <td align="center"><img src="assets/screenshots/09-freestyle.png" alt="Freestyle practice" width="180" /><br/><sub>Practice freely at your own pace</sub></td>
+    <td align="center"><img src="assets/screenshots/06-retell.png" alt="Retelling" width="180" /><br/><sub>Retelling: say it in your own words</sub></td>
+    <td align="center"><img src="assets/screenshots/07-favorites.png" alt="Saved sentences" width="180" /><br/><sub>Saved hard sentences, focused drills</sub></td>
+    <td align="center"><img src="assets/screenshots/08-flashcard.png" alt="Flashcard review" width="180" /><br/><sub>Flashcard review, original context</sub></td>
+    <td align="center"><img src="assets/screenshots/09-freestyle.png" alt="Freestyle listening" width="180" /><br/><sub>Freestyle listening, your own pace</sub></td>
     <td align="center"><img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="120" /></td>
   </tr>
 </table>
@@ -51,55 +70,30 @@
 
 ## ✨ Features
 
-- 🤖 **Auto-driven learning rhythm**: Shadowing repetitions, review timing, and hard-sentence marking all advance automatically — you just focus on listening and speaking.
-- 🎯 **Listen-speak loop**: Intensive listening, shadowing, and retelling flow seamlessly. From understanding the content, to imitating expression, to saying it in your own words.
-- 🧩 **Sense-group splitting for long sentences**: Long sentences are split by sense groups, breaking complex structures into digestible chunks.
-- ⭐ **Save hard sentences and review them on demand**: Hard sentences are auto-archived for focused shadowing and repeated practice — no more "marked and forgotten".
-- 📚 **Contextualized flashcard review**: Saved words and sense groups are reviewed alongside their original sentence context — memorize in context, not in isolation.
-- 💡 **AI translation, analysis, and vocabulary explanation**: Bilingual translation, sentence analysis, word usage and collocations — expand on demand without breaking your flow.
-- 📍 **Resume where you left off**: Automatically records your stage and current sentence, so you can pick up instantly — even 5-minute fragments count.
-- 📊 **Learning statistics**: Tracks practice time, input/output ratio, and unique vocabulary — see exactly how much you've practiced and spoken.
-- 🎙️ **AI shadowing evaluation**: Automatically aligns ASR results with the original text, highlights matched words, and gives a shadowing rating.
-- 🎧 **Local audio import + AI subtitles**: Batch-import local audio, import existing subtitles, or auto-transcribe with AI.
+- **Auto-driven learning rhythm**: Shadowing repetitions, review timing and hard-sentence marking advance automatically — you just listen and speak.
+- **Listen-speak loop**: Intensive listening, shadowing and retelling in one flow — understand first, imitate next, then say it in your own words.
+- **Sense-group splitting for long sentences**: Long sentences are split by sense groups so complex structures become digestible.
+- **Save hard sentences and drill them**: Hard sentences are auto-archived for focused re-practice — no more "marked and forgotten".
+- **Contextualized flashcard review**: Saved words and sense groups are reviewed with their original sentence context — memorize in context, not in isolation.
+- **AI translation, analysis and vocabulary help**: Bilingual translation, sentence analysis, word usage and collocations, expanded on demand without breaking your flow.
+- **Resume where you left off**: Your stage and current sentence are saved automatically, so even a 5-minute break fits.
+- **Learning statistics**: Practice time, input/output ratio and unique vocabulary.
+- **Shadowing evaluation**: On-device recognition is aligned with the original text, matched words are highlighted, and you get a rating.
+- **Local audio import + subtitles**: Batch-import local audio, bring your own subtitles, or transcribe with an on-device model.
 
 ---
 
-## 🤔 Why we built this
+## 🔌 AI provider & localization notes
 
-When using other English-learning apps, you have to decide for yourself: how many times should I listen today? Intensive or extensive? Which sentence haven't I mastered yet? Should I shadow it? When should I review?
+AI features use a provider you configure. On first use, go to **Settings → AI service**, choose DeepSeek, OpenRouter or a custom OpenAI-compatible endpoint, enter a model and API key, and verify the connection manually. The base URL receives `/chat/completions` directly; `/v1` is never appended automatically. Keys stay in device secure storage, are excluded from backups, and must be re-entered after restoring a backup.
 
-**Those decisions themselves are what drains your willpower** — it's not that you can't understand, it's that you don't know what to do next.
-
-LoopBack takes those decisions off your plate. Pick a piece of audio you want to understand, hit start, and from intensive listening to completion, every step tells you "what to do right now".
-
-You just need to keep opening the app — LoopBack handles the rest. Practicing one piece thoroughly beats listening to 100 random ones.
-
----
-
-## 🆚 How it differs from other solutions
-
-We picked four English-learning apps most familiar to Chinese learners for comparison. Each individual feature exists, more or less, in other apps. But LoopBack's real difference is this: **it strings every step together and drives you through automatically — you don't need to figure out the method, control repetition counts, or manage review intervals yourself.**
-
-| Feature | LoopBack | Daily English Listening | Kekenet | Liulishuo | Anki |
-|---|---|---|---|---|---|
-| **App-driven learning rhythm** | ✅ Fully automatic | ❌ | ❌ | ❌ | ❌ |
-| Listen → speak loop (intensive + shadowing + **retelling**) | ✅ | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ❌ |
-| **Sense-group splitting for long sentences** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Saved-sentence focused review** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Contextualized flashcard review** | ✅ | ❌ | ❌ | ❌ | ⚠️ Manual cards required |
-| AI translation / sentence analysis / word deep-dive | ✅ | ⚠️ Partial | ⚠️ Partial | ❌ | ❌ |
-| **Resume where you left off** | ✅ | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial |
-| Stats: time / input-output ratio / unique vocabulary | ✅ | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ❌ |
-| AI shadowing evaluation | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Local audio import | ✅ | ✅ | ❌ | ❌ | ⚠️ Manual cards |
-| Offline available | ✅ | ✅ | ✅ | ⚠️ Partial | ✅ |
-| Open source | ✅ | ❌ | ❌ | ❌ | ✅ |
+Subtitle and retelling transcription run with an on-device English model; the study assistant and explanation requests go to the current provider. Accounts, membership, cloud subtitles, community sync, cloud-drive import and self-update are disabled. Existing learning data stays available; local folders can be imported as collections, and curated podcasts ship in the bundle.
 
 ---
 
 ## 🧠 Methodology
 
-**Intensive listening → Shadowing → Blind listening → Retelling → Spaced review → Completion.**
+**Intensive listening → Shadowing → Blind listening → Retelling → Spaced review → Done.**
 
 ```mermaid
 flowchart LR
@@ -107,19 +101,10 @@ flowchart LR
   B --> C[Blind listening<br/>Listen through once, check overall comprehension]
   C --> D[Retelling<br/>Express in your own words, build output ability]
   D --> E[Spaced review<br/>Re-practice before forgetting, consolidate long-term memory]
-  E --> F[Completion<br/>Finish this round of learning]
+  E --> F[Done<br/>Finish this round of learning]
 ```
 
-**Every step above is auto-driven by LoopBack — no judgment calls required.**
-
-You don't need to manage "how many times should I listen" or "is it time to review last week's material". Open the app, and what to do today appears right in front of you.
-
-The full process is quantified: **practice time · input/output ratio · unique vocabulary**.
-
-<details>
-<summary><strong>How are spaced reviews scheduled?</strong></summary>
-
-Each piece of material is split into 1 first-pass session + 7 spaced reviews. Intervals stretch from 6 hours to 28 days, hitting the memory trace just before forgetting — aligned with the Ebbinghaus forgetting curve.
+Each material = 1 first-pass session + 7 spaced reviews, with intervals stretching from 6 hours to 28 days:
 
 | Stage | Interval since last | Tasks |
 |---|---|---|
@@ -132,97 +117,97 @@ Each piece of material is split into 1 first-pass session + 7 spaced reviews. In
 | Review 6 | After 14 days | Blind listening + drills + retelling |
 | Review 7 | After 28 days | Blind listening + drills + retelling |
 
-</details>
+---
+
+## 🆚 How it differs from other apps
+
+Compared with other English-learning apps, LoopBack's difference is this: **it strings the steps into one auto-driven flow — no planning, counting repetitions or tracking review dates yourself.**
+
+| Feature | LoopBack | Daily English Listening | Kekenet | Liulishuo | Anki |
+|---|---|---|---|---|---|
+| App-driven learning rhythm | ✅ Fully automatic | ❌ | ❌ | ❌ | ❌ |
+| Intensive + shadowing + retelling loop | ✅ | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ❌ |
+| Sense-group splitting for long sentences | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Saved-sentence focused review | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Contextualized flashcard review | ✅ | ❌ | ❌ | ❌ | ⚠️ Manual cards |
+| AI translation / analysis / vocabulary | ✅ | ⚠️ Partial | ⚠️ Partial | ❌ | ❌ |
+| Resume where you left off | ✅ | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial |
+| Learning statistics | ✅ | ⚠️ Partial | ⚠️ Partial | ⚠️ Partial | ❌ |
+| Shadowing evaluation | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Local audio import | ✅ | ✅ | ❌ | ❌ | ⚠️ Manual cards |
+| Offline use | ✅ | ✅ | ✅ | ⚠️ Partial | ✅ |
+| Open source | ✅ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
 ## 📥 Download & try it
 
-This branch is not distributed through app stores. Download the Android APK from GitHub [Releases](https://github.com/iron6909/loop-back/releases) and sideload it; iOS/macOS/Windows currently build from source (desktop in development, web not planned).
+This project is not distributed through app stores. On Android, download the APK from GitHub [Releases](https://github.com/iron6909/loop-back/releases) and sideload it; iOS / macOS / Windows build from source (desktop in development, web not planned).
 
 ---
 
 ## ❓ FAQ
 
-This branch connects directly to an AI provider configured by the user and currently targets Android acceptance. In **Settings → AI service**, choose DeepSeek, OpenRouter or a custom OpenAI-compatible endpoint, enter a model and API key, then test the connection. The base URL receives `/chat/completions` directly; `/v1` is never added automatically. Keys stay in device secure storage and must be entered again after restoring a backup.
-
-English subtitle transcription and retelling transcription run on the device. Account login, membership checkout, cloud transcription, community sync, Baidu Netdisk import and self-update checks are disabled. Existing learning data stays available; Android folders can become collections, and curated podcasts come from a bundled catalog.
-
 <details>
 <summary><strong>Is LoopBack free?</strong></summary>
 
-All core features are free, with no usage caps and no item limits:
+Core features are free with no limits: material imports, favorites, the full learning loop with 7 rounds of spaced review, hard-sentence drills, in-context flashcards, on-device shadowing evaluation and transcription, offline dictionary, statistics, PDF export, and backup & restore.
 
-- **Unlimited imports**: local files, Android folders, links and podcast subscriptions
-- **Unlimited favorites**: save as many hard sentences, words and sense groups as you like
-- **The full learning loop**: intensive listening, shadowing, blind listening and retelling, plus 7 rounds of spaced review with reminders
-- **Focused review of hard sentences + in-context flashcards**
-- **Shadowing evaluation**: runs on your device's built-in speech recognition, with no usage count
-- **Offline transcription**: download a model and generate subtitles on your device, no sign-in needed
-- **Offline dictionary, learning statistics, PDF note export, backup & restore**
-
-AI explanations and the study assistant use your configured provider, which charges according to its own plan or usage. This branch has no LoopBack AI allowance or membership checkout.
+AI explanations and the study assistant use your configured provider, which bills under its own plan or usage. This project provides no free AI allowance or membership checkout.
 
 </details>
 
 <details>
 <summary><strong>Which features call the AI provider?</strong></summary>
 
-Translation, sentence analysis, sense groups, word and phrase explanations, the study assistant and retelling evaluation call the current provider. Subtitle generation and retelling transcription use an English speech model on the device; recordings are not uploaded.
+Translation, sentence analysis, sense groups, vocabulary explanations, the study assistant and retelling evaluation call the current provider. Subtitle generation and retelling transcription use an on-device English model; recordings are not uploaded.
 
 </details>
 
 <details>
-<summary><strong>What happens when my provider balance or plan runs out?</strong></summary>
+<summary><strong>What if my provider balance or plan runs out?</strong></summary>
 
-Local study keeps working. Check your balance or plan in the provider's console, or change the configuration in **Settings → AI service**. Payments and renewals are handled by the provider.
+Local study keeps working. Check your balance or plan in the provider's console, or change the configuration in **Settings → AI service**. The app handles no payments or renewals.
 
 </details>
 
 <details>
 <summary><strong>Is my API key included in backups?</strong></summary>
 
-No. Keys stay in device secure storage and are excluded from logs, ordinary preferences, learning-data backups and analytics. Enter the key again after restoring. Non-secret settings such as the provider address and model are included in backups.
+No. Keys stay in device secure storage and are excluded from logs, preferences, backups and analytics; re-enter the key after restoring. Non-secret settings such as the provider address and model are included.
 
 </details>
 
 <details>
 <summary><strong>Which platforms are supported?</strong></summary>
 
-Right now the focus is **Android**: download the APK from GitHub [Releases](https://github.com/iron6909/loop-back/releases) and sideload it. iOS and desktop macOS/Windows builds follow the source, with releases refined later.
-
-</details>
-
-<details>
-<summary><strong>How is it different from other English apps?</strong></summary>
-
-Other apps mostly give you materials and tools and leave it to you to work out how to practice. LoopBack handles the *how*: intensive listening, shadowing, blind listening, retelling and spaced review run as a single flow, and the app tells you what to do at every step. You don't need to make a plan, count repetitions or track review dates. See "🆚 How it differs from other solutions" above for a detailed comparison.
+Right now the focus is Android (sideload the APK from GitHub [Releases](https://github.com/iron6909/loop-back/releases)). iOS and desktop build from source, with releases refined later.
 
 </details>
 
 <details>
 <summary><strong>What materials are supported?</strong></summary>
 
-- **Audio**: mp3, m4a, wav, aac, flac
-- **Video**: mp4, mov, m4v, mkv (you can hide the picture and practice with audio only)
-- **Subtitles**: srt, vtt, lrc; subtitle files with the same name as the audio are paired automatically. No subtitles? Generate them with AI transcription
-- **Sources**: local files, Android folders, direct audio links, podcast subscriptions
+- Audio: mp3, m4a, wav, aac, flac
+- Video: mp4, mov, m4v, mkv (you can hide the picture and practice with audio only)
+- Subtitles: srt, vtt, lrc; files named after the audio pair automatically. No subtitles? Generate them with AI transcription
+- Sources: local files, Android folders, direct audio links, podcast subscriptions
 
-Podcasts, TED talks, TV clips and textbook audio all work. For best results, pick content **you're interested in and that's slightly above your current level**.
+Pick content you're interested in and that's slightly above your current level.
 
 </details>
 
 <details>
 <summary><strong>What English level do I need?</strong></summary>
 
-If you can follow the gist of a material with subtitles, you're ready. When a sentence is hard to follow, break it down with sense-group splitting, AI translation and sentence analysis. If you're still building your basics, start with short, slow-paced materials.
+If you can follow the gist of a material with subtitles, you're ready. For hard sentences, lean on sense-group splitting, translation and analysis. If you're still building your basics, start with short, slow materials.
 
 </details>
 
 <details>
 <summary><strong>How soon will I see results?</strong></summary>
 
-After the first study session on a material, you'll understand it and be able to retell it in your own words. The 7 rounds of spaced review that follow take about 8 weeks and lock it into long-term memory. Overall listening and speaking skills build up over time: practice 20–30 minutes a day with 2–3 materials at once, and within a few weeks listening should feel easier and speaking more fluent.
+After the first session on a material, you'll understand it and be able to retell it in your own words. The 7 spaced reviews that follow take about 8 weeks and turn it into long-term memory. Overall gains accumulate: 20–30 minutes a day across 2–3 materials, and within weeks listening should feel easier and speaking smoother.
 
 </details>
 
@@ -236,71 +221,22 @@ Yes. The learning flow, reviews, favorites, shadowing evaluation and local trans
 <details>
 <summary><strong>Where is my data stored? What if I switch phones?</strong></summary>
 
-Your learning data is stored on your device. Before switching phones or reinstalling, export a backup from **Settings → Backup & Restore**, then restore it on the new device.
+Data is stored on your device. Before switching phones or reinstalling, export a backup from **Settings → Backup & Restore**, then restore it on the new device.
 
 </details>
 
 ---
 
----
-
 ## 🗺️ Roadmap
 
-### ✅ 1 · Core features
-
-- [x] Learning loop: intensive / shadowing / blind / retelling
-- [x] Spaced review scheduling (6h → 28d)
-- [x] Sense-group splitting for long sentences
-- [x] Saved hard sentences + focused review
-- [x] Contextualized flashcard review
-- [x] AI translation / sentence analysis
-- [x] iOS / macOS native ASR shadowing evaluation
-- [x] Resume where you left off
-- [x] Learning statistics
-
-### 🚧 2 · AI capabilities
-
-- [ ] AI speaking partner
-- [x] AI learning assistant (on-demand Q&A)
-- [x] AI word lookup
-- [ ] Personalized material recommendations
-
-### 🔭 3 · Experience & platforms
-
-- [ ] Custom task flows
-- [ ] Streaks / learning badges
-- [ ] Official macOS / Windows desktop release
-
-### 🔭 4 · Content ecosystem
-
-- [ ] Official curated collections (by topic + difficulty)
-- [ ] User-shared collections / UGC learning materials
-
----
-
-## ⭐ Star History
-
-<a href="https://www.star-history.com/?repos=iron6909%2Floop-back&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
- </picture>
-</a>
----
-
-## 🎓 Academic guidance & acknowledgements
-
-**Academic guidance**
-
-Thanks to [Yang Yan](https://sfs.muc.edu.cn/info/1063/3729.htm) (School of Foreign Studies, Minzu University of China; PhD in English Language and Literature, Peking University) for guiding this project's methodology.
-
-**Core dependencies**
-
-- Audio & speech: [just_audio](https://pub.dev/packages/just_audio) · [audio_session](https://pub.dev/packages/audio_session) · [flutter_tts](https://pub.dev/packages/flutter_tts) · [sherpa_onnx](https://pub.dev/packages/sherpa_onnx)
-- Data & state: [drift](https://pub.dev/packages/drift) · [flutter_riverpod](https://pub.dev/packages/flutter_riverpod)
-- Text processing: [subtitle](https://pub.dev/packages/subtitle) · [lemmatizerx](https://pub.dev/packages/lemmatizerx)
-- System capabilities: [file_picker](https://pub.dev/packages/file_picker) · [flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications)
+- ✅ Learning loop: intensive / shadowing / blind / retelling + 7 spaced reviews (6h → 28d)
+- ✅ Sense-group splitting, saved-sentence drills, in-context flashcards
+- ✅ AI translation / analysis / word lookup / study assistant (user-configured provider)
+- ✅ On-device speech recognition, speech synthesis and offline dictionary (public model sources)
+- ✅ Resume, statistics, backup & restore
+- 🚧 AI speaking partner
+- 🚧 Official macOS / Windows desktop release
+- 🔭 Official curated collections (by topic & difficulty), custom task flows
 
 ---
 
@@ -322,7 +258,6 @@ flutter run -d <ios|android|macos> --dart-define-from-file=.dev.env
 > via `--dart-define-from-file`. Both files are gitignored. There is no self-hosted API or
 > resource CDN anymore, so no service endpoints need to be configured.
 
-
 </details>
 
 <details>
@@ -335,52 +270,24 @@ flutter analyze
 flutter test
 ```
 
-Commit titles follow the `PREFIX: content` format (check `git log` for common prefixes — FEAT / FIX / DOCS / MOD / OPT / CHORE / CI / RELEASE, etc.). A detailed contribution guide will live in [CONTRIBUTING.md](#) (TBD). This project follows the [Contributor Covenant](https://www.contributor-covenant.org/) code of conduct.
+Commit titles follow the `PREFIX: content` format (see `git log` for common prefixes — FEAT / FIX / DOCS / MOD / OPT / CHORE / CI / RELEASE, etc.).
 
 </details>
 
 <details>
 <summary><strong>🛠️ Tech stack</strong></summary>
 
-![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
-![Dart](https://img.shields.io/badge/Dart-0175C2?logo=dart&logoColor=white)
-![Riverpod](https://img.shields.io/badge/Riverpod-1F2937?logo=flutter&logoColor=white)
-![Drift](https://img.shields.io/badge/Drift-SQLite-003B57?logo=sqlite&logoColor=white)
-![Material 3](https://img.shields.io/badge/Material-3-757575?logo=materialdesign&logoColor=white)
-
 | Category | Technology | Purpose |
 |------|------|------|
 | UI framework | Flutter + Material 3 | Cross-platform UI |
 | State management | Riverpod (code generation) | Unidirectional data flow |
 | Audio playback | just_audio + audio_session | Audio engine layer |
+| Speech recognition / synthesis | sherpa_onnx (Whisper / Kokoro / Piper) | On-device ASR & TTS |
 | Subtitle parsing | subtitle | SRT/VTT |
-| File picker | file_picker | Local audio/subtitle import |
 | Persistence | Drift (SQLite) + shared_preferences | Progress, favorites, cache |
 | i18n | flutter_localizations + ARB | 简体中文 / English |
 | Testing | flutter_test + mocktail | Unit / widget / integration |
 | Static analysis | flutter_lints | Code style |
-
-</details>
-
-<details>
-<summary><strong>📁 Project structure</strong></summary>
-
-```
-lib/
-├── l10n/              # i18n files (ARB format)
-├── models/            # Data models (AudioItem, Sentence, Collection, etc.)
-├── providers/         # Riverpod state management
-│   ├── audio_engine/  # Audio engine layer (low-level playback control)
-│   └── listening_practice/  # Listening practice layer (business logic)
-│       ├── sentence_tracker.dart   # Sentence locator (binary search)
-│       └── bookmark_manager.dart   # Bookmark manager
-├── screens/           # Pages
-├── services/          # Service layer (StorageService, SubtitleParser)
-└── widgets/           # Reusable components
-
-integration_test/      # End-to-end tests
-test/                  # Unit / widget tests
-```
 
 </details>
 
@@ -394,11 +301,6 @@ flutter run -d ios            # iOS
 flutter run -d android        # Android
 flutter run -d macos          # macOS (in development, unreleased)
 flutter run -d chrome         # Web (debug only, no release plan)
-
-# iOS Simulator
-xcrun simctl list devices available
-xcrun simctl boot <DEVICE_UDID>
-open -a Simulator
 ```
 
 **Test / quality checks**
@@ -411,7 +313,7 @@ flutter test integration_test -d macos   # Integration tests
 MAESTRO_APP_ID=app.loopback.dev scripts/test_maestro.sh
 # Android device: build, install the dev build, then run the Study tests
 scripts/test_maestro_android.sh
-# With multiple devices, specify the target; alternatively export MAESTRO_ANDROID_DEVICE=<adb-serial> once
+# With multiple devices, specify the target
 scripts/test_maestro_android.sh --device <adb-serial>
 dart format .                            # Format
 ```
@@ -428,22 +330,14 @@ dart run build_runner build
 **Build**
 
 ```bash
-# Supabase / Google compile-time variables are injected from an env file (.prod.env for release)
-flutter build macos --dart-define-from-file=.prod.env
-flutter build apk   --dart-define-from-file=.prod.env
-flutter build ios   --dart-define-from-file=.prod.env
-
-# Run on device
-flutter run --release -d <DEVICE_ID> --dart-define-from-file=.dev.env
+flutter build apk --dart-define-from-file=.prod.env
 ```
 
-> The release scripts `scripts/run_simulator.sh` (reads `.dev.env`) and
-> `scripts/release_{android,ios,macos}.sh` (read `.prod.env`) already pass
-> `--dart-define-from-file` for you.
+> The release scripts `scripts/release_*.sh` already pass `--dart-define-from-file` for you.
 
 **Requirements**
 
-- Flutter SDK 3.9.2+
+- Dart SDK ^3.9.2 (see `pubspec.yaml`)
 - iOS Simulator / Android emulator / physical devices
 - Desktop: macOS / Windows / Linux dev environment
 
@@ -451,7 +345,18 @@ flutter run --release -d <DEVICE_ID> --dart-define-from-file=.dev.env
 
 ---
 
-AtomGit mirror for users in China: <a href="https://atomgit.com/iron6909/loop-back">LoopBack on AtomGit</a>
+## 🙏 Acknowledgements
+
+LoopBack is derived from [Echo Loop](https://github.com/echo-loop/Echo-Loop) (AGPL-3.0). Thanks to its developers and community for their open-source work on the learning methodology and engineering.
+
+Core dependencies:
+
+- Audio & speech: [just_audio](https://pub.dev/packages/just_audio) · [audio_session](https://pub.dev/packages/audio_session) · [flutter_tts](https://pub.dev/packages/flutter_tts) · [sherpa_onnx](https://pub.dev/packages/sherpa_onnx)
+- Data & state: [drift](https://pub.dev/packages/drift) · [flutter_riverpod](https://pub.dev/packages/flutter_riverpod)
+- Text processing: [subtitle](https://pub.dev/packages/subtitle) · [lemmatizerx](https://pub.dev/packages/lemmatizerx)
+- System capabilities: [file_picker](https://pub.dev/packages/file_picker) · [flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications)
+
+---
 
 ## 📄 License
 

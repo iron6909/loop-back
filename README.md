@@ -5,13 +5,11 @@
 <div align="center">
   <img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="128" />
 
-  <h1>LoopBack — 高效的英语听说训练 App</h1>
+  <h1>LoopBack — 英语听说训练 App</h1>
 
-  <p><strong>从此不必自己摸索怎么练好英语。</strong></p>
+  <p><strong>选一段想听懂的音频，从精听到复述，把它真正练透。</strong></p>
 
-  <p>精听 · 跟读 · 盲听 · 复述 · 复习，LoopBack 按科学节奏推你走完。</p>
-
-  <p><sub><em>本项目由中央民族大学外国语学院 <a href="https://sfs.muc.edu.cn/info/1063/3729.htm">杨艳老师</a> 指导设计。</em></sub></p>
+  <p>精听 · 跟读 · 盲听 · 复述 · 间隔复习，LoopBack 自动安排每一步，你只负责练。</p>
 
   <p>
     <a href="./LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" /></a>
@@ -23,26 +21,29 @@
 
 </div>
 
+---
+
+## ⚖️ 项目来源与许可
+
+LoopBack 是开源项目 [Echo Loop](https://github.com/echo-loop/Echo-Loop)（GNU AGPL-3.0）的修改版本，修改始于 2026 年 11 月，主要改动包括：
+
+- 品牌更名为 LoopBack：应用名、包名、图标、数据库与本地文件全部改名；
+- 去云端化：账号、会员结账、云端字幕、社区同步、网盘导入与自更新已停用；
+- AI 改为用户自配供应商直连（OpenAI 兼容接口），费用由供应商按其套餐或用量计费；
+- 语音识别、语音合成、词典与发音库改从公开源下载（Hugging Face 等），不再依赖 Echo Loop 资源服务；
+- 不再上架应用商店，通过 GitHub Releases 分发 Android APK。
+
+依据 AGPL-3.0，本项目整体继续以 AGPL-3.0 许可，完整许可文本见 [LICENSE](./LICENSE)；对上游代码的改动与新增代码均在本仓库公开。感谢 Echo Loop 的开发者与社区。
 
 ---
 
 ## 📖 LoopBack 是什么
 
-本分支将 AI 改为用户自行配置的供应商直连，当前验收目标为 Android。首次使用请到「设置 → AI 服务」选择 DeepSeek、OpenRouter 或自定义 OpenAI 兼容地址，填写模型与 API Key，再手动验证连接。Base URL 会直接追加 `/chat/completions`，不会自动补 `/v1`。密钥仅存设备安全存储，备份恢复后需要重新填写。
+LoopBack 是一款开源的英语听说训练 App。导入一段音频——播客、TED、剧集或教材都可以——它带你依次完成**精听 → 跟读 → 盲听 → 复述**，再按**间隔复习**在遗忘前巩固，直到一段材料真正内化。
 
-字幕与复述转写在本机用英语模型完成；学习助手与讲解请求由当前供应商处理。账号、会员、云端字幕、社区同步、网盘导入与自更新已停用；历史学习数据保留，本地目录可导入为合集，精选播客随包提供。
+大多数材料类 App 只提供内容和工具，"怎么练"要自己安排。LoopBack 把这个环节自动化：今天练哪段、听几遍、什么时候看字幕、哪句该反复跟读、什么时候复习，都由 App 决定。你不需要做计划，打开就能开始。
 
-**若英语听说也有一卷无上内功心法，LoopBack 便是一部现代学习者的英语听说心法**。它听进去的是 English，说出来的是 Expression。它不传花拳绣腿，不教临场取巧，而是带你:
-
-- 先精听通脉，打通语音、词义与句意经脉
-- 再跟读运功，校准发音、节奏和语感
-- 继而盲听入定，检验对原声的整体理解
-- 再以复述出招，把听进去的英语化为自己口中自然流出的表达
-
-初练之后，八阶回环自成周天，间隔复习固本培元，难句与生词也在一次次回炉中融会贯通，化为己用。
-练到深处，听力不再靠猜，口语不再硬憋，真正生出一身可持续增长的英语听说内功。
-
-说得直白一点，LoopBack 是一款科学高效的英语听说训练 App。它帮助你把一段音频从陌生练到真正听懂，再通过跟读和复述实现听说闭环，逐步练到脱口而出。系统会自动安排间隔复习和提醒，逐步推进训练节奏。你不用自己摸索方法，也不用手动控制流程，只需专注练习本身。
+学习过程全程量化：**学习时长 · 输入输出比 · 唯一词汇量**，练了多少、说了多少一目了然。
 
 ---
 
@@ -51,16 +52,16 @@
 <table>
   <tr>
     <td align="center"><img src="assets/screenshots/01-import.png" alt="导入音频" width="180" /><br/><sub>导入音频，开始练习</sub></td>
-    <td align="center"><img src="assets/screenshots/02-loop.png" alt="科学练习" width="180" /><br/><sub>科学练习，听说闭环</sub></td>
-    <td align="center"><img src="assets/screenshots/03-reminder.png" alt="自动提醒" width="180" /><br/><sub>自动提醒，进步可见</sub></td>
-    <td align="center"><img src="assets/screenshots/04-intensive.png" alt="逐句精听" width="180" /><br/><sub>逐句精听，难句标注</sub></td>
-    <td align="center"><img src="assets/screenshots/05-analysis.png" alt="意群划分" width="180" /><br/><sub>意群划分，难句解析</sub></td>
+    <td align="center"><img src="assets/screenshots/02-loop.png" alt="学习计划" width="180" /><br/><sub>学习计划，听说闭环</sub></td>
+    <td align="center"><img src="assets/screenshots/03-reminder.png" alt="复习提醒" width="180" /><br/><sub>复习提醒，自动安排</sub></td>
+    <td align="center"><img src="assets/screenshots/04-intensive.png" alt="逐句精听" width="180" /><br/><sub>逐句精听，难点标注</sub></td>
+    <td align="center"><img src="assets/screenshots/05-analysis.png" alt="句子讲解" width="180" /><br/><sub>句子讲解，意群划分</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="assets/screenshots/06-retell.png" alt="段落复述" width="180" /><br/><sub>段落复述，听懂变成会说</sub></td>
-    <td align="center"><img src="assets/screenshots/07-favorites.png" alt="难句收藏" width="180" /><br/><sub>难句收藏，熟中生巧</sub></td>
-    <td align="center"><img src="assets/screenshots/08-flashcard.png" alt="闪卡复习" width="180" /><br/><sub>闪卡复习，原句再现</sub></td>
-    <td align="center"><img src="assets/screenshots/09-freestyle.png" alt="自由练习" width="180" /><br/><sub>按你的节奏，自由练习</sub></td>
+    <td align="center"><img src="assets/screenshots/06-retell.png" alt="段落复述" width="180" /><br/><sub>段落复述，说出理解</sub></td>
+    <td align="center"><img src="assets/screenshots/07-favorites.png" alt="难句收藏" width="180" /><br/><sub>难句收藏，集中重练</sub></td>
+    <td align="center"><img src="assets/screenshots/08-flashcard.png" alt="闪卡复习" width="180" /><br/><sub>闪卡复习，原句重现</sub></td>
+    <td align="center"><img src="assets/screenshots/09-freestyle.png" alt="随心听" width="180" /><br/><sub>随心听，自由练习</sub></td>
     <td align="center"><img src="assets/icon/app-icon-1024-rounded.png" alt="LoopBack" width="120" /></td>
   </tr>
 </table>
@@ -69,59 +70,28 @@
 
 ## ✨ 功能
 
-- 🤖 **自动驱动学习节奏**：跟读次数、复习时机、难句标记自动推进，你只需要专注听和说。
-- 🎯 **听说闭环**：精听、跟读、复述一气呵成。从听懂内容，到模仿表达，再到用自己的话说出来。
-- 🧩 **长难句意群划分**：长句按意群切分，复杂句拆开理解，降低听懂难度。
-- ⭐ **难句收藏与专项复习**：难句自动归档，可集中跟读、反复重练，避免“标了就忘”。
-- 📚 **语境化闪卡复习**：收藏单词和意群，结合原句上下文复习，在语境中记忆，而不是孤立背词。
-- 💡 **AI 翻译、解析与词汇讲解**：支持双语翻译、句子解析、单词用法和搭配讲解，按需展开，不打断学习节奏。
-- 📍 **断点续学**：自动记录学习阶段和当前句子，下次打开直接继续，5 分钟碎片时间也能练。
-- 📊 **学习数据统计**：记录学习时长、输入输出比例、唯一词汇量，让练了多少、说了多少一目了然。
-- 🎙️ **跟读 AI 评测**：自动对齐识别结果与原文，高亮命中词，并给出跟读评级。
-- 🎧 **导入本地音频 + AI 字幕**：支持批量导入本地音频，可导入本地字幕，也可用 AI 自动转录生成字幕。
+- **自动驱动的学习节奏**：跟读次数、复习时机、难句标记自动推进，专注听和说即可。
+- **听说闭环**：精听、跟读、复述一条流程走完——先听懂，再模仿，最后用自己的话说出来。
+- **长难句意群划分**：长句按意群切分，复杂句拆开理解。
+- **难句收藏与专项复习**：练过的难句自动归档，可集中重练，避免"标了就忘"。
+- **语境化闪卡复习**：收藏的单词和意群结合原句上下文复习，在语境中记忆。
+- **AI 翻译、解析与词汇讲解**：双语翻译、句子解析、单词用法与搭配，按需展开，不打断练习。
+- **断点续学**：自动记录学习阶段与当前句子，碎片时间也能接着练。
+- **学习数据统计**：记录学习时长、输入输出比、唯一词汇量。
+- **跟读评测**：本机识别结果与原句对齐，高亮命中词并给出评级。
+- **本地音频导入 + 字幕**：批量导入本地音频，可带本地字幕，也可用本机模型转录生成。
 
 ---
 
-## 🤔 我们为什么做这个
+## 🔌 AI 服务与本地化说明
 
-很多人学英语时，最大的问题不是缺材料，而是不知道怎么把一段材料真正练透。
+AI 功能使用用户自行配置的供应商，首次使用请到「设置 → AI 服务」选择 DeepSeek、OpenRouter 或自定义 OpenAI 兼容地址，填写模型与 API Key 并手动验证连接。Base URL 直接追加 `/chat/completions`，不会自动补 `/v1`。密钥仅存设备安全存储，不进入备份，恢复备份后需重新填写。
 
-常见情况是：今天收藏一个播客，明天听一段演讲，材料越来越多，但真正认真练熟的内容很少。听的时候好像懂了，过几天又忘了，更不用说把里面的表达说出来。
-
-这背后其实很符合人性：人天然喜欢新鲜、轻松、即时反馈强的东西，所以花哨的内容、游戏化激励和不断刷新的材料很容易让人上瘾。但对语言学习来说，真正有效的训练往往不是"不断换新材料"，而是对合适的材料进行重复、拆解、模仿和复述。过多的新鲜感反而会分散注意力，让学习停留在"看过、听过、收藏过"，而没有真正内化。
-
-另一个更隐蔽的问题是：即使知道正确的方法，也很难长期坚持。因为这些方法看起来简单，真正执行时却需要大量手动判断：今天练哪段、先听几遍、什么时候看字幕、哪些句子要反复跟读、什么时候开始复述、几天后再复习、复习时该练什么。每一步都要自己控制，最后学习本身还没开始，决策负担已经把心力耗尽了。
-
-**这些决策本身才是最消耗意志力的地方**：不是听不懂，是不知道下一步该做什么。
-
-LoopBack 想做的，就是在不违背人性的前提下，用更科学的训练流程降低重复练习的执行成本。它把精听、跟读、盲听、复述和间隔复习串成一个自动推进的闭环：选一段你想听懂的音频，按下开始，从精听到通关，每一步它都会告诉你"现在做什么"。
-
-你只需要坚持打开 App，剩下交给 LoopBack。把一段材料练透，强过泛听 100 个音频。
+字幕与复述录音转写使用本机英语模型完成；学习助手与讲解请求由当前供应商处理。账号、会员、云端字幕、社区同步、网盘导入与自更新已停用；历史学习数据保留，本地目录可导入为合集，精选播客随包提供。
 
 ---
 
-## 🆚 和其他方案的差异
-
-挑了四款国内学习者最熟的 App 对比。单看每一项功能，其它 App 也或多或少有；但 LoopBack 真正的不同在于：**它把每一步串起来自动驱动你走完，你不需要自己摸索方法、控制遍数、掌握复习节奏。**
-
-| 功能 | LoopBack | 每日英语听力 | 可可英语 | 英语流利说 | Anki |
-|---|---|---|---|---|---|
-| **学习节奏由 App 驱动** | ✅ 全自动 | ❌ | ❌ | ❌ | ❌ |
-| 听 → 说闭环（精听 + 跟读 + **复述**） | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 | ❌ |
-| **长难句意群划分** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **收藏句专项复习** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **语境化闪卡复习** | ✅ | ❌ | ❌ | ❌ | ⚠️ 需手动建卡 |
-| AI 翻译 / 句子解析 / 单词深度解析 | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ❌ | ❌ |
-| **断点续学**| ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 |
-| 学习数据：时长 / 输入输出比 / 唯一词汇量 | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 | ❌ |
-| 跟读 AI 评测 | ✅ | ✅ | ✅ | ✅ | ❌ |
-| 导入本地音频 | ✅ | ✅ | ❌ | ❌ | ⚠️ 需自制卡片 |
-| 离线可用 | ✅ | ✅ | ✅ | ⚠️ 部分支持 | ✅ |
-| 开源 | ✅ | ❌ | ❌ | ❌ | ✅ |
-
----
-
-## 🧠 学习方法论
+## 🧠 学习方法
 
 **精听 → 跟读 → 盲听 → 复述 → 科学间隔复习 → 通关。**
 
@@ -134,16 +104,7 @@ flowchart LR
   E --> F[通关<br/>完成本轮学习任务]
 ```
 
-**以上每一步，由 LoopBack 自动驱动，不需要你判断。**
-
-你不需要管"现在该听几遍"、"上次那个素材该不该复习了"。打开 App，今天该做什么会直接呈现在你眼前。
-
-学习全过程量化：**学习时长 · 输入输出比 · 唯一词汇量**。
-
-<details>
-<summary><strong>间隔复习法是怎么安排的？</strong></summary>
-
-每段素材分成 1 次首次学习 + 7 轮间隔复习。间隔从 6 小时拉长到 28 天，让大脑在快要遗忘时重新触达记忆痕迹，符合艾宾浩斯遗忘曲线。
+每段素材 = 1 次首次学习 + 7 轮间隔复习，间隔从 6 小时逐步拉长到 28 天：
 
 | 阶段 | 距上次间隔 | 任务 |
 |---|---|---|
@@ -156,13 +117,32 @@ flowchart LR
 | 第六轮复习 | 14 天后 | 盲听 + 难句补练 + 段落复述 |
 | 第七轮复习 | 28 天后 | 盲听 + 难句补练 + 段落复述 |
 
-</details>
+---
+
+## 🆚 与其他方案的差异
+
+和其他英语学习 App 相比，LoopBack 的不同在于：**它把每一步串成流程自动驱动，不需要自己定计划、数遍数、记复习时间。**
+
+| 功能 | LoopBack | 每日英语听力 | 可可英语 | 英语流利说 | Anki |
+|---|---|---|---|---|---|
+| 学习节奏由 App 驱动 | ✅ 全自动 | ❌ | ❌ | ❌ | ❌ |
+| 精听 + 跟读 + 复述闭环 | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 | ❌ |
+| 长难句意群划分 | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 收藏句专项复习 | ✅ | ❌ | ❌ | ❌ | ❌ |
+| 语境化闪卡复习 | ✅ | ❌ | ❌ | ❌ | ⚠️ 需手动建卡 |
+| AI 翻译 / 句子解析 / 词汇讲解 | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ❌ | ❌ |
+| 断点续学 | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 |
+| 学习数据统计 | ✅ | ⚠️ 部分支持 | ⚠️ 部分支持 | ⚠️ 部分支持 | ❌ |
+| 跟读评测 | ✅ | ✅ | ✅ | ✅ | ❌ |
+| 导入本地音频 | ✅ | ✅ | ❌ | ❌ | ⚠️ 需自制卡片 |
+| 离线可用 | ✅ | ✅ | ✅ | ⚠️ 部分支持 | ✅ |
+| 开源 | ✅ | ❌ | ❌ | ❌ | ✅ |
 
 ---
 
 ## 📥 下载与试用
 
-本分支不上架应用商店。Android 请从 GitHub [Releases](https://github.com/iron6909/loop-back/releases) 下载 APK 侧载安装；iOS/macOS/Windows 目前以源码构建为准（桌面端开发中，Web 暂无计划）。
+本项目不上架应用商店。Android 请从 GitHub [Releases](https://github.com/iron6909/loop-back/releases) 下载 APK 侧载安装；iOS / macOS / Windows 以源码构建为准（桌面端开发中，Web 暂无计划）。
 
 ---
 
@@ -171,92 +151,77 @@ flowchart LR
 <details>
 <summary><strong>LoopBack 免费吗？</strong></summary>
 
-基础功能完全免费，不限次数、不限数量：
+核心功能免费且不限量：导入素材、收藏、完整学习闭环与 7 轮间隔复习、难句专项复习、语境闪卡、本机跟读评测与离线转录、离线词典、数据统计、PDF 导出、备份与恢复。
 
-- **无限导入素材**：本地文件、Android 文件夹、链接、播客订阅都能导入，数量不限
-- **无限收藏**：难句、单词、意群随便收藏，没有上限
-- **完整学习闭环**：精听、跟读、盲听、复述，加上 7 轮间隔复习和到点提醒
-- **难句专项复习 + 语境化闪卡**
-- **跟读评测**：用设备自带的语音识别，不计次数
-- **本地离线转录字幕**：下载模型后在本机生成字幕，不用登录
-- **离线词典、学习数据统计、导出 PDF 笔记、备份与恢复**
-
-AI 讲解与学习助手使用你配置的供应商接口，由该供应商按其套餐或用量计费；本分支不提供 LoopBack 免费 AI 额度或会员结账。
+AI 讲解与学习助手走你配置的供应商接口，由供应商按其套餐或用量计费；本项目不提供免费 AI 额度或会员结账。
 
 </details>
 
 <details>
 <summary><strong>哪些功能会调用供应商 AI？</strong></summary>
 
-AI 翻译、句子解析、意群拆分、词汇解析、AI 学习助手与复述评估会请求当前供应商。字幕生成与复述录音转写使用本机英语识别模型，不上传录音。
+AI 翻译、句子解析、意群拆分、词汇解析、学习助手与复述评估会请求当前供应商。字幕生成与复述录音转写使用本机英语识别模型，录音不上传。
 
 </details>
 
 <details>
 <summary><strong>供应商余额或套餐不足时怎么办？</strong></summary>
 
-本地学习不受影响。请到供应商控制台查看套餐与余额，或在「设置 → AI 服务」切换配置；应用内不办理充值或续订。
+本地学习不受影响。到供应商控制台查看套餐与余额，或在「设置 → AI 服务」切换配置；应用内不办理充值或续订。
 
 </details>
 
 <details>
 <summary><strong>API Key 会进入备份吗？</strong></summary>
 
-不会。Key 仅存设备安全存储，不写入日志、普通偏好、学习数据备份或埋点；恢复备份后需重新填写。备份包含供应商地址、模型等非敏感配置。
+不会。Key 仅存设备安全存储，不写入日志、偏好、备份或埋点；恢复备份后需重新填写。供应商地址、模型等非敏感配置会随备份。
 
 </details>
 
 <details>
 <summary><strong>支持哪些平台？</strong></summary>
 
-目前主力是 **Android**，从 GitHub [Releases](https://github.com/iron6909/loop-back/releases) 下载 APK 侧载安装；iOS 与 macOS/Windows 桌面版以源码构建为准，后续完善发布。
-
-</details>
-
-<details>
-<summary><strong>和其他英语 App 有什么不同？</strong></summary>
-
-其他 App 主要提供材料和工具，怎么练要靠你自己安排。LoopBack 管的是「怎么练」：精听、跟读、盲听、复述、间隔复习串成一个流程，每一步都由 App 告诉你接下来做什么，你不用自己定计划、数遍数、记复习时间。详细对比见上方「🆚 和其他方案的差异」。
+目前主力是 Android（GitHub [Releases](https://github.com/iron6909/loop-back/releases) 侧载 APK）。iOS 与桌面端以源码构建为准，后续完善发布。
 
 </details>
 
 <details>
 <summary><strong>支持哪些学习材料？</strong></summary>
 
-- **音频**：mp3、m4a、wav、aac、flac
-- **视频**：mp4、mov、m4v、mkv（可隐藏画面当音频练）
-- **字幕**：srt、vtt、lrc，与音频同名会自动配对；没有字幕可以用 AI 转录生成
-- **来源**：本地文件、Android 文件夹、音频直链、播客订阅
+- 音频：mp3、m4a、wav、aac、flac
+- 视频：mp4、mov、m4v、mkv（可隐藏画面当音频练）
+- 字幕：srt、vtt、lrc，与音频同名自动配对；没有字幕可用 AI 转录生成
+- 来源：本地文件、Android 文件夹、音频直链、播客订阅
 
-播客、TED、美剧片段、教材音频都可以，建议选**你感兴趣、难度略高于当前水平**的内容。
+建议选感兴趣、难度略高于当前水平的内容。
 
 </details>
 
 <details>
 <summary><strong>需要什么英语基础？</strong></summary>
 
-能借助字幕看懂材料大意就可以开始。遇到听不懂的句子，可以用意群拆分、AI 翻译和句子解析拆开理解。基础薄弱的话，先从慢速、短篇的材料练起。
+能借助字幕看懂材料大意就可以开始。听不懂的句子可以用意群拆分、翻译和解析辅助；基础薄弱先从慢速短篇练起。
 
 </details>
 
 <details>
 <summary><strong>多久能看到效果？</strong></summary>
 
-一段素材练完首次学习，你就能听懂这段内容，并用自己的话复述出来。之后的 7 轮间隔复习会持续大约 8 周，把它变成长期记忆。整体听说能力的提升靠积累，建议每天练 20～30 分钟，同时学 2～3 段素材，坚持几周会明显感到听得更轻松、说得更顺。
+一段素材完成首次学习后就能听懂并复述；之后 7 轮间隔复习持续约 8 周，把它变成长时记忆。整体提升靠积累：每天 20～30 分钟、同时练 2～3 段素材，几周后通常能感到听得更轻松、说得更顺。
 
 </details>
 
 <details>
 <summary><strong>没有网络能用吗？</strong></summary>
 
-可以。学习流程、复习、收藏、跟读评测、本地转录都能离线使用；供应商 AI、播客内容与模型首次下载需要联网。
+可以。学习流程、复习、收藏、跟读评测、本地转录都可离线；供应商 AI、播客内容与模型首次下载需要联网。
 
 </details>
 
 <details>
 <summary><strong>学习数据存在哪里？换手机怎么办？</strong></summary>
 
-学习数据默认存在本机。换手机或重装前，在「设置 → 备份与恢复」导出备份，到新设备上恢复即可。
+数据默认存本机。换手机或重装前，在「设置 → 备份与恢复」导出备份，到新设备恢复。
 
 </details>
 
@@ -264,62 +229,14 @@ AI 翻译、句子解析、意群拆分、词汇解析、AI 学习助手与复�
 
 ## 🗺️ Roadmap
 
-### ✅ 1 · 核心功能
-
-- [x] 学习闭环：精听 / 跟读 / 盲听 / 段落复述
-- [x] 间隔复习调度（6h → 28d）
-- [x] 长难句意群划分
-- [x] 难句收藏 + 专项复习
-- [x] 语境化闪卡复习
-- [x] AI 翻译 / 句子解析
-- [x] iOS / macOS 原生 ASR 跟读评测
-- [x] 断点续学
-- [x] 学习数据统计
-
-### 🚧 2 · AI 能力
-
-- [ ] AI 口语陪练
-- [x] AI 学习助手（随时答疑）
-- [x] AI 查词
-- [ ] 个性化素材推荐
-
-### 🔭 3 · 体验与平台
-
-- [ ] 自定义任务流
-- [ ] 连胜激励 / 学习勋章
-- [ ] macOS / Windows 桌面版正式发布
-
-### 🔭 4 · 内容生态
-
-- [ ] 官方精选合集（按主题 + 难度分级）
-- [ ] 用户合集分享 / UGC 学习材料
-
----
-
-## ⭐ Star History
-
-<a href="https://www.star-history.com/?repos=iron6909%2Floop-back&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=iron6909/loop-back&type=date&legend=top-left" />
- </picture>
-</a>
-
----
-
-## 🎓 学术指导 & 致谢
-
-**学术指导**
-
-感谢 [杨艳老师](https://sfs.muc.edu.cn/info/1063/3729.htm)（中央民族大学外国语学院；北京大学英语语言文学博士）对本项目方法论的指导。
-
-**核心依赖**
-
-- 音频与语音：[just_audio](https://pub.dev/packages/just_audio) · [audio_session](https://pub.dev/packages/audio_session) · [flutter_tts](https://pub.dev/packages/flutter_tts) · [sherpa_onnx](https://pub.dev/packages/sherpa_onnx)
-- 数据与状态：[drift](https://pub.dev/packages/drift) · [flutter_riverpod](https://pub.dev/packages/flutter_riverpod)
-- 文本处理：[subtitle](https://pub.dev/packages/subtitle) · [lemmatizerx](https://pub.dev/packages/lemmatizerx)
-- 系统能力：[file_picker](https://pub.dev/packages/file_picker) · [flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications)
+- ✅ 学习闭环：精听 / 跟读 / 盲听 / 复述 + 7 轮间隔复习（6h → 28d）
+- ✅ 意群划分、难句收藏与专项复习、语境化闪卡
+- ✅ AI 翻译 / 解析 / 查词 / 学习助手（供应商直连）
+- ✅ 本机语音识别、语音合成与离线词典（公开源模型）
+- ✅ 断点续学、学习统计、备份与恢复
+- 🚧 AI 口语陪练
+- 🚧 macOS / Windows 桌面端正式发布
+- 🔭 官方精选合集（按主题与难度分级）、自定义任务流
 
 ---
 
@@ -341,7 +258,6 @@ flutter run -d <ios|android|macos> --dart-define-from-file=.dev.env
 > `--dart-define-from-file` 注入。这两个文件已被 `.gitignore`，请勿提交。
 > 项目已无自有后端 API 与资源 CDN，无需配置任何服务端点。
 
-
 </details>
 
 <details>
@@ -354,52 +270,24 @@ flutter analyze
 flutter test
 ```
 
-Commit 标题遵循 `PREFIX: 内容` 格式（参考 `git log` 看常用前缀，如 FEAT / FIX / DOCS / MOD / OPT / CHORE / CI / RELEASE 等）。详细贡献流程见 [CONTRIBUTING.md](#)（待补）。本项目遵循 [Contributor Covenant](https://www.contributor-covenant.org/) 行为准则。
+Commit 标题遵循 `PREFIX: 内容` 格式（参考 `git log` 常用前缀，如 FEAT / FIX / DOCS / MOD / OPT / CHORE / CI / RELEASE 等）。
 
 </details>
 
 <details>
 <summary><strong>🛠️ 技术栈</strong></summary>
 
-![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
-![Dart](https://img.shields.io/badge/Dart-0175C2?logo=dart&logoColor=white)
-![Riverpod](https://img.shields.io/badge/Riverpod-1F2937?logo=flutter&logoColor=white)
-![Drift](https://img.shields.io/badge/Drift-SQLite-003B57?logo=sqlite&logoColor=white)
-![Material 3](https://img.shields.io/badge/Material-3-757575?logo=materialdesign&logoColor=white)
-
 | 类别 | 技术 | 用途 |
 |------|------|------|
 | UI 框架 | Flutter + Material 3 | 跨平台 UI |
 | 状态管理 | Riverpod（代码生成） | 单向数据流 |
 | 音频播放 | just_audio + audio_session | 音频引擎层 |
+| 语音识别 / 合成 | sherpa_onnx（Whisper / Kokoro / Piper） | 本机识别与 TTS |
 | 字幕解析 | subtitle | SRT/VTT |
-| 文件选择 | file_picker | 本地音频/字幕导入 |
 | 数据持久化 | Drift (SQLite) + shared_preferences | 学习进度、收藏、缓存 |
 | 国际化 | flutter_localizations + ARB | 简体中文 / English |
 | 测试 | flutter_test + mocktail | 单元 / Widget / 集成 |
 | 静态分析 | flutter_lints | 代码规范 |
-
-</details>
-
-<details>
-<summary><strong>📁 项目结构</strong></summary>
-
-```
-lib/
-├── l10n/              # 国际化翻译文件（ARB 格式）
-├── models/            # 数据模型（AudioItem, Sentence, Collection 等）
-├── providers/         # Riverpod 状态管理
-│   ├── audio_engine/  # 音频引擎层（底层播放控制）
-│   └── listening_practice/  # 听力练习层（业务逻辑）
-│       ├── sentence_tracker.dart   # 句子定位（二分查找）
-│       └── bookmark_manager.dart   # 书签管理
-├── screens/           # 页面
-├── services/          # 服务层（StorageService, SubtitleParser）
-└── widgets/           # 可复用组件
-
-integration_test/      # 端到端测试
-test/                  # 单元 / Widget 测试
-```
 
 </details>
 
@@ -413,11 +301,6 @@ flutter run -d ios            # iOS
 flutter run -d android        # Android
 flutter run -d macos          # macOS（开发中，未发布）
 flutter run -d chrome         # Web（仅调试用，无发布计划）
-
-# iOS 模拟器
-xcrun simctl list devices available
-xcrun simctl boot <DEVICE_UDID>
-open -a Simulator
 ```
 
 **测试 / 质量检查**
@@ -430,7 +313,7 @@ flutter test integration_test -d macos   # 集成测试
 MAESTRO_APP_ID=app.loopback.dev scripts/test_maestro.sh
 # Android 真机：自动构建、安装 dev 包并运行 Study 测试
 scripts/test_maestro_android.sh
-# 多台设备时，显式指定目标；也可一次性 export MAESTRO_ANDROID_DEVICE=<adb-serial>
+# 多台设备时显式指定目标
 scripts/test_maestro_android.sh --device <adb-serial>
 dart format .                            # 格式化
 ```
@@ -447,21 +330,14 @@ dart run build_runner build
 **构建**
 
 ```bash
-# Supabase / Google 等编译期变量从 env 文件注入（发布用 .prod.env）
-flutter build macos --dart-define-from-file=.prod.env
-flutter build apk   --dart-define-from-file=.prod.env
-flutter build ios   --dart-define-from-file=.prod.env
-
-# 真机运行
-flutter run --release -d <DEVICE_ID> --dart-define-from-file=.dev.env
+flutter build apk --dart-define-from-file=.prod.env
 ```
 
-> 发布脚本 `scripts/run_simulator.sh`（读 `.dev.env`）、`scripts/release_{android,ios,macos}.sh`（读 `.prod.env`）
-> 已内置 `--dart-define-from-file`，无需手动传参。
+> 发布脚本 `scripts/release_*.sh` 已内置 `--dart-define-from-file`，无需手动传参。
 
 **环境要求**
 
-- Flutter SDK 3.9.2+
+- Dart SDK ^3.9.2（见 `pubspec.yaml`）
 - iOS 模拟器 / Android 模拟器 / 真机
 - 桌面端：macOS / Windows / Linux 开发环境
 
@@ -469,7 +345,18 @@ flutter run --release -d <DEVICE_ID> --dart-define-from-file=.dev.env
 
 ---
 
-国内 AtomGit 托管：<a href="https://atomgit.com/iron6909/loop-back">LoopBack AtomGit 项目主页</a>
+## 🙏 致谢
+
+LoopBack 派生自 [Echo Loop](https://github.com/echo-loop/Echo-Loop)（AGPL-3.0），感谢其开发者与社区对学习方法设计与工程实现的开源贡献。
+
+核心依赖：
+
+- 音频与语音：[just_audio](https://pub.dev/packages/just_audio) · [audio_session](https://pub.dev/packages/audio_session) · [flutter_tts](https://pub.dev/packages/flutter_tts) · [sherpa_onnx](https://pub.dev/packages/sherpa_onnx)
+- 数据与状态：[drift](https://pub.dev/packages/drift) · [flutter_riverpod](https://pub.dev/packages/flutter_riverpod)
+- 文本处理：[subtitle](https://pub.dev/packages/subtitle) · [lemmatizerx](https://pub.dev/packages/lemmatizerx)
+- 系统能力：[file_picker](https://pub.dev/packages/file_picker) · [flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications)
+
+---
 
 ## 📄 License
 
