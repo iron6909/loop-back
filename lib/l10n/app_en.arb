@@ -3208,6 +3208,7 @@
   "aiServiceTestUnauthorized": "Authentication failed: check the API key",
   "aiServiceTestNotFound": "Address or model not found",
   "aiServiceTestTimeout": "Network timeout",
+  "aiServiceUntested": "Not tested",
   "aiServiceNotConfigured": "AI service is not configured",
   "aiServiceConfigureProvider": "Configure provider",
   "aiServicePromptVersion": "Prompt version",

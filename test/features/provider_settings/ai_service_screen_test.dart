@@ -98,9 +98,8 @@ void main() {
       ],
     });
     await edit(tester, 'Model', 'another-model');
-    // 改模型后旧结果作废：状态行不报错也不谎称已验证。
     expect(find.text('Connection OK'), findsNothing);
-    expect(find.text('Not tested'), findsNothing);
+    expect(find.text('Not tested'), findsOneWidget);
     await edit(tester, 'API key', '');
     expect(
       await fixture.container.read(providerConfigurationProvider.future),

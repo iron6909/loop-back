@@ -2478,6 +2478,7 @@
   "aiServiceTestUnauthorized": "鉴权失败：请检查 API Key",
   "aiServiceTestNotFound": "地址或模型不存在",
   "aiServiceTestTimeout": "网络超时",
+  "aiServiceUntested": "未验证",
   "aiServiceNotConfigured": "尚未配置 AI 服务",
   "aiServiceConfigureProvider": "配置供应商",
   "aiServicePromptVersion": "提示词版本",

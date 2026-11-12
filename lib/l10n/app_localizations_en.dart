@@ -5529,6 +5529,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiServiceTestTimeout => 'Network timeout';
 
   @override
+  String get aiServiceUntested => 'Not tested';
+
+  @override
   String get aiServiceNotConfigured => 'AI service is not configured';
 
   @override

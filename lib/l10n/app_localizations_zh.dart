@@ -5279,6 +5279,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aiServiceTestTimeout => '网络超时';
 
   @override
+  String get aiServiceUntested => '未验证';
+
+  @override
   String get aiServiceNotConfigured => '尚未配置 AI 服务';
 
   @override
