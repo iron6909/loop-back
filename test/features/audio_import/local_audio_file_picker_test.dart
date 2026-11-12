@@ -65,6 +65,62 @@ void main() {
     expect(calls.map((c) => c.method), ['pickDirectory']);
   });
 
+  test('目录快照带上持久授权的 tree URI，缺失时不影响选目录', () async {
+    mockChannel({
+      'pickDirectory': {
+        'uri': 'content://tree/primary%3ADownload%2FLessons',
+        'name': 'Lessons',
+        'children': <Object?>[],
+      },
+    });
+    final withUri = await AndroidLocalAudioFilePicker(
+      channel: channel,
+    ).pickDirectory();
+    expect(withUri?.uri, 'content://tree/primary%3ADownload%2FLessons');
+
+    mockChannel({
+      'pickDirectory': {'name': 'Lessons', 'children': <Object?>[]},
+    });
+    final withoutUri = await AndroidLocalAudioFilePicker(
+      channel: channel,
+    ).pickDirectory();
+    expect(withoutUri?.uri, isNull);
+  });
+
+  test('按记住的 URI 重列目录；授权失效时抛出异常', () async {
+    mockChannel({
+      'listDirectory': {
+        'uri': 'content://tree/lessons',
+        'name': 'Lessons',
+        'children': [
+          {
+            'uri': 'content://tree/1',
+            'name': '1.mp3',
+            'size': 7,
+            'isDirectory': false,
+          },
+        ],
+      },
+    });
+    final directory = await AndroidLocalAudioFilePicker(
+      channel: channel,
+    ).listDirectory('content://tree/lessons');
+    expect(directory.name, 'Lessons');
+    expect(directory.files.single.name, '1.mp3');
+    expect(calls.single.method, 'listDirectory');
+    expect(calls.single.arguments, {'uri': 'content://tree/lessons'});
+
+    mockChannel({
+      'listDirectory': PlatformException(code: 'directory_unavailable'),
+    });
+    await expectLater(
+      AndroidLocalAudioFilePicker(
+        channel: channel,
+      ).listDirectory('content://tree/lessons'),
+      throwsA(isA<PlatformException>()),
+    );
+  });
+
   test('目录取消返回 null，畸形条目拒绝', () async {
     mockChannel({'pickDirectory': null});
     expect(

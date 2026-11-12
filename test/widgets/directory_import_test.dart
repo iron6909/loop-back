@@ -4,6 +4,7 @@ library;
 import 'dart:async';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:loop_back/features/audio_import/last_import_directory_store.dart';
 import 'package:loop_back/features/audio_import/local_audio_file_picker.dart';
 import 'package:loop_back/models/audio_item.dart';
 import 'package:loop_back/providers/audio_library_provider.dart';
@@ -19,6 +20,8 @@ import 'package:loop_back/widgets/import_audio_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/test_app.dart';
 import '../helpers/mock_providers.dart';
@@ -33,12 +36,27 @@ void main() {
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   Object? directory;
+
+  /// 模拟「按记住的 URI 重列目录」的回包；null 表示授权已失效。
+  Object? rememberedDirectory;
+  bool rememberedUnavailable = false;
+  late SharedPreferences prefs;
   final calls = <String>[];
-  setUp(() {
+  setUp(() async {
     calls.clear();
+    rememberedDirectory = null;
+    rememberedUnavailable = false;
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
     messenger.setMockMethodCallHandler(channel, (call) async {
       calls.add(call.method);
       if (call.method == 'pickDirectory') return directory;
+      if (call.method == 'listDirectory') {
+        if (rememberedUnavailable) {
+          throw PlatformException(code: 'directory_unavailable');
+        }
+        return rememberedDirectory;
+      }
       if (call.method == 'readBytes') {
         return Uint8List.fromList(
           '1\n00:00:00,000 --> 00:00:01,000\nHello\n'.codeUnits,
@@ -59,6 +77,7 @@ void main() {
     ),
     overrides: [
       audioImportControllerProvider.overrideWith(_IdleImport.new),
+      sharedPreferencesProvider.overrideWithValue(prefs),
       initialRemoteConfigProvider.overrideWithValue(
         const RemoteConfig(
           version: 1,
@@ -106,19 +125,72 @@ void main() {
     expect(find.byType(ImportAudioSelectionList), findsNothing);
   });
 
-  testWidgets('空目录不进入导入面板，错误与重选入口同时保留', (tester) async {
+  testWidgets('空目录不进入确认页，错误与重选入口同时保留', (tester) async {
     directory = {'name': 'Empty', 'children': <Object?>[]};
     await tester.pumpWidget(app());
     await tester.tap(find.text('Open Import'));
     await tester.pumpAndSettle();
     expect(find.text('This folder has no importable audio'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('import-option-directory')),
-      findsOneWidget,
-    );
-    expect(find.text('Import from File'), findsNothing);
-    expect(find.text('Import from Link'), findsNothing);
+    expect(find.byKey(const ValueKey('reselect-directory')), findsOneWidget);
     expect(find.byType(ImportAudioSelectionList), findsNothing);
+    // 空目录不得遗留旧的单选项入口。
+    expect(find.byKey(const ValueKey('import-option-directory')), findsNothing);
+  });
+
+  testWidgets('有上次文件夹时先给一键入口，点开直接进确认页', (tester) async {
+    await prefs.setString(
+      LastImportDirectoryStore.uriKey,
+      'content://tree/lessons',
+    );
+    await prefs.setString(LastImportDirectoryStore.nameKey, 'Lessons');
+    rememberedDirectory = {
+      'uri': 'content://tree/lessons',
+      'name': 'Lessons',
+      'children': [
+        {
+          'uri': 'content://tree/1',
+          'name': '1.mp3',
+          'size': 3,
+          'isDirectory': false,
+        },
+      ],
+    };
+
+    await tester.pumpWidget(app());
+    await tester.tap(find.text('Open Import'));
+    await tester.pumpAndSettle();
+
+    // 不再重新走系统选择器，也不再经过只有一项的旧入口页。
+    expect(calls, isEmpty);
+    expect(find.text('Last import'), findsOneWidget);
+    expect(find.byKey(const ValueKey('remembered-directory')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('remembered-directory')));
+    await tester.pumpAndSettle();
+
+    expect(calls, ['listDirectory']);
+    expect(find.text('Confirm import'), findsOneWidget);
+    expect(find.byType(ImportAudioSelectionList), findsOneWidget);
+  });
+
+  testWidgets('上次文件夹失效时清空记忆并退回系统选择器', (tester) async {
+    await prefs.setString(
+      LastImportDirectoryStore.uriKey,
+      'content://tree/lessons',
+    );
+    await prefs.setString(LastImportDirectoryStore.nameKey, 'Lessons');
+    rememberedUnavailable = true;
+    directory = null;
+
+    await tester.pumpWidget(app());
+    await tester.tap(find.text('Open Import'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('remembered-directory')));
+    await tester.pumpAndSettle();
+
+    expect(calls, ['listDirectory', 'pickDirectory']);
+    expect(prefs.getString(LastImportDirectoryStore.uriKey), isNull);
+    expect(prefs.getString(LastImportDirectoryStore.nameKey), isNull);
   });
 
   testWidgets('只读直接文件，按自然序预览且匹配同名字幕', (tester) async {
@@ -165,9 +237,37 @@ void main() {
     );
     expect(list.items.map((item) => item.displayName), ['2.mp3', '10.mp3']);
     expect(list.items.first.hasSubtitle, isTrue);
-    expect(find.text('Lessons'), findsOneWidget);
+    // 文件夹名同时出现在页头与「合集名」汇总行。
+    expect(find.text('Lessons'), findsWidgets);
     expect(calls, ['pickDirectory', 'readBytes']);
     expect(find.text('Select Collection'), findsNothing);
+  });
+
+  testWidgets('确认页点「更换」后取消选择，仍留在原确认页', (tester) async {
+    directory = {
+      'name': 'Lessons',
+      'children': [
+        {
+          'uri': 'content://tree/1',
+          'name': '1.mp3',
+          'size': 3,
+          'isDirectory': false,
+        },
+      ],
+    };
+    await tester.pumpWidget(app());
+    await tester.tap(find.text('Open Import'));
+    await tester.pumpAndSettle();
+    expect(find.text('Confirm import'), findsOneWidget);
+
+    // 第二次选目录被取消（回包 null），不应关掉面板也不应丢掉已选目录。
+    directory = null;
+    await tester.tap(find.byKey(const ValueKey('replace-directory')));
+    await tester.pumpAndSettle();
+
+    expect(calls, ['pickDirectory', 'pickDirectory']);
+    expect(find.text('Confirm import'), findsOneWidget);
+    expect(find.byType(ImportAudioSelectionList), findsOneWidget);
   });
 
   testWidgets('全重复导入仍提交合集；事务失败可重试且不会重新复制文件', (tester) async {

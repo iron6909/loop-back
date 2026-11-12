@@ -10,6 +10,8 @@ import 'package:go_router/go_router.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import '../features/community_collections/providers/community_enrollment_provider.dart';
 import '../features/community_collections/widgets/community_badge.dart';
+import '../features/audio_import/directory_import_support.dart';
+import '../features/audio_import/last_import_directory_store.dart';
 import '../features/podcast/podcast_info_sheet.dart';
 import '../models/collection.dart';
 import '../providers/collection_provider.dart';
@@ -242,6 +244,12 @@ class _CreateCollectionFlowSheetState
         onLocal: () => _setStep(_CreateCollectionStep.local),
         onPodcast: _openPodcastSubscribe,
         onDirectory: _openDirectoryImport,
+        // 目录导入目前只有 Android 有实现；其他平台不展示这个入口。
+        showDirectoryImport: ref.watch(directoryImportSupportedProvider),
+        lastDirectoryName: ref
+            .read(lastImportDirectoryStoreProvider)
+            .read()
+            ?.name,
       ),
       _CreateCollectionStep.local => _LocalCollectionPanel(
         key: const ValueKey('local-collection-form'),
@@ -359,11 +367,19 @@ class _CollectionTypePanel extends StatelessWidget {
     required this.onLocal,
     required this.onPodcast,
     required this.onDirectory,
+    this.showDirectoryImport = true,
+    this.lastDirectoryName,
   });
 
   final VoidCallback onLocal;
   final VoidCallback onPodcast;
   final VoidCallback onDirectory;
+
+  /// 仅 Android 提供目录导入。
+  final bool showDirectoryImport;
+
+  /// 上次成功导入的文件夹名；有值时第三项直接告诉用户会复用哪个文件夹。
+  final String? lastDirectoryName;
 
   @override
   Widget build(BuildContext context) {
@@ -388,13 +404,17 @@ class _CollectionTypePanel extends StatelessWidget {
           onTap: onPodcast,
         ),
         const SizedBox(height: 12),
-        _CollectionOptionTile(
-          key: const ValueKey('collection-option-directory'),
-          icon: Icons.folder_open_outlined,
-          title: l10n.importAudioFromFolder,
-          description: l10n.importAudioFromFolderDescription,
-          onTap: onDirectory,
-        ),
+        if (showDirectoryImport)
+          _CollectionOptionTile(
+            key: const ValueKey('collection-option-directory'),
+            icon: Icons.folder_open_outlined,
+            title: l10n.importAudioFromFolder,
+            description: switch (lastDirectoryName) {
+              final String name => l10n.folderImportLastUsed(name),
+              _ => l10n.importAudioFromFolderDescription,
+            },
+            onTap: onDirectory,
+          ),
       ],
     );
   }

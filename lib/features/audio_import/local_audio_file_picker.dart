@@ -43,32 +43,59 @@ class AndroidLocalAudioFilePicker {
 
   /// 选取目录并仅列出直接子项；子目录不递归读取。
   Future<PickedAudioDirectory?> pickDirectory() async {
-    final result = await _channel.invokeMethod<Object?>('pickDirectory');
-    if (result == null) return null;
-    if (result case {
-      'name': final String name,
-      'children': final List<Object?> children,
-    } when name.trim().isNotEmpty) {
-      final files = <PlatformFile>[];
-      var ignoredDirectories = 0;
-      for (final child in children) {
-        if (child case {'isDirectory': final bool directory}) {
-          if (directory) {
-            ignoredDirectories++;
-          } else {
-            files.add(_platformFileFrom(child));
-          }
-        } else {
-          throw const LocalAudioFilePickerException('Invalid directory entry');
-        }
-      }
-      return PickedAudioDirectory(
-        name: name,
-        files: files,
-        ignoredDirectories: ignoredDirectories,
+    return _directoryFrom(
+      await _channel.invokeMethod<Object?>('pickDirectory'),
+    );
+  }
+
+  /// 重新列出已持久授权的目录（「上次导入的文件夹」复用）。
+  ///
+  /// 授权被撤销或目录不存在时原生回 `directory_unavailable`，这里向上抛出异常，
+  /// 由调用方清掉记忆并退回系统选择器。
+  Future<PickedAudioDirectory> listDirectory(String uri) async {
+    final directory = _directoryFrom(
+      await _channel.invokeMethod<Object?>('listDirectory', {'uri': uri}),
+    );
+    if (directory == null) {
+      throw const LocalAudioFilePickerException(
+        'Directory listing returned no data',
       );
     }
-    throw const LocalAudioFilePickerException('Invalid directory metadata');
+    return directory;
+  }
+
+  /// 解析原生目录快照；`uri` 缺失时仍可用，只是无法记住这个文件夹。
+  PickedAudioDirectory? _directoryFrom(Object? result) {
+    if (result == null) return null;
+    if (result is! Map<Object?, Object?>) {
+      throw const LocalAudioFilePickerException('Invalid directory metadata');
+    }
+    final name = result['name'];
+    final children = result['children'];
+    if (name is! String || name.trim().isEmpty || children is! List<Object?>) {
+      throw const LocalAudioFilePickerException('Invalid directory metadata');
+    }
+    final rawUri = result['uri'];
+    final uri = rawUri is String && rawUri.isNotEmpty ? rawUri : null;
+    final files = <PlatformFile>[];
+    var ignoredDirectories = 0;
+    for (final child in children) {
+      if (child case {'isDirectory': final bool directory}) {
+        if (directory) {
+          ignoredDirectories++;
+        } else {
+          files.add(_platformFileFrom(child));
+        }
+      } else {
+        throw const LocalAudioFilePickerException('Invalid directory entry');
+      }
+    }
+    return PickedAudioDirectory(
+      uri: uri,
+      name: name,
+      files: files,
+      ignoredDirectories: ignoredDirectories,
+    );
   }
 
   /// 读取 [uri] 的全部字节。仅用于字幕这类小文件，原生侧对体积设了上限。
@@ -169,11 +196,15 @@ class PickedAudioDirectory {
   const PickedAudioDirectory({
     required this.name,
     required this.files,
+    this.uri,
     this.ignoredDirectories = 0,
     this.unsupportedCount = 0,
   });
   final String name;
   final List<PlatformFile> files;
+
+  /// SAF tree URI（已持久授权）；为空表示这个目录无法记住，下次需重新选择。
+  final String? uri;
   final int ignoredDirectories;
   final int unsupportedCount;
 }

@@ -89,6 +89,9 @@ class AddAudioDialog extends ConsumerStatefulWidget {
   /// 目录导入完成后的收尾动作（由宿主关闭面板并回传新建合集）。
   final VoidCallback? onDone;
 
+  /// 主操作按钮文案覆盖；目录导入用「创建合集并导入 N 个素材」代替默认的添加文案。
+  final String? primaryActionLabel;
+
   /// 通知嵌入式导入流程的宿主：本地文件处理是否正在运行。
   final ValueChanged<bool>? onImportingChanged;
 
@@ -105,6 +108,7 @@ class AddAudioDialog extends ConsumerStatefulWidget {
     this.initialDirectory,
     this.onImported,
     this.onDone,
+    this.primaryActionLabel,
     this.onImportingChanged,
     this.onPickerDismissedEmpty,
   });
@@ -287,14 +291,15 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
         child: _isLoading
             ? Text(_isCanceling ? l10n.cancelingImport : l10n.cancelImport)
             : Text(
-                _pickedFiles.isEmpty
-                    ? l10n.importAudioShort
-                    : l10n.importAudioAndSubtitleCount(
-                        _pickedFiles.length,
-                        _pickedFiles
-                            .where((file) => file.subtitleText != null)
-                            .length,
-                      ),
+                widget.primaryActionLabel ??
+                    (_pickedFiles.isEmpty
+                        ? l10n.importAudioShort
+                        : l10n.importAudioAndSubtitleCount(
+                            _pickedFiles.length,
+                            _pickedFiles
+                                .where((file) => file.subtitleText != null)
+                                .length,
+                          )),
               ),
       ),
     );

@@ -5,15 +5,18 @@ import 'package:flutter/services.dart';
 import '../features/audio_import/audio_import_models.dart';
 import '../features/audio_import/audio_import_provider.dart';
 import '../features/audio_import/community_directory_import.dart';
+import '../features/audio_import/last_import_directory_store.dart';
 import '../features/audio_import/local_audio_file_picker.dart';
 import '../database/providers.dart';
 import '../providers/collection_provider.dart';
 import '../features/audio_import/subtitle_pairing.dart';
 import '../l10n/app_localizations.dart';
+import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
 import 'add_audio_dialog.dart';
 import 'common/form_input_style.dart';
 import 'common/secondary_action_button.dart';
+import 'import_audio_selection_list.dart';
 import 'media_type_icon.dart';
 
 /// 显示统一的音频导入流程。
@@ -37,7 +40,13 @@ Future<String?> showImportAudioSheet(
 enum _ImportStep {
   chooseSource,
   localFile,
+
+  /// 有记住的文件夹时先问一句：继续用它，还是换一个。
+  recentDirectory,
   localDirectory,
+
+  /// 选中的文件夹里没有可导入音频：原地拒绝，可重选。
+  directoryUnavailable,
   directUrl,
   completed,
 }
@@ -69,6 +78,17 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
   String? _directoryError;
   String? _createdCollectionId;
 
+  /// 上次成功导入的文件夹（来自本地记忆）；为空时不经过「最近导入」页。
+  RememberedImportDirectory? _remembered;
+
+  /// 被拒绝的文件夹，用于在不可用页显示是哪一个文件夹。
+  PickedAudioDirectory? _rejectedDirectory;
+
+  /// 确认页汇总的计数与体积，来自目录计划。
+  int _audioCount = 0;
+  int _subtitleCount = 0;
+  int _totalBytes = 0;
+
   /// 每次重新选目录都换 key，强制重建面板丢弃上一次的已选列表与状态。
   int _directorySelectionId = 0;
 
@@ -76,7 +96,9 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
   void initState() {
     super.initState();
     if (widget.directoryOnly) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _pickDirectory());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _startDirectoryImport(),
+      );
     }
   }
 
@@ -111,8 +133,8 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
                 _ImportHeader(
                   title: _titleFor(l10n),
                   showBack:
-                      (widget.directoryOnly ||
-                          _step != _ImportStep.chooseSource) &&
+                      _step != _ImportStep.chooseSource &&
+                      _step != _ImportStep.recentDirectory &&
                       !busy,
                   showClose: !importing,
                   onBack: _goBack,
@@ -146,11 +168,11 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
 
   String _titleFor(AppLocalizations l10n) {
     return switch (_step) {
-      _ImportStep.chooseSource =>
-        widget.directoryOnly ? l10n.importAudioFromFolder : l10n.importAudio,
+      _ImportStep.chooseSource => l10n.importAudio,
       _ImportStep.localFile => l10n.importAudioFromFile,
-      _ImportStep.localDirectory =>
-        _directory?.name ?? l10n.importAudioFromFolder,
+      _ImportStep.recentDirectory => l10n.importAudioFromFolder,
+      _ImportStep.localDirectory => l10n.folderImportConfirmTitle,
+      _ImportStep.directoryUnavailable => l10n.importAudioFromFolder,
       _ImportStep.directUrl => l10n.importAudioFromUrl,
       _ImportStep.completed => l10n.audioImportComplete,
     };
@@ -162,22 +184,20 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       child: switch (_step) {
-        _ImportStep.chooseSource =>
-          widget.directoryOnly
-              ? _ImportOptionTile(
-                  key: const ValueKey('import-option-directory'),
-                  icon: Icons.folder_open_outlined,
-                  title: l10n.importAudioFromFolder,
-                  description: l10n.importAudioFromFolderDescription,
-                  onTap: _pickDirectory,
-                )
-              : _ChooseSourcePanel(
-                  key: const ValueKey('choose-source'),
-                  onLocalFile: () =>
-                      setState(() => _step = _ImportStep.localFile),
-                  onDirectUrl: () =>
-                      setState(() => _step = _ImportStep.directUrl),
-                ),
+        _ImportStep.chooseSource => _ChooseSourcePanel(
+          key: const ValueKey('choose-source'),
+          onLocalFile: () => setState(() => _step = _ImportStep.localFile),
+          onDirectUrl: () => setState(() => _step = _ImportStep.directUrl),
+        ),
+        _ImportStep.recentDirectory when _remembered != null =>
+          _RecentDirectoryPanel(
+            key: const ValueKey('recent-directory'),
+            remembered: _remembered!,
+            onOpen: _openRememberedDirectory,
+            onChooseOther: _pickDirectory,
+          ),
+        // 记忆刚被清空、系统选择器正在唤起：不留一帧空白以外的旧内容。
+        _ImportStep.recentDirectory => const SizedBox.shrink(),
         _ImportStep.localFile => AddAudioDialog(
           key: const ValueKey('local-file'),
           collectionId: widget.collectionId,
@@ -189,16 +209,30 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
           },
           onPickerDismissedEmpty: _goBackToSource,
         ),
-        _ImportStep.localDirectory => AddAudioDialog(
-          key: ValueKey('local-directory-$_directorySelectionId'),
-          embedded: true,
-          initialDirectory: _directory,
-          onImported: _handleDirectoryImported,
-          onDone: () => Navigator.pop(context, _createdCollectionId),
-          onImportingChanged: (isImporting) {
-            if (_localImporting == isImporting || !mounted) return;
-            setState(() => _localImporting = isImporting);
-          },
+        _ImportStep.localDirectory => _FolderImportConfirmPanel(
+          directory: _directory!,
+          audioCount: _audioCount,
+          subtitleCount: _subtitleCount,
+          totalBytes: _totalBytes,
+          onReplace: _pickDirectory,
+          child: AddAudioDialog(
+            key: ValueKey('local-directory-$_directorySelectionId'),
+            embedded: true,
+            initialDirectory: _directory,
+            primaryActionLabel: l10n.folderImportCreateCollection(_audioCount),
+            onImported: _handleDirectoryImported,
+            onDone: () => Navigator.pop(context, _createdCollectionId),
+            onImportingChanged: (isImporting) {
+              if (_localImporting == isImporting || !mounted) return;
+              setState(() => _localImporting = isImporting);
+            },
+          ),
+        ),
+        _ImportStep.directoryUnavailable => _FolderUnavailablePanel(
+          key: const ValueKey('directory-unavailable'),
+          directoryName: _rejectedDirectory?.name,
+          onReselect: _pickDirectory,
+          onCancel: () => Navigator.pop(context),
         ),
         _ImportStep.directUrl => _DirectUrlPanel(
           key: const ValueKey('direct-url'),
@@ -217,48 +251,120 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
     );
   }
 
-  /// 只在目录内确有音频时进入确认页，空目录保留来源页和内联错误。
+  /// 目录导入入口：有记忆的文件夹先给一键入口，否则直接唤起系统选择器。
+  ///
+  /// 系统选择器不支持指定落地位置，「默认上次的文件夹」只能由应用自己提供入口。
+  Future<void> _startDirectoryImport() async {
+    final remembered = ref.read(lastImportDirectoryStoreProvider).read();
+    if (!mounted) return;
+    if (remembered == null) {
+      await _pickDirectory();
+      return;
+    }
+    setState(() {
+      _remembered = remembered;
+      _step = _ImportStep.recentDirectory;
+    });
+  }
+
+  /// 按已持久化的授权重新列出上次的文件夹；失效时静默清空并退回系统选择器。
+  Future<void> _openRememberedDirectory() async {
+    final remembered = _remembered;
+    if (remembered == null) return;
+    try {
+      final directory = await AndroidLocalAudioFilePicker().listDirectory(
+        remembered.uri,
+      );
+      if (!mounted) return;
+      _applyDirectory(directory);
+    } catch (error) {
+      AppLogger.log(
+        'AudioImport',
+        'remembered_directory_unavailable error=${error.runtimeType}',
+      );
+      await ref.read(lastImportDirectoryStoreProvider).clear();
+      if (!mounted) return;
+      setState(() => _remembered = null);
+      await _pickDirectory();
+    }
+  }
+
+  /// 唤起系统目录选择器；取消时回到最近页（有记忆）或关闭面板。
   Future<void> _pickDirectory() async {
     try {
       final directory = await AndroidLocalAudioFilePicker().pickDirectory();
       if (!mounted) return;
       if (directory == null) {
-        if (widget.directoryOnly) Navigator.pop(context);
+        // 取消「更换」：已有可导入的文件夹时留在原确认页，不要关掉整个面板。
+        if (_directory != null) return;
+        if (_remembered != null) {
+          setState(() => _step = _ImportStep.recentDirectory);
+        } else if (widget.directoryOnly) {
+          Navigator.pop(context);
+        }
         return;
       }
-      final plan = CommunityDirectoryImport(directory);
-      setState(() {
-        _directoryError = plan.isEmpty
-            ? AppLocalizations.of(context)!.folderEmptyNoAudio
-            : null;
-        if (!plan.isEmpty) {
-          _directory = PickedAudioDirectory(
-            name: directory.name,
-            files: plan.files,
-            ignoredDirectories: directory.ignoredDirectories,
-            unsupportedCount: plan.unsupportedCount,
-          );
-          _createdCollectionId = null;
-          _directorySelectionId++;
-          _step = _ImportStep.localDirectory;
-        }
-      });
+      _applyDirectory(directory);
     } catch (error) {
-      if (mounted) {
-        setState(
-          () => _directoryError =
-              '${AppLocalizations.of(context)!.pickAudioFileFailed}: $error',
-        );
-      }
+      if (!mounted) return;
+      setState(
+        () => _directoryError =
+            '${AppLocalizations.of(context)!.pickAudioFileFailed}: $error',
+      );
     }
+  }
+
+  /// 目录计划：有音频进确认页，没有就停在不可用页并保留重选入口。
+  void _applyDirectory(PickedAudioDirectory directory) {
+    final plan = CommunityDirectoryImport(directory);
+    if (plan.isEmpty) {
+      setState(() {
+        _directoryError = null;
+        _directory = null;
+        _rejectedDirectory = directory;
+        _step = _ImportStep.directoryUnavailable;
+      });
+      return;
+    }
+    setState(() {
+      _directory = PickedAudioDirectory(
+        name: directory.name,
+        files: plan.files,
+        uri: directory.uri,
+        ignoredDirectories: directory.ignoredDirectories,
+        unsupportedCount: plan.unsupportedCount,
+      );
+      _directoryError = null;
+      _rejectedDirectory = null;
+      _audioCount = plan.audioCount;
+      _subtitleCount = plan.files.length - plan.audioCount;
+      _totalBytes = plan.files.fold(0, (sum, file) => sum + file.size);
+      _createdCollectionId = null;
+      _directorySelectionId++;
+      _step = _ImportStep.localDirectory;
+    });
   }
 
   Future<void> _handleDirectoryImported(List<String> audioIds) async {
     final directory = _directory;
     if (directory == null || audioIds.isEmpty) return;
-    _createdCollectionId ??= await CommunityDirectoryImport(
-      directory,
-    ).commit(ref.read(appDatabaseProvider), audioIds);
+    var createdId = _createdCollectionId;
+    if (createdId == null) {
+      createdId = await CommunityDirectoryImport(
+        directory,
+      ).commit(ref.read(appDatabaseProvider), audioIds);
+      _createdCollectionId = createdId;
+    }
+    // 合集建成后才记住这个文件夹：下次点「从文件夹导入」一点就到。
+    final uri = directory.uri;
+    if (createdId != null && uri != null) {
+      final remembered = RememberedImportDirectory(
+        name: directory.name,
+        uri: uri,
+      );
+      await ref.read(lastImportDirectoryStoreProvider).save(remembered);
+      if (mounted) setState(() => _remembered = remembered);
+    }
     await ref.read(collectionListProvider.notifier).loadCollections();
   }
 
@@ -268,11 +374,23 @@ class _ImportAudioFlowSheetState extends ConsumerState<ImportAudioFlowSheet> {
   }
 
   void _goBack() {
-    if (widget.directoryOnly) {
-      Navigator.pop(context);
-    } else {
+    if (!widget.directoryOnly) {
       _goBackToSource();
+      return;
     }
+    final canReturnToRecent =
+        _remembered != null &&
+        (_step == _ImportStep.localDirectory ||
+            _step == _ImportStep.directoryUnavailable);
+    if (canReturnToRecent) {
+      ref.read(audioImportControllerProvider.notifier).reset();
+      setState(() {
+        _directoryError = null;
+        _step = _ImportStep.recentDirectory;
+      });
+      return;
+    }
+    Navigator.pop(context);
   }
 
   /// 切到独立完成页。
@@ -527,6 +645,350 @@ class _ImportOptionTile extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 目录导入：上次的文件夹一键入口 + 改选其他文件夹。
+class _RecentDirectoryPanel extends StatelessWidget {
+  const _RecentDirectoryPanel({
+    super.key,
+    required this.remembered,
+    required this.onOpen,
+    required this.onChooseOther,
+  });
+
+  final RememberedImportDirectory remembered;
+  final VoidCallback onOpen;
+  final VoidCallback onChooseOther;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.folderImportRecentLabel,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Material(
+          key: const ValueKey('remembered-directory'),
+          color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: colorScheme.primary.withValues(alpha: 0.28),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onOpen,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+              child: Row(
+                children: [
+                  Icon(Icons.folder_open_outlined, color: colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      remembered.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: colorScheme.primary),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: OutlinedButton.icon(
+            key: const ValueKey('choose-other-directory'),
+            onPressed: onChooseOther,
+            icon: const Icon(Icons.drive_file_move_outlined, size: 20),
+            label: Text(l10n.folderImportChooseOther),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.m),
+        const _FolderImportNotes(),
+      ],
+    );
+  }
+}
+
+/// 挑选前与空目录时共用的格式 / 子目录说明，避免两处文案漂移。
+class _FolderImportNotes extends StatelessWidget {
+  const _FolderImportNotes();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final style = Theme.of(context).textTheme.bodySmall?.copyWith(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      height: 1.45,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.folderImportSupportedFormats, style: style),
+        const SizedBox(height: 4),
+        Text(l10n.folderImportNoSubdirectories, style: style),
+      ],
+    );
+  }
+}
+
+/// 确认页：文件夹身份 + 汇总 + 复用 AddAudioDialog 的列表与导入主操作。
+class _FolderImportConfirmPanel extends StatelessWidget {
+  const _FolderImportConfirmPanel({
+    required this.directory,
+    required this.audioCount,
+    required this.subtitleCount,
+    required this.totalBytes,
+    required this.onReplace,
+    required this.child,
+  });
+
+  final PickedAudioDirectory directory;
+  final int audioCount;
+  final int subtitleCount;
+  final int totalBytes;
+  final VoidCallback onReplace;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final skipped = <String>[
+      if (directory.unsupportedCount > 0)
+        l10n.folderUnsupportedFiles(directory.unsupportedCount),
+      if (directory.ignoredDirectories > 0)
+        l10n.folderIgnoredSubdirectories(directory.ignoredDirectories),
+    ];
+    final importDetail = [
+      l10n.audioCount(audioCount),
+      if (subtitleCount > 0) l10n.folderImportSubtitleCount(subtitleCount),
+      formatImportFileSize(totalBytes),
+    ].join(' · ');
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.folder_open_outlined,
+                color: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                directory.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            TextButton(
+              key: const ValueKey('replace-directory'),
+              onPressed: onReplace,
+              child: Text(l10n.folderImportReplace),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SummaryRow(
+                label: l10n.folderImportCollectionName,
+                value: directory.name,
+                valueWeight: FontWeight.w600,
+              ),
+              const SizedBox(height: 8),
+              _SummaryRow(
+                label: l10n.folderImportWillImport,
+                value: importDetail,
+              ),
+              if (skipped.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _SummaryRow(
+                  label: l10n.folderImportWillSkip,
+                  value: skipped.join(' · '),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.m),
+        child,
+      ],
+    );
+  }
+}
+
+/// 汇总行：固定标签列 + 可换行内容。
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({
+    required this.label,
+    required this.value,
+    this.valueWeight,
+  });
+
+  final String label;
+  final String value;
+  final FontWeight? valueWeight;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 62,
+          child: Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: valueWeight,
+              height: 1.35,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 选中的文件夹没有可导入音频：不建合集、不进空列表，原地解释并可重选。
+class _FolderUnavailablePanel extends StatelessWidget {
+  const _FolderUnavailablePanel({
+    super.key,
+    this.directoryName,
+    required this.onReselect,
+    required this.onCancel,
+  });
+
+  final String? directoryName;
+  final VoidCallback onReselect;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: colorScheme.error.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.error_outline, color: colorScheme.error),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.folderEmptyNoAudio,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (directoryName case final name?) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(
+                Icons.folder_outlined,
+                size: 20,
+                color: colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: AppSpacing.m),
+        const _FolderImportNotes(),
+        const SizedBox(height: AppSpacing.m),
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: FilledButton(
+            key: const ValueKey('reselect-directory'),
+            onPressed: onReselect,
+            child: Text(l10n.folderImportChooseOther),
+          ),
+        ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: double.infinity,
+          height: 44,
+          child: TextButton(onPressed: onCancel, child: Text(l10n.cancel)),
+        ),
+      ],
     );
   }
 }

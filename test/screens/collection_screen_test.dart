@@ -13,11 +13,20 @@ import 'package:loop_back/providers/collection_provider.dart';
 import 'package:loop_back/providers/listening_practice/listening_practice_provider.dart';
 import 'package:loop_back/providers/audio_engine/audio_engine_provider.dart';
 import 'package:loop_back/features/user_region/user_region_providers.dart';
+import 'package:loop_back/features/audio_import/directory_import_support.dart';
+import 'package:loop_back/providers/shared_preferences_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/mock_providers.dart';
 import '../helpers/test_app.dart';
 
 void main() {
+  /// 创建菜单会读取「上次导入的文件夹」记忆，需要真实的 SharedPreferences 实例。
+  Future<SharedPreferences> freshPrefs() async {
+    SharedPreferences.setMockInitialValues({});
+    return SharedPreferences.getInstance();
+  }
+
   group('LibraryScreen（合集视图）', () {
     group('渲染', () {
       testWidgets('空状态显示提示文案', (tester) async {
@@ -176,7 +185,8 @@ void main() {
                 name: 'Community Lessons',
               ).copyWith(
                 source: CollectionSource.community,
-                coverUrl: 'https://community.example.com/media/images/cover.jpg',
+                coverUrl:
+                    'https://community.example.com/media/images/cover.jpg',
                 coverUrlChina:
                     'https://community.example.cn/media/images/cover.jpg',
               );
@@ -418,7 +428,16 @@ void main() {
         });
         addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
-        await tester.pumpWidget(createTestScreen(const LibraryScreen()));
+        await tester.pumpWidget(
+          createTestScreen(
+            const LibraryScreen(),
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(await freshPrefs()),
+              // 测试宿主是 Windows，但本用例验证的是 Android 的目录导入流程。
+              directoryImportSupportedProvider.overrideWithValue(true),
+            ],
+          ),
+        );
         await tester.pumpAndSettle();
         expect(find.text('Import Local Collection'), findsNothing);
         await tester.tap(find.byIcon(Icons.add).first);
@@ -429,13 +448,17 @@ void main() {
         expect(find.text('Import from File'), findsNothing);
         expect(find.text('Import from Link'), findsNothing);
 
-        await tester.tap(find.text('Import from Folder'));
+        await tester.tap(
+          find.byKey(const ValueKey('collection-option-directory')),
+        );
         await tester.pumpAndSettle();
         expect(picks, 1);
         expect(find.text('New Collection'), findsOneWidget);
 
         directory = {'name': 'Empty', 'children': <Object?>[]};
-        await tester.tap(find.text('Import from Folder'));
+        await tester.tap(
+          find.byKey(const ValueKey('collection-option-directory')),
+        );
         await tester.pumpAndSettle();
         expect(picks, 2);
         expect(
@@ -456,7 +479,7 @@ void main() {
             },
           ],
         };
-        await tester.tap(find.text('Import from Folder').last);
+        await tester.tap(find.byKey(const ValueKey('reselect-directory')));
         await tester.pumpAndSettle();
         expect(picks, 3);
         expect(find.text('2.mp3'), findsOneWidget);
@@ -466,7 +489,14 @@ void main() {
       });
 
       testWidgets('点击 + 创建新合集', (tester) async {
-        await tester.pumpWidget(createTestScreen(const LibraryScreen()));
+        await tester.pumpWidget(
+          createTestScreen(
+            const LibraryScreen(),
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(await freshPrefs()),
+            ],
+          ),
+        );
         await tester.pumpAndSettle();
 
         // 点击 AppBar 中的创建按钮（第一个 add 图标）
@@ -495,7 +525,14 @@ void main() {
       });
 
       testWidgets('创建本地合集表单弱化输入提示样式', (tester) async {
-        await tester.pumpWidget(createTestScreen(const LibraryScreen()));
+        await tester.pumpWidget(
+          createTestScreen(
+            const LibraryScreen(),
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(await freshPrefs()),
+            ],
+          ),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.byIcon(Icons.add).first);
@@ -534,7 +571,14 @@ void main() {
       });
 
       testWidgets('创建合集时空名称时 Add 按钮禁用', (tester) async {
-        await tester.pumpWidget(createTestScreen(const LibraryScreen()));
+        await tester.pumpWidget(
+          createTestScreen(
+            const LibraryScreen(),
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(await freshPrefs()),
+            ],
+          ),
+        );
         await tester.pumpAndSettle();
 
         // 打开创建对话框（AppBar 中的 + 按钮）
@@ -560,7 +604,14 @@ void main() {
       });
 
       testWidgets('点击「订阅 Podcast」关闭 sheet 并进入统一订阅页', (tester) async {
-        await tester.pumpWidget(createTestScreen(const LibraryScreen()));
+        await tester.pumpWidget(
+          createTestScreen(
+            const LibraryScreen(),
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(await freshPrefs()),
+            ],
+          ),
+        );
         await tester.pumpAndSettle();
 
         await tester.tap(find.byIcon(Icons.add).first);

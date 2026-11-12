@@ -5355,6 +5355,49 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get folderImportConfirmTitle => '确认导入';
+
+  @override
+  String get folderImportRecentLabel => '最近导入';
+
+  @override
+  String folderImportLastUsed(String name) {
+    return '上次：$name';
+  }
+
+  @override
+  String get folderImportChooseOther => '选择其他文件夹';
+
+  @override
+  String get folderImportReplace => '更换';
+
+  @override
+  String folderImportCreateCollection(int count) {
+    return '创建合集并导入 $count 个素材';
+  }
+
+  @override
+  String get folderImportCollectionName => '合集名';
+
+  @override
+  String get folderImportWillImport => '将导入';
+
+  @override
+  String get folderImportWillSkip => '会跳过';
+
+  @override
+  String folderImportSubtitleCount(int count) {
+    return '$count 个字幕';
+  }
+
+  @override
+  String get folderImportSupportedFormats =>
+      '支持 mp3、wav、m4a、aac、flac，并自动配对同名 .srt / .vtt / .lrc 字幕。';
+
+  @override
+  String get folderImportNoSubdirectories => '只读取所选文件夹内的文件，不进入子文件夹。';
+
+  @override
   String get recognitionModeTitle => '识别方式';
 
   @override

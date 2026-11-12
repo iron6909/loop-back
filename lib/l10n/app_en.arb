@@ -3246,6 +3246,39 @@
       }
     }
   },
+  "folderImportConfirmTitle": "Confirm import",
+  "folderImportRecentLabel": "Last import",
+  "folderImportLastUsed": "Last: {name}",
+  "@folderImportLastUsed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "folderImportChooseOther": "Choose another folder",
+  "folderImportReplace": "Change",
+  "folderImportCreateCollection": "{count, plural, =1{Create collection and import 1 item} other{Create collection and import {count} items}}",
+  "@folderImportCreateCollection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderImportCollectionName": "Collection name",
+  "folderImportWillImport": "Importing",
+  "folderImportWillSkip": "Skipping",
+  "folderImportSubtitleCount": "{count, plural, =1{1 subtitle} other{{count} subtitles}}",
+  "@folderImportSubtitleCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "folderImportSupportedFormats": "Supports mp3, wav, m4a, aac and flac, and pairs same-name .srt / .vtt / .lrc subtitles.",
+  "folderImportNoSubdirectories": "Only files directly inside the chosen folder are read; subfolders are skipped.",
   "recognitionModeTitle": "Recognition modes",
   "localModelLibraryTitle": "On-device models",
   "onlineServiceSectionTitle": "Online service",

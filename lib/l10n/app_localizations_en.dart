@@ -5613,6 +5613,62 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get folderImportConfirmTitle => 'Confirm import';
+
+  @override
+  String get folderImportRecentLabel => 'Last import';
+
+  @override
+  String folderImportLastUsed(String name) {
+    return 'Last: $name';
+  }
+
+  @override
+  String get folderImportChooseOther => 'Choose another folder';
+
+  @override
+  String get folderImportReplace => 'Change';
+
+  @override
+  String folderImportCreateCollection(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Create collection and import $count items',
+      one: 'Create collection and import 1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get folderImportCollectionName => 'Collection name';
+
+  @override
+  String get folderImportWillImport => 'Importing';
+
+  @override
+  String get folderImportWillSkip => 'Skipping';
+
+  @override
+  String folderImportSubtitleCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subtitles',
+      one: '1 subtitle',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get folderImportSupportedFormats =>
+      'Supports mp3, wav, m4a, aac and flac, and pairs same-name .srt / .vtt / .lrc subtitles.';
+
+  @override
+  String get folderImportNoSubdirectories =>
+      'Only files directly inside the chosen folder are read; subfolders are skipped.';
+
+  @override
   String get recognitionModeTitle => 'Recognition modes';
 
   @override

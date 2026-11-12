@@ -79,6 +79,7 @@ class AndroidLocalAudioPicker(
         when (call.method) {
             "pickAudioFiles" -> pickAudioFiles(result)
             "pickDirectory" -> pickDirectory(result)
+            "listDirectory" -> listDirectory(call, result)
             "readBytes" -> readBytes(call, result)
             "copyToFile" -> copyToFile(call, result)
             "cancelCopyToFile" -> cancelCopyToFile(call, result)
@@ -154,7 +155,42 @@ class AndroidLocalAudioPicker(
                         DocumentsContract.Document.MIME_TYPE_DIR)))
             }
         }
-        return mapOf("name" to name, "children" to children)
+        // 回传 tree URI：Dart 侧据此记住「上次导入的文件夹」，下次不必重新挑一遍。
+        // 授权已在上面 takePersistableUriPermission 持久化，跨重启有效。
+        return mapOf("uri" to tree.toString(), "name" to name, "children" to children)
+    }
+
+    /**
+     * 重新列出已记住授权的目录，供「上次导入的文件夹」一键复用。
+     *
+     * 授权被撤销、目录被删除或 provider 不可用时回 `directory_unavailable`，
+     * 由 Dart 侧清掉记忆并退回系统选择器。
+     */
+    private fun listDirectory(call: MethodCall, result: MethodChannel.Result) {
+        val raw = call.argument<String>("uri")
+        if (raw.isNullOrEmpty()) {
+            result.error("invalid_argument", "uri is required.", null)
+            return
+        }
+        val tree = Uri.parse(raw)
+        worker.execute {
+            val described = runCatching {
+                describeDirectory(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            activity.runOnUiThread {
+                described.onSuccess(result::success).onFailure { error ->
+                    Log.w(
+                        LOG_TAG,
+                        "list remembered directory failed error=${error.javaClass.simpleName}",
+                    )
+                    result.error(
+                        "directory_unavailable",
+                        "The remembered directory is no longer readable.",
+                        null,
+                    )
+                }
+            }
+        }
     }
 
     /**

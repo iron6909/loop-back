@@ -9848,6 +9848,78 @@ abstract class AppLocalizations {
   /// **'Unsupported files ignored: {count}'**
   String folderUnsupportedFiles(int count);
 
+  /// No description provided for @folderImportConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm import'**
+  String get folderImportConfirmTitle;
+
+  /// No description provided for @folderImportRecentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last import'**
+  String get folderImportRecentLabel;
+
+  /// No description provided for @folderImportLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last: {name}'**
+  String folderImportLastUsed(String name);
+
+  /// No description provided for @folderImportChooseOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose another folder'**
+  String get folderImportChooseOther;
+
+  /// No description provided for @folderImportReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get folderImportReplace;
+
+  /// No description provided for @folderImportCreateCollection.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Create collection and import 1 item} other{Create collection and import {count} items}}'**
+  String folderImportCreateCollection(int count);
+
+  /// No description provided for @folderImportCollectionName.
+  ///
+  /// In en, this message translates to:
+  /// **'Collection name'**
+  String get folderImportCollectionName;
+
+  /// No description provided for @folderImportWillImport.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing'**
+  String get folderImportWillImport;
+
+  /// No description provided for @folderImportWillSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipping'**
+  String get folderImportWillSkip;
+
+  /// No description provided for @folderImportSubtitleCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 subtitle} other{{count} subtitles}}'**
+  String folderImportSubtitleCount(int count);
+
+  /// No description provided for @folderImportSupportedFormats.
+  ///
+  /// In en, this message translates to:
+  /// **'Supports mp3, wav, m4a, aac and flac, and pairs same-name .srt / .vtt / .lrc subtitles.'**
+  String get folderImportSupportedFormats;
+
+  /// No description provided for @folderImportNoSubdirectories.
+  ///
+  /// In en, this message translates to:
+  /// **'Only files directly inside the chosen folder are read; subfolders are skipped.'**
+  String get folderImportNoSubdirectories;
+
   /// No description provided for @recognitionModeTitle.
   ///
   /// In en, this message translates to:
