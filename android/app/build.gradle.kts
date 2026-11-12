@@ -103,6 +103,17 @@ android {
 androidComponents {
     onVariants(selector().all()) { variant ->
         if (variant.name.startsWith("prod")) {
+            // prod 必须用发布密钥签名。缺 key.properties 时 AGP 会静默回落 debug 证书，
+            // 产出与既有安装签名不一致的同名包：用户升级时报 signature mismatch，
+            // 且旧包只能卸载重装（2026-11-12 的 1.0.46 就踩了这个坑）。
+            // 宁可在配置阶段失败，也不要再发出第二把 key 签过的包。
+            val storeFile = keystoreProperties.getProperty("storeFile")
+            if (storeFile.isNullOrBlank()) {
+                throw GradleException(
+                    "prod 变体缺少发布密钥：android/key.properties 不存在或未配置 " +
+                        "storeFile。请先恢复发布密钥（CI secrets 或离线备份）再构建。",
+                )
+            }
             variant.signingConfig.setConfig(
                 android.signingConfigs.getByName("release"),
             )
