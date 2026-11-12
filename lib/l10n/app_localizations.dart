@@ -9704,12 +9704,6 @@ abstract class AppLocalizations {
   /// **'Network timeout'**
   String get aiServiceTestTimeout;
 
-  /// No description provided for @aiServiceUntested.
-  ///
-  /// In en, this message translates to:
-  /// **'Not tested'**
-  String get aiServiceUntested;
-
   /// No description provided for @aiServiceNotConfigured.
   ///
   /// In en, this message translates to:

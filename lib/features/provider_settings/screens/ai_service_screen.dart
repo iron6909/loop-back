@@ -88,8 +88,6 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
           ],
           _sectionTitle(context, l10n.aiServiceConnectionSection),
           _fields(l10n, config, runtime != null),
-          const SizedBox(height: AppSpacing.m),
-          _testCard(l10n, runtime != null),
           const SizedBox(height: AppSpacing.l),
           Center(
             child: Text(
@@ -245,7 +243,8 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
   }
 
   /// 各字段独立编辑，首次选择供应商后不依赖 Key 才能继续操作。
-  /// 供应商入口收在身份卡的编辑按钮上，避免同一信息出现两次。
+  /// 供应商入口收在身份卡的编辑按钮上，避免同一信息出现两次；
+  /// 连接验证作为本组最后一行，与应用行为一致的用量卡同属一组。
   Widget _fields(AppLocalizations l10n, ProviderConfig? config, bool hasKey) {
     return Card(
       child: Column(
@@ -265,77 +264,55 @@ class _AiServiceScreenState extends ConsumerState<AiServiceScreen> {
             hasKey ? l10n.aiServiceKeySaved : l10n.aiServiceKeyNotSet,
             config == null ? null : () => _key(config),
           ),
+          _testRow(l10n, hasKey),
         ],
       ),
     );
   }
 
-  /// 连接验证卡：结果内联，动作在右；没有 Key 时按钮禁用并说明原因。
-  Widget _testCard(AppLocalizations l10n, bool hasKey) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.m,
-          AppSpacing.s + AppSpacing.xs,
-          AppSpacing.s,
-          AppSpacing.s + AppSpacing.xs,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+  /// 连接验证行：空闲时不展示状态，避免把“未跑过测试”读成配置有问题。
+  Widget _testRow(AppLocalizations l10n, bool hasKey) {
+    final status = _statusText(l10n, hasKey);
+    return ListTile(
+      enabled: hasKey && !_testing && !_saving,
+      title: Text(l10n.aiServiceConnectionTest),
+      subtitle: status == null
+          ? null
+          : Semantics(
+              liveRegion: true,
+              child: Row(
                 children: [
-                  Text(
-                    l10n.aiServiceConnectionTest,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Semantics(
-                    liveRegion: true,
-                    child: Row(
-                      children: [
-                        if (_result != null) ...[
-                          Icon(
-                            Icons.info_outline,
-                            size: 16,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                        ],
-                        Flexible(
-                          child: Text(
-                            _statusText(l10n, hasKey),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
+                  if (_result != null) ...[
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                  ],
+                  Flexible(
+                    child: Text(
+                      status,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.s),
-            FilledButton.tonal(
-              onPressed: !hasKey || _testing || _saving ? null : _test,
-              child: Text(
-                _testing ? l10n.aiServiceTesting : l10n.aiServiceTest,
-              ),
-            ),
-          ],
-        ),
+      trailing: FilledButton.tonal(
+        onPressed: !hasKey || _testing || _saving ? null : _test,
+        child: Text(_testing ? l10n.aiServiceTesting : l10n.aiServiceTest),
       ),
     );
   }
 
-  /// 验证行的状态文字：测试中优先，其次本次结果，最后回退到 Key 与验证状态。
-  String _statusText(AppLocalizations l10n, bool hasKey) => _testing
-      ? l10n.aiServiceTesting
-      : _result ?? (hasKey ? l10n.aiServiceUntested : l10n.aiServiceKeyNotSet);
+  /// 验证行的状态文字：测试中优先，其次本次结果；无 Key 时说明禁用原因。
+  String? _statusText(AppLocalizations l10n, bool hasKey) {
+    if (_testing) return l10n.aiServiceTesting;
+    if (_result case final result?) return result;
+    return hasKey ? null : l10n.aiServiceKeyNotSet;
+  }
 
   Widget _row(String label, String? value, VoidCallback? action) => ListTile(
     enabled: action != null && !_saving,
