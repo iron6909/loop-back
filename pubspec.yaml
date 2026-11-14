@@ -93,6 +93,11 @@ dependencies:
   share_plus: ^10.1.4
   table_calendar: ^3.2.0
   timeago: ^3.7.1
+  # 锁定 1.x：2.0.0 起 sherpa-onnx 移除了 espeak-ng / piper-phonemize（PR #4055），
+  # `dataDir` 被标记 @Deprecated 且运行时直接忽略。Piper 与 Kokoro 的合成全靠它指向
+  # `espeak-ng-data`，升到 2.x 会编译通过、测试全绿、离线朗读静默失效（C 层 abort）。
+  # 升级前必须先给每个音色补 `lexicon.txt` 并改走 `lexicon:`，详见
+  # docs/reference/on-device-tts-models-2026-11-13.md。
   sherpa_onnx: ^1.13.4
   showcaseview: ^5.0.1
   just_waveform: ^0.0.7

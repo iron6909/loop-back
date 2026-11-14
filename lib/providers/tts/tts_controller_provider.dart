@@ -485,8 +485,11 @@ class TtsController extends Notifier<TtsControllerState> {
 
     if (!await warmUpCurrentEngine()) return;
 
-    // 幂等：同签名（引擎+变体）批次已在跑则不重启，避免触发点竞相 bump token 掐断。
-    final signature = 'kokoro|${variant.name}';
+    // 只预热当前口音的英语音色：v1.0 全量 53 个音色全预热会白耗十几分钟 CPU，
+    // 非英语音色也不参与口音切换（用户基本只会试听当前口音那组）。
+    final voices = voicesForAccent(settings.accent);
+    // 幂等：同签名（引擎+变体+口音）批次已在跑则不重启，避免触发点竞相 bump token 掐断。
+    final signature = 'kokoro|${variant.name}|${settings.accent.name}';
     if (_prewarmSignature == signature) {
       AppLogger.log('TtsController', '预热跳过：同批次已在跑 $signature');
       return;
@@ -496,20 +499,20 @@ class TtsController extends Notifier<TtsControllerState> {
     AppLogger.log(
       'TtsController',
       '预热开始 engine=kokoro variant=${variant.name} token=$token '
-          'voices=${kokoroVoices.length}',
+          'voices=${voices.length}',
     );
     var done = 0;
     try {
-      for (var i = 0; i < kokoroVoices.length; i++) {
+      for (var i = 0; i < voices.length; i++) {
         if (token != _prewarmToken) {
           AppLogger.log('TtsController', '预热被取消 token=$token');
           return; // 已被取消/重发：停止旧批次
         }
-        final voice = kokoroVoices[i];
+        final voice = voices[i];
         final config = ttsVoicePreviewConfig(voice, variant);
         AppLogger.log(
           'TtsController',
-          '预热[${i + 1}/${kokoroVoices.length}] voice=${voice.id}',
+          '预热[${i + 1}/${voices.length}] voice=${voice.id}',
         );
         try {
           await _readyCoordinator.prewarm(

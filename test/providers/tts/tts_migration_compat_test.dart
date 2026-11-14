@@ -32,7 +32,8 @@ Future<void> _writeKokoroInstall(
   Directory root, {
   bool missingModelFile = false,
 }) async {
-  final dir = Directory(p.join(root.path, 'kokoro-en-v0_19'))
+  final resourceId = kokoroSpecOf(KokoroModelVariant.fp32).id;
+  final dir = Directory(p.join(root.path, resourceId))
     ..createSync(recursive: true);
   if (!missingModelFile) {
     await File(p.join(dir.path, 'model.onnx')).writeAsBytes([1, 2, 3]);
@@ -44,7 +45,7 @@ Future<void> _writeKokoroInstall(
   await File(p.join(dataDir.path, 'phondata')).writeAsBytes([6]);
   await File(p.join(dir.path, 'install.json')).writeAsString(
     jsonEncode({
-      'resourceId': 'kokoro-en-v0_19',
+      'resourceId': resourceId,
       'installAt': '2026-01-01T00:00:00.000Z',
       'resourceSize': 10,
     }),
@@ -111,7 +112,13 @@ void main() {
       expect(state.isReady, isTrue);
       // 目录内容未被替换/重下：模型文件仍原样存在。
       expect(
-        File(p.join(root.path, 'kokoro-en-v0_19', 'model.onnx')).existsSync(),
+        File(
+          p.join(
+            root.path,
+            kokoroSpecOf(KokoroModelVariant.fp32).id,
+            'model.onnx',
+          ),
+        ).existsSync(),
         isTrue,
       );
       // 未安装的 int8 变体保持未下载，未被迁移误判为就绪。
@@ -121,16 +128,18 @@ void main() {
       );
     });
 
-    test('已移除音色（lessac/alan）孤儿目录 → 启动迁移清理', () async {
+    test('已移除音色（lessac/alan/amy 等）孤儿目录 → 启动迁移清理', () async {
       final root = await Directory.systemTemp.createTemp('tts_orphan_cleanup_');
       addTearDown(() async {
         if (await root.exists()) await root.delete(recursive: true);
       });
       await _writePiperInstall(root, 'en_US-lessac-medium');
       await _writePiperInstall(root, 'en_GB-alan-medium');
-      await _writePiperInstall(root, 'en_US-amy-medium'); // 仍保留
+      await _writePiperInstall(root, 'en_US-amy-medium'); // 本轮许可收紧下线
+      await _writePiperInstall(root, 'en_GB-cori-medium'); // 同上
+      await _writePiperInstall(root, piperDefaultVoiceUs); // 仍保留
 
-      await removeOrphanPiperModelDirs(
+      await removeOrphanTtsModelDirs(
         removedPiperVoiceIds,
         modelsRootResolver: () async => root.path,
       );
@@ -145,6 +154,40 @@ void main() {
       );
       expect(
         Directory(p.join(root.path, 'en_US-amy-medium')).existsSync(),
+        isFalse,
+      );
+      expect(
+        Directory(p.join(root.path, 'en_GB-cori-medium')).existsSync(),
+        isFalse,
+      );
+      expect(
+        Directory(p.join(root.path, piperDefaultVoiceUs)).existsSync(),
+        isTrue,
+      );
+    });
+
+    test('Kokoro v0.19 退役模型目录 → 启动迁移清理且保留 v1.0 安装', () async {
+      final root = await Directory.systemTemp.createTemp('tts_kokoro_orphan_');
+      addTearDown(() async {
+        if (await root.exists()) await root.delete(recursive: true);
+      });
+      for (final legacyId in kokoroLegacyModelIds) {
+        await Directory(p.join(root.path, legacyId)).create(recursive: true);
+      }
+      await _writeKokoroInstall(root);
+
+      await removeOrphanTtsModelDirs(
+        kokoroLegacyModelIds,
+        modelsRootResolver: () async => root.path,
+      );
+
+      for (final legacyId in kokoroLegacyModelIds) {
+        expect(Directory(p.join(root.path, legacyId)).existsSync(), isFalse);
+      }
+      expect(
+        Directory(
+          p.join(root.path, kokoroSpecOf(KokoroModelVariant.fp32).id),
+        ).existsSync(),
         isTrue,
       );
     });
@@ -209,28 +252,34 @@ void main() {
       expect(prefs.getString(TtsSettingsKeys.accent), TtsAccent.uk.name);
       expect(prefs.getString(TtsSettingsKeys.kokoroVoiceUs), 'am_michael');
       expect(prefs.getString(TtsSettingsKeys.kokoroVoiceUk), 'bm_lewis');
-      expect(prefs.getString(TtsSettingsKeys.piperVoiceUs), 'en_US-amy-medium');
-      expect(prefs.getString(TtsSettingsKeys.piperVoiceUk), 'en_GB-cori-medium');
+      expect(
+        prefs.getString(TtsSettingsKeys.piperVoiceUs),
+        piperDefaultVoiceUs,
+      );
+      expect(
+        prefs.getString(TtsSettingsKeys.piperVoiceUk),
+        piperDefaultVoiceUk,
+      );
       final s = TtsSettings.fromPrefsSync(prefs);
-      expect(s.activePiperVoice, 'en_GB-cori-medium');
+      expect(s.activePiperVoice, piperDefaultVoiceUk);
     });
 
-    test('新装默认不变（含英音默认已改 cori）', () {
+    test('新装默认（美音 kristin、英音 cori-high）', () {
       const s = TtsSettings();
       expect(s.engine, TtsEngineKind.kokoro);
       expect(s.kokoroVariant, KokoroModelVariant.fp32);
       expect(s.kokoroVoiceUs, 'af_sarah');
       expect(s.kokoroVoiceUk, 'bf_emma');
-      expect(s.piperVoiceUs, 'en_US-amy-medium');
-      expect(s.piperVoiceUk, 'en_GB-cori-medium');
+      expect(s.piperVoiceUs, 'en_US-kristin-medium');
+      expect(s.piperVoiceUk, 'en_GB-cori-high');
       // 目录常量与设置默认保持一致，避免两处漂移。
       expect(kokoroDefaultVoiceUs, 'af_sarah');
       expect(kokoroDefaultVoiceUk, 'bf_emma');
-      expect(piperDefaultVoiceUs, 'en_US-amy-medium');
-      expect(piperDefaultVoiceUk, 'en_GB-cori-medium');
+      expect(piperDefaultVoiceUs, 'en_US-kristin-medium');
+      expect(piperDefaultVoiceUk, 'en_GB-cori-high');
     });
 
-    test('其它无效值不写回默认（只处理被移除的两个 ID）', () async {
+    test('其它无效值不写回默认（只处理已移除的 ID）', () async {
       SharedPreferences.setMockInitialValues({
         TtsSettingsKeys.piperVoiceUs: 'bogus',
         TtsSettingsKeys.piperVoiceUk: 'en_GB-alan-medium',
@@ -240,8 +289,11 @@ void main() {
       await fallbackRemovedPiperVoicePreferences(prefs);
 
       expect(prefs.getString(TtsSettingsKeys.piperVoiceUs), 'bogus');
-      expect(prefs.getString(TtsSettingsKeys.piperVoiceUk), 'en_GB-cori-medium');
-      expect(piperDefaultVoiceUk, 'en_GB-cori-medium');
+      expect(
+        prefs.getString(TtsSettingsKeys.piperVoiceUk),
+        piperDefaultVoiceUk,
+      );
+      expect(piperDefaultVoiceUk, 'en_GB-cori-high');
     });
   });
 

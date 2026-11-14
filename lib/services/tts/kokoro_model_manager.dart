@@ -1,15 +1,14 @@
 /// Kokoro 模型下载、校验、缓存管理。
 ///
-/// Kokoro 从固定公开来源（本项目 GitHub Releases 的 gzip 重打包）整包下载：
-/// 下载归档 → 校验整包 SHA-256 → staging 解包校验 → 原子替换模型目录。模型
-/// 归档自带 `espeak-ng-data/`；若模型目录本体齐全、仅该目录缺失或损坏，则只
-/// 下载独立的 `espeak-ng-data` 归档解包进模型目录，不重下模型本体。下载基于
+/// Kokoro v1.0 的两个变体从上游 Hugging Face 仓库逐文件下载（HF resolve 布局）：
+/// 逐文件校验 SHA-256 → staging 组装 → 原子替换模型目录 → 补共享
+/// `espeak-ng-data` 依赖。若模型本体齐全、仅该目录缺失或损坏，则只下载独立的
+/// `espeak-ng-data` 归档解包进模型目录，不重下模型本体。下载基于
 /// `ReliableHttpDownloader`，网络中断时保留 `.part` 供后续 Range 续传。
 library;
 
 import 'dart:io';
 
-import 'package:archive/archive_io.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -19,6 +18,8 @@ import '../asr/asr_model_catalog.dart'
     show AsrDownloadSource, AsrPublicResourceSpec, AsrResourceFile;
 import '../asr/asr_model_manager.dart'
     show AsrModelDownloadStatus, AsrModelDownloadProgress;
+import '../asr/asr_resource_installer.dart'
+    show AsrResourceFileDownload, AsrResourceInstaller;
 import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
 import '../resource_install_manifest.dart';
@@ -63,7 +64,12 @@ class KokoroModelManager {
   /// 同一个 [_dio] 来关闭底层 HTTP 客户端。
   late final Dio _dio;
   late final ReliableHttpDownloader _downloader;
-  late final ResourceArchiveInstaller _installer;
+
+  /// 归档安装器：只用于共享 `espeak-ng-data` 依赖包（仍以 tar.gz 分发）。
+  late final ResourceArchiveInstaller _archiveInstaller;
+
+  /// 逐文件安装器：模型本体（onnx/voices/tokens）走 HF resolve 逐文件下载。
+  late final AsrResourceInstaller _fileInstaller;
 
   /// 本管理器绑定的模型规格（决定目录名/归档/SHA/模型文件名）。
   final KokoroModelSpec spec;
@@ -97,7 +103,8 @@ class KokoroModelManager {
           ),
         );
     _downloader = DioReliableHttpDownloader(dio: _dio);
-    _installer = ResourceArchiveInstaller(_downloader);
+    _archiveInstaller = ResourceArchiveInstaller(_downloader);
+    _fileInstaller = AsrResourceInstaller(_downloader);
   }
 
   /// 模型存储根目录。
@@ -179,9 +186,9 @@ class KokoroModelManager {
 
   /// 下载并安装模型，通过 [onProgress] 报告进度，可经 [cancelToken] 取消。
   ///
-  /// 正常流程：下载归档 → 校验 SHA-256 → staging 解包校验 → 原子替换模型目录
-  /// （归档自带 `espeak-ng-data/`）。若模型目录本体齐全、仅 `espeak-ng-data/`
-  /// 缺失或损坏，则只下载独立 espeak 归档解包进模型目录，不重下模型本体。
+  /// 正常流程：逐文件下载 onnx/voices/tokens → 逐文件校验 SHA-256 → staging 组装
+  /// → 原子替换模型目录 → 补共享 `espeak-ng-data`。若模型目录本体齐全、仅
+  /// `espeak-ng-data/` 缺失或损坏，则只下载独立 espeak 归档，不重下模型本体。
   Future<String> downloadModel({
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
     void Function(AsrModelDownloadProgress)? onProgress,
@@ -208,7 +215,7 @@ class KokoroModelManager {
         dataDirectoryName: kokoroDataDirectoryName,
         existingDataDirPath: await _findDir(target, kokoroDataDirectoryName),
         resourceRegistry: resourceRegistry,
-        installer: _installer,
+        installer: _archiveInstaller,
         source: source,
         uriFor: _uriFor,
         cancelToken: cancelToken,
@@ -226,8 +233,7 @@ class KokoroModelManager {
       return target.path;
     }
 
-    final uri = _uriFor(spec.resource, spec.resource.files.single, source);
-    AppLogger.log('KokoroModel', '┌ downloadModel dir=${target.path} url=$uri');
+    AppLogger.log('KokoroModel', '┌ downloadModel dir=${target.path}');
 
     onProgress?.call(
       const AsrModelDownloadProgress(
@@ -235,13 +241,17 @@ class KokoroModelManager {
       ),
     );
 
-    await _installer.install(
+    await _fileInstaller.installFiles(
       root: root,
       target: target,
       resourceId: spec.id,
-      archiveFileName: '_download_${spec.id}.tar.gz',
-      uri: uri,
-      expectedSha256: spec.sha256,
+      downloads: [
+        for (final file in spec.resource.files)
+          AsrResourceFileDownload(
+            file: file,
+            uri: _uriFor(spec.resource, file, source),
+          ),
+      ],
       cancelToken: cancelToken,
       onProgress: (progress) => onProgress?.call(
         AsrModelDownloadProgress(
@@ -255,15 +265,22 @@ class KokoroModelManager {
           progress: 1,
         ),
       ),
-      extractAndValidate: (archive, staging) async {
-        await extractFileToDisk(archive.path, staging.path);
-        if (await _resolvePaths(staging) == null) {
-          throw StateError(
-            'Kokoro key files missing after extraction in ${staging.path}',
-          );
-        }
-      },
     );
+
+    // 共享依赖：模型本体就位后补 espeak-ng-data（v1.0 的英文 G2P 仍走 espeak）。
+    await installTtsEspeakData(
+      logTag: 'KokoroModel',
+      root: root,
+      target: target,
+      dataDirectoryName: kokoroDataDirectoryName,
+      existingDataDirPath: await _findDir(target, kokoroDataDirectoryName),
+      resourceRegistry: resourceRegistry,
+      installer: _archiveInstaller,
+      source: source,
+      uriFor: _uriFor,
+      cancelToken: cancelToken,
+    );
+
     onProgress?.call(
       const AsrModelDownloadProgress(
         status: AsrModelDownloadStatus.downloaded,
@@ -297,11 +314,13 @@ class KokoroModelManager {
 
   /// 清理用户主动取消或删除时遗留的下载归档、续传文件和 staging。
   Future<void> discardPartialDownload() async {
-    await _installer.discardPartial(
-      root: Directory(await _modelsRoot),
+    final root = Directory(await _modelsRoot);
+    await _archiveInstaller.discardPartial(
+      root: root,
       resourceId: spec.id,
       archiveFileName: '_download_${spec.id}.tar.gz',
     );
+    await _fileInstaller.discardPartial(root: root, resourceId: spec.id);
   }
 
   /// 释放资源。

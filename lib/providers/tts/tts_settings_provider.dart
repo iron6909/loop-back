@@ -60,18 +60,20 @@ Future<void> migrateAndroidPlatformTtsPreference(
   await prefs.setString(TtsSettingsKeys.engine, TtsEngineKind.kokoro.name);
 }
 
-/// 将选中已移除 Piper 音色（lessac/alan）的存量偏好回退到对应口音默认。
+/// 将选中已移除 Piper 音色的存量偏好回退到对应口音默认。
 ///
-/// 只处理这两个被移除的 ID；其它无效值保持原样（读取时仍由 [TtsSettings] 回退默认，
-/// 但不写回）。回退写入失败不阻断启动。
+/// 覆盖 lessac/alan（历史许可移除）与本轮许可收紧下线的音色（见
+/// `removedPiperVoiceIds`）；其它无效值保持原样（读取时仍由 [TtsSettings] 回退
+/// 默认，但不写回）。回退写入失败不阻断启动。
 Future<void> fallbackRemovedPiperVoicePreferences(
   SharedPreferences prefs,
 ) async {
-  if (prefs.getString(TtsSettingsKeys.piperVoiceUs) ==
-      removedPiperVoiceLessacId) {
+  final us = prefs.getString(TtsSettingsKeys.piperVoiceUs);
+  if (us != null && removedPiperVoiceIds.contains(us)) {
     await prefs.setString(TtsSettingsKeys.piperVoiceUs, piperDefaultVoiceUs);
   }
-  if (prefs.getString(TtsSettingsKeys.piperVoiceUk) == removedPiperVoiceAlanId) {
+  final uk = prefs.getString(TtsSettingsKeys.piperVoiceUk);
+  if (uk != null && removedPiperVoiceIds.contains(uk)) {
     await prefs.setString(TtsSettingsKeys.piperVoiceUk, piperDefaultVoiceUk);
   }
 }

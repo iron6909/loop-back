@@ -209,6 +209,10 @@ void _entryPoint(_InitPayload init) {
             voices: init.paths.voices,
             tokens: init.paths.tokens,
             dataDir: init.paths.dataDir,
+            // Kokoro v1.0 是多语言模型（model version 2）：sherpa-onnx 1.13.8 的
+            // native 层必须拿到 lexicon 或 lang，否则直接 abort 整个进程（无
+            // Dart 异常）。本项目只合成英文，固定 en-us 音素，与 v0.19 的行为一致。
+            lang: 'en-us',
           ),
           numThreads: init.numThreads,
           provider: 'cpu',

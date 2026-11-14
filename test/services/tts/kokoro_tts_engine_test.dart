@@ -93,7 +93,7 @@ void main() {
       const TtsSpeechConfig(languageTag: 'en-GB', voiceName: 'bm_george'),
     );
     await engine.synthesize('x', outputDir: outDir.path, baseName: 'b');
-    expect(synth.lastSid, 9); // bm_george
+    expect(synth.lastSid, 26); // bm_george（v1.0 sid）
   });
 
   test('无 voiceName：按语言标签回退该口音默认音色 sid', () async {
@@ -101,11 +101,11 @@ void main() {
     final engine = build(synth);
     await engine.applyConfig(const TtsSpeechConfig(languageTag: 'en-GB'));
     await engine.synthesize('x', outputDir: outDir.path, baseName: 'b');
-    expect(synth.lastSid, 7); // bf_emma（英音默认）
+    expect(synth.lastSid, 21); // bf_emma（英音默认，v1.0 sid）
 
     await engine.applyConfig(const TtsSpeechConfig(languageTag: 'en-US'));
     await engine.synthesize('x', outputDir: outDir.path, baseName: 'c');
-    expect(synth.lastSid, 3); // af_sarah（美音默认）
+    expect(synth.lastSid, 9); // af_sarah（美音默认，v1.0 sid）
   });
 
   test('合成失败（synth 返回 null）→ engine 返回 null', () async {

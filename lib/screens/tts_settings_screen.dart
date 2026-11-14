@@ -699,8 +699,9 @@ String formatModelBytes(int bytes) {
 
 /// 音色「当前值 + 展开」单行：标题 + 当前音色（名称 · 性别）+ 雪佛龙；点开底部弹层选。
 ///
-/// 弹层按「美音 / 英音」分组列出全部 11 个音色。音色名自带口音，选中某音色即同时把
-/// 全局口音设为该音色的口音（见 [_openSheet]），故 Kokoro 下无需单独的口音控件。
+/// 弹层按「美音 / 英音 / 其他语言」分组列出模型全部 53 个音色。英语音色自带口音，
+/// 选中即同时把全局口音设为该音色的口音；非英语音色只换音色，不改口音（见
+/// [_VoicePreviewRow._onTap]），故 Kokoro 下无需单独的口音控件。
 class _VoiceDisclosure extends ConsumerWidget {
   const _VoiceDisclosure({required this.l10n});
 
@@ -714,7 +715,7 @@ class _VoiceDisclosure extends ConsumerWidget {
         voiceById(settings.activeKokoroVoice) ?? defaultVoice(settings.accent);
     final gender = current.isFemale ? l10n.ttsVoiceFemale : l10n.ttsVoiceMale;
     // 音色名不含口音信息，单独标出（美/英），便于一眼分辨。
-    final accent = current.accent == TtsAccent.uk
+    final languageLabel = current.accent == TtsAccent.uk
         ? l10n.ttsAccentUk
         : l10n.ttsAccentUs;
 
@@ -724,7 +725,7 @@ class _VoiceDisclosure extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '$accent · ${current.displayName} · $gender',
+            '$languageLabel · ${current.displayName} · $gender',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -737,8 +738,8 @@ class _VoiceDisclosure extends ConsumerWidget {
     );
   }
 
-  /// 弹出底部音色选择器（全部 11 个，按口音分组）。点任一行即提交选中并试听该音色，
-  /// 弹层**不关闭**——便于连续试听、重点当前项重播。用户手动下滑/返回关闭。
+  /// 弹出底部音色选择器（全部 28 个英语音色，按口音分组）。点任一行即提交选中并试听
+  /// 该音色，弹层**不关闭**——便于连续试听、重点当前项重播。用户手动下滑/返回关闭。
   void _openSheet(BuildContext context, WidgetRef ref) {
     showModalBottomSheet<void>(
       context: context,
@@ -751,8 +752,16 @@ class _VoiceDisclosure extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _voiceGroup(theme, l10n.ttsAccentUs, TtsAccent.us),
-                _voiceGroup(theme, l10n.ttsAccentUk, TtsAccent.uk),
+                _voiceGroup(
+                  theme,
+                  l10n.ttsAccentUs,
+                  voicesForAccent(TtsAccent.us),
+                ),
+                _voiceGroup(
+                  theme,
+                  l10n.ttsAccentUk,
+                  voicesForAccent(TtsAccent.uk),
+                ),
                 const SizedBox(height: AppSpacing.s),
               ],
             ),
@@ -765,8 +774,8 @@ class _VoiceDisclosure extends ConsumerWidget {
     );
   }
 
-  /// 一个口音分组：小标题 + 该口音下的音色行。
-  Widget _voiceGroup(ThemeData theme, String label, TtsAccent accent) {
+  /// 一个分组：小标题 + 该组下的音色行。
+  Widget _voiceGroup(ThemeData theme, String label, List<KokoroVoice> voices) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -787,8 +796,7 @@ class _VoiceDisclosure extends ConsumerWidget {
             ),
           ),
         ),
-        for (final v in voicesForAccent(accent))
-          _VoicePreviewRow(voice: v, l10n: l10n),
+        for (final v in voices) _VoicePreviewRow(voice: v, l10n: l10n),
       ],
     );
   }
@@ -858,9 +866,11 @@ class _VoicePreviewRow extends ConsumerWidget {
   /// 点击：提交选中（口音 + 音色）并试听该音色。不关闭弹层。
   void _onTap(WidgetRef ref) {
     final notifier = ref.read(ttsSettingsProvider.notifier);
-    // 音色自带口音：先对齐全局口音，再写入该口音下的音色。
-    notifier.setAccent(voice.accent);
-    notifier.setKokoroVoice(voice.accent, voice.id);
+    final accent = voice.accent;
+    // 英语音色自带口音：先对齐全局口音，再写入该口音下的音色。
+    // 非英语音色只换音色（存入当前口音槽），朗读仍用当前口音的英语发音。
+    notifier.setAccent(accent);
+    notifier.setKokoroVoice(accent, voice.id);
     ref.read(ttsControllerProvider.notifier).previewVoice(voice);
   }
 }

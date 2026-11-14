@@ -9,13 +9,14 @@ import 'app_logger.dart';
 import 'asr/asr_model_manager.dart';
 import 'resource_install_manifest.dart';
 import 'storage_migration_service.dart';
+import 'tts/kokoro_model_catalog.dart' show kokoroLegacyModelIds;
 import 'tts/piper_model_catalog.dart';
 
 /// SharedPreferences 中记录应用升级迁移链进度的 key。
 const appUpdateMigrationVersionKey = 'app_update_migration_version';
 
 /// 当前已注册的应用升级迁移版本。
-const currentAppUpdateMigrationVersion = 10;
+const currentAppUpdateMigrationVersion = 12;
 
 /// 删除已废弃的 TTS 模型下载状态缓存；模型状态现在以安装清单和文件校验为准。
 Future<void> removeLegacyTtsModelDownloadFlags(SharedPreferences prefs) async {
@@ -238,7 +239,20 @@ List<AppUpdateMigration> buildAppUpdateMigrations(
       version: 10,
       name: 'removed_piper_voices_cleanup',
       action: () async {
-        await removeOrphanPiperModelDirs(removedPiperVoiceIds);
+        await removeOrphanTtsModelDirs(removedPiperVoiceIds);
+        await fallbackRemovedPiperVoicePreferences(prefs);
+      },
+    ),
+    AppUpdateMigration(
+      version: 11,
+      name: 'kokoro_v1_model_cleanup',
+      action: () => removeOrphanTtsModelDirs(kokoroLegacyModelIds),
+    ),
+    AppUpdateMigration(
+      version: 12,
+      name: 'piper_license_cleanup',
+      action: () async {
+        await removeOrphanTtsModelDirs(retiredPiperVoiceIds);
         await fallbackRemovedPiperVoicePreferences(prefs);
       },
     ),

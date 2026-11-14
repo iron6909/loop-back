@@ -1,26 +1,20 @@
 /// Piper VITS 模型下载、校验、缓存管理（按音色，每音色一个独立模型）。
 ///
-/// 音色资源按布局分两类：HF resolve 逐文件（onnx + tokens.txt，共享 espeak 依赖）
-/// 与 GitHub 重打包整包（ryan/joe/hfc_female 三个音色，归档自带 espeak-ng-data）。
-/// 下载 → 校验 SHA-256 → staging 校验 → 原子替换；共享 espeak-ng-data 缺失时
-/// 只补该依赖、不重下模型本体（同 #21 Kokoro 的只补修复）。下载基于
+/// 全部音色从 csukuangfj 的逐音色 HF 仓库逐文件下载（onnx + tokens.txt）。下载 →
+/// 逐文件校验 SHA-256 → staging 组装 → 原子替换 → 补共享 `espeak-ng-data`；共享
+/// 依赖缺失时只补该依赖、不重下模型本体（同 #21 Kokoro 的只补修复）。下载基于
 /// `ReliableHttpDownloader`，网络中断保留 `.part`/`.part.meta.json` 供续传。
 library;
 
 import 'dart:io';
 
-import 'package:archive/archive_io.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../app_logger.dart';
 import '../asr/asr_model_catalog.dart'
-    show
-        AsrDownloadSource,
-        AsrPublicResourceLayout,
-        AsrPublicResourceSpec,
-        AsrResourceFile;
+    show AsrDownloadSource, AsrPublicResourceSpec, AsrResourceFile;
 import '../asr/asr_model_manager.dart'
     show AsrModelDownloadStatus, AsrModelDownloadProgress;
 import '../asr/asr_resource_installer.dart'
@@ -233,26 +227,14 @@ class PiperModelManager {
       ),
     );
 
-    if (spec.layout == AsrPublicResourceLayout.githubReleaseAsset) {
-      await _installArchiveVoice(
-        root: root,
-        target: target,
-        spec: spec,
-        source: source,
-        cancelToken: cancelToken,
-        onProgress: onProgress,
-      );
-    } else {
-      await _installFileVoice(
-        root: root,
-        target: target,
-        spec: spec,
-        source: source,
-        cancelToken: cancelToken,
-        onProgress: onProgress,
-      );
-    }
-
+    await _installFileVoice(
+      root: root,
+      target: target,
+      spec: spec,
+      source: source,
+      cancelToken: cancelToken,
+      onProgress: onProgress,
+    );
     onProgress?.call(
       const AsrModelDownloadProgress(
         status: AsrModelDownloadStatus.downloaded,
@@ -261,47 +243,6 @@ class PiperModelManager {
     );
     AppLogger.log('PiperModel', '└ downloadModel done dir=${target.path}');
     return target.path;
-  }
-
-  /// 安装 GitHub 重打包整包音色（归档自带 espeak-ng-data）。
-  Future<void> _installArchiveVoice({
-    required Directory root,
-    required Directory target,
-    required AsrPublicResourceSpec spec,
-    required AsrDownloadSource source,
-    CancelToken? cancelToken,
-    void Function(AsrModelDownloadProgress)? onProgress,
-  }) async {
-    final file = spec.files.single;
-    await _archiveInstaller.install(
-      root: root,
-      target: target,
-      resourceId: spec.id,
-      archiveFileName: '_download_${spec.id}.tar.gz',
-      uri: _uriFor(spec, file, source),
-      expectedSha256: file.sha256,
-      cancelToken: cancelToken,
-      onProgress: (progress) => onProgress?.call(
-        AsrModelDownloadProgress(
-          status: AsrModelDownloadStatus.downloading,
-          progress: progress,
-        ),
-      ),
-      onInstalling: () => onProgress?.call(
-        const AsrModelDownloadProgress(
-          status: AsrModelDownloadStatus.downloading,
-          progress: 1,
-        ),
-      ),
-      extractAndValidate: (archive, staging) async {
-        await extractFileToDisk(archive.path, staging.path);
-        if (await _resolvePaths(staging) == null) {
-          throw StateError(
-            'Piper key files missing after extraction in ${staging.path}',
-          );
-        }
-      },
-    );
   }
 
   /// 安装 HF 逐文件音色：onnx + tokens.txt，再补共享 espeak-ng-data。
@@ -319,10 +260,7 @@ class PiperModelManager {
       resourceId: spec.id,
       downloads: [
         for (final file in spec.files)
-          AsrResourceFileDownload(
-            file: file,
-            uri: _uriFor(spec, file, source),
-          ),
+          AsrResourceFileDownload(file: file, uri: _uriFor(spec, file, source)),
       ],
       cancelToken: cancelToken,
       onProgress: (value) => onProgress?.call(

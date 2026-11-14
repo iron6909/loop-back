@@ -114,13 +114,16 @@ void main() {
     expect(find.textContaining('Best sound quality'), findsOneWidget);
     expect(find.text('Full precision (fp32)'), findsOneWidget);
     expect(find.text('Recommended'), findsOneWidget);
-    // Kokoro 卡展示来源与许可（含共享 espeak-ng-data 许可）。
+    // Kokoro 卡展示来源与许可（模型已改为上游 HF 逐文件源，含共享 espeak-ng-data 许可）。
     expect(
-      find.textContaining('iron6909/loop-back-models (GitHub Release)'),
+      find.textContaining('csukuangfj/kokoro-multi-lang-v1_0'),
       findsOneWidget,
     );
     expect(find.textContaining('Apache-2.0'), findsOneWidget);
-    expect(find.textContaining('espeak-ng-data GPL-3.0-or-later'), findsOneWidget);
+    expect(
+      find.textContaining('espeak-ng-data GPL-3.0-or-later'),
+      findsOneWidget,
+    );
   });
 
   test('Android 不显示系统语音入口，其他平台保留', () {
@@ -237,7 +240,7 @@ void main() {
       _wrap(
         const TtsSettings(engine: TtsEngineKind.piper),
         piperModels: const PiperModelsState({
-          'en_US-amy-medium': PiperModelState(
+          'en_US-kristin-medium': PiperModelState(
             downloadStatus: AsrModelDownloadStatus.downloading,
             downloadProgress: 0.42,
           ),
@@ -248,7 +251,7 @@ void main() {
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.byTooltip('Cancel'), findsNothing);
-    // amy 正在下载不显下载图标，其余 6 个音色 → 6 个下载图标。
+    // 当前音色（默认 kristin）正在下载不显下载图标，其余 6 个音色 → 6 个下载图标。
     expect(find.byIcon(Icons.download_rounded), findsNWidgets(6));
   });
 
@@ -272,7 +275,7 @@ void main() {
     );
   });
 
-  testWidgets('就绪（fp32 选中）→ 音色行 + 点开弹层显全部 11 个（分组），使用中变体不显删除', (tester) async {
+  testWidgets('就绪（fp32 选中）→ 音色行 + 点开弹层显全部 28 个（分组），使用中变体不显删除', (tester) async {
     await tester.pumpWidget(
       _wrap(
         const TtsSettings(engine: TtsEngineKind.kokoro),
@@ -292,16 +295,19 @@ void main() {
     expect(find.text('American'), findsNothing);
     expect(find.text('British'), findsNothing);
 
-    // 点开音色弹层 → 全部 11 个（美音 7 + 英音 4），按口音分组。
+    // 点开音色弹层 → 全部 28 个英语音色（美音 20 + 英音 8），按口音分组。
     await tester.tap(find.text('Voice'));
     await tester.pumpAndSettle();
-    expect(find.byType(Radio<String>), findsNWidgets(11));
+    expect(find.byType(Radio<String>), findsNWidgets(28));
     expect(find.text('American'), findsOneWidget);
     expect(find.text('British'), findsOneWidget);
     expect(find.text('Sarah'), findsOneWidget);
     expect(find.text('Adam'), findsOneWidget);
     expect(find.text('Emma'), findsOneWidget);
     expect(find.text('George'), findsOneWidget);
+    // 非英语音色不收录，不再有其他语言分组。
+    expect(find.text('中文'), findsNothing);
+    expect(find.text('日本語'), findsNothing);
   });
 
   testWidgets('就绪 + 非使用中的已下载变体可删除', (tester) async {
@@ -331,6 +337,17 @@ void main() {
     expect(_containerOf(tester).read(ttsSettingsProvider).accent, TtsAccent.us);
     await tester.tap(find.text('Voice'));
     await tester.pumpAndSettle();
+    // 28 个音色超出弹层可视高度，先在弹层自己的滚动容器里滚到目标行再点。
+    await tester.scrollUntilVisible(
+      find.text('Emma'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(SingleChildScrollView),
+            matching: find.byType(Scrollable),
+          )
+          .last,
+    );
     await tester.tap(find.text('Emma'));
     await tester.pumpAndSettle();
 
@@ -381,11 +398,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // HF 逐文件音色展示仓库来源与逐音色许可。
+    // HF 逐文件音色展示仓库来源与逐音色许可（英音男声是唯一的 CC-BY-SA 音色）。
     expect(
-      find.textContaining(
-        'Source: csukuangfj/vits-piper-en_US-amy-medium',
-      ),
+      find.textContaining('Source: csukuangfj/vits-piper-en_US-kristin-medium'),
       findsOneWidget,
     );
     expect(find.textContaining('License: CC BY-SA 4.0'), findsOneWidget);

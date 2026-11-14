@@ -9,16 +9,18 @@ import 'package:path/path.dart' as p;
 
 import 'package:loop_back/services/asr/asr_model_catalog.dart';
 import 'package:loop_back/services/reliable_http_downloader.dart';
-import 'package:loop_back/services/tts/piper_model_manager.dart';
 import 'package:loop_back/services/tts/piper_model_catalog.dart';
-import 'package:loop_back/services/tts/tts_engine.dart';
-import 'package:loop_back/services/tts/tts_shared_resource_catalog.dart';
+import 'package:loop_back/services/tts/piper_model_manager.dart';
+import 'package:loop_back/services/tts/tts_engine.dart' show TtsAccent;
 
-/// 按文件名返回预置字节的 mock adapter；未知文件返回 404。
-class _MockResourceAdapter implements HttpClientAdapter {
-  _MockResourceAdapter(this.byName, {this.requestUris});
-  final Map<String, List<int>> byName;
+/// 按 URL 末段文件名返回预置字节的 mock adapter（支持 Range 续传）。
+class _MockFileAdapter implements HttpClientAdapter {
+  _MockFileAdapter(this.payloads, {this.requestUris});
+
+  /// 文件名 → 字节；未命中返回 404。
+  final Map<String, List<int>> payloads;
   final List<Uri>? requestUris;
+  final List<Map<String, Object?>> requests = [];
 
   @override
   Future<ResponseBody> fetch(
@@ -26,16 +28,34 @@ class _MockResourceAdapter implements HttpClientAdapter {
     Stream<List<int>>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    requests.add(Map<String, Object?>.from(options.headers));
     requestUris?.add(options.uri);
-    final name = options.path.split('/').last;
-    final payload = byName[name];
+    final name = options.uri.pathSegments.isEmpty
+        ? ''
+        : options.uri.pathSegments.last;
+    final payload = payloads[name];
     if (payload == null) {
       return ResponseBody(const Stream.empty(), 404, headers: {});
     }
+    final range = options.headers['Range']?.toString();
+    if (range == null) {
+      return ResponseBody(
+        Stream.value(Uint8List.fromList(payload)),
+        200,
+        headers: {
+          'content-length': [payload.length.toString()],
+        },
+      );
+    }
+    final start = int.parse(range.substring('bytes='.length, range.length - 1));
+    final body = payload.sublist(start);
     return ResponseBody(
-      Stream.fromIterable([Uint8List.fromList(payload)]),
-      200,
-      headers: {'content-length': [payload.length.toString()]},
+      Stream.value(Uint8List.fromList(body)),
+      206,
+      headers: {
+        'content-length': [body.length.toString()],
+        'content-range': ['bytes $start-${payload.length - 1}/${payload.length}'],
+      },
     );
   }
 
@@ -43,7 +63,7 @@ class _MockResourceAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-/// 对任何请求都返回 404 的 mock adapter，用于模拟网络失败。
+/// 对任何请求都返回 404（模拟网络失败）。
 class _AlwaysNotFoundAdapter implements HttpClientAdapter {
   @override
   Future<ResponseBody> fetch(
@@ -56,151 +76,95 @@ class _AlwaysNotFoundAdapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-/// 支持 Range 的归档 mock，用于验证断点续传请求和完成后的残留清理。
-class _RangeArchiveAdapter implements HttpClientAdapter {
-  _RangeArchiveAdapter(this.payload);
-
-  final List<int> payload;
-  final requests = <Map<String, Object?>>[];
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<List<int>>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    requests.add(Map<String, Object?>.from(options.headers));
-    final range = options.headers['Range']?.toString();
-    if (range == null) {
-      return ResponseBody(
-        Stream.value(Uint8List.fromList(payload)),
-        200,
-        headers: {'content-length': [payload.length.toString()]},
-      );
-    }
-    final start = int.parse(range.substring('bytes='.length, range.length - 1));
-    final body = payload.sublist(start);
-    return ResponseBody(
-      Stream.value(Uint8List.fromList(body)),
-      206,
-      headers: {
-        'content-length': [body.length.toString()],
-        'content-range': [
-          'bytes $start-${payload.length - 1}/${payload.length}',
-        ],
-      },
-    );
-  }
-
-  @override
-  void close({bool force = false}) {}
-}
-
-List<int> _gzipTar(Archive archive) {
+/// 构造 espeak-ng-data 归档字节（根级平铺，以 `phondata` 为完整性标记）。
+List<int> _buildEspeakArchive() {
+  final archive = Archive();
+  archive.add(ArchiveFile('phondata', 5, List<int>.filled(5, 6)));
   final tar = TarEncoder().encodeBytes(archive);
   return GZipEncoder().encodeBytes(tar);
 }
 
-/// 构造 GitHub 整包音色归档：`<id>.onnx` + `.onnx.json`（应被忽略）+ tokens +
-/// espeak-ng-data/phondata。Piper 单说话人，无 voices.bin。
-List<int> _buildArchive({
-  String onnxName = 'en_US-ryan-medium.onnx',
-  bool includeDataDir = true,
-}) {
-  final archive = Archive();
-  archive.add(ArchiveFile(onnxName, 8, List<int>.filled(8, 1)));
-  archive.add(ArchiveFile('$onnxName.json', 4, List<int>.filled(4, 9)));
-  archive.add(ArchiveFile('tokens.txt', 3, List<int>.filled(3, 3)));
-  if (includeDataDir) {
-    archive.add(
-      ArchiveFile('espeak-ng-data/phondata', 5, List<int>.filled(5, 4)),
-    );
-  }
-  return _gzipTar(archive);
-}
+/// 测试音色的模型文件（onnx + tokens.txt）。
+const _testVoiceId = 'en_US-test-medium';
+final Map<String, List<int>> _modelFiles = {
+  '$_testVoiceId.onnx': List<int>.filled(48, 1),
+  'tokens.txt': List<int>.filled(6, 2),
+};
 
-/// 构造共享 espeak-ng-data 归档（根级平铺，以 phondata 作为完整性标记）。
-List<int> _buildEspeakArchive() {
-  final archive = Archive();
-  archive.add(ArchiveFile('phondata', 5, List<int>.filled(5, 6)));
-  return _gzipTar(archive);
-}
-
-AsrPublicResourceSpec _githubSpec({
-  required String id,
-  required String archiveName,
-  required String sha256,
-  required int sizeBytes,
-}) {
-  return AsrPublicResourceSpec(
-    id: id,
-    repository: 'iron6909/loop-back-models',
-    revision: 'tts-models',
-    layout: AsrPublicResourceLayout.githubReleaseAsset,
-    license: 'CC0',
-    files: [AsrResourceFile(name: archiveName, sha256: sha256, sizeBytes: sizeBytes)],
-    dependencies: const [ttsEspeakNgDataResourceId],
+/// 构造测试音色（HF 逐文件布局：onnx + tokens + 共享 espeak 依赖）。
+PiperVoice _testVoice({Map<String, String>? shaOverrides}) {
+  return PiperVoice(
+    id: _testVoiceId,
+    displayName: 'Test',
+    accent: TtsAccent.us,
+    isFemale: true,
+    license: 'public domain',
+    resource: AsrPublicResourceSpec(
+      id: _testVoiceId,
+      repository: 'example/piper-test',
+      revision: 'v1',
+      layout: AsrPublicResourceLayout.huggingFaceResolve,
+      license: 'public domain',
+      files: [
+        for (final entry in _modelFiles.entries)
+          AsrResourceFile(
+            name: entry.key,
+            sha256:
+                shaOverrides?[entry.key] ??
+                sha256.convert(entry.value).toString(),
+            sizeBytes: entry.value.length,
+          ),
+      ],
+      dependencies: const ['espeak-ng-data'],
+    ),
   );
 }
 
-AsrPublicResourceSpec _hfSpec({
-  required String id,
-  required String onnxName,
-  required String onnxSha256,
-  required int onnxSizeBytes,
-  required String tokensSha256,
-  required int tokensSizeBytes,
+/// 构造 espeak-ng-data 独立资源规格及其注册表（供只补修复分支使用）。
+Map<String, AsrPublicResourceSpec> _espeakRegistry(
+  List<int> archive, {
+  String? shaOverride,
 }) {
-  return AsrPublicResourceSpec(
-    id: id,
-    repository: 'csukuangfj/vits-piper-$id',
-    revision: 'test-commit',
-    layout: AsrPublicResourceLayout.huggingFaceResolve,
-    license: 'CC0',
-    files: [
-      AsrResourceFile(name: onnxName, sha256: onnxSha256, sizeBytes: onnxSizeBytes),
-      AsrResourceFile(
-        name: piperTokensFileName,
-        sha256: tokensSha256,
-        sizeBytes: tokensSizeBytes,
-      ),
-    ],
-    dependencies: const [ttsEspeakNgDataResourceId],
-  );
-}
-
-AsrPublicResourceSpec _espeakSpec(List<int> espeakArchive) {
-  return AsrPublicResourceSpec(
-    id: ttsEspeakNgDataResourceId,
-    repository: 'iron6909/loop-back-models',
+  final resource = AsrPublicResourceSpec(
+    id: 'espeak-ng-data',
+    repository: 'example/models',
     revision: 'tts-models',
     layout: AsrPublicResourceLayout.githubReleaseAsset,
     license: 'GPL-3.0-or-later',
     files: [
       AsrResourceFile(
-        name: ttsEspeakNgDataFileName,
-        sha256: sha256.convert(espeakArchive).toString(),
-        sizeBytes: espeakArchive.length,
+        name: 'espeak-ng-data.tar.gz',
+        sha256: shaOverride ?? sha256.convert(archive).toString(),
+        sizeBytes: archive.length,
       ),
     ],
   );
+  return {'espeak-ng-data': resource};
 }
 
 PiperModelManager _manager(
-  Directory root,
-  PiperVoice voice,
-  List<int> archive, {
+  Directory root, {
+  PiperVoice? voice,
+  Map<String, String>? shaOverrides,
+  String? espeakShaOverride,
+  HttpClientAdapter? adapter,
   List<Uri>? requestUris,
 }) {
+  final payloads = <String, List<int>>{
+    ..._modelFiles,
+    'espeak-ng-data.tar.gz': _buildEspeakArchive(),
+  };
   final dio = Dio();
-  dio.httpClientAdapter = _MockResourceAdapter(
-    {voice.resource.files.single.name: archive},
-    requestUris: requestUris,
-  );
+  dio.httpClientAdapter =
+      adapter ?? _MockFileAdapter(payloads, requestUris: requestUris);
   return PiperModelManager(
     dio: dio,
     baseUrlOverride: 'http://mock.local',
-    voice: voice,
+    voice: voice ?? _testVoice(shaOverrides: shaOverrides),
+    resourceRegistryOverride: _espeakRegistry(
+      payloads['espeak-ng-data.tar.gz']!,
+      shaOverride: espeakShaOverride,
+    ),
     modelsRootResolver: () async => root.path,
   );
 }
@@ -212,84 +176,60 @@ void main() {
   setUp(() async {
     root = await Directory.systemTemp.createTemp('piper-model-test');
   });
+
   tearDown(() async {
     if (await root.exists()) await root.delete(recursive: true);
   });
 
-  PiperVoice githubVoice(List<int> archive) {
-    return PiperVoice(
-      id: 'en_US-ryan-medium',
-      displayName: 'Ryan',
-      accent: TtsAccent.us,
-      isFemale: false,
-      license: 'CC0',
-      resource: _githubSpec(
-        id: 'en_US-ryan-medium',
-        archiveName: 'vits-piper-en_US-ryan-medium.tar.gz',
-        sha256: sha256.convert(archive).toString(),
-        sizeBytes: archive.length,
-      ),
-    );
-  }
-
-  test('下载 → 校验 → 解包：onnx/tokens/espeak-ng-data 就位，忽略 .onnx.json', () async {
-    final archive = _buildArchive();
+  test('逐文件下载 → 校验 → 安装：onnx/tokens/espeak-ng-data 就位', () async {
     final requestedUris = <Uri>[];
-    final manager = _manager(
-      root,
-      githubVoice(archive),
-      archive,
-      requestUris: requestedUris,
-    );
+    final manager = _manager(root, requestUris: requestedUris);
 
     final progresses = <double>[];
-    await manager.downloadModel(onProgress: (p) => progresses.add(p.progress));
+    await manager.downloadModel(
+      onProgress: (progress) => progresses.add(progress.progress),
+    );
 
-    expect(requestedUris.single.path, '/vits-piper-en_US-ryan-medium.tar.gz');
+    expect(
+      requestedUris.map((u) => u.path).toList(),
+      ['/$_testVoiceId.onnx', '/tokens.txt', '/espeak-ng-data.tar.gz'],
+    );
     expect(await manager.isModelDownloaded(), isTrue);
     final paths = await manager.piperConfigPaths();
-    expect(p.basename(paths.model), 'en_US-ryan-medium.onnx');
     expect(File(paths.model).existsSync(), isTrue);
     expect(File(paths.tokens).existsSync(), isTrue);
     expect(p.basename(paths.dataDir), 'espeak-ng-data');
+    expect(File(p.join(paths.dataDir, 'phondata')).existsSync(), isTrue);
     expect(progresses.last, 1.0);
+    // espeak 依赖装在音色目录内，不在 tts-models 顶层。
+    expect(Directory(p.join(root.path, 'espeak-ng-data')).existsSync(), isFalse);
   });
 
-  test('SHA-256 不匹配 → 抛错且模型未安装，临时归档已清理', () async {
-    final archive = _buildArchive();
-    final voice = PiperVoice(
-      id: 'en_US-ryan-medium',
-      displayName: 'Ryan',
-      accent: TtsAccent.us,
-      isFemale: false,
-      license: 'CC0',
-      resource: _githubSpec(
-        id: 'en_US-ryan-medium',
-        archiveName: 'vits-piper-en_US-ryan-medium.tar.gz',
-        sha256: 'deadbeef',
-        sizeBytes: archive.length,
-      ),
+  test('真实目录：按 HF resolve + 固定 revision 构造下载地址', () {
+    final voice = piperVoiceById(piperDefaultVoiceUk);
+    expect(voice, isNotNull);
+    final resource = voice!.resource;
+    final onnx = resource.files.first;
+    expect(
+      resource.fileUri(AsrDownloadSource.huggingFace, onnx).toString(),
+      'https://huggingface.co/${resource.repository}/resolve/'
+      '${resource.revision}/${onnx.name}',
     );
-    final manager = _manager(root, voice, archive);
+  });
+
+  test('单文件 SHA-256 不匹配 → 抛错且模型未安装', () async {
+    final manager = _manager(
+      root,
+      shaOverrides: {'$_testVoiceId.onnx': 'deadbeef'},
+    );
 
     await expectLater(manager.downloadModel(), throwsA(isA<StateError>()));
     expect(await manager.isModelDownloaded(), isFalse);
-    final leftovers = root.listSync().whereType<File>().where(
-      (f) => f.path.endsWith('.tar.gz'),
-    );
-    expect(leftovers, isEmpty);
+    expect(Directory(await manager.modelDir()).existsSync(), isFalse);
   });
 
-  test('归档下载网络失败 → 抛结构化异常且不留 .part 残留', () async {
-    final dio = Dio();
-    dio.httpClientAdapter = _AlwaysNotFoundAdapter();
-    final archive = _buildArchive();
-    final manager = PiperModelManager(
-      dio: dio,
-      baseUrlOverride: 'http://mock.local',
-      voice: githubVoice(archive),
-      modelsRootResolver: () async => root.path,
-    );
+  test('下载网络失败 → 抛结构化异常且不留 .part 残留', () async {
+    final manager = _manager(root, adapter: _AlwaysNotFoundAdapter());
 
     await expectLater(
       manager.downloadModel(),
@@ -301,69 +241,54 @@ void main() {
         ),
       ),
     );
-    final leftovers = root.listSync().whereType<File>();
+    final leftovers = root
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((f) => f.path.endsWith('.part'));
     expect(leftovers, isEmpty);
   });
 
   test('预置 .part → 使用 Range 续传并在安装后清理残留', () async {
-    final archive = _buildArchive();
-    final sha = sha256.convert(archive).toString();
-    final partialLength = archive.length ~/ 2;
-    final partial = File(
-      p.join(root.path, '_download_en_US-ryan-medium.tar.gz.part'),
+    final onnxBytes = _modelFiles['$_testVoiceId.onnx']!;
+    final onnxSha = sha256.convert(onnxBytes).toString();
+    final partialLength = onnxBytes.length ~/ 2;
+    final downloadDir = Directory(p.join(root.path, '_download_$_testVoiceId'));
+    await downloadDir.create(recursive: true);
+    final partial = File(p.join(downloadDir.path, '$_testVoiceId.onnx.part'));
+    await partial.writeAsBytes(onnxBytes.sublist(0, partialLength));
+    await File('${partial.path}.meta.json').writeAsString(
+      '{"identityKey":"$onnxSha","downloadedBytes":$partialLength}',
     );
-    await partial.parent.create(recursive: true);
-    await partial.writeAsBytes(archive.sublist(0, partialLength));
-    await File(
-      '${partial.path}.meta.json',
-    ).writeAsString('{"identityKey":"$sha","downloadedBytes":$partialLength}');
-    final adapter = _RangeArchiveAdapter(archive);
-    final dio = Dio()..httpClientAdapter = adapter;
-    final manager = PiperModelManager(
-      dio: dio,
-      baseUrlOverride: 'http://mock.local',
-      voice: githubVoice(archive),
-      modelsRootResolver: () async => root.path,
-    );
+    final adapter = _MockFileAdapter({
+      ..._modelFiles,
+      'espeak-ng-data.tar.gz': _buildEspeakArchive(),
+    });
+    final manager = _manager(root, adapter: adapter);
 
     await manager.downloadModel();
 
-    expect(adapter.requests.single['Range'], 'bytes=$partialLength-');
+    expect(adapter.requests.first['Range'], 'bytes=$partialLength-');
     expect(await manager.isModelDownloaded(), isTrue);
     expect(partial.existsSync(), isFalse);
-    expect(File('${partial.path}.meta.json').existsSync(), isFalse);
+    expect(downloadDir.existsSync(), isFalse);
   });
 
   test('安装失败不会覆盖已有模型，staging 会清理', () async {
-    final valid = _buildArchive();
-    final manager = _manager(root, githubVoice(valid), valid);
-    await manager.downloadModel();
-    final oldModel = File(
-      p.join(await manager.modelDir(), 'en_US-ryan-medium.onnx'),
+    final valid = _manager(root);
+    await valid.downloadModel();
+    final installedOnnx = File(
+      p.join(await valid.modelDir(), '$_testVoiceId.onnx'),
     );
-    final invalid = _buildArchive(includeDataDir: false);
-    final invalidVoice = PiperVoice(
-      id: 'en_US-ryan-medium',
-      displayName: 'Ryan',
-      accent: TtsAccent.us,
-      isFemale: false,
-      license: 'CC0',
-      resource: _githubSpec(
-        id: 'en_US-ryan-medium',
-        archiveName: 'vits-piper-en_US-ryan-medium.tar.gz',
-        sha256: sha256.convert(invalid).toString(),
-        sizeBytes: invalid.length,
-      ),
-    );
-    final invalidManager = _manager(root, invalidVoice, invalid);
+    expect(installedOnnx.existsSync(), isTrue);
 
-    await expectLater(
-      invalidManager.downloadModel(),
-      throwsA(isA<StateError>()),
+    final invalid = _manager(
+      root,
+      shaOverrides: {'tokens.txt': 'deadbeef'},
     );
+    await expectLater(invalid.downloadModel(), throwsA(isA<StateError>()));
 
-    expect(oldModel.existsSync(), isTrue);
-    expect(await manager.isModelDownloaded(), isTrue);
+    expect(installedOnnx.existsSync(), isTrue);
+    expect(await valid.isModelDownloaded(), isTrue);
     expect(
       root.listSync().whereType<Directory>().where(
         (directory) => p.basename(directory.path).startsWith('_staging_'),
@@ -372,201 +297,74 @@ void main() {
     );
   });
 
-  test('deleteModel 清理续传归档、元数据和 staging', () async {
-    final manager = _manager(root, githubVoice(_buildArchive()), _buildArchive());
-    final archive = File(
-      p.join(root.path, '_download_en_US-ryan-medium.tar.gz'),
-    );
-    final partial = File('${archive.path}.part');
-    final meta = File('${partial.path}.meta.json');
-    final staging = Directory(
-      p.join(root.path, '_staging_en_US-ryan-medium_old'),
-    );
+  test('deleteModel 清理模型目录与下载残留', () async {
+    final manager = _manager(root);
+    await manager.downloadModel();
+    final downloadDir = Directory(p.join(root.path, '_download_$_testVoiceId'));
+    await downloadDir.create(recursive: true);
+    await File(p.join(downloadDir.path, 'tokens.txt.part')).writeAsBytes([1]);
+    final staging = Directory(p.join(root.path, '_staging_${_testVoiceId}_old'));
     await staging.create(recursive: true);
-    await archive.writeAsBytes([1]);
-    await partial.writeAsBytes([1, 2]);
-    await meta.writeAsString('{}');
 
     await manager.deleteModel();
 
-    expect(archive.existsSync(), isFalse);
-    expect(partial.existsSync(), isFalse);
-    expect(meta.existsSync(), isFalse);
+    expect(await manager.isModelDownloaded(), isFalse);
+    expect(await manager.modelLocalSize(), 0);
+    expect(downloadDir.existsSync(), isFalse);
     expect(staging.existsSync(), isFalse);
   });
 
-  test('解包后缺 espeak-ng-data → 抛错', () async {
-    final archive = _buildArchive(includeDataDir: false);
-    final voice = PiperVoice(
-      id: 'en_US-ryan-medium',
-      displayName: 'Ryan',
-      accent: TtsAccent.us,
-      isFemale: false,
-      license: 'CC0',
-      resource: _githubSpec(
-        id: 'en_US-ryan-medium',
-        archiveName: 'vits-piper-en_US-ryan-medium.tar.gz',
-        sha256: sha256.convert(archive).toString(),
-        sizeBytes: archive.length,
-      ),
-    );
-    final manager = _manager(root, voice, archive);
-    await expectLater(manager.downloadModel(), throwsA(isA<StateError>()));
-    expect(await manager.isModelDownloaded(), isFalse);
-  });
-
-  test('deleteModel 删除本地目录；modelLocalSize 归零', () async {
-    final manager = _manager(root, githubVoice(_buildArchive()), _buildArchive());
+  test('espeak 缺失时只下 espeak 归档且模型不重下', () async {
+    final requested = <Uri>[];
+    final manager = _manager(root, requestUris: requested);
     await manager.downloadModel();
-    expect(await manager.modelLocalSize(), greaterThan(0));
-    await manager.deleteModel();
-    expect(await manager.isModelDownloaded(), isFalse);
-    expect(await manager.modelLocalSize(), 0);
-  });
+    requested.clear();
 
-  test('HF 逐文件音色：onnx+tokens 逐文件安装并补共享 espeak-ng-data', () async {
-    final onnx = List<int>.filled(16, 7);
-    final tokens = List<int>.filled(6, 8);
-    final espeak = _buildEspeakArchive();
-    final voice = PiperVoice(
-      id: 'en_US-amy-medium',
-      displayName: 'Amy',
-      accent: TtsAccent.us,
-      isFemale: true,
-      license: 'CC0',
-      resource: _hfSpec(
-        id: 'en_US-amy-medium',
-        onnxName: 'en_US-amy-medium.onnx',
-        onnxSha256: sha256.convert(onnx).toString(),
-        onnxSizeBytes: onnx.length,
-        tokensSha256: sha256.convert(tokens).toString(),
-        tokensSizeBytes: tokens.length,
-      ),
+    final dataDir = Directory(
+      p.join(await manager.modelDir(), 'espeak-ng-data'),
     );
-    final dio = Dio();
-    final requestedUris = <Uri>[];
-    dio.httpClientAdapter = _MockResourceAdapter(
-      {
-        'en_US-amy-medium.onnx': onnx,
-        piperTokensFileName: tokens,
-        ttsEspeakNgDataFileName: espeak,
-      },
-      requestUris: requestedUris,
-    );
-    final manager = PiperModelManager(
-      dio: dio,
-      baseUrlOverride: 'http://mock.local',
-      voice: voice,
-      resourceRegistryOverride: {
-        voice.id: voice.resource,
-        ttsEspeakNgDataResourceId: _espeakSpec(espeak),
-      },
-      modelsRootResolver: () async => root.path,
-    );
+    await dataDir.delete(recursive: true);
+    expect(await manager.isModelDownloaded(), isFalse);
 
     await manager.downloadModel();
-
-    expect(await manager.isModelDownloaded(), isTrue);
-    final paths = await manager.piperConfigPaths();
-    expect(p.basename(paths.model), 'en_US-amy-medium.onnx');
-    expect(File(paths.tokens).existsSync(), isTrue);
-    expect(File(p.join(paths.dataDir, 'phondata')).existsSync(), isTrue);
     expect(
-      requestedUris.map((u) => u.path).toSet(),
-      containsAll({
-        '/en_US-amy-medium.onnx',
-        '/tokens.txt',
-        '/espeak-ng-data.tar.gz',
-      }),
+      requested.map((u) => u.pathSegments.last).toList(),
+      ['espeak-ng-data.tar.gz'],
     );
-  });
-
-  test('HF 音色只补分支：onnx/tokens 齐全、espeak 缺失时只下 espeak', () async {
-    final onnx = List<int>.filled(16, 7);
-    final tokens = List<int>.filled(6, 8);
-    final espeak = _buildEspeakArchive();
-    final voice = PiperVoice(
-      id: 'en_US-amy-medium',
-      displayName: 'Amy',
-      accent: TtsAccent.us,
-      isFemale: true,
-      license: 'CC0',
-      resource: _hfSpec(
-        id: 'en_US-amy-medium',
-        onnxName: 'en_US-amy-medium.onnx',
-        onnxSha256: sha256.convert(onnx).toString(),
-        onnxSizeBytes: onnx.length,
-        tokensSha256: sha256.convert(tokens).toString(),
-        tokensSizeBytes: tokens.length,
-      ),
-    );
-    // 先手工布置 onnx + tokens（模拟既有安装，缺 espeak）。
-    final target = Directory(p.join(root.path, voice.id));
-    await target.create(recursive: true);
-    await File(p.join(target.path, 'en_US-amy-medium.onnx')).writeAsBytes(onnx);
-    await File(p.join(target.path, 'tokens.txt')).writeAsBytes(tokens);
-
-    final dio = Dio();
-    final requestedUris = <Uri>[];
-    dio.httpClientAdapter = _MockResourceAdapter(
-      {ttsEspeakNgDataFileName: espeak},
-      requestUris: requestedUris,
-    );
-    final manager = PiperModelManager(
-      dio: dio,
-      baseUrlOverride: 'http://mock.local',
-      voice: voice,
-      resourceRegistryOverride: {
-        voice.id: voice.resource,
-        ttsEspeakNgDataResourceId: _espeakSpec(espeak),
-      },
-      modelsRootResolver: () async => root.path,
-    );
-
-    await manager.downloadModel();
-
     expect(await manager.isModelDownloaded(), isTrue);
-    expect(requestedUris.single.path, '/espeak-ng-data.tar.gz');
+    expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
   });
 
   test('espeak 目录存在但 phondata 缺失 → 视为未下载且只补 espeak', () async {
-    final modelArchive = _buildArchive();
-    final espeakArchive = _buildEspeakArchive();
-    final voice = githubVoice(modelArchive);
-    final requestedUris = <Uri>[];
-    final dio = Dio();
-    dio.httpClientAdapter = _MockResourceAdapter(
-      {
-        voice.resource.files.single.name: modelArchive,
-        ttsEspeakNgDataFileName: espeakArchive,
-      },
-      requestUris: requestedUris,
-    );
-    final manager = PiperModelManager(
-      dio: dio,
-      baseUrlOverride: 'http://mock.local',
-      voice: voice,
-      resourceRegistryOverride: {
-        voice.id: voice.resource,
-        ttsEspeakNgDataResourceId: _espeakSpec(espeakArchive),
-      },
-      modelsRootResolver: () async => root.path,
-    );
-
+    final requested = <Uri>[];
+    final manager = _manager(root, requestUris: requested);
     await manager.downloadModel();
-    requestedUris.clear();
+    requested.clear();
 
-    // 仅删除 phondata（保留 espeak-ng-data 目录），模拟目录存在但核心文件缺失。
     final dataDir = Directory(
-      p.join(await manager.modelDir(), piperDataDirectoryName),
+      p.join(await manager.modelDir(), 'espeak-ng-data'),
     );
     await File(p.join(dataDir.path, 'phondata')).delete();
     expect(await manager.isModelDownloaded(), isFalse);
 
-    // 再下载：只补 espeak 归档，模型归档不重下，修复后即视为已下载。
     await manager.downloadModel();
-    expect(requestedUris.map((u) => u.path).toList(), ['/espeak-ng-data.tar.gz']);
+    expect(
+      requested.map((u) => u.pathSegments.last).toList(),
+      ['espeak-ng-data.tar.gz'],
+    );
     expect(await manager.isModelDownloaded(), isTrue);
-    expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
+  });
+
+  test('espeak 修复失败 → 抛错且模型本体保留', () async {
+    final good = _manager(root);
+    await good.downloadModel();
+    final modelDir = await good.modelDir();
+    await Directory(p.join(modelDir, 'espeak-ng-data')).delete(recursive: true);
+
+    final bad = _manager(root, espeakShaOverride: 'deadbeef');
+    await expectLater(bad.downloadModel(), throwsA(isA<StateError>()));
+
+    expect(File(p.join(modelDir, '$_testVoiceId.onnx')).existsSync(), isTrue);
+    expect(await bad.isModelDownloaded(), isFalse);
   });
 }

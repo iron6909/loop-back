@@ -1,4 +1,4 @@
-/// Piper VITS 音色目录（7 个 medium 单说话人模型）。
+/// Piper VITS 音色目录（7 个单说话人模型）。
 ///
 /// 与 Kokoro 根本不同：Piper 每个音色 = 一个**独立单说话人模型**（一个 `.onnx`），
 /// 故音色既是「选择项」也是「下载单元」——每个音色单独下载、互不共享，合成时固定
@@ -7,23 +7,22 @@
 /// [PiperVoice.id] 同时作为：① 本地模型目录名；② 缓存键 voiceId（见
 /// [TtsSpeechConfig.voiceId]）；③ 下载状态机的 key（见 `piper_model_provider.dart`）。
 ///
-/// 公开源为 csukuangfj 的逐音色 HF 仓库（4 个与现有安装逐字节一致的音色）与
-/// `iron6909/loop-back-models` 的重打包资产（ryan/joe/hfc_female 三个音色，其
-/// HF 仓库 onnx 为旧版、与现有安装不一致）。lessac/alan 两个音色许可不允许再分发，
-/// 已从目录移除（见 [removedPiperVoiceIds]，启动迁移清理其孤儿安装目录）。逐音色
-/// 许可与核验见
-/// `docs/features/20261110-tts-provider-decoupling/public-source-verification.md`。
+/// 选音色只按**许可**筛：本目录里除 `en_GB-northern_english_male-medium`（CC-BY-SA 4.0）
+/// 外全部是 public domain。许可不明（amy/danny/kusal/arctic/jenny）、非商用
+/// （ryan/hfc_female/l2arctic/semaine/miro/dii）与 only-research（lessac/alan）
+/// 一律不进目录；CC BY 4.0 的 alba/cori-medium 按其「仅收录 A 档」的决策也一并移除。
+/// 许可以 `rhasspy/piper-voices` 每个音色目录的 `MODEL_CARD` 为准。
+///
+/// 全部音色均从 csukuangfj 的逐音色 HF 仓库下载（onnx + tokens.txt），不再依赖本
+/// 项目自建 GitHub 发布资产。已移除音色见 [removedPiperVoiceIds]，启动迁移清理其
+/// 孤儿安装目录并回退存量偏好。
 library;
 
 import '../asr/asr_model_catalog.dart'
     show AsrPublicResourceLayout, AsrPublicResourceSpec, AsrResourceFile;
 import 'tts_engine.dart' show TtsAccent;
 import 'tts_shared_resource_catalog.dart'
-    show
-        ttsEspeakNgDataResource,
-        ttsEspeakNgDataResourceId,
-        ttsPublicRepository,
-        ttsPublicRevision;
+    show ttsEspeakNgDataResource, ttsEspeakNgDataResourceId;
 
 /// Piper 推理所需的固定文件名。
 const piperTokensFileName = 'tokens.txt';
@@ -63,27 +62,6 @@ AsrPublicResourceSpec _hfPiperSpec({
   );
 }
 
-/// 构造 GitHub 重打包整包形态的 Piper 音色资源（归档自带 espeak，依赖用于只补）。
-AsrPublicResourceSpec _githubPiperSpec({
-  required String id,
-  required String archiveName,
-  required String sha256,
-  required int sizeBytes,
-  required String license,
-}) {
-  return AsrPublicResourceSpec(
-    id: id,
-    repository: ttsPublicRepository,
-    revision: ttsPublicRevision,
-    layout: AsrPublicResourceLayout.githubReleaseAsset,
-    license: license,
-    files: [
-      AsrResourceFile(name: archiveName, sha256: sha256, sizeBytes: sizeBytes),
-    ],
-    dependencies: const [ttsEspeakNgDataResourceId],
-  );
-}
-
 /// 单个 Piper 音色（= 一个独立模型）。
 class PiperVoice {
   const PiperVoice({
@@ -95,10 +73,10 @@ class PiperVoice {
     required this.resource,
   });
 
-  /// 音色标识（如 `en_US-amy-medium`）：本地目录名 + 缓存 voiceId + 下载 key。
+  /// 音色标识（如 `en_US-kristin-medium`）：本地目录名 + 缓存 voiceId + 下载 key。
   final String id;
 
-  /// 展示名（如 `Amy`）。
+  /// 展示名（如 `Kristin`）。
   final String displayName;
 
   /// 口音（美/英），决定语言标签与分组。
@@ -115,15 +93,10 @@ class PiperVoice {
 
   /// 预计下载字节数（供下载弹窗预估）。
   ///
-  /// HF 逐文件音色单独下载共享 espeak 依赖，预估需把该依赖一并计入；GitHub
-  /// 整包音色归档自带 espeak，不重复计入。
-  int get estimatedDownloadBytes {
-    if (resource.layout != AsrPublicResourceLayout.huggingFaceResolve) {
-      return resource.estimatedDownloadBytes;
-    }
-    return resource.estimatedDownloadBytes +
-        ttsEspeakNgDataResource.estimatedDownloadBytes;
-  }
+  /// 模型与 `tokens.txt` 逐文件下载，共享 `espeak-ng-data` 依赖需一并计入。
+  int get estimatedDownloadBytes =>
+      resource.estimatedDownloadBytes +
+      ttsEspeakNgDataResource.estimatedDownloadBytes;
 
   @override
   bool operator ==(Object other) =>
@@ -142,61 +115,74 @@ class PiperVoice {
       Object.hash(id, displayName, accent, isFemale, license, resource);
 }
 
+/// 全英音色共用的 `tokens.txt` 身份（en_US / en_GB 的 espeak 音素表一致）。
+const _piperTokensMediumSha256 =
+    'ef3a7e4a8d1af0c9d4dc45aaae1a6242ebe24a7ed6f3d025a49eb29682784c6d';
+const _piperTokensMediumSizeBytes = 940;
+
 /// 全部 7 个 Piper 音色（5 美音 + 2 英音），均可公开下载。
 ///
-/// lessac/alan 许可不允许再分发，已从目录移除（见 [removedPiperVoiceIds]）。
+/// 男女与口音分布：美男 3 / 美女 2 / 英女 1 / 英男 1。
 final List<PiperVoice> piperVoices = [
-  // 美音（en_US）
+  // 美音（en_US）男声
   PiperVoice(
-    id: 'en_US-amy-medium',
-    displayName: 'Amy',
+    id: 'en_US-bryce-medium',
+    displayName: 'Bryce',
     accent: TtsAccent.us,
-    isFemale: true,
-    license: 'CC BY-SA 4.0',
+    isFemale: false,
+    license: 'public domain',
     resource: _hfPiperSpec(
-      id: 'en_US-amy-medium',
-      repository: 'csukuangfj/vits-piper-en_US-amy-medium',
-      revision: '79936839cc9409b1a752a45c629fe21639e1c1b2',
-      license: 'CC BY-SA 4.0',
-      onnxName: 'en_US-amy-medium.onnx',
+      id: 'en_US-bryce-medium',
+      repository: 'csukuangfj/vits-piper-en_US-bryce-medium',
+      revision: 'b7f24892d9291522cf27e7cbfe34f17fa1cf4b17',
+      license: 'public domain',
+      onnxName: 'en_US-bryce-medium.onnx',
       onnxSha256:
-          'fbaa8e36d8f26fe6f3ebb65cab461e629d8b37a5b7c5fb78fb64317db73e1c25',
-      onnxSizeBytes: 63201425,
-      tokensSha256:
-          '87c8ef66eae5473ed0cc0366b3964c736ca6c5f676c979522ea31234e47430b9',
-      tokensSizeBytes: 921,
+          'f9ad3c773102fc27b13f48e5a743bbc75de6036b07dfb8a5c84ec2cc24153a28',
+      onnxSizeBytes: 63531507,
+      tokensSha256: _piperTokensMediumSha256,
+      tokensSizeBytes: _piperTokensMediumSizeBytes,
     ),
   ),
   PiperVoice(
-    id: 'en_US-ryan-medium',
-    displayName: 'Ryan',
+    id: 'en_US-john-medium',
+    displayName: 'John',
     accent: TtsAccent.us,
     isFemale: false,
-    license: 'CC BY-NC-SA 4.0',
-    resource: _githubPiperSpec(
-      id: 'en_US-ryan-medium',
-      archiveName: 'vits-piper-en_US-ryan-medium.tar.gz',
-      sha256:
-          '0cc1c5241f1651b5f893d3259dcd6a9c88acaeb33a59563a0ca1c113ef32c11e',
-      sizeBytes: 67370820,
-      license: 'CC BY-NC-SA 4.0',
+    license: 'public domain',
+    resource: _hfPiperSpec(
+      id: 'en_US-john-medium',
+      repository: 'csukuangfj/vits-piper-en_US-john-medium',
+      revision: 'adfff0e2951b85fafe20b582a8961a956ba926bd',
+      license: 'public domain',
+      onnxName: 'en_US-john-medium.onnx',
+      onnxSha256:
+          '7ab60237f77e06c8f32b811080b7ad82d23bc5bacc4bba2c35e58aeae6833364',
+      onnxSizeBytes: 63531507,
+      tokensSha256: _piperTokensMediumSha256,
+      tokensSizeBytes: _piperTokensMediumSizeBytes,
     ),
   ),
   PiperVoice(
-    id: 'en_US-joe-medium',
-    displayName: 'Joe',
+    id: 'en_US-norman-medium',
+    displayName: 'Norman',
     accent: TtsAccent.us,
     isFemale: false,
-    license: 'CC0',
-    resource: _githubPiperSpec(
-      id: 'en_US-joe-medium',
-      archiveName: 'vits-piper-en_US-joe-medium.tar.gz',
-      sha256:
-          'b8c9581a93b02c67066aad978b6eee56e247c692f82572da00e7b998a13ce38f',
-      sizeBytes: 67329430,
-      license: 'CC0',
+    license: 'public domain',
+    resource: _hfPiperSpec(
+      id: 'en_US-norman-medium',
+      repository: 'csukuangfj/vits-piper-en_US-norman-medium',
+      revision: '96632d35050997005e69857cbdf5352ed329bb45',
+      license: 'public domain',
+      onnxName: 'en_US-norman-medium.onnx',
+      onnxSha256:
+          'fa06b6b8b280e176b17f8424e05ca12d0223eeac9a31c87230937fe7120fbe2a',
+      onnxSizeBytes: 63531507,
+      tokensSha256: _piperTokensMediumSha256,
+      tokensSizeBytes: _piperTokensMediumSizeBytes,
     ),
   ),
+  // 美音（en_US）女声
   PiperVoice(
     id: 'en_US-kristin-medium',
     displayName: 'Kristin',
@@ -212,83 +198,101 @@ final List<PiperVoice> piperVoices = [
       onnxSha256:
           'f9a5c375c70ddc33ccdb3969c76a4d7cc5255ac08119a312b0034a1d07041be6',
       onnxSizeBytes: 63531507,
-      tokensSha256:
-          'ef3a7e4a8d1af0c9d4dc45aaae1a6242ebe24a7ed6f3d025a49eb29682784c6d',
-      tokensSizeBytes: 940,
+      tokensSha256: _piperTokensMediumSha256,
+      tokensSizeBytes: _piperTokensMediumSizeBytes,
     ),
   ),
   PiperVoice(
-    id: 'en_US-hfc_female-medium',
-    displayName: 'Hannah',
+    id: 'en_US-ljspeech-medium',
+    displayName: 'Linda',
     accent: TtsAccent.us,
     isFemale: true,
-    license: 'CC BY-NC-SA 4.0',
-    resource: _githubPiperSpec(
-      id: 'en_US-hfc_female-medium',
-      archiveName: 'vits-piper-en_US-hfc_female-medium.tar.gz',
-      sha256:
-          'f4dd17d8d1e392df7691a6acb4402e93cb284b935e1cd1e9b86bf108707be784',
-      sizeBytes: 67359748,
-      license: 'CC BY-NC-SA 4.0',
+    license: 'public domain',
+    resource: _hfPiperSpec(
+      id: 'en_US-ljspeech-medium',
+      repository: 'csukuangfj/vits-piper-en_US-ljspeech-medium',
+      revision: '34f390d13b9edbaa30c339127de0f9c4c5948c90',
+      license: 'public domain',
+      onnxName: 'en_US-ljspeech-medium.onnx',
+      onnxSha256:
+          '8ceba58a4b540d4e7e7e24ad079cf0d92762a4fd334e059f12940787c6c37b3d',
+      onnxSizeBytes: 63531507,
+      tokensSha256: _piperTokensMediumSha256,
+      tokensSizeBytes: _piperTokensMediumSizeBytes,
     ),
   ),
-  // 英音（en_GB）
+  // 英音（en_GB）女声
   PiperVoice(
-    id: 'en_GB-cori-medium',
+    id: 'en_GB-cori-high',
     displayName: 'Cori',
     accent: TtsAccent.uk,
     isFemale: true,
-    license: 'CC BY 4.0',
+    license: 'public domain',
     resource: _hfPiperSpec(
-      id: 'en_GB-cori-medium',
-      repository: 'csukuangfj/vits-piper-en_GB-cori-medium',
-      revision: 'e304c95c578725ba9cab0cff451c4e5d9aaf889e',
-      license: 'CC BY 4.0',
-      onnxName: 'en_GB-cori-medium.onnx',
+      id: 'en_GB-cori-high',
+      repository: 'csukuangfj/vits-piper-en_GB-cori-high',
+      revision: '37f6efb503f5dc22de01bad04c9a118a99111096',
+      license: 'public domain',
+      onnxName: 'en_GB-cori-high.onnx',
       onnxSha256:
-          '8b0d3cdd77f2878e0aa2048103eabb4d01b334783f99629f042bcf703aeba487',
-      onnxSizeBytes: 63531507,
-      tokensSha256:
-          'ef3a7e4a8d1af0c9d4dc45aaae1a6242ebe24a7ed6f3d025a49eb29682784c6d',
-      tokensSizeBytes: 940,
+          '006bb4db48e066f7f1be91d218db3b76617a707196271694ca6455d7bbd13842',
+      onnxSizeBytes: 114219480,
+      tokensSha256: _piperTokensMediumSha256,
+      tokensSizeBytes: _piperTokensMediumSizeBytes,
     ),
   ),
+  // 英音（en_GB）男声（CC-BY-SA 4.0，原样分发需署名）
   PiperVoice(
-    id: 'en_GB-alba-medium',
-    displayName: 'Alba',
+    id: 'en_GB-northern_english_male-medium',
+    displayName: 'Northern',
     accent: TtsAccent.uk,
-    isFemale: true,
-    license: 'CC BY 4.0',
+    isFemale: false,
+    license: 'CC BY-SA 4.0',
     resource: _hfPiperSpec(
-      id: 'en_GB-alba-medium',
-      repository: 'csukuangfj/vits-piper-en_GB-alba-medium',
-      revision: '7e469a54c7a4f5bd191cae788e197266e2c9c5ac',
-      license: 'CC BY 4.0',
-      onnxName: 'en_GB-alba-medium.onnx',
+      id: 'en_GB-northern_english_male-medium',
+      repository: 'csukuangfj/vits-piper-en_GB-northern_english_male-medium',
+      revision: '1d9a616e1cdeb91d8bc0b921a8b31296e2c9ff75',
+      license: 'CC BY-SA 4.0',
+      onnxName: 'en_GB-northern_english_male-medium.onnx',
       onnxSha256:
-          'c904d007a8047ab13628b021351b983d0a2627c0d7a81c64a6fe9ad661adb1cf',
+          'd23e7891af7062eb188283dba94866e25ffd5b01a0d9fb9a23c71a39b75b2308',
       onnxSizeBytes: 63201430,
       tokensSha256:
-          '87c8ef66eae5473ed0cc0366b3964c736ca6c5f676c979522ea31234e47430b9',
-      tokensSizeBytes: 921,
+          '2619c1a9de1bcf928162f40c583caf39368cfd6b2340c7bcad51dc634411ec36',
+      tokensSizeBytes: 907,
     ),
   ),
 ];
 
-/// 美音默认音色。
-const String piperDefaultVoiceUs = 'en_US-amy-medium';
+/// 美音默认音色（kristin，public domain）。
+const String piperDefaultVoiceUs = 'en_US-kristin-medium';
 
-/// 英音默认音色（cori，CC BY 4.0）。
-const String piperDefaultVoiceUk = 'en_GB-cori-medium';
+/// 英音默认音色（cori-high，public domain）。
+const String piperDefaultVoiceUk = 'en_GB-cori-high';
 
-/// 已从目录移除的音色 ID：lessac / alan 许可不允许再分发，不再提供下载。
+/// 历史版本里因许可不允许再分发而移除的音色 ID（lessac / alan）。
 const removedPiperVoiceLessacId = 'en_US-lessac-medium';
 const removedPiperVoiceAlanId = 'en_GB-alan-medium';
+
+/// 本轮因许可收紧（只保留 A 档）而下线的音色 ID。
+///
+/// - `amy` 许可不明；`joe` 为 CC0 但此前只从自建 GitHub 资产分发；
+/// - `ryan` / `hfc_female` 为 CC BY-NC-SA 4.0（非商用）；
+/// - `cori-medium` / `alba` 为 CC BY 4.0（B 档），按只保留 A 档的决策下线。
+const retiredPiperVoiceIds = [
+  'en_US-amy-medium',
+  'en_US-ryan-medium',
+  'en_US-joe-medium',
+  'en_US-hfc_female-medium',
+  'en_GB-cori-medium',
+  'en_GB-alba-medium',
+];
 
 /// 全部已移除音色 ID；启动迁移据此清理孤儿安装目录并回退存量偏好。
 const removedPiperVoiceIds = [
   removedPiperVoiceLessacId,
   removedPiperVoiceAlanId,
+  ...retiredPiperVoiceIds,
 ];
 
 /// 全部 Piper 公开资源（7 个可下载音色 + 共享 espeak-ng-data）。

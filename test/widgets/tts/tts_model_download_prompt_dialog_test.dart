@@ -54,12 +54,12 @@ void main() {
     expect(state.engine, TtsEngineKind.kokoro);
     expect(state.status, AsrModelDownloadStatus.downloading);
     expect(state.progress, 0.42);
-    expect(state.estimatedDownloadBytes, 313785757);
+    expect(state.estimatedDownloadBytes, 362749051);
     expect(state.isReady, isFalse);
   });
 
   test('Piper 发音状态复用当前 Piper 全局失败状态', () {
-    const voiceId = 'en_US-amy-medium';
+    const voiceId = 'en_US-kristin-medium';
     final container = ProviderContainer(
       overrides: [
         initialTtsSettingsProvider.overrideWithValue(
@@ -82,7 +82,7 @@ void main() {
     expect(state.status, AsrModelDownloadStatus.failed);
     expect(state.isReady, isFalse);
     // HF 逐文件音色的预估包含共享 espeak 依赖（约 9MB）。
-    expect(state.estimatedDownloadBytes, 72189194);
+    expect(state.estimatedDownloadBytes, 72519295);
   });
 
   testWidgets('未下载时显示说明、预计流量和手动下载按钮', (tester) async {
@@ -106,7 +106,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Speech Synthesis Model Required'), findsOneWidget);
-    expect(find.text('Estimated download: ~299.2 MB'), findsOneWidget);
+    expect(find.text('Estimated download: ~345.9 MB'), findsOneWidget);
     expect(
       find.text('You can also choose another speech model in Settings.'),
       findsOneWidget,
@@ -148,7 +148,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Downloading Speech Synthesis Model'), findsOneWidget);
-    expect(find.text('Estimated download: ~299.2 MB'), findsOneWidget);
+    expect(find.text('Estimated download: ~345.9 MB'), findsOneWidget);
     expect(find.text('42% complete'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
     expect(find.text('Cancel Download'), findsOneWidget);
@@ -187,7 +187,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('The download did not finish. Estimated download: ~299.2 MB'),
+      find.text('The download did not finish. Estimated download: ~345.9 MB'),
       findsOneWidget,
     );
     expect(
