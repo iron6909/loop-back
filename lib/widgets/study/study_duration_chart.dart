@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// `ScrollCacheExtent` 只在 rendering 库导出（ListView.scrollCacheExtent 的类型）。
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -207,12 +209,12 @@ class _BucketListState extends ConsumerState<_BucketList> {
     return SizedBox(
       height: 150,
       child: ListView.builder(
+        scrollCacheExtent: ScrollCacheExtent.pixels(58 * 8),
         controller: _scrollController,
         // 从最新周期端开始布局，避免首帧先绘制最早周期再跳转到末端。
         reverse: true,
         scrollDirection: Axis.horizontal,
         itemExtent: 58,
-        cacheExtent: 58 * 8,
         itemCount: widget.buckets.length,
         itemBuilder: (context, index) {
           final bucket = widget.buckets[widget.buckets.length - index - 1];
