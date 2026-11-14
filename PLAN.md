@@ -55,7 +55,7 @@ Echo Loop 是一个围绕“音频输入 + 句子级学习 + 间隔复习 + AI �
 
 ### ✅ 语音合成去 EchoLoop 化（2026-11-10）
 
-已完成并合入集成分支 `feature/20261110-tts-provider-decoupling`（明细见 [TASKS.md](./TASKS.md)）。Kokoro fp32/int8 与 Piper 7 音色改从固定公开源分发（公开仓库 `iron6909/loop-back-models` tag `tts-models` 重打包 gzip + csukuangfj HF resolve），不再依赖 EchoLoop 资源 CDN；界面还原真实模型名（Kokoro / Piper、Full precision (fp32) / Quantized (int8)）并展示来源与许可；lessac/alan 因许可禁止再分发已移除（启动迁移清理其孤儿目录并回退存量偏好）；espeak-ng-data 按共享依赖「只补」修复；Android 真机验收全过（公开源下载、断网离线合成、损坏修复、发音朗读）。
+已完成并合入集成分支 `feature/20261110-tts-provider-decoupling`（明细见 [TASKS.md](./TASKS.md)）。Kokoro 与 Piper 改从固定公开源分发（csukuangfj 上游 HF 仓库逐文件 + 共享 `espeak-ng-data` 托管在 HF dataset），不再依赖 EchoLoop 资源 CDN，也不再依赖自建 GitHub 发布资产；界面还原真实模型名（Kokoro / Piper、Full precision (fp32) / Quantized (int8)）并展示来源与许可；音色按许可筛查收紧（Kokoro 升 v1.0 全 53 音色；Piper 只保留 public domain 的 6 个 + 1 个 CC-BY-SA 英音男声，lessac/alan/amy/ryan/hfc_female/cori-medium/alba 已移除并由启动迁移清理孤儿目录）。
 
 剩余验证缺口：Apple 编译与集成测试需 macOS 宿主；集成分支并入 main 的发布流程待定；规格 issue #20 按 ASR #1 同约定保持开放。
 
