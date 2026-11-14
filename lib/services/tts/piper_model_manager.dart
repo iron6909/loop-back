@@ -19,6 +19,7 @@ import '../asr/asr_model_manager.dart'
     show AsrModelDownloadStatus, AsrModelDownloadProgress;
 import '../asr/asr_resource_installer.dart'
     show AsrResourceFileDownload, AsrResourceInstaller;
+import '../download/source_fallback.dart';
 import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
 import '../resource_install_manifest.dart';
@@ -175,8 +176,23 @@ class PiperModelManager {
   /// 下载并安装模型，通过 [onProgress] 报告进度，可经 [cancelToken] 取消。
   ///
   /// 模型本体齐全、仅 espeak-ng-data 缺失或损坏时只补该依赖。
+  /// 镜像确定性缺资源（404/410/5xx）时自动回落到上游重试一次。
   Future<String> downloadModel({
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
+    void Function(AsrModelDownloadProgress)? onProgress,
+    CancelToken? cancelToken,
+  }) => withUpstreamFallback(
+    logTag: 'PiperModel',
+    source: source,
+    run: (effectiveSource) => _downloadModel(
+      source: effectiveSource,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    ),
+  );
+
+  Future<String> _downloadModel({
+    required AsrDownloadSource source,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {

@@ -31,6 +31,15 @@ enum AsrDownloadSource {
   final String host;
 }
 
+/// 按地区解析默认下载源。
+///
+/// 中国区默认用镜像（huggingface.co 与 hf-mirror.com 同版本同摘要），其余地区用上游。
+/// 用户显式选过的来源由调用方保存，不经过这里。
+AsrDownloadSource defaultDownloadSourceForRegion({required bool isChinaUser}) =>
+    isChinaUser
+    ? AsrDownloadSource.huggingFaceMirror
+    : AsrDownloadSource.huggingFace;
+
 /// 公开资源的目录布局，决定文件 URL 的拼接方式。
 enum AsrPublicResourceLayout {
   /// `<域名>/<repository>/resolve/<revision>/<file>`：Hugging Face 及其镜像通用。

@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:loop_back/features/user_region/user_region_providers.dart'
+    show isChinaUserProvider;
+import 'package:loop_back/providers/shared_preferences_provider.dart'
+    show sharedPreferencesProvider;
 import 'package:loop_back/providers/tts/piper_model_provider.dart';
 import 'package:loop_back/providers/tts/tts_settings_provider.dart';
 import 'package:loop_back/services/asr/asr_model_catalog.dart';
@@ -16,6 +20,9 @@ import 'package:loop_back/services/tts/tts_engine.dart';
 
 const _us = piperDefaultVoiceUs;
 const _uk = piperDefaultVoiceUk;
+
+/// 当前测试的 SharedPreferences；下载源来自它支撑的设置状态。
+late SharedPreferences _testPrefs;
 
 /// 可编排行为的假管理器（按 voiceId 被 family override 复用）。
 class _FakeManager extends PiperModelManager {
@@ -39,6 +46,9 @@ class _FakeManager extends PiperModelManager {
   int downloadCount = 0;
   int deleteCount = 0;
 
+  /// 最近一次下载请求使用的来源（校验「按地区选源」是否真传到管理器）。
+  AsrDownloadSource? lastSource;
+
   @override
   Future<String> downloadModel({
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
@@ -46,6 +56,7 @@ class _FakeManager extends PiperModelManager {
     CancelToken? cancelToken,
   }) async {
     downloadCount++;
+    lastSource = source;
     onProgress?.call(
       const AsrModelDownloadProgress(
         status: AsrModelDownloadStatus.downloading,
@@ -121,6 +132,7 @@ ProviderContainer _container(
 }) {
   return ProviderContainer(
     overrides: [
+      sharedPreferencesProvider.overrideWithValue(_testPrefs),
       piperModelManagerProvider.overrideWith((ref, id) => managerOf(id)),
       initialPiperModelStateProvider.overrideWithValue(
         initial ?? PiperModelsState.initial(),
@@ -133,7 +145,12 @@ ProviderContainer _container(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  late SharedPreferences prefs;
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    prefs = await SharedPreferences.getInstance();
+    _testPrefs = prefs;
+  });
 
   test('ensureDownloaded 成功 → ready + 进度 1.0 + 体积', () async {
     final c = _container((_) => _FakeManager());
@@ -145,6 +162,25 @@ void main() {
     expect(s.isReady, isTrue);
     expect(s.downloadProgress, 1.0);
     expect(s.localSizeBytes, 1024);
+  });
+
+  test('下载源跟随地区：中国区传给管理器的是镜像', () async {
+    final manager = _FakeManager();
+    final c = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(_testPrefs),
+        piperModelManagerProvider.overrideWith((ref, id) => manager),
+        initialPiperModelStateProvider.overrideWithValue(
+          PiperModelsState.initial(),
+        ),
+        isChinaUserProvider.overrideWithValue(true),
+      ],
+    );
+    addTearDown(c.dispose);
+
+    await c.read(piperModelProvider.notifier).ensureDownloaded(_us);
+
+    expect(manager.lastSource, AsrDownloadSource.huggingFaceMirror);
   });
 
   test('已有 install.json → 同步 ready 且不重复下载', () async {

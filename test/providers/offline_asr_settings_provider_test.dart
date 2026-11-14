@@ -164,38 +164,37 @@ void main() {
     expect(model.displayName, 'Whisper Base (English)');
   });
 
-  test('下载来源默认 Hugging Face，切换后持久化并恢复', () async {
+  test('下载源完全由系统地区决定，历史手选偏好不再生效', () async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     final prefs = await SharedPreferences.getInstance();
-    final initial = offlineAsrSettingsStateFromPrefs(
+
+    final global = offlineAsrSettingsStateFromPrefs(
       prefs: prefs,
       recommendedModel: recommendedModel,
       defaultBackend: AsrBackend.offline,
+      isChinaUser: false,
     );
-    expect(initial.downloadSource, AsrDownloadSource.huggingFace);
+    expect(global.downloadSource, AsrDownloadSource.huggingFace);
 
-    final container = ProviderContainer(
-      overrides: [
-        offlineAsrSettingsProvider.overrideWith(
-          () => _TestOfflineAsrSettingsNotifier(initial),
-        ),
-      ],
+    final china = offlineAsrSettingsStateFromPrefs(
+      prefs: prefs,
+      recommendedModel: recommendedModel,
+      defaultBackend: AsrBackend.offline,
+      isChinaUser: true,
     );
-    addTearDown(container.dispose);
-    await container
-        .read(offlineAsrSettingsProvider.notifier)
-        .setDownloadSource(AsrDownloadSource.huggingFaceMirror);
-    expect(
-      container.read(offlineAsrSettingsProvider).downloadSource,
-      AsrDownloadSource.huggingFaceMirror,
-    );
+    expect(china.downloadSource, AsrDownloadSource.huggingFaceMirror);
 
-    final restored = offlineAsrSettingsStateFromPrefs(
+    // 旧版本残留的手选值被忽略：仍按地区解析。
+    SharedPreferences.setMockInitialValues(<String, Object>{
+      'offline_asr_download_source': AsrDownloadSource.huggingFace.name,
+    });
+    final legacy = offlineAsrSettingsStateFromPrefs(
       prefs: await SharedPreferences.getInstance(),
       recommendedModel: recommendedModel,
       defaultBackend: AsrBackend.offline,
+      isChinaUser: true,
     );
-    expect(restored.downloadSource, AsrDownloadSource.huggingFaceMirror);
+    expect(legacy.downloadSource, AsrDownloadSource.huggingFaceMirror);
   });
 
   test('旧完成标记不再恢复 downloaded，避免与安装清单漂移', () async {
@@ -207,6 +206,7 @@ void main() {
       prefs: prefs,
       recommendedModel: recommendedModel,
       defaultBackend: AsrBackend.offline,
+      isChinaUser: false,
     );
 
     expect(state.enabled, isTrue);
@@ -221,6 +221,7 @@ void main() {
       prefs: prefs,
       recommendedModel: recommendedModel,
       defaultBackend: AsrBackend.offline,
+      isChinaUser: false,
     );
 
     expect(state.downloadStatus, AsrModelDownloadStatus.notDownloaded);
@@ -274,6 +275,7 @@ void main() {
       prefs: prefs,
       recommendedModel: recommendedModel,
       defaultBackend: AsrBackend.offline,
+      isChinaUser: false,
     );
 
     expect(state.selectedModel.id, recommendedModel.id);
@@ -290,6 +292,7 @@ void main() {
       prefs: prefs,
       recommendedModel: recommendedModel,
       defaultBackend: AsrBackend.platform,
+      isChinaUser: false,
     );
 
     expect(state.backend, AsrBackend.offline);

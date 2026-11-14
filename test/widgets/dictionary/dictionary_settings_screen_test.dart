@@ -6,10 +6,8 @@ import 'package:loop_back/providers/dictionary/dictionary_offline_resources_prov
 import 'package:loop_back/providers/dictionary/dictionary_registry.dart';
 import 'package:loop_back/providers/dictionary/dictionary_settings_provider.dart';
 import 'package:loop_back/providers/dictionary_provider.dart';
-import 'package:loop_back/providers/offline_asr_settings_provider.dart';
 import 'package:loop_back/providers/pronunciation/pronunciation_providers.dart';
 import 'package:loop_back/screens/dictionary_settings_screen.dart';
-import 'package:loop_back/services/asr/asr_model_catalog.dart';
 import 'package:loop_back/services/dictionary/dictionary_source.dart';
 import 'package:loop_back/services/download/download_failure.dart';
 import 'package:flutter/material.dart';
@@ -329,31 +327,5 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Retry'), findsOneWidget);
-  });
-
-  testWidgets('下载来源切换与语音识别设置同源', (tester) async {
-    final (container, widget) = build();
-    await tester.pumpWidget(widget);
-    await tester.pumpAndSettle();
-
-    expect(
-      container.read(offlineAsrSettingsProvider).downloadSource,
-      AsrDownloadSource.huggingFace,
-    );
-
-    await tester.ensureVisible(find.text('Model Source'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Model Source'));
-    await tester.pumpAndSettle();
-
-    await tester.ensureVisible(find.text('hf-mirror.com (mirror)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('hf-mirror.com (mirror)'));
-    await tester.pumpAndSettle();
-
-    expect(
-      container.read(offlineAsrSettingsProvider).downloadSource,
-      AsrDownloadSource.huggingFaceMirror,
-    );
   });
 }

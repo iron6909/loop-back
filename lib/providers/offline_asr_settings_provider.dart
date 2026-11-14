@@ -14,6 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../analytics/analytics_providers.dart';
 import '../analytics/models/event_names.dart';
+import '../features/user_region/user_region_providers.dart'
+    show isChinaUserProvider;
 import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import '../services/app_logger.dart';
@@ -28,7 +30,6 @@ import 'asr_engine_provider.dart';
 bool _asrCrashMarkerChecked = false;
 const _backendKey = 'offline_asr_backend';
 const _selectedModelKey = 'offline_asr_selected_model_id';
-const _downloadSourceKey = 'offline_asr_download_source';
 
 // ---------------------------------------------------------------------------
 // State
@@ -103,7 +104,8 @@ class OfflineAsrSettingsState {
   /// 各 Whisper 模型的下载状态（key 为 model id）。
   final Map<String, AsrModelState> modelStates;
 
-  /// 已迁移公开模型的下载来源；仅影响有同版本镜像的资源。
+  /// 公开模型的下载源。**不提供用户选择**：进程启动时按系统地区解析——
+  /// 中国区用镜像（hf-mirror.com），其余地区用上游（huggingface.co）。
   final AsrDownloadSource downloadSource;
 
   OfflineAsrSettingsState({
@@ -254,6 +256,8 @@ final initialOfflineAsrSettingsStateProvider =
         prefs: ref.read(sharedPreferencesProvider),
         recommendedModel: recommended,
         defaultBackend: defaultBackend,
+        // 地区解析是同步的（系统国家码），首次读取即有结论。
+        isChinaUser: ref.watch(isChinaUserProvider),
       );
     });
 
@@ -684,15 +688,6 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
     await prefs.setString(_selectedModelKey, modelId);
   }
 
-  /// 切换已迁移公开模型的下载来源。已安装资源不重下，只影响下一次安装。
-  Future<void> setDownloadSource(AsrDownloadSource source) async {
-    if (state.downloadSource == source) return;
-    state = state.copyWith(downloadSource: source);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_downloadSourceKey, source.name);
-    AppLogger.log('OfflineAsr', 'download source changed: ${source.name}');
-  }
-
   AsrModelInfo _modelInfoById(String modelId) {
     return availableModels.firstWhere(
       (m) => m.id == modelId,
@@ -773,10 +768,13 @@ class OfflineAsrSettingsNotifier extends Notifier<OfflineAsrSettingsState> {
 }
 
 /// 仅恢复用户偏好；安装状态必须异步从 install.json 恢复。
+///
+/// [isChinaUser] 仅在用户从未手动选过下载源时生效：中国区默认镜像，其余地区默认上游。
 OfflineAsrSettingsState offlineAsrSettingsStateFromPrefs({
   required SharedPreferences prefs,
   required AsrModelInfo recommendedModel,
   required AsrBackend defaultBackend,
+  required bool isChinaUser,
 }) {
   final backendName = prefs.getString(_backendKey);
   final backend = backendName == AsrBackend.offline.name
@@ -789,10 +787,8 @@ OfflineAsrSettingsState offlineAsrSettingsStateFromPrefs({
     (m) => m.id == selectedModelId,
     orElse: () => recommendedModel,
   );
-  final downloadSourceName = prefs.getString(_downloadSourceKey);
-  final downloadSource = AsrDownloadSource.values.firstWhere(
-    (source) => source.name == downloadSourceName,
-    orElse: () => AsrDownloadSource.huggingFace,
+  final downloadSource = defaultDownloadSourceForRegion(
+    isChinaUser: isChinaUser,
   );
 
   return OfflineAsrSettingsState(

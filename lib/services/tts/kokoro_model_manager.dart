@@ -20,6 +20,7 @@ import '../asr/asr_model_manager.dart'
     show AsrModelDownloadStatus, AsrModelDownloadProgress;
 import '../asr/asr_resource_installer.dart'
     show AsrResourceFileDownload, AsrResourceInstaller;
+import '../download/source_fallback.dart';
 import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
 import '../resource_install_manifest.dart';
@@ -189,8 +190,23 @@ class KokoroModelManager {
   /// 正常流程：逐文件下载 onnx/voices/tokens → 逐文件校验 SHA-256 → staging 组装
   /// → 原子替换模型目录 → 补共享 `espeak-ng-data`。若模型目录本体齐全、仅
   /// `espeak-ng-data/` 缺失或损坏，则只下载独立 espeak 归档，不重下模型本体。
+  /// 镜像确定性缺资源（404/410/5xx）时自动回落到上游重试一次。
   Future<String> downloadModel({
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
+    void Function(AsrModelDownloadProgress)? onProgress,
+    CancelToken? cancelToken,
+  }) => withUpstreamFallback(
+    logTag: 'KokoroModel',
+    source: source,
+    run: (effectiveSource) => _downloadModel(
+      source: effectiveSource,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    ),
+  );
+
+  Future<String> _downloadModel({
+    required AsrDownloadSource source,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {

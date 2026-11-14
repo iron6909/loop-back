@@ -11,6 +11,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../app_logger.dart';
+import '../download/source_fallback.dart';
 import '../reliable_http_downloader.dart';
 import '../resource_install_manifest.dart';
 import 'asr_model_catalog.dart';
@@ -135,10 +136,27 @@ class AsrModelManager {
   /// 下载资源本体（含缺失的共享依赖），逐文件校验通过后才原子替换当前安装。
   ///
   /// 已安装的资源不会重复下载；主模型已安装但共享 VAD 缺失时只补 VAD。
-  /// [source] 只改变下载域名，不改变被信任的版本与摘要。
+  /// [source] 只改变下载域名，不改变被信任的版本与摘要；镜像确定性缺资源
+  /// （404/410/5xx）时自动回落到上游重试一次。
   Future<String> downloadModel(
     String modelId, {
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
+    void Function(AsrModelDownloadProgress)? onProgress,
+    CancelToken? cancelToken,
+  }) => withUpstreamFallback(
+    logTag: 'ASRModel',
+    source: source,
+    run: (effectiveSource) => _downloadModel(
+      modelId,
+      source: effectiveSource,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    ),
+  );
+
+  Future<String> _downloadModel(
+    String modelId, {
+    required AsrDownloadSource source,
     void Function(AsrModelDownloadProgress)? onProgress,
     CancelToken? cancelToken,
   }) async {

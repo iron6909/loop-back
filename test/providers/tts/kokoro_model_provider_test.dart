@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:loop_back/providers/shared_preferences_provider.dart'
+    show sharedPreferencesProvider;
 import 'package:loop_back/providers/tts/kokoro_model_provider.dart';
 import 'package:loop_back/services/asr/asr_model_catalog.dart';
 import 'package:loop_back/services/download/download_failure.dart';
@@ -14,6 +16,9 @@ import 'package:loop_back/services/resource_install_manifest.dart';
 import 'package:loop_back/services/tts/kokoro_model_manager.dart';
 
 const _fp32 = KokoroModelVariant.fp32;
+
+/// 当前测试的 SharedPreferences；下载源来自它支撑的设置状态。
+late SharedPreferences _testPrefs;
 
 /// 可编排行为的假管理器（不区分变体，按需被 family override 复用）。
 class _FakeManager extends KokoroModelManager {
@@ -119,6 +124,7 @@ ProviderContainer _container(
 }) {
   return ProviderContainer(
     overrides: [
+      sharedPreferencesProvider.overrideWithValue(_testPrefs),
       kokoroModelManagerProvider.overrideWith((ref, variant) => manager),
       initialKokoroModelStateProvider.overrideWithValue(
         initial ?? KokoroModelsState.initial(),
@@ -130,7 +136,10 @@ ProviderContainer _container(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    _testPrefs = await SharedPreferences.getInstance();
+  });
 
   test('ensureDownloaded 成功 → ready + 进度 1.0 + 体积', () async {
     final c = _container(_FakeManager());

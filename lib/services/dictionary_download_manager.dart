@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart';
 import 'dictionary/dictionary_catalog.dart';
 import 'app_logger.dart';
 import 'asr/asr_model_catalog.dart' show AsrDownloadSource;
+import 'download/source_fallback.dart';
 import 'reliable_http_downloader.dart';
 import 'resource_archive_installer.dart';
 import 'resource_install_manifest.dart';
@@ -88,6 +89,22 @@ class DictionaryDownloadManager {
   Future<String> download(
     String nativeLanguage, {
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
+    void Function(double progress)? onProgress,
+    CancelToken? cancelToken,
+  }) => withUpstreamFallback(
+    logTag: 'DictionaryDownload',
+    source: source,
+    run: (effectiveSource) => _download(
+      nativeLanguage,
+      source: effectiveSource,
+      onProgress: onProgress,
+      cancelToken: cancelToken,
+    ),
+  );
+
+  Future<String> _download(
+    String nativeLanguage, {
+    required AsrDownloadSource source,
     void Function(double progress)? onProgress,
     CancelToken? cancelToken,
   }) async {

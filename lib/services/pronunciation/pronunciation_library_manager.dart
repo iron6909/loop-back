@@ -9,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart';
 
 import '../app_logger.dart';
 import '../asr/asr_model_catalog.dart' show AsrDownloadSource;
+import '../download/source_fallback.dart';
 import '../reliable_http_downloader.dart';
 import '../resource_archive_installer.dart';
 import '../resource_install_manifest.dart';
@@ -121,6 +122,22 @@ class PronunciationLibraryManager {
 
   Future<PronunciationLibraryPaths> downloadAndInstall({
     AsrDownloadSource source = AsrDownloadSource.huggingFace,
+    CancelToken? cancelToken,
+    void Function(double progress)? onDownloadProgress,
+    void Function()? onInstalling,
+  }) => withUpstreamFallback(
+    logTag: 'PronunciationLibrary',
+    source: source,
+    run: (effectiveSource) => _downloadAndInstall(
+      source: effectiveSource,
+      cancelToken: cancelToken,
+      onDownloadProgress: onDownloadProgress,
+      onInstalling: onInstalling,
+    ),
+  );
+
+  Future<PronunciationLibraryPaths> _downloadAndInstall({
+    required AsrDownloadSource source,
     CancelToken? cancelToken,
     void Function(double progress)? onDownloadProgress,
     void Function()? onInstalling,

@@ -15,6 +15,7 @@ import '../../services/reliable_http_downloader.dart';
 import '../../services/resource_install_manifest.dart';
 import '../../services/tts/piper_model_manager.dart';
 import '../../services/tts/piper_model_catalog.dart';
+import '../offline_asr_settings_provider.dart' show offlineAsrSettingsProvider;
 import 'tts_settings_provider.dart';
 
 // ---------------------------------------------------------------------------
@@ -305,6 +306,8 @@ class PiperModelNotifier extends Notifier<PiperModelsState> {
     final manager = ref.read(piperModelManagerProvider(voiceId));
     try {
       await manager.downloadModel(
+        // 下载源由系统地区决定（中国区→镜像），与语音识别/词典共用同一份设置。
+        source: ref.read(offlineAsrSettingsProvider).downloadSource,
         cancelToken: cancelToken,
         onProgress: (p) {
           if (!_isCurrent(voiceId, session, cancelToken)) return;

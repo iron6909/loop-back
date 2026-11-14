@@ -2021,13 +2021,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the built-in Whisper model. It works offline after downloading';
 
   @override
-  String get asrDownloadSourceTitle => 'Model Source';
-
-  @override
-  String get asrDownloadSourceDescription =>
-      'Applies to public models only. Both sources serve the same version and checksums.';
-
-  @override
   String get asrDownloadSourceHuggingFace => 'Hugging Face';
 
   @override

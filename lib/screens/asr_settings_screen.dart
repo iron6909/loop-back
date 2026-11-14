@@ -91,15 +91,7 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
             text: l10n.localModelLibraryTitle,
             trailing: _buildLibraryHeader(l10n, state, theme),
           ),
-          Card(
-            child: Column(
-              children: [
-                _buildModelList(l10n, state, theme),
-                const Divider(height: 1),
-                _buildDownloadSourceTile(l10n, state, theme),
-              ],
-            ),
-          ),
+          Card(child: Column(children: [_buildModelList(l10n, state, theme)])),
 
           // 在线服务分组只有一行入口，具体配置在独立的「在线语音服务」页。
           const SizedBox(height: AppSpacing.m),
@@ -396,62 +388,6 @@ class _AsrSettingsScreenState extends ConsumerState<AsrSettingsScreen> {
       onPressed: () =>
           ref.read(offlineAsrSettingsProvider.notifier).downloadModel(modelId),
       child: Text(l10n.localModelDownloadAction),
-    );
-  }
-
-  // ========== 模型来源 ==========
-
-  /// 卡片底部的模型来源入口：展开后用现有两个来源选项与说明。
-  ///
-  /// 来源只影响后续安装，已下载资源不重下。
-  Widget _buildDownloadSourceTile(
-    AppLocalizations l10n,
-    OfflineAsrSettingsState state,
-    ThemeData theme,
-  ) {
-    return ExpansionTile(
-      leading: Icon(
-        Icons.cloud_download_outlined,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-      title: Text(l10n.asrDownloadSourceTitle),
-      subtitle: Text(asrDownloadSourceLabel(l10n, state.downloadSource)),
-      shape: const Border(),
-      collapsedShape: const Border(),
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.m,
-            0,
-            AppSpacing.m,
-            AppSpacing.s,
-          ),
-          child: Text(
-            l10n.asrDownloadSourceDescription,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        RadioGroup<AsrDownloadSource>(
-          groupValue: state.downloadSource,
-          onChanged: (value) {
-            if (value == null) return;
-            ref
-                .read(offlineAsrSettingsProvider.notifier)
-                .setDownloadSource(value);
-          },
-          child: Column(
-            children: [
-              for (final source in AsrDownloadSource.values)
-                RadioListTile<AsrDownloadSource>(
-                  title: Text(asrDownloadSourceLabel(l10n, source)),
-                  value: source,
-                ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 

@@ -13,10 +13,8 @@ import '../providers/dictionary/dictionary_registry.dart';
 import '../providers/dictionary/dictionary_settings_provider.dart';
 import '../providers/dictionary/visible_sources_provider.dart';
 import '../providers/dictionary_provider.dart';
-import '../providers/offline_asr_settings_provider.dart';
 import '../providers/pronunciation/pronunciation_providers.dart';
 import '../providers/settings_provider.dart';
-import '../services/asr/asr_model_catalog.dart';
 import '../services/dictionary/dictionary_catalog.dart';
 import '../services/dictionary/dictionary_source.dart';
 import '../services/download/download_failure.dart';
@@ -24,7 +22,6 @@ import '../services/resource_archive_spec.dart';
 import '../theme/app_theme.dart';
 import '../utils/download_failure_message.dart';
 import '../utils/file_size.dart';
-import '../widgets/asr/asr_download_source_presentation.dart';
 import '../widgets/dictionary/dict_source_presentation.dart';
 
 /// 词典设置页面
@@ -121,8 +118,6 @@ class DictionarySettingsScreen extends ConsumerWidget {
                   _DictionaryResourceTile(nativeLanguage: lang),
                 const Divider(height: 1),
                 const _PronunciationResourceTile(),
-                const Divider(height: 1),
-                const _DownloadSourceTile(),
               ],
             ),
           ),
@@ -493,62 +488,6 @@ class _PronunciationResourceTile extends ConsumerWidget {
         ],
       ),
       trailing: trailing,
-    );
-  }
-}
-
-/// 下载来源切换：与语音识别设置页共用同一份偏好，两处互见一致。
-class _DownloadSourceTile extends ConsumerWidget {
-  const _DownloadSourceTile();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final source = ref.watch(offlineAsrSettingsProvider).downloadSource;
-    return ExpansionTile(
-      leading: Icon(
-        Icons.cloud_download_outlined,
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-      title: Text(l10n.asrDownloadSourceTitle),
-      subtitle: Text(asrDownloadSourceLabel(l10n, source)),
-      shape: const Border(),
-      collapsedShape: const Border(),
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.m,
-            0,
-            AppSpacing.m,
-            AppSpacing.s,
-          ),
-          child: Text(
-            l10n.asrDownloadSourceDescription,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        RadioGroup<AsrDownloadSource>(
-          groupValue: source,
-          onChanged: (value) {
-            if (value == null) return;
-            ref
-                .read(offlineAsrSettingsProvider.notifier)
-                .setDownloadSource(value);
-          },
-          child: Column(
-            children: [
-              for (final s in AsrDownloadSource.values)
-                RadioListTile<AsrDownloadSource>(
-                  title: Text(asrDownloadSourceLabel(l10n, s)),
-                  value: s,
-                ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

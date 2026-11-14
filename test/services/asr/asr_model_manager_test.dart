@@ -103,12 +103,9 @@ Future<_Harness> _createHarness() async {
   final adapter = _ServingAdapter({
     for (final source in AsrDownloadSource.values) ...{
       for (var i = 0; i < modelSpec.files.length; i++)
-        modelSpec
-            .fileUri(source, modelSpec.files[i])
-            .toString(): modelPayloads[i],
-      vadSpec
-          .fileUri(source, vadSpec.files.single)
-          .toString(): _vadBytes,
+        modelSpec.fileUri(source, modelSpec.files[i]).toString():
+            modelPayloads[i],
+      vadSpec.fileUri(source, vadSpec.files.single).toString(): _vadBytes,
     },
   });
   final dio = Dio()..httpClientAdapter = adapter;
@@ -218,7 +215,10 @@ void main() {
     await harness.manager.discardPartialDownload(vadModelId);
 
     expect(legacyArchivePartial.existsSync(), isFalse);
-    expect(File('${legacyArchivePartial.path}.meta.json').existsSync(), isFalse);
+    expect(
+      File('${legacyArchivePartial.path}.meta.json').existsSync(),
+      isFalse,
+    );
     expect(vadPartial.existsSync(), isFalse);
     expect(File('${vadPartial.path}.meta.json').existsSync(), isFalse);
     expect(filePartial.existsSync(), isFalse);
@@ -233,5 +233,55 @@ void main() {
     expect(await harness.manager.readInstallManifest(_modelId), isNull);
     expect(await harness.manager.isModelDownloaded(_modelId), isFalse);
     expect(await harness.manager.validateLegacyModelFiles(_modelId), isFalse);
+  });
+
+  test('镜像缺资源（404）→ 自动回落到上游并安装成功', () async {
+    final root = await Directory.systemTemp.createTemp('asr-fallback-test');
+    addTearDown(() async {
+      if (root.existsSync()) await root.delete(recursive: true);
+    });
+    final modelSpec = _modelSpec();
+    final vadSpec = _vadSpec();
+    final modelPayloads = [_encoderBytes, _decoderBytes, _tokensBytes];
+    // 只给上游内容：镜像 URI 一律 404。
+    final adapter = _ServingAdapter({
+      for (var i = 0; i < modelSpec.files.length; i++)
+        modelSpec
+                .fileUri(AsrDownloadSource.huggingFace, modelSpec.files[i])
+                .toString():
+            modelPayloads[i],
+      vadSpec
+              .fileUri(AsrDownloadSource.huggingFace, vadSpec.files.single)
+              .toString():
+          _vadBytes,
+    });
+    final dio = Dio()..httpClientAdapter = adapter;
+    final manager = AsrModelManager(
+      dio: dio,
+      modelsRootResolver: () async => p.join(root.path, 'models'),
+      downloader: DioReliableHttpDownloader(
+        dio: dio,
+        backoffDelay: (duration) async {},
+      ),
+      resourceRegistryOverride: {_modelId: modelSpec, vadModelId: vadSpec},
+    );
+    addTearDown(manager.dispose);
+
+    await manager.downloadModel(
+      _modelId,
+      source: AsrDownloadSource.huggingFaceMirror,
+    );
+
+    expect(await manager.isModelDownloaded(_modelId), isTrue);
+    expect(
+      adapter.requests.any((uri) => uri.host == 'hf-mirror.com'),
+      isTrue,
+      reason: '应先尝试镜像',
+    );
+    expect(
+      adapter.requests.any((uri) => uri.host == 'huggingface.co'),
+      isTrue,
+      reason: '镜像缺资源后应回落到上游',
+    );
   });
 }

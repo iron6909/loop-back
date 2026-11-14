@@ -42,18 +42,12 @@ class _StaticOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
   final OfflineAsrSettingsState _initialState;
   bool deleteAllDownloadedModelsCalled = false;
   bool? deleteAllIncludeSelected;
-  final downloadSourceChanges = <AsrDownloadSource>[];
   final downloadedModelIds = <String>[];
   final selectedModelIds = <String>[];
   final backends = <AsrBackend>[];
   final retriedModelIds = <String>[];
   final cancelledModelIds = <String>[];
   final deletedModelIds = <String>[];
-
-  @override
-  Future<void> setDownloadSource(AsrDownloadSource source) async {
-    downloadSourceChanges.add(source);
-  }
 
   @override
   OfflineAsrSettingsState build() => _initialState;
@@ -496,17 +490,9 @@ void main() {
     // 三档都已迁移到固定公开来源，都展示来源与许可。
     expect(find.textContaining('Source: Hugging Face'), findsNWidgets(3));
     expect(find.textContaining('License: MIT'), findsNWidgets(3));
-    // 来源选项收在卡片底部的来源入口里，展开后才出现。
+    // 不再提供手选来源：页面上没有来源入口与镜像选项。
+    expect(find.text('Model Source'), findsNothing);
     expect(find.text('hf-mirror.com (mirror)'), findsNothing);
-
-    await tester.tap(find.text('Model Source'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('hf-mirror.com (mirror)'));
-    await tester.pumpAndSettle();
-
-    expect(notifier.downloadSourceChanges, [
-      AsrDownloadSource.huggingFaceMirror,
-    ]);
   });
 
   group('在线语音服务入口', () {
