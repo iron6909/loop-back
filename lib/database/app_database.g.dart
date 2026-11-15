@@ -1628,8 +1628,7 @@ class AudioItem extends DataClass implements Insertable<AudioItem> {
           other.wordCount == this.wordCount &&
           other.isPinned == this.isPinned &&
           other.transcriptSource == this.transcriptSource &&
-          other.transcriptWordTimingSource ==
-              this.transcriptWordTimingSource &&
+          other.transcriptWordTimingSource == this.transcriptWordTimingSource &&
           other.audioSha256 == this.audioSha256 &&
           other.originalAudioSha256 == this.originalAudioSha256 &&
           other.transcriptLanguage == this.transcriptLanguage &&
@@ -2072,9 +2071,7 @@ class AudioItemsCompanion extends UpdateCompanion<AudioItem> {
           ..write('wordCount: $wordCount, ')
           ..write('isPinned: $isPinned, ')
           ..write('transcriptSource: $transcriptSource, ')
-          ..write(
-            'transcriptWordTimingSource: $transcriptWordTimingSource, ',
-          )
+          ..write('transcriptWordTimingSource: $transcriptWordTimingSource, ')
           ..write('audioSha256: $audioSha256, ')
           ..write('originalAudioSha256: $originalAudioSha256, ')
           ..write('transcriptLanguage: $transcriptLanguage, ')

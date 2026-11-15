@@ -286,14 +286,8 @@ void main() {
       expect(spec.revision, entry.value.revision);
       expect(spec.license, 'MIT');
       expect(spec.dependencies, [vadModelId]);
-      expect(
-        spec.files.take(2).map((file) => file.name),
-        entry.value.names,
-      );
-      expect(
-        spec.files.take(2).map((file) => file.sha256),
-        entry.value.sha256,
-      );
+      expect(spec.files.take(2).map((file) => file.name), entry.value.names);
+      expect(spec.files.take(2).map((file) => file.sha256), entry.value.sha256);
       expect(
         spec.files.take(2).map((file) => file.sizeBytes),
         entry.value.sizes,

@@ -840,11 +840,7 @@ void main() {
     final attempt = controller.state.currentAttempt;
     expect(transcribed, hasLength(1), reason: '按复述自己的模型转写录音文件');
     expect(attempt?.recognitionIdentity, 'local:retell-model');
-    expect(
-      attempt?.isRecognitionFailure,
-      isFalse,
-      reason: '本机转写成功时不应被判为识别失败',
-    );
+    expect(attempt?.isRecognitionFailure, isFalse, reason: '本机转写成功时不应被判为识别失败');
     expect(
       container
           .read(recognitionInFlightTasksProvider)

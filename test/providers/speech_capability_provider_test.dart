@@ -372,9 +372,7 @@ void main() {
     speechStore.config = const SpeechConfig(
       kind: SpeechProviderKind.openrouter,
       baseUrl: 'https://openrouter.ai/api/v1',
-      onlineModels: {
-        RecognitionPurpose.subtitle: 'openai/whisper-large-v3',
-      },
+      onlineModels: {RecognitionPurpose.subtitle: 'openai/whisper-large-v3'},
     );
     await container.read(speechConfigurationProvider.future);
 

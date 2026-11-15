@@ -228,10 +228,7 @@ class AudioTranscodeService {
         '${start.inMilliseconds / 1000}',
         '-i',
         source.path,
-        if (duration != null) ...[
-          '-t',
-          '${duration.inMilliseconds / 1000}',
-        ],
+        if (duration != null) ...['-t', '${duration.inMilliseconds / 1000}'],
         '-vn',
         '-map',
         '0:a:0',
@@ -255,8 +252,8 @@ class AudioTranscodeService {
         AppLogger.log(
           _logTag,
           'wav16k range failed: returnCode=$returnCode '
-              'start=${start.inSeconds}s source=${p.basename(source.path)} '
-              'logs=${logs ?? ''}',
+          'start=${start.inSeconds}s source=${p.basename(source.path)} '
+          'logs=${logs ?? ''}',
         );
         await _deleteIfExists(output);
         return false;

@@ -102,7 +102,9 @@ class SpeechModelCatalogClient {
   Map<String, Object?>? _tryDecodeObject(String raw) {
     try {
       final decoded = jsonDecode(raw);
-      return decoded is Map ? {for (final entry in decoded.entries) '${entry.key}': entry.value} : null;
+      return decoded is Map
+          ? {for (final entry in decoded.entries) '${entry.key}': entry.value}
+          : null;
     } on FormatException {
       return null;
     }

@@ -7,7 +7,11 @@ library;
 import '../remote_config/remote_config.dart';
 
 /// 地区解析的来源，供启动诊断与 UI 状态共享。
-enum UserRegionDecisionSource { remoteConfig, systemFallback, developerOverride }
+enum UserRegionDecisionSource {
+  remoteConfig,
+  systemFallback,
+  developerOverride,
+}
 
 /// 本进程启动时采用的地区。
 class UserRegionBootstrapResult {

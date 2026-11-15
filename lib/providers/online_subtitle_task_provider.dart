@@ -160,9 +160,10 @@ class OnlineSubtitleIdle extends OnlineSubtitleTaskState {
 /// 全局 provider 持有任务与进程内检查点：弹窗关闭后请求继续，重新打开仍能看到
 /// 进度、失败位置与可续试状态。同一材料同时只允许一个在途任务，重复启动被忽略。
 final onlineSubtitleTaskManagerProvider =
-    NotifierProvider<OnlineSubtitleTaskManager, Map<String, OnlineSubtitleTaskState>>(
-      OnlineSubtitleTaskManager.new,
-    );
+    NotifierProvider<
+      OnlineSubtitleTaskManager,
+      Map<String, OnlineSubtitleTaskState>
+    >(OnlineSubtitleTaskManager.new);
 
 /// 维护在线字幕任务状态与进程内检查点，并保证只有全部块成功才写库。
 class OnlineSubtitleTaskManager
@@ -236,7 +237,10 @@ class OnlineSubtitleTaskManager
     _cancelTokens[audioId] = cancelToken;
     File? chunkFile;
     try {
-      _update(audioId, OnlineSubtitleWorking(service: service, modelId: modelId));
+      _update(
+        audioId,
+        OnlineSubtitleWorking(service: service, modelId: modelId),
+      );
 
       final fileOps = ref.read(transcriptionFileOpsProvider);
       final dataDir = await fileOps.getDataDir();
@@ -432,7 +436,9 @@ class OnlineSubtitleTaskManager
     if (token != null && !token.isCancelled) token.cancel();
     final sessionId = _transcodeSessions.remove(audioId);
     if (sessionId != null) {
-      ref.read(localTranscriptionTranscodeServiceProvider).cancelSession(sessionId);
+      ref
+          .read(localTranscriptionTranscodeServiceProvider)
+          .cancelSession(sessionId);
     }
     _update(audioId, const OnlineSubtitleIdle());
   }
@@ -557,9 +563,9 @@ class OnlineSubtitleTaskManager
       '规划 ${chunks.length} 块 id=$audioId total=${total.inSeconds}s '
           'hardCut=${chunks.where((c) => c.hardCut).length}',
     );
-    final baselineSrt = await ref.read(audioItemDaoProvider).getTranscriptSrt(
-      audioId,
-    );
+    final baselineSrt = await ref
+        .read(audioItemDaoProvider)
+        .getTranscriptSrt(audioId);
     return _OnlineSubtitleRun(
       inputId: inputId,
       identity: identity,
@@ -582,9 +588,7 @@ class OnlineSubtitleTaskManager
     final extracted = await ref
         .read(localTranscriptionTranscodeServiceProvider)
         .transcodeToPcmWav16k(source: sourceFile, output: file);
-    final duration = extracted
-        ? pcmWavDuration(await file.length())
-        : null;
+    final duration = extracted ? pcmWavDuration(await file.length()) : null;
     await _deleteFile(file);
     if (duration == null || duration <= Duration.zero) return null;
     return duration;
@@ -618,9 +622,7 @@ class OnlineSubtitleTaskManager
     final parsed = await SubtitleParser.parseSubtitleString(srt);
     final combined = combineModelWordTimestamps(
       sentences: parsed,
-      modelWords: [
-        for (final chunk in run.chunks) ...?run.words[chunk.index],
-      ],
+      modelWords: [for (final chunk in run.chunks) ...?run.words[chunk.index]],
     );
     final wordsJson = combined.words.isEmpty
         ? null
@@ -645,10 +647,7 @@ class OnlineSubtitleTaskManager
       isCancelled: () => _isCancelled(audioId),
     );
     if (commit == TranscriptCommitResult.conflict) {
-      AppLogger.log(
-        'OnlineSubtitle',
-        '⚠️ 字幕已被用户更新的内容替换，放弃本次结果 id=$audioId',
-      );
+      AppLogger.log('OnlineSubtitle', '⚠️ 字幕已被用户更新的内容替换，放弃本次结果 id=$audioId');
       _update(audioId, const OnlineSubtitleConflict());
       await _discardRun(audioId);
       return;
@@ -694,7 +693,10 @@ class OnlineSubtitleTaskManager
     try {
       if (await run.tempDir.exists()) await run.tempDir.delete(recursive: true);
     } catch (error) {
-      AppLogger.log('OnlineSubtitle', '清理临时音频失败 dir=${run.tempDir.path} | $error');
+      AppLogger.log(
+        'OnlineSubtitle',
+        '清理临时音频失败 dir=${run.tempDir.path} | $error',
+      );
     }
   }
 
@@ -800,8 +802,7 @@ class _OnlineSubtitleRun {
         ? const <AsrSegment>[]
         : segments[chunk.index - 1] ?? const <AsrSegment>[];
     // 只有硬切才共享音频：重叠区内两边的结果要用局部对齐去重。
-    segments[chunk.index] =
-        previousChunk == null || !previousChunk.hardCut
+    segments[chunk.index] = previousChunk == null || !previousChunk.hardCut
         ? restored
         : trimChunkOverlap(
             previousTail: [

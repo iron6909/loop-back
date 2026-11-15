@@ -25,13 +25,19 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     expect(
-      container.read(remoteFeatureEnabledProvider(RemoteFeature.aiChatAssistant)),
+      container.read(
+        remoteFeatureEnabledProvider(RemoteFeature.aiChatAssistant),
+      ),
       isTrue,
     );
     // 刷新调用不改变状态，也不触网。
-    await container.read(remoteConfigProvider.notifier).refreshIfStale(force: true);
+    await container
+        .read(remoteConfigProvider.notifier)
+        .refreshIfStale(force: true);
     expect(
-      container.read(remoteFeatureEnabledProvider(RemoteFeature.aiChatAssistant)),
+      container.read(
+        remoteFeatureEnabledProvider(RemoteFeature.aiChatAssistant),
+      ),
       isTrue,
     );
   });

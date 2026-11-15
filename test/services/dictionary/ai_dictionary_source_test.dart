@@ -1,5 +1,6 @@
 /// AI 词典源：只负责路由（单词/词组）与逐帧转发；缓存与凭据由统一客户端处理。
 library;
+
 import 'package:dio/dio.dart';
 import 'package:loop_back/models/dictionary/dictionary_entry.dart';
 import 'package:loop_back/models/dictionary/dictionary_lookup_result.dart';
@@ -36,9 +37,10 @@ MultiWordDictionaryEntry _multiEntry(String expression) =>
       background: '',
     );
 
-Stream<AiDictionaryStreamFrame> _frames(AiDictionaryEntry entry,
-        {bool isFinal = true}) =>
-    Stream.value(AiDictionaryStreamFrame(entry: entry, isFinal: isFinal));
+Stream<AiDictionaryStreamFrame> _frames(
+  AiDictionaryEntry entry, {
+  bool isFinal = true,
+}) => Stream.value(AiDictionaryStreamFrame(entry: entry, isFinal: isFinal));
 
 void main() {
   late MockApiClient api;
@@ -166,13 +168,11 @@ void main() {
         targetLanguage: 'zh-CN',
         cancelToken: any(named: 'cancelToken'),
       ),
-    ).thenAnswer(
-      (_) async* {
-        yield AiDictionaryStreamFrame(entry: _entry('run'), isFinal: false);
-        token.cancel('closed');
-        yield AiDictionaryStreamFrame(entry: _entry('run'), isFinal: true);
-      },
-    );
+    ).thenAnswer((_) async* {
+      yield AiDictionaryStreamFrame(entry: _entry('run'), isFinal: false);
+      token.cancel('closed');
+      yield AiDictionaryStreamFrame(entry: _entry('run'), isFinal: true);
+    });
 
     final frames = await source
         .lookupStream(request('run'), cancelToken: token)

@@ -48,7 +48,8 @@ class SpeechCapability {
     required String baseUrl,
     required String modelId,
     required String? credentialVersion,
-  }) => '${kind.name}|${_normalizeRoot(baseUrl)}|${modelId.trim()}|'
+  }) =>
+      '${kind.name}|${_normalizeRoot(baseUrl)}|${modelId.trim()}|'
       '${credentialVersion ?? ''}';
 
   /// 只用于日志与调试：不含凭据。
@@ -95,9 +96,8 @@ class SpeechCapability {
 
 /// 能力结论与上传告知的本地存储入口。
 class SpeechCapabilityStore {
-  SpeechCapabilityStore({
-    Future<SharedPreferences> Function()? preferences,
-  }) : _preferences = preferences ?? SharedPreferences.getInstance;
+  SpeechCapabilityStore({Future<SharedPreferences> Function()? preferences})
+    : _preferences = preferences ?? SharedPreferences.getInstance;
 
   final Future<SharedPreferences> Function() _preferences;
 
@@ -105,7 +105,8 @@ class SpeechCapabilityStore {
   static const preferencePrefix = 'speech_capability_';
 
   /// 已确认的服务地址（含告知）的存储槽。
-  static const uploadNoticePreferenceKey = '${preferencePrefix}upload_notice_v1';
+  static const uploadNoticePreferenceKey =
+      '${preferencePrefix}upload_notice_v1';
 
   /// 能力结论的存储槽。
   static const recordsPreferenceKey = '${preferencePrefix}records_v1';

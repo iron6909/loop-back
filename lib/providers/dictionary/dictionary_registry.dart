@@ -26,9 +26,8 @@ LocalDictionarySource localDictionarySource(Ref ref) =>
 ///
 /// 依赖延迟解析（lookup 时才读），避免枚举注册表即初始化数据库/网络栈。
 @Riverpod(keepAlive: true)
-AiDictionarySource aiDictionarySource(Ref ref) => AiDictionarySource(
-  apiClient: () => ref.read(sentenceAiApiClientProvider),
-);
+AiDictionarySource aiDictionarySource(Ref ref) =>
+    AiDictionarySource(apiClient: () => ref.read(sentenceAiApiClientProvider));
 
 /// 网页词典源列表（由 [kWebDictConfigs] 配置生成：Cambridge / Oxford / ...）
 @Riverpod(keepAlive: true)

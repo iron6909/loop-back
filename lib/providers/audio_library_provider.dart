@@ -76,10 +76,9 @@ class AudioLibrary extends _$AudioLibrary {
               transcriptSource: TranscriptSource.fromIndex(
                 row.transcriptSource,
               ),
-              transcriptWordTimingSource:
-                  TranscriptWordTimingSource.fromIndex(
-                    row.transcriptWordTimingSource,
-                  ),
+              transcriptWordTimingSource: TranscriptWordTimingSource.fromIndex(
+                row.transcriptWordTimingSource,
+              ),
               audioSha256: row.audioSha256,
               originalAudioSha256: row.originalAudioSha256,
               transcriptLanguage: row.transcriptLanguage,
@@ -671,9 +670,7 @@ class AudioLibrary extends _$AudioLibrary {
       wordCount: Value(item.wordCount),
       isPinned: Value(item.isPinned),
       transcriptSource: Value(item.transcriptSource?.index),
-      transcriptWordTimingSource: Value(
-        item.transcriptWordTimingSource?.index,
-      ),
+      transcriptWordTimingSource: Value(item.transcriptWordTimingSource?.index),
       audioSha256: Value(item.audioSha256),
       originalAudioSha256: Value(item.originalAudioSha256),
       transcriptLanguage: Value(item.transcriptLanguage),

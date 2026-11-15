@@ -50,10 +50,15 @@ class RetellOnlineSpeech {
 }
 
 class RetellReviewEvaluationState {
-  const RetellReviewEvaluationState({this.attemptKey,
-    this.phase = RetellReviewEvaluationPhase.idle, this.evaluation, this.errorCode,
-    this.speechError, this.onlineSpeech,
-    this.quotaReason = AiQuotaRejectionReason.exhausted});
+  const RetellReviewEvaluationState({
+    this.attemptKey,
+    this.phase = RetellReviewEvaluationPhase.idle,
+    this.evaluation,
+    this.errorCode,
+    this.speechError,
+    this.onlineSpeech,
+    this.quotaReason = AiQuotaRejectionReason.exhausted,
+  });
   final String? attemptKey;
   final RetellReviewEvaluationPhase phase;
   final RetellReviewEvaluation? evaluation;
@@ -70,13 +75,16 @@ class RetellReviewEvaluationState {
 
   // 旧页面参数保留，生产逻辑不再产生会员配额错误。
   final AiQuotaRejectionReason quotaReason;
-  bool get hasCachedResult => phase == RetellReviewEvaluationPhase.completed && evaluation != null;
+  bool get hasCachedResult =>
+      phase == RetellReviewEvaluationPhase.completed && evaluation != null;
 }
 
 /// 独立本机转写入口；按复述自己的识别选择执行，不上传录音。
 ///
 /// 复述不再借用字幕模型：模型来自复述用途的本机档位，与字幕、跟读各自独立。
-final retellTranscriptProvider = Provider<Future<String?> Function(String)>((ref) {
+final retellTranscriptProvider = Provider<Future<String?> Function(String)>((
+  ref,
+) {
   return RetellTranscriber(
     engineFactory: ref.read(localTranscriptionEngineFactoryProvider),
     transcode: ref.read(localTranscriptionTranscodeServiceProvider),
@@ -88,15 +96,20 @@ final retellTranscriptProvider = Provider<Future<String?> Function(String)>((ref
       if (!await manager.isModelDownloaded(model.id)) {
         throw StateError('请先下载英语识别模型');
       }
-      return AsrModelConfig(model: model, modelDir: await manager.modelDir(model.id),
-        numThreads: AsrModelConfig.recommendedThreads());
+      return AsrModelConfig(
+        model: model,
+        modelDir: await manager.modelDir(model.id),
+        numThreads: AsrModelConfig.recommendedThreads(),
+      );
     },
   ).transcribe;
 });
 
-final retellReviewEvaluationProvider = NotifierProvider<
-  RetellReviewEvaluationController, RetellReviewEvaluationState>(
-    RetellReviewEvaluationController.new);
+final retellReviewEvaluationProvider =
+    NotifierProvider<
+      RetellReviewEvaluationController,
+      RetellReviewEvaluationState
+    >(RetellReviewEvaluationController.new);
 
 /// 复述在线的转写结果：单块上传或分块合并后的完整文本。
 class RetellOnlineTranscript {
@@ -282,11 +295,7 @@ class RetellOnlineTranscriber {
     final text = active.text;
     // 全部块成功：临时音频用完即删，源录音不动。
     await discard();
-    return _transcriptOf(
-      access,
-      text: text,
-      reportedCost: active.reportedCost,
-    );
+    return _transcriptOf(access, text: text, reportedCost: active.reportedCost);
   }
 
   RetellOnlineTranscript _transcriptOf(
@@ -329,16 +338,21 @@ final retellOnlineTranscriptProvider = Provider<RetellOnlineTranscriber>((ref) {
   return transcriber;
 });
 
-class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationState> {
+class RetellReviewEvaluationController
+    extends Notifier<RetellReviewEvaluationState> {
   CancelToken? _token;
   var _generation = 0;
   var _disposed = false;
   @override
   RetellReviewEvaluationState build() {
-    ref.onDispose(() { _disposed = true; _token?.cancel('disposed'); });
+    ref.onDispose(() {
+      _disposed = true;
+      _token?.cancel('disposed');
+    });
     ref.listen(providerConfigurationProvider, (previous, _) {
       if (previous == null || previous.isLoading) return;
-      _generation++; _token?.cancel('provider changed');
+      _generation++;
+      _token?.cancel('provider changed');
       state = RetellReviewEvaluationState(attemptKey: state.attemptKey);
     });
     return const RetellReviewEvaluationState();
@@ -346,39 +360,54 @@ class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationSt
 
   void syncAttempt(String? attemptKey) {
     if (state.attemptKey == attemptKey) return;
-    _generation++; _token?.cancel('attempt changed');
+    _generation++;
+    _token?.cancel('attempt changed');
     state = RetellReviewEvaluationState(attemptKey: attemptKey);
   }
 
-  Future<void> evaluate({required String attemptKey, required String recordingPath,
-    required String originalText, required String targetLanguage,
-    String? localTranscript, String? localTranscriptIdentity}) async {
+  Future<void> evaluate({
+    required String attemptKey,
+    required String recordingPath,
+    required String originalText,
+    required String targetLanguage,
+    String? localTranscript,
+    String? localTranscriptIdentity,
+  }) async {
     if (state.attemptKey != attemptKey) syncAttempt(attemptKey);
-    if (state.hasCachedResult || state.phase == RetellReviewEvaluationPhase.loading ||
-      state.phase == RetellReviewEvaluationPhase.streaming) {
+    if (state.hasCachedResult ||
+        state.phase == RetellReviewEvaluationPhase.loading ||
+        state.phase == RetellReviewEvaluationPhase.streaming) {
       return;
     }
     final generation = ++_generation;
     _token?.cancel('restart');
-    final token = CancelToken(); _token = token;
-    state = RetellReviewEvaluationState(attemptKey: attemptKey,
-      phase: RetellReviewEvaluationPhase.loading);
+    final token = CancelToken();
+    _token = token;
+    state = RetellReviewEvaluationState(
+      attemptKey: attemptKey,
+      phase: RetellReviewEvaluationPhase.loading,
+    );
     try {
       final selection = ref.read(recognitionSettingsProvider).retell;
       final supplied = localTranscript?.trim();
       // 线下的身份就是选择本身；在线还要绑定实际服务与模型，否则换了在线模型
       // 也会被当成同一次结果。
       final onlineConfig = selection.usesOnlineModel
-        ? await _retellOnlineConfig()
-        : null;
+          ? await _retellOnlineConfig()
+          : null;
       final expectedIdentity = onlineConfig == null
-        ? selection.recognitionIdentity
-        : onlineRecognitionIdentity(onlineConfig.config, onlineConfig.modelId);
+          ? selection.recognitionIdentity
+          : onlineRecognitionIdentity(
+              onlineConfig.config,
+              onlineConfig.modelId,
+            );
       if (!_current(generation, attemptKey)) return;
       // 只复用同 attempt 且实际识别身份与复述选择一致的结果；身份缺失或不同
       // 来源（如字幕、跟读，或另一个在线模型）一律重新按复述自己的选择识别。
-      final reusable = supplied != null && supplied.isNotEmpty &&
-        localTranscriptIdentity == expectedIdentity;
+      final reusable =
+          supplied != null &&
+          supplied.isNotEmpty &&
+          localTranscriptIdentity == expectedIdentity;
       String? transcript;
       RetellOnlineSpeech? onlineSpeech;
       if (reusable) {
@@ -416,8 +445,15 @@ class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationSt
         _fail(generation, attemptKey, 'transcription_failed');
         return;
       }
-      await _evaluateText(generation, attemptKey, transcript, originalText,
-        targetLanguage, token, onlineSpeech);
+      await _evaluateText(
+        generation,
+        attemptKey,
+        transcript,
+        originalText,
+        targetLanguage,
+        token,
+        onlineSpeech,
+      );
     } on Object catch (error) {
       if (token.isCancelled || !_current(generation, attemptKey)) return;
       // 到这里只有转写阶段的失败：不调用文字服务，语音错误单独呈现。
@@ -433,11 +469,16 @@ class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationSt
   /// 本机用复述自己的档位；在线用复述自己的在线模型并上传一次；系统识别只能随
   /// 录音会话产生实时结果，无法对录音文件二次转写，返回空文本由上层报告失败，
   /// 不自动改用其它方式。
-  Future<_RecognizedTranscript> _recognize(String recordingPath,
-    RecognitionSelection selection, CancelToken token) async {
+  Future<_RecognizedTranscript> _recognize(
+    String recordingPath,
+    RecognitionSelection selection,
+    CancelToken token,
+  ) async {
     if (selection.usesOnlineModel) {
       final online = await ref.read(retellOnlineTranscriptProvider)(
-        recordingPath, cancelToken: token);
+        recordingPath,
+        cancelToken: token,
+      );
       return _RecognizedTranscript(
         text: online.text,
         onlineSpeech: RetellOnlineSpeech(
@@ -473,48 +514,79 @@ class RetellReviewEvaluationController extends Notifier<RetellReviewEvaluationSt
   }
 
   /// 复用在线文本时的语音信息：本次没有新请求，费用为未知。
-  RetellOnlineSpeech _speechOf(({SpeechConfig config, String modelId}) online) =>
-    RetellOnlineSpeech(
-      modelId: online.modelId,
-      serviceHost: Uri.tryParse(online.config.baseUrl)?.host ?? '',
-    );
+  RetellOnlineSpeech _speechOf(
+    ({SpeechConfig config, String modelId}) online,
+  ) => RetellOnlineSpeech(
+    modelId: online.modelId,
+    serviceHost: Uri.tryParse(online.config.baseUrl)?.host ?? '',
+  );
 
-  Future<void> _evaluateText(int generation, String attempt, String transcript,
-    String original, String language, CancelToken token,
-    RetellOnlineSpeech? onlineSpeech) async {
+  Future<void> _evaluateText(
+    int generation,
+    String attempt,
+    String transcript,
+    String original,
+    String language,
+    CancelToken token,
+    RetellOnlineSpeech? onlineSpeech,
+  ) async {
     var complete = false;
-    await for (final frame in ref.read(sentenceAiApiClientProvider)
-      .evaluateTranscriptStream(transcript: transcript, originalText: original,
-        targetLanguage: language, cancelToken: token)) {
+    await for (final frame
+        in ref
+            .read(sentenceAiApiClientProvider)
+            .evaluateTranscriptStream(
+              transcript: transcript,
+              originalText: original,
+              targetLanguage: language,
+              cancelToken: token,
+            )) {
       if (!_current(generation, attempt)) return;
       complete = frame.isFinal;
-      state = RetellReviewEvaluationState(attemptKey: attempt,
-        phase: complete ? RetellReviewEvaluationPhase.completed : RetellReviewEvaluationPhase.streaming,
-        evaluation: frame.evaluation, onlineSpeech: onlineSpeech);
+      state = RetellReviewEvaluationState(
+        attemptKey: attempt,
+        phase: complete
+            ? RetellReviewEvaluationPhase.completed
+            : RetellReviewEvaluationPhase.streaming,
+        evaluation: frame.evaluation,
+        onlineSpeech: onlineSpeech,
+      );
     }
     if (!complete && _current(generation, attempt)) {
       _fail(generation, attempt, 'request_failed', onlineSpeech: onlineSpeech);
     }
   }
 
-  bool _current(int generation, String attempt) => !_disposed &&
-    generation == _generation && state.attemptKey == attempt;
+  bool _current(int generation, String attempt) =>
+      !_disposed && generation == _generation && state.attemptKey == attempt;
 
   /// 失败回到可重试状态；[code] 是文字 AI 分类，[speechError] 是语音阶段原因。
-  void _fail(int generation, String attempt, String? code, {
-    Object? speechError, RetellOnlineSpeech? onlineSpeech}) {
+  void _fail(
+    int generation,
+    String attempt,
+    String? code, {
+    Object? speechError,
+    RetellOnlineSpeech? onlineSpeech,
+  }) {
     if (_current(generation, attempt)) {
-      state = RetellReviewEvaluationState(attemptKey: attempt,
-        phase: RetellReviewEvaluationPhase.failed, errorCode: code,
-        speechError: speechError, onlineSpeech: onlineSpeech);
+      state = RetellReviewEvaluationState(
+        attemptKey: attempt,
+        phase: RetellReviewEvaluationPhase.failed,
+        errorCode: code,
+        speechError: speechError,
+        onlineSpeech: onlineSpeech,
+      );
     }
   }
 
   void loadSample({required String attemptKey}) {
     assert(retellReviewSampleEnabled);
-    _generation++; _token?.cancel('sample');
-    state = RetellReviewEvaluationState(attemptKey: attemptKey,
-      phase: RetellReviewEvaluationPhase.completed, evaluation: retellReviewSampleEvaluation());
+    _generation++;
+    _token?.cancel('sample');
+    state = RetellReviewEvaluationState(
+      attemptKey: attemptKey,
+      phase: RetellReviewEvaluationPhase.completed,
+      evaluation: retellReviewSampleEvaluation(),
+    );
   }
 }
 

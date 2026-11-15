@@ -66,10 +66,7 @@ CombinedWordTimings combineModelWordTimestamps({
 }
 
 /// 句子与模型词是否逐词一致：词数相同且规范化后的词面顺序完全一致。
-bool _matchesSentence(
-  Sentence sentence,
-  List<SpeechTranscriptWord> words,
-) {
+bool _matchesSentence(Sentence sentence, List<SpeechTranscriptWord> words) {
   final expected = _tokens(sentence.text);
   if (expected.isEmpty || expected.length != words.length) return false;
   for (var i = 0; i < expected.length; i++) {

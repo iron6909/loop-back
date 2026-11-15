@@ -38,10 +38,7 @@ Future<T> withUpstreamFallback<T>({
     // 安装器在少数路径上会直接抛 Dio 异常（如取消之外的适配器失败）。
     final status = error.response?.statusCode;
     if (status == null || !_isFallbackStatus(status)) rethrow;
-    AppLogger.log(
-      logTag,
-      '镜像缺少资源或服务异常 statusCode=$status，回退到上游重试一次',
-    );
+    AppLogger.log(logTag, '镜像缺少资源或服务异常 statusCode=$status，回退到上游重试一次');
     return run(AsrDownloadSource.huggingFace);
   }
 }

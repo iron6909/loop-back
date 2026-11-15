@@ -44,8 +44,8 @@ class _FakeOfflineAsrSettingsNotifier extends OfflineAsrSettingsNotifier {
 
 /// 跟读选择替身：本文件只验证录音生命周期与平台行为，固定为本机方式，
 /// 不让识别设置依赖偏好初始化。
-Override recognitionSettingsLocalOverride() =>
-    recognitionSettingsProvider.overrideWith(_LocalRecognitionSettingsNotifier.new);
+Override recognitionSettingsLocalOverride() => recognitionSettingsProvider
+    .overrideWith(_LocalRecognitionSettingsNotifier.new);
 
 class _LocalRecognitionSettingsNotifier extends RecognitionSettingsNotifier {
   @override

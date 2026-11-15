@@ -642,9 +642,7 @@ class SentenceAnnotationCardState
         );
         if (!automatic) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(providerErrorText(context, error)),
-            ),
+            SnackBar(content: Text(providerErrorText(context, error))),
           );
         }
       }
@@ -662,7 +660,6 @@ class SentenceAnnotationCardState
     _notifyToolbar();
     AppLogger.log('SentenceAnnotation', '翻译请求无内容结束: source=$source');
   }
-
 
   /// 解析按钮点击（返回 Future 供 AsyncToggleButton 管理 loading）。
   ///
@@ -775,9 +772,7 @@ class SentenceAnnotationCardState
         );
         if (!automatic) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(providerErrorText(context, error)),
-            ),
+            SnackBar(content: Text(providerErrorText(context, error))),
           );
         }
       }
@@ -795,7 +790,6 @@ class SentenceAnnotationCardState
     _notifyToolbar();
     AppLogger.log('SentenceAnnotation', '解析请求无内容结束: source=$source');
   }
-
 
   @override
   void dispose() {

@@ -365,11 +365,17 @@ void main() {
         );
 
         expect(
-          approximate(TranscriptSource.online, TranscriptWordTimingSource.model),
+          approximate(
+            TranscriptSource.online,
+            TranscriptWordTimingSource.model,
+          ),
           isFalse,
         );
         expect(
-          approximate(TranscriptSource.online, TranscriptWordTimingSource.mixed),
+          approximate(
+            TranscriptSource.online,
+            TranscriptWordTimingSource.mixed,
+          ),
           isTrue,
         );
         expect(

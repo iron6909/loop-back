@@ -240,8 +240,7 @@ DetectionResult detectNearCompletion(
       : minTailHits;
   if (tailMatchCount < requiredHits) {
     return DetectionResult(
-      description:
-          'E:末尾$effectiveTailSize词命中$tailMatchCount<$requiredHits,未触发',
+      description: 'E:末尾$effectiveTailSize词命中$tailMatchCount<$requiredHits,未触发',
     );
   }
 

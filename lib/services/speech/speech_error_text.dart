@@ -98,7 +98,5 @@ String speechCostText(bool zh, double? reportedCost) {
   if (reportedCost == null) {
     return zh ? '在线语音费用：未知' : 'Online speech cost: unknown';
   }
-  return zh
-      ? '在线语音费用：$reportedCost'
-      : 'Online speech cost: $reportedCost';
+  return zh ? '在线语音费用：$reportedCost' : 'Online speech cost: $reportedCost';
 }

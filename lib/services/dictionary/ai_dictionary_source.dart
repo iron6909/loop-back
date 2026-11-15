@@ -23,14 +23,22 @@ class AiDictionarySource implements DictionarySource {
   bool get requiresNetwork => true;
   void clearMemoryCache() => _api().clearMemoryCache();
 
-  Stream<DictionaryLookupResult?> lookupStream(DictionaryLookupRequest request,
-    {CancelToken? cancelToken}) async* {
+  Stream<DictionaryLookupResult?> lookupStream(
+    DictionaryLookupRequest request, {
+    CancelToken? cancelToken,
+  }) async* {
     final client = _api();
     final stream = normalizeWord(request.word).contains(' ')
-      ? client.lookupPhraseStreamFrames(request.word,
-          targetLanguage: request.targetLanguage, cancelToken: cancelToken)
-      : client.lookupWordStreamFrames(request.word,
-          targetLanguage: request.targetLanguage, cancelToken: cancelToken);
+        ? client.lookupPhraseStreamFrames(
+            request.word,
+            targetLanguage: request.targetLanguage,
+            cancelToken: cancelToken,
+          )
+        : client.lookupWordStreamFrames(
+            request.word,
+            targetLanguage: request.targetLanguage,
+            cancelToken: cancelToken,
+          );
     await for (final frame in stream) {
       if (cancelToken?.isCancelled ?? false) return;
       yield AiDictResult(frame.entry);
@@ -38,8 +46,10 @@ class AiDictionarySource implements DictionarySource {
   }
 
   @override
-  Future<DictionaryLookupResult?> lookup(DictionaryLookupRequest request,
-    {CancelToken? cancelToken}) async {
+  Future<DictionaryLookupResult?> lookup(
+    DictionaryLookupRequest request, {
+    CancelToken? cancelToken,
+  }) async {
     DictionaryLookupResult? last;
     await for (final value in lookupStream(request, cancelToken: cancelToken)) {
       last = value;

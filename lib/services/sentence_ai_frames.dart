@@ -12,13 +12,19 @@ class AiDictionaryStreamFrame {
 }
 
 class SentenceTranslationStreamFrame {
-  const SentenceTranslationStreamFrame({required this.translation, required this.isFinal});
+  const SentenceTranslationStreamFrame({
+    required this.translation,
+    required this.isFinal,
+  });
   final SentenceTranslation translation;
   final bool isFinal;
 }
 
 class SentenceAnalysisStreamFrame {
-  const SentenceAnalysisStreamFrame({required this.analysis, required this.isFinal});
+  const SentenceAnalysisStreamFrame({
+    required this.analysis,
+    required this.isFinal,
+  });
   final SentenceAnalysis analysis;
   final bool isFinal;
 }

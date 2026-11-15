@@ -110,10 +110,7 @@ class _FakeClient extends SpeechTranscriptionClient {
     CancelToken? cancelToken,
   }) async {
     final index = calls.length;
-    calls.add((
-      duration: audioDuration,
-      wordTimestamps: requestWordTimestamps,
-    ));
+    calls.add((duration: audioDuration, wordTimestamps: requestWordTimestamps));
     final handler = onCall;
     if (handler != null) return handler(index, audioDuration);
     return _result('Hello world.', start: 0.2, end: 1.5);
@@ -131,7 +128,8 @@ SpeechTranscriptionResult _result(
   double? reportedCost,
 }) => SpeechTranscriptionResult(
   text: text,
-  segments: segments ?? [SpeechTranscriptSegment(start: start, end: end, text: text)],
+  segments:
+      segments ?? [SpeechTranscriptSegment(start: start, end: end, text: text)],
   words: words,
   segmentsValid: true,
   wordsValid: wordsValid,
@@ -199,9 +197,7 @@ class _FakeTranscode extends AudioTranscodeService {
     required File output,
   }) async {
     await output.parent.create(recursive: true);
-    await output.writeAsBytes(
-      _pcmBytes(const Duration(seconds: 1)),
-    );
+    await output.writeAsBytes(_pcmBytes(const Duration(seconds: 1)));
     return true;
   }
 
@@ -227,16 +223,18 @@ AudioItem _audioItem({int totalDuration = 60}) => AudioItem(
 );
 
 Future<void> _seedRow(db.AppDatabase database, AudioItem item) async {
-  await database.into(database.audioItems).insert(
-    db.AudioItemsCompanion.insert(
-      id: item.id,
-      name: item.name,
-      audioPath: Value(item.audioPath),
-      addedDate: item.addedDate,
-      totalDuration: Value(item.totalDuration),
-      updatedAt: DateTime(2026),
-    ),
-  );
+  await database
+      .into(database.audioItems)
+      .insert(
+        db.AudioItemsCompanion.insert(
+          id: item.id,
+          name: item.name,
+          audioPath: Value(item.audioPath),
+          addedDate: item.addedDate,
+          totalDuration: Value(item.totalDuration),
+          updatedAt: DateTime(2026),
+        ),
+      );
 }
 
 void main() {
@@ -297,15 +295,21 @@ void main() {
     return container;
   }
 
-  OnlineSubtitleTaskState? taskState(ProviderContainer container, AudioItem item) =>
-      container.read(onlineSubtitleTaskManagerProvider)[item.id];
+  OnlineSubtitleTaskState? taskState(
+    ProviderContainer container,
+    AudioItem item,
+  ) => container.read(onlineSubtitleTaskManagerProvider)[item.id];
 
   test('单块材料：一次请求即提交在线字幕与估算词时间戳', () async {
     final item = _audioItem();
     final container = await start(item, autoMergeShortSentences: false);
 
     expect(client.calls, hasLength(1));
-    expect(client.calls.single.wordTimestamps, isFalse, reason: '未验证词能力时不请求词参数');
+    expect(
+      client.calls.single.wordTimestamps,
+      isFalse,
+      reason: '未验证词能力时不请求词参数',
+    );
     final state = taskState(container, item);
     expect(state, isA<OnlineSubtitleCompleted>());
     expect((state as OnlineSubtitleCompleted).reportedCost, isNull);
@@ -313,11 +317,15 @@ void main() {
 
     final row = await database.audioItemDao.getById(item.id);
     expect(row?.transcriptSource, TranscriptSource.online.index);
-    expect(row?.transcriptWordTimingSource, TranscriptWordTimingSource.estimated.index);
+    expect(
+      row?.transcriptWordTimingSource,
+      TranscriptWordTimingSource.estimated.index,
+    );
     expect(row?.transcriptSrt, contains('Hello world.'));
     expect(row?.transcriptLanguage, 'en');
     expect(
-      container.read(onlineSubtitleTaskManagerProvider.notifier)
+      container
+          .read(onlineSubtitleTaskManagerProvider.notifier)
           .checkpointCountForTest,
       0,
       reason: '提交后不保留检查点',
@@ -341,8 +349,14 @@ void main() {
 
     expect(client.calls.single.wordTimestamps, isTrue);
     final row = await database.audioItemDao.getById(item.id);
-    expect(row?.transcriptWordTimingSource, TranscriptWordTimingSource.model.index);
-    expect(await database.audioItemDao.getWordTimestamps(item.id), contains('Hello'));
+    expect(
+      row?.transcriptWordTimingSource,
+      TranscriptWordTimingSource.model.index,
+    );
+    expect(
+      await database.audioItemDao.getWordTimestamps(item.id),
+      contains('Hello'),
+    );
   });
 
   test('配置未通过字幕能力验证时拒绝发送请求', () async {
@@ -355,7 +369,10 @@ void main() {
       (taskState(container, item) as OnlineSubtitleFailed).reason,
       OnlineSubtitleFailureReason.notVerified,
     );
-    expect((await database.audioItemDao.getById(item.id))?.transcriptSrt, isNull);
+    expect(
+      (await database.audioItemDao.getById(item.id))?.transcriptSrt,
+      isNull,
+    );
   });
 
   test('长材料分块顺序上传：两块成功后第三块失败，重试只发失败块', () async {
@@ -386,7 +403,10 @@ void main() {
     expect(failed.failedChunk, 3);
     expect(failed.retryable, isTrue, reason: '保留检查点后可只续试未完成块');
     expect(failed.mayHaveBeenCharged, isTrue, reason: '超时请求可能已被供应商计费');
-    expect((await database.audioItemDao.getById(item.id))?.transcriptSrt, isNull);
+    expect(
+      (await database.audioItemDao.getById(item.id))?.transcriptSrt,
+      isNull,
+    );
 
     // 重开弹窗/换页面后仍能续试：只重发第三块，前两块不再上传。
     await container
@@ -445,7 +465,8 @@ void main() {
     final item = _audioItem(totalDuration: 240);
     await start(item, autoMergeShortSentences: false);
 
-    final srt = (await database.audioItemDao.getById(item.id))?.transcriptSrt ?? '';
+    final srt =
+        (await database.audioItemDao.getById(item.id))?.transcriptSrt ?? '';
     // 第二块真实起点 99s，块内 10s → 109s；第三块起点 193.5s → 203.5s。
     expect(srt, contains('00:01:49'));
     expect(srt, contains('00:03:23,500'));
@@ -477,7 +498,10 @@ void main() {
 
     expect(client.calls, isEmpty);
     expect(taskState(container, item), isA<OnlineSubtitleNoSpeech>());
-    expect((await database.audioItemDao.getById(item.id))?.transcriptSrt, isNull);
+    expect(
+      (await database.audioItemDao.getById(item.id))?.transcriptSrt,
+      isNull,
+    );
   });
 
   test('有声块返回空结果时失败，不把语音内容当成静音跳过', () async {
@@ -490,7 +514,10 @@ void main() {
     expect(failed.reason, OnlineSubtitleFailureReason.invalidResult);
     expect(failed.retryable, isTrue);
     expect(failed.mayHaveBeenCharged, isTrue, reason: '请求已发出，可能已计费');
-    expect((await database.audioItemDao.getById(item.id))?.transcriptSrt, isNull);
+    expect(
+      (await database.audioItemDao.getById(item.id))?.transcriptSrt,
+      isNull,
+    );
   });
 
   test('识别期间用户另行导入字幕时保留用户内容并报告冲突', () async {
@@ -523,7 +550,8 @@ void main() {
     expect(row?.transcriptSrt, contains('User import'));
     expect(row?.transcriptSource, isNull);
     expect(
-      container.read(onlineSubtitleTaskManagerProvider.notifier)
+      container
+          .read(onlineSubtitleTaskManagerProvider.notifier)
           .checkpointCountForTest,
       0,
     );
@@ -555,14 +583,21 @@ void main() {
     expect(client.calls, hasLength(1));
     expect(taskState(container, item), isA<OnlineSubtitleIdle>());
     expect(
-      container.read(onlineSubtitleTaskManagerProvider.notifier)
+      container
+          .read(onlineSubtitleTaskManagerProvider.notifier)
           .checkpointCountForTest,
       0,
       reason: '取消后不留检查点',
     );
     final leftover = Directory(p.join(dataDir.path, 'tmp', 'online_subtitle'));
-    expect(await leftover.exists() ? await leftover.list().isEmpty : true, isTrue);
-    expect((await database.audioItemDao.getById(item.id))?.transcriptSrt, isNull);
+    expect(
+      await leftover.exists() ? await leftover.list().isEmpty : true,
+      isTrue,
+    );
+    expect(
+      (await database.audioItemDao.getById(item.id))?.transcriptSrt,
+      isNull,
+    );
   });
 
   test('请求期间配置变化时停止后续块，且不复用旧配置的已完成块', () async {
@@ -590,7 +625,10 @@ void main() {
     final failed = taskState(container, item) as OnlineSubtitleFailed;
     expect(failed.reason, OnlineSubtitleFailureReason.configChanged);
     expect(failed.retryable, isFalse, reason: '旧配置的块不能续用');
-    expect((await database.audioItemDao.getById(item.id))?.transcriptSrt, isNull);
+    expect(
+      (await database.audioItemDao.getById(item.id))?.transcriptSrt,
+      isNull,
+    );
 
     // 新配置下重试必须整份重新上传，不能拼接旧配置的结果。
     capabilityStore.credentialVersion = 'credential-b';

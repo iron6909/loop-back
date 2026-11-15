@@ -11,11 +11,15 @@ void main() {
     expect(piperVoicesByAccent(TtsAccent.uk), hasLength(2));
     expect(piperVoices.map((voice) => voice.id).toSet(), hasLength(7));
     expect(
-      piperVoices.where((voice) => voice.accent == TtsAccent.us && voice.isFemale),
+      piperVoices.where(
+        (voice) => voice.accent == TtsAccent.us && voice.isFemale,
+      ),
       hasLength(2),
     );
     expect(
-      piperVoices.where((voice) => voice.accent == TtsAccent.us && !voice.isFemale),
+      piperVoices.where(
+        (voice) => voice.accent == TtsAccent.us && !voice.isFemale,
+      ),
       hasLength(3),
     );
     for (final voice in piperVoices) {

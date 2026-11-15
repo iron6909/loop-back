@@ -219,14 +219,17 @@ void main() {
       final outcome = validateSenseGroups(validChunks(), original: original);
 
       expect(outcome, isA<ValidationSuccess<SenseGroupResult>>());
-      expect(
-        (outcome as ValidationSuccess<SenseGroupResult>).value.medium,
-        ['I want', ' to go', ' home', ' now.'],
-      );
+      expect((outcome as ValidationSuccess<SenseGroupResult>).value.medium, [
+        'I want',
+        ' to go',
+        ' home',
+        ' now.',
+      ]);
     });
 
     test('仅大小写不同即判不守恒（spike 实测零容忍）', () {
-      final json = validChunks()..['medium'] = ['i want', ' to go', ' home', ' now.'];
+      final json = validChunks()
+        ..['medium'] = ['i want', ' to go', ' home', ' now.'];
       expect(
         _reason(validateSenseGroups(json, original: original)),
         ValidationFailureReason.notConserved,
@@ -263,10 +266,7 @@ void main() {
       'rating': 'good',
       'summary': '整体表达清楚，缺少一个要点。',
       'keyPoints': [
-        {
-          'keyPoint': '提到通勤时间变长',
-          'status': 'covered',
-        },
+        {'keyPoint': '提到通勤时间变长', 'status': 'covered'},
       ],
       'corrections': [
         {
@@ -281,7 +281,8 @@ void main() {
       final outcome = validateRetell(validRetell());
 
       expect(outcome, isA<ValidationSuccess<RetellReviewEvaluation>>());
-      final value = (outcome as ValidationSuccess<RetellReviewEvaluation>).value;
+      final value =
+          (outcome as ValidationSuccess<RetellReviewEvaluation>).value;
       expect(value.rating, RetellReviewRating.good);
       expect(value.keyPoints.single.status, RetellReviewKeyPointStatus.covered);
     });

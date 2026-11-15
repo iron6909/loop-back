@@ -1063,10 +1063,14 @@ class _SentenceExplanationViewState
                 onToolbarStateChanged: _toolbarNotifier.notify,
                 onRequestTranslation: ai != null
                     ? (cancelToken, source) async* {
-                        final (previous, next) = await resolveTranslationContext();
+                        final (previous, next) =
+                            await resolveTranslationContext();
                         await for (final t in ai.getTranslationStream(
-                          _text, previous: previous, next: next,
-                          targetLanguage: nativeLanguage, cancelToken: cancelToken,
+                          _text,
+                          previous: previous,
+                          next: next,
+                          targetLanguage: nativeLanguage,
+                          cancelToken: cancelToken,
                         )) {
                           if (t.translation.isNotEmpty) {
                             ref
@@ -1080,7 +1084,8 @@ class _SentenceExplanationViewState
                 onRequestAnalysis: ai != null
                     ? (cancelToken, source) async* {
                         await for (final analysis in ai.getAnalysisStream(
-                          _text, targetLanguage: nativeLanguage,
+                          _text,
+                          targetLanguage: nativeLanguage,
                           cancelToken: cancelToken,
                         )) {
                           if (analysis.isNotEmpty) {

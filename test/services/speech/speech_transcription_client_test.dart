@@ -46,7 +46,12 @@ class _FakeAdapter implements HttpClientAdapter {
   }
 
   void enqueueError(DioExceptionType type) {
-    _responses.add(DioException(requestOptions: RequestOptions(path: ''), type: type));
+    _responses.add(
+      DioException(
+        requestOptions: RequestOptions(path: ''),
+        type: type,
+      ),
+    );
   }
 
   @override
@@ -163,7 +168,10 @@ void main() {
       expect(adapter.requestCount, 1);
       final request = adapter.requests.single;
       expect(request.method, 'POST');
-      expect(request.uri.toString(), 'https://openrouter.ai/api/v1/audio/transcriptions');
+      expect(
+        request.uri.toString(),
+        'https://openrouter.ai/api/v1/audio/transcriptions',
+      );
       expect(request.headers['Authorization'], 'Bearer sk-speech-test');
       expect(await _field(request, 'model'), 'openai/whisper-large-v3');
       expect(await _field(request, 'language'), 'en');
@@ -375,7 +383,10 @@ void main() {
   });
 
   group('错误分类', () {
-    Future<void> expectKind(int status, SpeechTranscriptionErrorKind kind) async {
+    Future<void> expectKind(
+      int status,
+      SpeechTranscriptionErrorKind kind,
+    ) async {
       adapter.enqueueJson({'error': 'failed'}, status: status);
       await expectLater(
         transcribe(),
@@ -398,10 +409,9 @@ void main() {
     });
 
     test('400 指向输出格式或时间戳参数时按能力不支持分类', () async {
-      adapter.enqueueJson(
-        {'error': 'response_format verbose_json is not supported'},
-        status: 400,
-      );
+      adapter.enqueueJson({
+        'error': 'response_format verbose_json is not supported',
+      }, status: 400);
 
       await expectLater(
         transcribe(),

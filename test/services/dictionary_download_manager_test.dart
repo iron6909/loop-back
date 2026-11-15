@@ -230,12 +230,11 @@ void main() {
   });
 
   test('旧安装（清单 resourceId 匹配）→ 识别为已下载且不重下', () async {
-    final dir = Directory(
-      p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh'),
-    )..createSync(recursive: true);
-    File(p.join(dir.path, 'dict.sqlite')).writeAsBytesSync(
-      List<int>.filled(8, 1),
-    );
+    final dir = Directory(p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh'))
+      ..createSync(recursive: true);
+    File(
+      p.join(dir.path, 'dict.sqlite'),
+    ).writeAsBytesSync(List<int>.filled(8, 1));
     await writeResourceInstallManifest(
       dir,
       resourceId: 'dict-en_zh-v1',
@@ -248,12 +247,11 @@ void main() {
   });
 
   test('损坏安装（清单缺失）→ 识别为未下载', () async {
-    final dir = Directory(
-      p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh'),
-    )..createSync(recursive: true);
-    File(p.join(dir.path, 'dict.sqlite')).writeAsBytesSync(
-      List<int>.filled(8, 1),
-    );
+    final dir = Directory(p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh'))
+      ..createSync(recursive: true);
+    File(
+      p.join(dir.path, 'dict.sqlite'),
+    ).writeAsBytesSync(List<int>.filled(8, 1));
 
     final m = manager(_MockAdapter(downloadUrl: 'http://unused.local/x.zip'));
 
@@ -318,9 +316,9 @@ void main() {
     final zhCnDir = Directory(
       p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh-CN'),
     )..createSync(recursive: true);
-    File(p.join(zhCnDir.path, 'dict.sqlite')).writeAsBytesSync(
-      List<int>.filled(8, 1),
-    );
+    File(
+      p.join(zhCnDir.path, 'dict.sqlite'),
+    ).writeAsBytesSync(List<int>.filled(8, 1));
     await writeResourceInstallManifest(
       zhCnDir,
       resourceId: zhCn.resourceId,
@@ -334,9 +332,9 @@ void main() {
     final zhTwDir = Directory(
       p.join(fakeAppSupportDir.path, 'dictionary', 'en_zh-TW'),
     )..createSync(recursive: true);
-    File(p.join(zhTwDir.path, 'dict.sqlite')).writeAsBytesSync(
-      List<int>.filled(8, 2),
-    );
+    File(
+      p.join(zhTwDir.path, 'dict.sqlite'),
+    ).writeAsBytesSync(List<int>.filled(8, 2));
     await writeResourceInstallManifest(
       zhTwDir,
       resourceId: zhTw.resourceId,

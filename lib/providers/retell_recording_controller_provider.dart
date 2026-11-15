@@ -185,6 +185,7 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
 
   /// 当前在途的在线转写请求；取消、换段或销毁时停止并丢弃旧回调。
   CancelToken? _onlineCancelToken;
+
   /// 累计有声时长（silenceMs == 0 区间的加总）
   Duration _voicedDuration = Duration.zero;
 
@@ -1195,7 +1196,8 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
         filePath,
         cancelToken: token,
       );
-      if (generation != _roundGeneration || !identical(_onlineCancelToken, token)) {
+      if (generation != _roundGeneration ||
+          !identical(_onlineCancelToken, token)) {
         return null;
       }
       AppLogger.log(
@@ -1205,7 +1207,8 @@ class RetellRecordingController extends Notifier<RetellRecordingState> {
       );
       return _RetellOnlineResult(text: online.text, identity: online.identity);
     } on Object catch (error) {
-      if (generation != _roundGeneration || !identical(_onlineCancelToken, token)) {
+      if (generation != _roundGeneration ||
+          !identical(_onlineCancelToken, token)) {
         return null;
       }
       AppLogger.log('RetellRec', '✗ 在线转写失败，未进入评分: ${error.runtimeType}');

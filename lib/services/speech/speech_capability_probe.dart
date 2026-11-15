@@ -53,8 +53,7 @@ class SpeechCapabilityProbe {
     CancelToken? cancelToken,
   }) async {
     final audio = await _sampleLoader();
-    final requestWordTimestamps =
-        config.kind == SpeechProviderKind.openrouter;
+    final requestWordTimestamps = config.kind == SpeechProviderKind.openrouter;
     final result = await _client.transcribe(
       config: config,
       apiKey: apiKey,

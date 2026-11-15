@@ -8,7 +8,10 @@ void main() {
     test('从 HF dataset 下载（可走 hf-mirror），不再固定 GitHub 发布资产', () {
       final resource = ttsEspeakNgDataResource;
       final file = resource.files.single;
-      expect(resource.layout, AsrPublicResourceLayout.huggingFaceDatasetResolve);
+      expect(
+        resource.layout,
+        AsrPublicResourceLayout.huggingFaceDatasetResolve,
+      );
 
       expect(
         resource.fileUri(AsrDownloadSource.huggingFace, file).toString(),

@@ -229,7 +229,9 @@ class SpeechTranscriptionClient {
         requestWordTimestamps: requestWordTimestamps,
       );
     } on DioException catch (error) {
-      throw SpeechTranscriptionException(speechTranscriptionErrorKindForDio(error));
+      throw SpeechTranscriptionException(
+        speechTranscriptionErrorKindForDio(error),
+      );
     }
   }
 
@@ -246,7 +248,8 @@ class SpeechTranscriptionClient {
         SpeechTranscriptionErrorKind.emptyResult,
       );
     }
-    final boundSeconds = _positiveSeconds(map?['duration']) ??
+    final boundSeconds =
+        _positiveSeconds(map?['duration']) ??
         audioDuration.inMilliseconds / 1000;
     final segments = _parseSegments(map?['segments'], boundSeconds);
     final words = _parseWords(map?['words'], boundSeconds);
@@ -302,13 +305,20 @@ class SpeechTranscriptionClient {
     var allValid = true;
     for (final item in raw) {
       final parsed = _segmentFrom(item, boundSeconds);
-      if (parsed == null || !_orderedAfter(items.isEmpty ? null : items.last.start, parsed.start)) {
+      if (parsed == null ||
+          !_orderedAfter(
+            items.isEmpty ? null : items.last.start,
+            parsed.start,
+          )) {
         allValid = false;
         continue;
       }
       items.add(parsed);
     }
-    return _ParsedTimestamps(items: items, allValid: allValid && items.isNotEmpty);
+    return _ParsedTimestamps(
+      items: items,
+      allValid: allValid && items.isNotEmpty,
+    );
   }
 
   SpeechTranscriptSegment? _segmentFrom(Object? item, double boundSeconds) {
@@ -349,7 +359,10 @@ class SpeechTranscriptionClient {
       }
       items.add(SpeechTranscriptWord(word: word, start: start, end: end));
     }
-    return _ParsedTimestamps(items: items, allValid: allValid && items.isNotEmpty);
+    return _ParsedTimestamps(
+      items: items,
+      allValid: allValid && items.isNotEmpty,
+    );
   }
 
   /// 起止必须有限、非负、起点不晚于终点，并落在音频范围内（含舍入容差）。

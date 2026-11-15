@@ -7,8 +7,11 @@ import 'app_logger.dart';
 import 'asr/offline_asr_engine.dart';
 
 class RetellTranscriber {
-  RetellTranscriber({required this.engineFactory, required this.configuration,
-    required this.transcode});
+  RetellTranscriber({
+    required this.engineFactory,
+    required this.configuration,
+    required this.transcode,
+  });
   final OfflineAsrEngine Function() engineFactory;
   final Future<AsrModelConfig> Function() configuration;
   final AudioTranscodeService transcode;
@@ -20,19 +23,29 @@ class RetellTranscriber {
     OfflineAsrEngine? engine;
     try {
       if (!await transcode.transcodeToPcmWav16k(
-        source: File(recordingPath), output: wav)) {
+        source: File(recordingPath),
+        output: wav,
+      )) {
         return null;
       }
       engine = engineFactory();
       final config = await configuration();
-      await engine.initialize(AsrModelConfig(model: config.model,
-        modelDir: config.modelDir, numThreads: config.numThreads));
+      await engine.initialize(
+        AsrModelConfig(
+          model: config.model,
+          modelDir: config.modelDir,
+          numThreads: config.numThreads,
+        ),
+      );
       final result = await engine.transcribe(wav.path);
       return result.text.trim().isEmpty ? null : result.text.trim();
     } finally {
       await engine?.dispose();
-      try { await directory.delete(recursive: true); }
-      catch (error) { AppLogger.log('RetellReview', '临时转写文件清理失败: ${error.runtimeType}'); }
+      try {
+        await directory.delete(recursive: true);
+      } catch (error) {
+        AppLogger.log('RetellReview', '临时转写文件清理失败: ${error.runtimeType}');
+      }
     }
   }
 }

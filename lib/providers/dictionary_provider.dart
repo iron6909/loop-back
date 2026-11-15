@@ -122,7 +122,6 @@ class Dictionary extends _$Dictionary {
         status: DictionaryStatus.downloaded,
         nativeLanguage: nativeLanguage,
       );
-
     } else {
       // 本地没有，开始下载
       AppLogger.log(

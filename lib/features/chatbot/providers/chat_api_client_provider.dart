@@ -13,20 +13,36 @@ class _ConfiguredChatApi implements ChatApi {
   const _ConfiguredChatApi(this._runtime);
   final Future<ProviderRuntime?> Function() _runtime;
   @override
-  Stream<ChatTextFrame> streamChat({required String endpoint,
-    required List<ChatMessage> history, required Map<String, Object?> context,
-    required String followUpInstruction, String? targetLanguage,
-    required String accessToken, CancelToken? cancelToken}) async* {
+  Stream<ChatTextFrame> streamChat({
+    required String endpoint,
+    required List<ChatMessage> history,
+    required Map<String, Object?> context,
+    required String followUpInstruction,
+    String? targetLanguage,
+    required String accessToken,
+    CancelToken? cancelToken,
+  }) async* {
     final runtime = await _runtime();
     if (runtime == null) throw const ProviderNotConfiguredException();
-    yield* ProviderChatApiClient(config: runtime.config, http: runtime.http)
-      .streamChat(endpoint: endpoint, history: history, context: context,
-        followUpInstruction: followUpInstruction, targetLanguage: targetLanguage,
-        accessToken: '', cancelToken: cancelToken);
+    yield* ProviderChatApiClient(
+      config: runtime.config,
+      http: runtime.http,
+    ).streamChat(
+      endpoint: endpoint,
+      history: history,
+      context: context,
+      followUpInstruction: followUpInstruction,
+      targetLanguage: targetLanguage,
+      accessToken: '',
+      cancelToken: cancelToken,
+    );
   }
+
   @override
   void dispose() {}
 }
 
-final chatApiClientProvider = Provider<ChatApi>((ref) => _ConfiguredChatApi(
-  () => ref.read(providerConfigurationProvider.future)));
+final chatApiClientProvider = Provider<ChatApi>(
+  (ref) =>
+      _ConfiguredChatApi(() => ref.read(providerConfigurationProvider.future)),
+);

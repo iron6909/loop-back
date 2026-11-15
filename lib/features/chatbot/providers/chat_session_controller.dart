@@ -229,7 +229,9 @@ class ChatSessionController extends _$ChatSessionController {
     if (e is DioException && e.type == DioExceptionType.cancel) {
       return ChatMessageStatus.done;
     }
-    if (e is ProviderHttpException && e.kind == ProviderErrorKind.cancelled && _stopRequested) {
+    if (e is ProviderHttpException &&
+        e.kind == ProviderErrorKind.cancelled &&
+        _stopRequested) {
       return ChatMessageStatus.done;
     }
     return ChatMessageStatus.error;
@@ -259,11 +261,7 @@ class ChatSessionController extends _$ChatSessionController {
   ///
   /// 特例：status==done 且 content 仍为空（首 token 前即停止）→ 直接移除该占位，
   /// 避免留下一条空气泡。
-  void _finishTurn(
-    String id,
-    ChatMessageStatus status, {
-    String? errorCode,
-  }) {
+  void _finishTurn(String id, ChatMessageStatus status, {String? errorCode}) {
     final target = state.messages.where((m) => m.id == id).firstOrNull;
     final removeEmpty =
         status == ChatMessageStatus.done &&

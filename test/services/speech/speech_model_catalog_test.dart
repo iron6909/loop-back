@@ -58,9 +58,7 @@ void main() {
 
   setUp(() {
     adapter = _FakeAdapter();
-    client = SpeechModelCatalogClient(
-      dio: Dio()..httpClientAdapter = adapter,
-    );
+    client = SpeechModelCatalogClient(dio: Dio()..httpClientAdapter = adapter);
   });
 
   test('只查询专用 STT 目录并带上语音 Key', () async {
@@ -104,10 +102,7 @@ void main() {
     );
 
     await expectLater(
-      client.fetchTranscriptionModels(
-        config: custom,
-        apiKey: 'sk-speech-test',
-      ),
+      client.fetchTranscriptionModels(config: custom, apiKey: 'sk-speech-test'),
       throwsA(isA<ArgumentError>()),
     );
 

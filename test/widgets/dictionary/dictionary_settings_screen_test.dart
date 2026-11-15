@@ -91,8 +91,7 @@ class _FakeDictionaryResource extends DictionaryResourceNotifier {
 /// 测试用：逐语言词典仍处于本地安装检查中（显式 loading 态）。
 class _FakeCheckingDictionaryResource extends DictionaryResourceNotifier {
   @override
-  DictionaryResourceState build(String arg) =>
-      const DictionaryResourceState();
+  DictionaryResourceState build(String arg) => const DictionaryResourceState();
 
   @override
   Future<void> download() async {}

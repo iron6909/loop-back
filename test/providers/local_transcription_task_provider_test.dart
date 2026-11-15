@@ -511,10 +511,7 @@ void main() {
         await database.audioItemDao.getWordTimestamps(item.id),
         'user imported words',
       );
-      expect(
-        notifier.getTaskState(item.id),
-        isA<LocalTranscriptionConflict>(),
-      );
+      expect(notifier.getTaskState(item.id), isA<LocalTranscriptionConflict>());
       // 内存条目未被本次识别结果覆盖。
       final memory = container.read(audioLibraryProvider).audioItems.single;
       expect(memory.sentenceCount, 0);

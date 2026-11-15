@@ -113,9 +113,7 @@ DictionaryLookupContext dictionaryLookupContext(Ref ref) {
   final targetLanguage = ref.watch(
     appSettingsProvider.select((s) => s.nativeLanguage),
   );
-  return DictionaryLookupContext(
-    targetLanguage: targetLanguage,
-  );
+  return DictionaryLookupContext(targetLanguage: targetLanguage);
 }
 
 /// 查词上下文

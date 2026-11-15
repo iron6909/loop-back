@@ -14,9 +14,9 @@ import '../providers/feature_access_provider.dart';
 /// 提示订阅能力已停用（历史上这里是「撞墙后跳 Paywall」的唯一入口）。
 Future<void> openPaywall(BuildContext context, WidgetRef ref) async {
   final l10n = AppLocalizations.of(context)!;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(l10n.premiumUnavailableOnPlatform)),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(l10n.premiumUnavailableOnPlatform)));
 }
 
 /// 根据 [feature] 是否解锁，在 [child] 与锁定占位间切换的门控组件。

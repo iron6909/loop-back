@@ -54,7 +54,9 @@ class _MockFileAdapter implements HttpClientAdapter {
       206,
       headers: {
         'content-length': [body.length.toString()],
-        'content-range': ['bytes $start-${payload.length - 1}/${payload.length}'],
+        'content-range': [
+          'bytes $start-${payload.length - 1}/${payload.length}',
+        ],
       },
     );
   }
@@ -190,10 +192,11 @@ void main() {
       onProgress: (progress) => progresses.add(progress.progress),
     );
 
-    expect(
-      requestedUris.map((u) => u.path).toList(),
-      ['/$_testVoiceId.onnx', '/tokens.txt', '/espeak-ng-data.tar.gz'],
-    );
+    expect(requestedUris.map((u) => u.path).toList(), [
+      '/$_testVoiceId.onnx',
+      '/tokens.txt',
+      '/espeak-ng-data.tar.gz',
+    ]);
     expect(await manager.isModelDownloaded(), isTrue);
     final paths = await manager.piperConfigPaths();
     expect(File(paths.model).existsSync(), isTrue);
@@ -202,7 +205,10 @@ void main() {
     expect(File(p.join(paths.dataDir, 'phondata')).existsSync(), isTrue);
     expect(progresses.last, 1.0);
     // espeak 依赖装在音色目录内，不在 tts-models 顶层。
-    expect(Directory(p.join(root.path, 'espeak-ng-data')).existsSync(), isFalse);
+    expect(
+      Directory(p.join(root.path, 'espeak-ng-data')).existsSync(),
+      isFalse,
+    );
   });
 
   test('真实目录：按 HF resolve + 固定 revision 构造下载地址', () {
@@ -281,10 +287,7 @@ void main() {
     );
     expect(installedOnnx.existsSync(), isTrue);
 
-    final invalid = _manager(
-      root,
-      shaOverrides: {'tokens.txt': 'deadbeef'},
-    );
+    final invalid = _manager(root, shaOverrides: {'tokens.txt': 'deadbeef'});
     await expectLater(invalid.downloadModel(), throwsA(isA<StateError>()));
 
     expect(installedOnnx.existsSync(), isTrue);
@@ -303,7 +306,9 @@ void main() {
     final downloadDir = Directory(p.join(root.path, '_download_$_testVoiceId'));
     await downloadDir.create(recursive: true);
     await File(p.join(downloadDir.path, 'tokens.txt.part')).writeAsBytes([1]);
-    final staging = Directory(p.join(root.path, '_staging_${_testVoiceId}_old'));
+    final staging = Directory(
+      p.join(root.path, '_staging_${_testVoiceId}_old'),
+    );
     await staging.create(recursive: true);
 
     await manager.deleteModel();
@@ -327,10 +332,9 @@ void main() {
     expect(await manager.isModelDownloaded(), isFalse);
 
     await manager.downloadModel();
-    expect(
-      requested.map((u) => u.pathSegments.last).toList(),
-      ['espeak-ng-data.tar.gz'],
-    );
+    expect(requested.map((u) => u.pathSegments.last).toList(), [
+      'espeak-ng-data.tar.gz',
+    ]);
     expect(await manager.isModelDownloaded(), isTrue);
     expect(File(p.join(dataDir.path, 'phondata')).existsSync(), isTrue);
   });
@@ -348,10 +352,9 @@ void main() {
     expect(await manager.isModelDownloaded(), isFalse);
 
     await manager.downloadModel();
-    expect(
-      requested.map((u) => u.pathSegments.last).toList(),
-      ['espeak-ng-data.tar.gz'],
-    );
+    expect(requested.map((u) => u.pathSegments.last).toList(), [
+      'espeak-ng-data.tar.gz',
+    ]);
     expect(await manager.isModelDownloaded(), isTrue);
   });
 

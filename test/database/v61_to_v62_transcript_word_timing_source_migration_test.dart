@@ -44,7 +44,9 @@ void main() {
 
     final raw = sqlite.sqlite3.open(file.path);
     try {
-      raw.execute('ALTER TABLE audio_items DROP COLUMN transcript_word_timing_source');
+      raw.execute(
+        'ALTER TABLE audio_items DROP COLUMN transcript_word_timing_source',
+      );
       raw.execute('PRAGMA user_version = 61');
     } finally {
       raw.dispose();

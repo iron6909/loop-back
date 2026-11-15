@@ -18,11 +18,7 @@ Sentence _sentence(String text, int startMs, int endMs) => Sentence(
 );
 
 SpeechTranscriptWord _word(String word, int startMs, int endMs) =>
-    SpeechTranscriptWord(
-      word: word,
-      start: startMs / 1000,
-      end: endMs / 1000,
-    );
+    SpeechTranscriptWord(word: word, start: startMs / 1000, end: endMs / 1000);
 
 void main() {
   test('整份句子都能对上模型词时保留模型时间戳并标记 model', () {
@@ -87,10 +83,7 @@ void main() {
   test('模型词起点落在句子区间外时不借用错位时间', () {
     final result = combineModelWordTimestamps(
       sentences: [_sentence('Hello world.', 1000, 2000)],
-      modelWords: [
-        _word('Hello', 120, 480),
-        _word('world.', 500, 960),
-      ],
+      modelWords: [_word('Hello', 120, 480), _word('world.', 500, 960)],
     );
 
     expect(result.source, TranscriptWordTimingSource.estimated);

@@ -17,11 +17,7 @@ import '../offline_asr_settings_provider.dart';
 
 /// 单个语言变体离线词典的安装/下载状态。
 class DictionaryResourceState {
-  const DictionaryResourceState({
-    this.status,
-    this.progress = 0,
-    this.failure,
-  });
+  const DictionaryResourceState({this.status, this.progress = 0, this.failure});
 
   /// 本地安装检查完成后的下载状态；null 表示仍在检查（显式 loading 态）。
   final DictionaryStatus? status;
@@ -37,10 +33,12 @@ class DictionaryResourceState {
 }
 
 /// 指定母语词典的安装检查与按需下载状态（设置页非当前母语变体使用）。
-final dictionaryResourceProvider = NotifierProvider.family<
-    DictionaryResourceNotifier, DictionaryResourceState, String>(
-  DictionaryResourceNotifier.new,
-);
+final dictionaryResourceProvider =
+    NotifierProvider.family<
+      DictionaryResourceNotifier,
+      DictionaryResourceState,
+      String
+    >(DictionaryResourceNotifier.new);
 
 /// 逐语言词典的只读安装检查 + 按需下载，复用
 /// [DictionaryDownloadManager] 的同一套校验与失败归类。
@@ -81,9 +79,7 @@ class DictionaryResourceNotifier
     final nativeLanguage = arg;
     _cancelToken?.cancel('new dictionary download');
     _cancelToken = CancelToken();
-    state = const DictionaryResourceState(
-      status: DictionaryStatus.downloading,
-    );
+    state = const DictionaryResourceState(status: DictionaryStatus.downloading);
     try {
       await _manager.download(
         nativeLanguage,

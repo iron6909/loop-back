@@ -49,7 +49,9 @@ Future<void> installTtsEspeakData({
 }) async {
   final resource = resourceRegistry[ttsEspeakNgDataResourceId];
   if (resource == null) {
-    throw StateError('$logTag missing espeak resource: $ttsEspeakNgDataResourceId');
+    throw StateError(
+      '$logTag missing espeak resource: $ttsEspeakNgDataResourceId',
+    );
   }
   final file = resource.files.single;
   final dataDir = existingDataDirPath != null
