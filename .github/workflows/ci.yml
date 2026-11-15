@@ -14,7 +14,9 @@ on:
       - 'docs/**'
 
 env:
-  FLUTTER_VERSION: '3.41.5'
+  # 与主力开发机对齐：格式门禁（dart format）必须本地可跑，否则新 SDK 写出的
+  # 代码会在 CI 被判“未格式化”。升级时同步 release.yml 与本地 Flutter。
+  FLUTTER_VERSION: '3.47.9'
 
 jobs:
   analyze:

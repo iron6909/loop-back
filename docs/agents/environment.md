@@ -5,8 +5,10 @@
 
 ## 工具链
 
-- **Flutter 3.41.5**：CI 固定这个版本（`ci.yml` 的 `FLUTTER_VERSION`）。本地版本不同时，
-  先对齐再判断「是不是我改坏了」。
+- **Flutter 3.47.9**：`ci.yml` / `release.yml` 固定这个版本。格式门禁（`dart format`）
+  用的是 SDK 自带的 dart_style，不同 SDK 对个别文件的折行结果不同；两者版本不一致时，
+  本地格式干净的代码会在 CI 被判「未格式化」（实测只差 3 个文件）。升级时三处同步：
+  `ci.yml`、`release.yml`、本地 Flutter。
 - **JDK 17**：Android 构建需要 11+。本机 `JAVA_HOME` 可能仍指向 corretto8，导致 AGP 直接失败；
   用 `flutter config --jdk-dir <corretto17 路径>` 固定。
 
