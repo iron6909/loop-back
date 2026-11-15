@@ -343,13 +343,20 @@ void main() {
 }
 
 /// 渲染气泡并取标题 "Title" 文字段的生效字号（沿 span 树继承）。
+///
+/// 取所有含标题的 RichText 里的**最大值**：markdown 渲染器在不同平台/布局下可能同时
+/// 生成可见副本与度量副本（CI 的 Linux runner 上观察到两份字号不同），副本数量与
+/// 顺序不是这个用例要断言的行为，标题是否被同比放大才是。
 Future<double> _headingFontSize(WidgetTester tester, Widget bubble) async {
   await pumpChatWidget(tester, bubble);
+  double? largest;
   for (final rich in tester.widgetList<RichText>(find.byType(RichText))) {
     final size = _effectiveFontSize(rich.text, null);
-    if (size != null) return size;
+    if (size == null) continue;
+    if (largest == null || size > largest) largest = size;
   }
-  fail('未找到标题文字');
+  if (largest == null) fail('未找到标题文字');
+  return largest;
 }
 
 /// 在 span 树中找到包含 "Title" 的文字段，返回其生效字号。
