@@ -16,7 +16,6 @@ import '../features/rating_prompt/domain/rating_prompt_policy.dart';
 import '../features/rating_prompt/rating_prompt_providers.dart';
 import '../features/rating_prompt/rating_prompt_presentation_guard.dart';
 import '../models/audio_item.dart';
-import '../models/learning_plan.dart';
 import '../models/learning_progress.dart';
 import '../models/media_learning_startup.dart';
 import '../models/media_load_result.dart';
@@ -71,6 +70,9 @@ import '../widgets/study/free_play_app_bar_button.dart';
 import '../widgets/study/plan_progress_card.dart';
 import '../widgets/study/plan_step_cards.dart';
 import '../widgets/study/stage_header_row.dart';
+import '../providers/learning_plan_stage_providers.dart';
+import '../utils/study_stage_ordering.dart';
+import '../widgets/study/study_stage_icons.dart';
 import '../widgets/study/learning_plan_bottom_bar.dart';
 import '../widgets/guide_flow.dart';
 import '../widgets/manage_subtitles_sheet.dart';
@@ -78,10 +80,6 @@ import '../providers/listening_practice/bookmark_manager.dart';
 import '../database/providers.dart';
 import '../providers/learning_session/sentence_playback_engine.dart';
 
-/// 学习计划复习轮次标题左侧图标。
-///
-/// 使用固定 SVG，避免 `🔁` emoji 在不同平台被系统字体渲染成不一致的蓝色方块。
-const String _refreshIconAsset = 'assets/icon/refresh.svg';
 const _durationDebugLogTag = 'MediaDuration';
 
 /// 统一打开音频或视频盲听任务，避免首次学习与复习入口各自维护媒体分流。
@@ -211,49 +209,6 @@ Future<void> _requestRatingAfterPractice(
     );
   }
 }
-
-/// 学习计划大阶段完成标记图标。
-///
-/// 使用固定 SVG，避免 `✅` emoji 在不同平台呈现不一致。
-const String _checkCircleIconAsset = 'assets/icon/check-circle-3.svg';
-
-/// 学习计划大阶段当前到期标记图标。
-///
-/// 使用固定 SVG，避免 `📖` emoji 在不同平台呈现不一致。
-const String _calendarIconAsset = 'assets/icon/calendar-2.svg';
-
-/// 学习计划大阶段锁定标记图标。
-///
-/// 使用固定 SVG，避免 `🔒` emoji 在不同平台呈现不一致。
-const String _lockIconAsset = 'assets/icon/lock.svg';
-
-/// 学习计划复习轮次提前解锁按钮图标。
-const String _unlockIconAsset = 'assets/icon/unlock.svg';
-
-/// 学习计划首次学习标题左侧图标。
-const String _readingIconAsset = 'assets/icon/reading.svg';
-
-/// 实时查询指定音频的书签数量（难句数）
-///
-/// 使用 StreamProvider 监听 bookmarks 表变化，确保难句数实时更新。
-final _bookmarkCountProvider = StreamProvider.family.autoDispose<int, String>((
-  ref,
-  audioItemId,
-) {
-  final bookmarkDao = ref.watch(bookmarkDaoProvider);
-  return bookmarkDao
-      .watchByAudioId(audioItemId)
-      .map((bookmarks) => bookmarks.length);
-});
-
-/// 查询指定音频各复习大阶段的最终完成时间。
-///
-/// 学习计划页据此为已完成的大阶段显示“X 天前”一类相对完成时间。
-final reviewStageCompletionTimesProvider =
-    StreamProvider.family<Map<String, DateTime>, String>((ref, audioItemId) {
-      final dao = ref.watch(stageCompletionDaoProvider);
-      return dao.watchStageCompletedAtByAudioId(audioItemId);
-    });
 
 /// 已完成大阶段标题文案。
 ///
@@ -2039,7 +1994,7 @@ class _FirstStudySection extends ConsumerWidget {
 
     // 迭代顺序 = 当前 plan 顺序 + 历史外延项（已完成或已跳过但不在当前 plan 内）。
     // firstLearn 没有 plan 变体，但 helper 统一处理便于复用。
-    final subStages = _orderedSubStagesForDisplay(
+    final subStages = orderedSubStagesForDisplay(
       plan: plan,
       stage: firstLearnStage,
       completedKeys: completedKeys,
@@ -2053,7 +2008,7 @@ class _FirstStudySection extends ConsumerWidget {
         StudyStageHeaderRow(
           keyPrefix: 'learning_plan_stage_first_learn',
           leadingIcon: SvgPicture.asset(
-            _readingIconAsset,
+            studyReadingIconAsset,
             width: 20,
             height: 20,
           ),
@@ -2061,7 +2016,7 @@ class _FirstStudySection extends ConsumerWidget {
           titleColor: isFirstLearnCompleted ? Colors.green : null,
           statusIcon: isFirstLearnCompleted
               ? SvgPicture.asset(
-                  _checkCircleIconAsset,
+                  studyCheckCircleIconAsset,
                   width: 18,
                   height: 18,
                   colorFilter: const ColorFilter.mode(
@@ -2070,9 +2025,9 @@ class _FirstStudySection extends ConsumerWidget {
                   ),
                 )
               : progress?.isCurrentStage(LearningStage.firstLearn) ?? false
-              ? SvgPicture.asset(_calendarIconAsset, width: 18, height: 18)
+              ? SvgPicture.asset(studyCalendarIconAsset, width: 18, height: 18)
               : SvgPicture.asset(
-                  _lockIconAsset,
+                  studyLockIconAsset,
                   width: 18,
                   height: 18,
                   colorFilter: ColorFilter.mode(
@@ -2186,7 +2141,7 @@ class _FirstStudySection extends ConsumerWidget {
 
     // 实时查询书签数量（难句数）
     final bookmarkCount =
-        ref.watch(_bookmarkCountProvider(audioItemId)).valueOrNull ?? 0;
+        ref.watch(bookmarkCountProvider(audioItemId)).valueOrNull ?? 0;
     if (bookmarkCount > 0) {
       parts.add(l10n.difficultSentenceCount(bookmarkCount));
     }
@@ -2205,7 +2160,7 @@ class _FirstStudySection extends ConsumerWidget {
 
     // 实时查询书签数量（难句数）
     final bookmarkCount =
-        ref.watch(_bookmarkCountProvider(audioItemId)).valueOrNull ?? 0;
+        ref.watch(bookmarkCountProvider(audioItemId)).valueOrNull ?? 0;
     parts.add(l10n.listenAndRepeatBriefingDifficultCount(bookmarkCount));
 
     // 跟读总完成遍数
@@ -3015,7 +2970,7 @@ class _ReviewRoundSection extends ConsumerWidget {
     // 迭代顺序 = 当前 plan 顺序 + 历史外延项（已完成 / 已跳过但不在当前 plan 内）。
     // 例如 review28 v1 用户完成了 reviewRetellSummary 后切到 v2 不会发生（v1 用户
     // 该 stage 有 completion 仍走 v1 plan），但 helper 防御性兜底。
-    final subStages = _orderedSubStagesForDisplay(
+    final subStages = orderedSubStagesForDisplay(
       plan: plan,
       stage: review.stage,
       completedKeys: completedKeys,
@@ -3066,7 +3021,7 @@ class _ReviewRoundSection extends ConsumerWidget {
           child: StudyStageHeaderRow(
             keyPrefix: 'learning_plan_stage_${review.stage.key}',
             leadingIcon: SvgPicture.asset(
-              _refreshIconAsset,
+              studyRefreshIconAsset,
               width: 20,
               height: 20,
               colorFilter: ColorFilter.mode(reviewIconColor, BlendMode.srcIn),
@@ -3075,7 +3030,7 @@ class _ReviewRoundSection extends ConsumerWidget {
             titleColor: titleColor,
             statusIcon: isCompleted
                 ? SvgPicture.asset(
-                    _checkCircleIconAsset,
+                    studyCheckCircleIconAsset,
                     width: 18,
                     height: 18,
                     colorFilter: const ColorFilter.mode(
@@ -3084,9 +3039,13 @@ class _ReviewRoundSection extends ConsumerWidget {
                     ),
                   )
                 : isCurrent
-                ? SvgPicture.asset(_calendarIconAsset, width: 18, height: 18)
+                ? SvgPicture.asset(
+                    studyCalendarIconAsset,
+                    width: 18,
+                    height: 18,
+                  )
                 : SvgPicture.asset(
-                    _lockIconAsset,
+                    studyLockIconAsset,
                     width: 18,
                     height: 18,
                     colorFilter: ColorFilter.mode(
@@ -3132,7 +3091,7 @@ class _ReviewRoundSection extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SvgPicture.asset(
-                        _unlockIconAsset,
+                        studyUnlockIconAsset,
                         width: 14,
                         height: 14,
                         colorFilter: ColorFilter.mode(
@@ -3176,9 +3135,7 @@ class _ReviewRoundSection extends ConsumerWidget {
               String? subtitle;
               if (subStage == SubStageType.reviewDifficultPractice) {
                 final bookmarkCount =
-                    ref
-                        .watch(_bookmarkCountProvider(audioItemId))
-                        .valueOrNull ??
+                    ref.watch(bookmarkCountProvider(audioItemId)).valueOrNull ??
                     0;
                 if (isCompleted && bookmarkCount == 0) {
                   subtitle = l10n.autoCompletedNoDifficultReview;
@@ -3197,9 +3154,7 @@ class _ReviewRoundSection extends ConsumerWidget {
               if (canFreePlay) {
                 // 无难句自动完成的补练步骤：点击只显示提示
                 final bookmarkCount =
-                    ref
-                        .watch(_bookmarkCountProvider(audioItemId))
-                        .valueOrNull ??
+                    ref.watch(bookmarkCountProvider(audioItemId)).valueOrNull ??
                     0;
                 if (subStage == SubStageType.reviewDifficultPractice &&
                     bookmarkCount == 0) {
@@ -3322,32 +3277,4 @@ class _NoTranscriptBanner extends StatelessWidget {
       builder: (_) => ManageSubtitlesSheet(audioItem: audioItem),
     );
   }
-}
-
-/// 学习计划页子步骤显示顺序：当前 plan 顺序在前，历史外延项在后。
-///
-/// - [plan]：按 audio 版本派生的 plan（v1/v2）
-/// - [stage]：当前渲染的大阶段
-/// - [completedKeys]：该 audio 的 stage_completions 集合
-/// - [skippedKeys]：该 audio 的用户跳过集合
-///
-/// 历史外延项 = `stage.allSubStages` ∖ plan，且属于 completed 或 skipped。
-/// 用于保留 v1 已完成但 v2 已移除项（如 review28 v1→v2 中的 reviewRetellSummary）
-/// 的 ✅ 历史显示。当用户走 v1 plan（该 stage 有 completion）时，
-/// extras 通常为空（plan 已含历史项）。
-List<SubStageType> _orderedSubStagesForDisplay({
-  required LearningPlan plan,
-  required LearningStage stage,
-  required Set<String> completedKeys,
-  required Set<String> skippedKeys,
-}) {
-  final planned = plan.subStagesFor(stage);
-  final extras = stage.allSubStages
-      .where((s) {
-        if (planned.contains(s)) return false;
-        final key = '${stage.key}:${s.key}';
-        return completedKeys.contains(key) || skippedKeys.contains(key);
-      })
-      .toList(growable: false);
-  return [...planned, ...extras];
 }

@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:loop_back/providers/shared_preferences_provider.dart';
 import 'package:loop_back/l10n/app_localizations.dart';
+import 'package:loop_back/providers/learning_plan_stage_providers.dart';
 import 'package:loop_back/screens/learning_plan_screen.dart';
 import 'package:loop_back/models/audio_item.dart';
 import 'package:loop_back/models/learning_progress.dart';
