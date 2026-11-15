@@ -31,6 +31,7 @@ import '../l10n/app_localizations.dart';
 import '../services/app_logger.dart';
 import '../utils/transcript_picker.dart';
 import 'import_audio_selection_list.dart';
+import '../utils/file_cleanup.dart';
 
 /// 已选中的音频文件信息
 ///
@@ -918,10 +919,10 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
         'save_failed trace=$traceId stage=$_activeImportStage '
             'canceled=${cancelToken.isCancelled} error=${error.runtimeType}',
       );
-      await _deleteIfExists(tempFile);
+      await deleteFileQuietly(tempFile);
       final saved = finalized;
       if (saved != null && saved.created) {
-        await _deleteIfExists(
+        await deleteFileQuietly(
           File(path.join(dataDir.path, saved.relativePath)),
         );
       }
@@ -968,13 +969,6 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
       );
       return item;
     }
-  }
-
-  Future<void> _deleteIfExists(File file) async {
-    if (!await file.exists()) return;
-    try {
-      await file.delete();
-    } catch (_) {}
   }
 
   /// 添加音频
@@ -1092,7 +1086,9 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
           } on DioException catch (error) {
             if (!CancelToken.isCancel(error)) rethrow;
             if (saved.created) {
-              await _deleteIfExists(File(path.join(dataDir.path, saved.path)));
+              await deleteFileQuietly(
+                File(path.join(dataDir.path, saved.path)),
+              );
             }
             setState(() {
               _importStatuses[itemId] = AudioImportSelectionStatus.pending;
@@ -1104,7 +1100,7 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
           switch (result) {
             case AudioRegistrationAdded(:final item):
               if (saved.created && item.audioPath != saved.path) {
-                await _deleteIfExists(
+                await deleteFileQuietly(
                   File(path.join(dataDir.path, saved.path)),
                 );
               }
@@ -1122,7 +1118,7 @@ class _AddAudioDialogState extends ConsumerState<AddAudioDialog> {
               :final existingName,
             ):
               if (saved.created) {
-                await _deleteIfExists(
+                await deleteFileQuietly(
                   File(path.join(dataDir.path, saved.path)),
                 );
               }

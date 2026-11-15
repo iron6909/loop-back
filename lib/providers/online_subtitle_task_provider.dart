@@ -47,6 +47,7 @@ import 'local_transcription_task_provider.dart'
 import 'recognition_settings_provider.dart';
 import 'speech_capability_provider.dart';
 import 'speech_configuration_provider.dart';
+import '../utils/file_cleanup.dart';
 
 /// 在线字幕失败的本地原因；供应商失败另由 [OnlineSubtitleFailed.speechError] 表达。
 enum OnlineSubtitleFailureReason {
@@ -341,7 +342,7 @@ class OnlineSubtitleTaskManager
             '跳过确认无声的块 id=$audioId chunk=${chunk.index + 1}/${run.chunks.length}',
           );
           run.markSilent(chunk.index);
-          await _deleteFile(chunkFile);
+          await deleteFileQuietly(chunkFile);
           chunkFile = null;
           _reportProgress(audioId, service, modelId, run);
           continue;
@@ -394,7 +395,7 @@ class OnlineSubtitleTaskManager
         }
 
         run.collect(chunk: chunk, result: result);
-        await _deleteFile(chunkFile);
+        await deleteFileQuietly(chunkFile);
         chunkFile = null;
         _reportProgress(audioId, service, modelId, run);
       }
@@ -418,7 +419,7 @@ class OnlineSubtitleTaskManager
         run: _runs[audioId],
       );
     } finally {
-      if (chunkFile != null) await _deleteFile(chunkFile);
+      if (chunkFile != null) await deleteFileQuietly(chunkFile);
       _transcodeSessions.remove(audioId);
       // 取消后不留检查点与临时音频；失败时保留，供用户只续试未完成块。
       if (_isCancelled(audioId)) await _discardRun(audioId);
@@ -548,7 +549,7 @@ class OnlineSubtitleTaskManager
         _transcodeSessions.remove(audioId);
         if (!extracted) return null;
         final bytes = await probeFile.readAsBytes();
-        await _deleteFile(probeFile);
+        await deleteFileQuietly(probeFile);
         return quietestCutInPcm(wavBytes: bytes, windowStart: from);
       },
     );
@@ -589,7 +590,7 @@ class OnlineSubtitleTaskManager
         .read(localTranscriptionTranscodeServiceProvider)
         .transcodeToPcmWav16k(source: sourceFile, output: file);
     final duration = extracted ? pcmWavDuration(await file.length()) : null;
-    await _deleteFile(file);
+    await deleteFileQuietly(file);
     if (duration == null || duration <= Duration.zero) return null;
     return duration;
   }
@@ -697,14 +698,6 @@ class OnlineSubtitleTaskManager
         'OnlineSubtitle',
         '清理临时音频失败 dir=${run.tempDir.path} | $error',
       );
-    }
-  }
-
-  Future<void> _deleteFile(File file) async {
-    try {
-      if (await file.exists()) await file.delete();
-    } catch (error) {
-      AppLogger.log('OnlineSubtitle', '删除临时文件失败 path=${file.path} | $error');
     }
   }
 

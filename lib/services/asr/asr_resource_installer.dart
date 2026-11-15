@@ -9,6 +9,7 @@ import '../app_logger.dart';
 import '../reliable_http_downloader.dart';
 import '../resource_install_manifest.dart';
 import 'asr_model_catalog.dart';
+import '../../utils/file_cleanup.dart';
 
 /// 公开来源资源的单个下载项：文件身份 + 本次使用的下载地址。
 class AsrResourceFileDownload {
@@ -93,7 +94,7 @@ class AsrResourceInstaller {
         final actualSha256 = await sha256.bind(File(savePath).openRead()).first;
         if (actualSha256.toString() != file.sha256) {
           // 删除损坏文件，避免下一次安装跳过它。
-          await _deleteFileQuietly(File(savePath));
+          await deleteFileQuietly(File(savePath));
           throw StateError(
             'ASR file SHA-256 mismatch: ${file.name} '
             'expected=${file.sha256} actual=$actualSha256',
@@ -116,10 +117,10 @@ class AsrResourceInstaller {
         installAt: DateTime.now(),
       );
       await _publish(staging: staging, target: target, resourceId: resourceId);
-      await _deleteDirectoryQuietly(downloadDirectory);
+      await deleteDirectoryQuietly(downloadDirectory);
       AppLogger.log('AsrInstall', 'install finished resource=$resourceId');
     } finally {
-      if (staging != null) await _deleteDirectoryQuietly(staging);
+      if (staging != null) await deleteDirectoryQuietly(staging);
     }
   }
 
@@ -132,10 +133,10 @@ class AsrResourceInstaller {
     required String resourceId,
   }) async {
     final archive = File(p.join(root.path, '_download_$resourceId.zip'));
-    await _deleteFileQuietly(archive);
-    await _deleteFileQuietly(File('${archive.path}.part'));
-    await _deleteFileQuietly(File('${archive.path}.part.meta.json'));
-    await _deleteDirectoryQuietly(
+    await deleteFileQuietly(archive);
+    await deleteFileQuietly(File('${archive.path}.part'));
+    await deleteFileQuietly(File('${archive.path}.part.meta.json'));
+    await deleteDirectoryQuietly(
       Directory(p.join(root.path, '_download_$resourceId')),
     );
     await _cleanupOrphanedStagingDirectories(root, resourceId);
@@ -155,13 +156,13 @@ class AsrResourceInstaller {
     final existing = File(path);
     if (!existing.existsSync()) return false;
     if (await existing.length() != file.sizeBytes) {
-      await _deleteFileQuietly(existing);
+      await deleteFileQuietly(existing);
       return false;
     }
     final actualSha256 = (await sha256.bind(existing.openRead()).first)
         .toString();
     if (actualSha256 == file.sha256) return true;
-    await _deleteFileQuietly(existing);
+    await deleteFileQuietly(existing);
     return false;
   }
 
@@ -198,45 +199,7 @@ class AsrResourceInstaller {
       final name = p.basename(entity.path);
       if (entity is Directory &&
           (name == legacyName || name.startsWith(prefix))) {
-        await _deleteDirectoryQuietly(entity);
-      }
-    }
-  }
-
-  Future<void> _deleteFileQuietly(File file) async {
-    if (!file.existsSync()) return;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        await file.delete();
-        return;
-      } on FileSystemException catch (error, stackTrace) {
-        if (attempt == 2) {
-          AppLogger.log(
-            'AsrInstall',
-            'cleanup file failed path=${file.path} error=$error\n$stackTrace',
-          );
-          return;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-      }
-    }
-  }
-
-  Future<void> _deleteDirectoryQuietly(Directory directory) async {
-    if (!directory.existsSync()) return;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        await directory.delete(recursive: true);
-        return;
-      } on FileSystemException catch (error, stackTrace) {
-        if (attempt == 2) {
-          AppLogger.log(
-            'AsrInstall',
-            'cleanup directory failed path=${directory.path} error=$error\n$stackTrace',
-          );
-          return;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await deleteDirectoryQuietly(entity);
       }
     }
   }

@@ -17,6 +17,7 @@ import '../app_update_migration.dart';
 import 'backup_constants.dart';
 import 'backup_manifest.dart';
 import 'backup_progress.dart';
+import '../../utils/file_cleanup.dart';
 
 /// 不应跨设备恢复的 SharedPreferences key。
 const _spBlacklist = {
@@ -170,11 +171,11 @@ class BackupService {
       return finalFile.path;
     } catch (error, stackTrace) {
       _logFailure('export_failed path=${finalFile.path}', error, stackTrace);
-      await _deleteFileIfExists(partialFile);
-      await _deleteFileIfExists(finalFile);
+      await deleteFileQuietly(partialFile);
+      await deleteFileQuietly(finalFile);
       rethrow;
     } finally {
-      await _deleteDirectoryIfExists(scratchDir);
+      await deleteDirectoryQuietly(scratchDir);
     }
   }
 
@@ -240,7 +241,7 @@ class BackupService {
       return prepared;
     } catch (error, stackTrace) {
       _logFailure('prepare_import_failed zipPath=$zipPath', error, stackTrace);
-      await _deleteDirectoryIfExists(tempDir);
+      await deleteDirectoryQuietly(tempDir);
       rethrow;
     }
   }
@@ -378,7 +379,7 @@ class PreparedBackupImport {
   final int? previousAppUpdateMigrationVersion;
 
   /// 清理数据库快照和恢复准备目录。
-  Future<void> dispose() => _deleteDirectoryIfExists(tempDirectory);
+  Future<void> dispose() => deleteDirectoryQuietly(tempDirectory);
 }
 
 /// 已写入新数据但尚未最终提交的恢复会话。
@@ -449,7 +450,7 @@ class AppliedBackupImport {
   Future<void> _installDatabase() async {
     final destination = File(p.join(dataDirectory.path, _dbFileName));
     final partial = File('${destination.path}.restore-$_token.part');
-    await _deleteFileIfExists(partial);
+    await deleteFileQuietly(partial);
     final sink = partial.openWrite();
     try {
       await prepared.databaseSnapshot.openRead().pipe(sink);
@@ -457,7 +458,7 @@ class AppliedBackupImport {
       _databaseWasInstalled = true;
     } catch (_) {
       await sink.close();
-      await _deleteFileIfExists(partial);
+      await deleteFileQuietly(partial);
       rethrow;
     }
   }
@@ -466,7 +467,7 @@ class AppliedBackupImport {
   Future<void> commit() async {
     if (_finalized) return;
     _finalized = true;
-    await _deleteDirectoryIfExists(_rollbackDirectory);
+    await deleteDirectoryQuietly(_rollbackDirectory);
     _log('apply_import_commit_success rollbackDir=${_rollbackDirectory.path}');
   }
 
@@ -477,7 +478,7 @@ class AppliedBackupImport {
 
     if (_payloadExtractionStarted) {
       for (final relativePath in prepared.importedMediaPaths) {
-        await _deleteFileIfExists(
+        await deleteFileQuietly(
           File(_joinRelative(dataDirectory.path, relativePath)),
         );
       }
@@ -494,7 +495,7 @@ class AppliedBackupImport {
 
     if (_databaseWasInstalled) {
       for (final suffix in ['', '-wal', '-shm']) {
-        await _deleteFileIfExists(
+        await deleteFileQuietly(
           File(p.join(dataDirectory.path, '$_dbFileName$suffix')),
         );
       }
@@ -502,7 +503,7 @@ class AppliedBackupImport {
     for (final entry in _protectedDatabaseFiles.entries) {
       final rollback = File(entry.value);
       if (!await rollback.exists()) continue;
-      await _deleteFileIfExists(File(entry.key));
+      await deleteFileQuietly(File(entry.key));
       await rollback.parent.create(recursive: true);
       await rollback.rename(entry.key);
     }
@@ -517,7 +518,7 @@ class AppliedBackupImport {
         await preferences.setInt(appUpdateMigrationVersionKey, previousVersion);
       }
     }
-    await _deleteDirectoryIfExists(_rollbackDirectory);
+    await deleteDirectoryQuietly(_rollbackDirectory);
     _log('apply_import_rollback_cleaned path=${_rollbackDirectory.path}');
   }
 }
@@ -1202,26 +1203,6 @@ Future<void> _ensureNoSymlinkAncestors(String root, String relativePath) async {
 Future<Directory> _createTempDir(String prefix) async {
   final systemTemp = await getTemporaryDirectory();
   return systemTemp.createTemp('${prefix}_');
-}
-
-Future<void> _deleteFileIfExists(File file) async {
-  try {
-    if (await file.exists()) await file.delete();
-  } catch (error, stackTrace) {
-    _logFailure('cleanup_file_failed path=${file.path}', error, stackTrace);
-  }
-}
-
-Future<void> _deleteDirectoryIfExists(Directory directory) async {
-  try {
-    if (await directory.exists()) await directory.delete(recursive: true);
-  } catch (error, stackTrace) {
-    _logFailure(
-      'cleanup_directory_failed path=${directory.path}',
-      error,
-      stackTrace,
-    );
-  }
 }
 
 class _ArchiveSource {

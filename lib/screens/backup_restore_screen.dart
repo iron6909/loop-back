@@ -19,6 +19,7 @@ import '../services/backup/backup_progress.dart';
 import '../services/backup/backup_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/file_size.dart';
+import '../utils/file_cleanup.dart';
 
 /// 用户数据备份与恢复页面。
 class BackupRestoreScreen extends ConsumerStatefulWidget {
@@ -44,7 +45,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
   @override
   void dispose() {
     final path = _temporaryBackupPath;
-    if (path != null) unawaited(_deleteFile(path));
+    if (path != null) unawaited(deleteFileQuietly(File(path)));
     super.dispose();
   }
 
@@ -60,7 +61,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
     try {
       final oldPath = _temporaryBackupPath;
-      if (oldPath != null) await _deleteFile(oldPath);
+      if (oldPath != null) await deleteFileQuietly(File(oldPath));
       _closingBackupReadyDialog = false;
       final path = await performExport(
         ref,
@@ -68,7 +69,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       );
       _trackBackupResult('backup', 'completed');
       if (!mounted) {
-        await _deleteFile(path);
+        await deleteFileQuietly(File(path));
         return;
       }
       Navigator.of(context, rootNavigator: true).pop();
@@ -325,7 +326,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     _closingBackupReadyDialog = true;
     final path = _temporaryBackupPath;
     _temporaryBackupPath = null;
-    if (path != null) await _deleteFile(path);
+    if (path != null) await deleteFileQuietly(File(path));
     if (dialogContext.mounted) Navigator.of(dialogContext).pop();
   }
 
@@ -403,13 +404,6 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  static Future<void> _deleteFile(String path) async {
-    try {
-      final file = File(path);
-      if (await file.exists()) await file.delete();
-    } catch (_) {}
   }
 
   @override

@@ -19,6 +19,7 @@ import '../../utils/path_key.dart';
 import '../../utils/text_normalize.dart';
 import '../app_logger.dart';
 import 'tts_engine.dart';
+import '../../utils/file_cleanup.dart';
 
 /// 缓存保留策略默认值。
 class TtsCachePolicy {
@@ -153,7 +154,7 @@ class TtsCacheStore {
     try {
       final expired = await _dao.expiredEntries(DateTime.now());
       for (final row in expired) {
-        await _deleteFileQuietly(row.filePath);
+        await deleteFileQuietly(File(row.filePath));
         await _dao.deleteByKey(row.cacheKey);
       }
 
@@ -164,7 +165,7 @@ class TtsCacheStore {
         final lru = await _dao.unpinnedByLruAsc();
         for (final row in lru) {
           if (total <= maxBytes) break;
-          await _deleteFileQuietly(row.filePath);
+          await deleteFileQuietly(File(row.filePath));
           await _dao.deleteByKey(row.cacheKey);
           total -= row.fileSize;
           evicted++;
@@ -222,14 +223,5 @@ class TtsCacheStore {
       AppLogger.log('TtsCacheStore', '_sweepOrphanFiles 失败: $e');
     }
     return freed;
-  }
-
-  Future<void> _deleteFileQuietly(String path) async {
-    try {
-      final file = File(path);
-      if (await file.exists()) await file.delete();
-    } catch (e) {
-      AppLogger.log('TtsCacheStore', '删文件失败 $path: $e');
-    }
   }
 }

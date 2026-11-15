@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'app_logger.dart';
 import 'reliable_http_downloader.dart';
 import 'resource_install_manifest.dart';
+import '../utils/file_cleanup.dart';
 
 /// 固定 CDN 资源归档的通用下载与原子安装流程。
 ///
@@ -97,8 +98,8 @@ class ResourceArchiveInstaller {
       if (previous.existsSync()) await previous.delete(recursive: true);
       AppLogger.log('ResourceInstall', 'install finished resource=$resourceId');
     } finally {
-      await _deleteFileQuietly(archive);
-      if (staging != null) await _deleteDirectoryQuietly(staging);
+      await deleteFileQuietly(archive);
+      if (staging != null) await deleteDirectoryQuietly(staging);
     }
   }
 
@@ -115,9 +116,9 @@ class ResourceArchiveInstaller {
     final archive = File(
       p.join(downloadRoot.path, archiveFileName ?? '_download_$resourceId.zip'),
     );
-    await _deleteFileQuietly(archive);
-    await _deleteFileQuietly(File('${archive.path}.part'));
-    await _deleteFileQuietly(File('${archive.path}.part.meta.json'));
+    await deleteFileQuietly(archive);
+    await deleteFileQuietly(File('${archive.path}.part'));
+    await deleteFileQuietly(File('${archive.path}.part.meta.json'));
     await _cleanupOrphanedStagingDirectories(root, resourceId);
   }
 
@@ -132,46 +133,7 @@ class ResourceArchiveInstaller {
       final name = p.basename(entity.path);
       if (entity is Directory &&
           (name == legacyName || name.startsWith(prefix))) {
-        await _deleteDirectoryQuietly(entity);
-      }
-    }
-  }
-
-  Future<void> _deleteFileQuietly(File file) async {
-    if (!file.existsSync()) return;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        await file.delete();
-        return;
-      } on FileSystemException catch (error, stackTrace) {
-        if (attempt == 2) {
-          AppLogger.log(
-            'ResourceInstall',
-            'cleanup file failed path=${file.path} error=$error\n$stackTrace',
-          );
-          return;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 50));
-      }
-    }
-  }
-
-  Future<void> _deleteDirectoryQuietly(Directory directory) async {
-    if (!directory.existsSync()) return;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        await directory.delete(recursive: true);
-        return;
-      } on FileSystemException catch (error, stackTrace) {
-        if (attempt == 2) {
-          AppLogger.log(
-            'ResourceInstall',
-            'cleanup directory failed path=${directory.path} '
-                'error=$error\n$stackTrace',
-          );
-          return;
-        }
-        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await deleteDirectoryQuietly(entity);
       }
     }
   }

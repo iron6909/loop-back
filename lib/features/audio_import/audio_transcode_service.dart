@@ -4,6 +4,7 @@ import 'package:path/path.dart' as p;
 import 'package:universal_io/io.dart';
 
 import '../../services/app_logger.dart';
+import '../../../utils/file_cleanup.dart';
 
 /// 用户音频统一转码服务。
 ///
@@ -61,7 +62,7 @@ class AudioTranscodeService {
           _logTag,
           'failed: returnCode=$returnCode source=${p.basename(source.path)} output=${p.basename(output.path)} logs=${logs ?? ''}',
         );
-        await _deleteIfExists(output);
+        await deleteFileQuietly(output);
         return false;
       }
       return true;
@@ -70,7 +71,7 @@ class AudioTranscodeService {
         _logTag,
         'exception: source=${p.basename(source.path)} error=$error stack=$stackTrace',
       );
-      await _deleteIfExists(output);
+      await deleteFileQuietly(output);
       return false;
     }
   }
@@ -121,7 +122,7 @@ class AudioTranscodeService {
           'transcription upload compression failed: returnCode=$returnCode '
           'source=${p.basename(source.path)} logs=${logs ?? ''}',
         );
-        await _deleteIfExists(output);
+        await deleteFileQuietly(output);
         return false;
       }
       return true;
@@ -131,7 +132,7 @@ class AudioTranscodeService {
         'transcription upload compression exception: '
         'source=${p.basename(source.path)} error=$error stack=$stackTrace',
       );
-      await _deleteIfExists(output);
+      await deleteFileQuietly(output);
       return false;
     }
   }
@@ -184,7 +185,7 @@ class AudioTranscodeService {
           _logTag,
           'wav16k failed: returnCode=$returnCode source=${p.basename(source.path)} output=${p.basename(output.path)} logs=${logs ?? ''}',
         );
-        await _deleteIfExists(output);
+        await deleteFileQuietly(output);
         return false;
       }
       return true;
@@ -193,7 +194,7 @@ class AudioTranscodeService {
         _logTag,
         'wav16k exception: source=${p.basename(source.path)} error=$error stack=$stackTrace',
       );
-      await _deleteIfExists(output);
+      await deleteFileQuietly(output);
       return false;
     }
   }
@@ -255,7 +256,7 @@ class AudioTranscodeService {
           'start=${start.inSeconds}s source=${p.basename(source.path)} '
           'logs=${logs ?? ''}',
         );
-        await _deleteIfExists(output);
+        await deleteFileQuietly(output);
         return false;
       }
       return true;
@@ -264,18 +265,11 @@ class AudioTranscodeService {
         _logTag,
         'wav16k range exception: start=${start.inSeconds}s error=$error stack=$stackTrace',
       );
-      await _deleteIfExists(output);
+      await deleteFileQuietly(output);
       return false;
     }
   }
 
   /// 终止一次在途的 ffmpeg 会话；已结束或未知 id 时什么也不做。
   void cancelSession(int sessionId) => FFmpegKit.cancel(sessionId);
-
-  Future<void> _deleteIfExists(File file) async {
-    if (!await file.exists()) return;
-    try {
-      await file.delete();
-    } catch (_) {}
-  }
 }

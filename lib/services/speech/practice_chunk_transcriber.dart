@@ -21,6 +21,7 @@ import '../../utils/audio_chunk_planner.dart';
 import '../app_logger.dart';
 import 'speech_config.dart';
 import 'speech_transcription_client.dart';
+import '../../utils/file_cleanup.dart';
 
 const _logTag = 'PracticeChunk';
 
@@ -198,7 +199,7 @@ class PracticeChunkTranscriber {
           );
           if (!extracted) return null;
           final bytes = await probeFile.readAsBytes();
-          await _delete(probeFile);
+          await deleteFileQuietly(probeFile);
           return quietestCutInPcm(wavBytes: bytes, windowStart: from);
         },
       );
@@ -269,7 +270,7 @@ class PracticeChunkTranscriber {
         onSessionStarted: onSessionStarted,
       );
       if (_isCancelled(cancelToken, isSessionValid)) {
-        await _delete(chunkFile);
+        await deleteFileQuietly(chunkFile);
         throw const PracticeChunkFailure(PracticeChunkFailureReason.cancelled);
       }
       final bytes = extracted ? await chunkFile.readAsBytes() : null;
@@ -277,7 +278,7 @@ class PracticeChunkTranscriber {
       if (bytes == null ||
           bytes.length > audioChunkMaxUploadBytes ||
           chunk.duration > audioChunkMaxDuration) {
-        await _delete(chunkFile);
+        await deleteFileQuietly(chunkFile);
         throw PracticeChunkFailure(
           PracticeChunkFailureReason.decodeFailed,
           failedChunk: chunk,
@@ -290,7 +291,7 @@ class PracticeChunkTranscriber {
           '跳过确认无声的块 ${chunk.index + 1}/${session.chunks.length}',
         );
         session.markSilent(chunk.index);
-        await _delete(chunkFile);
+        await deleteFileQuietly(chunkFile);
         onProgress?.call(
           session.completedCount,
           session.chunks.length,
@@ -312,7 +313,7 @@ class PracticeChunkTranscriber {
           cancelToken: cancelToken,
         );
       } on SpeechTranscriptionException catch (error) {
-        await _delete(chunkFile);
+        await deleteFileQuietly(chunkFile);
         if (error.kind == SpeechTranscriptionErrorKind.cancelled) {
           throw const PracticeChunkFailure(
             PracticeChunkFailureReason.cancelled,
@@ -326,7 +327,7 @@ class PracticeChunkTranscriber {
           mayHaveBeenCharged: true,
         );
       }
-      await _delete(chunkFile);
+      await deleteFileQuietly(chunkFile);
       session.collect(
         chunk: chunk,
         text: result.text,
@@ -359,19 +360,11 @@ class PracticeChunkTranscriber {
     );
     if (!extracted) return null;
     final duration = pcmWavDuration(await file.length());
-    await _delete(file);
+    await deleteFileQuietly(file);
     if (isSessionValid != null && !isSessionValid()) return null;
     return duration;
   }
 
   bool _isCancelled(CancelToken token, bool Function()? isSessionValid) =>
       token.isCancelled || (isSessionValid != null && !isSessionValid());
-
-  Future<void> _delete(File file) async {
-    try {
-      if (await file.exists()) await file.delete();
-    } catch (error) {
-      AppLogger.log(_logTag, '删除临时文件失败 path=${file.path} | $error');
-    }
-  }
 }

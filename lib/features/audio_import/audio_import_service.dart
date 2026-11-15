@@ -17,6 +17,7 @@ import 'audio_import_cancel.dart';
 import 'audio_import_models.dart';
 import 'audio_registration_service.dart';
 import 'audio_transcode_service.dart';
+import '../../../utils/file_cleanup.dart';
 
 typedef AudioImportProgressCallback =
     void Function(int receivedBytes, int? totalBytes);
@@ -112,7 +113,7 @@ class AudioImportService {
         case AudioRegistrationAdded(:final item):
           if (finalizedAudio.created &&
               item.audioPath != finalizedAudio.relativePath) {
-            await _deleteIfExists(
+            await deleteFileQuietly(
               File(p.join(dataDir.path, finalizedAudio.relativePath)),
             );
           }
@@ -126,7 +127,7 @@ class AudioImportService {
     } catch (error) {
       final savedAudio = finalizedAudio;
       if (savedAudio != null && savedAudio.created) {
-        await _deleteIfExists(
+        await deleteFileQuietly(
           File(p.join(dataDir.path, savedAudio.relativePath)),
         );
       }
@@ -272,7 +273,9 @@ class AudioImportService {
   Future<void> discardDownloadedAudio(DownloadedAudio downloaded) async {
     if (!downloaded.created) return;
     final dataDir = await _resolveDataDir();
-    await _deleteIfExists(File(p.join(dataDir.path, downloaded.relativePath)));
+    await deleteFileQuietly(
+      File(p.join(dataDir.path, downloaded.relativePath)),
+    );
   }
 
   Future<ResolvedAudioImport> resolveUrl(
@@ -381,7 +384,7 @@ class AudioImportService {
       } catch (error) {
         // 用户主动取消立即释放已落盘的部分文件；自然失败则保留，供下次继续。
         if (error is BackgroundFileDownloadException && error.isCanceled) {
-          await _deleteIfExists(downloadedFile);
+          await deleteFileQuietly(downloadedFile);
         }
         rethrow;
       }
@@ -520,12 +523,5 @@ class AudioImportService {
         .trim();
     if (replaced.isEmpty) return 'audio';
     return replaced.length > 80 ? replaced.substring(0, 80).trim() : replaced;
-  }
-
-  Future<void> _deleteIfExists(File file) async {
-    if (!await file.exists()) return;
-    try {
-      await file.delete();
-    } catch (_) {}
   }
 }

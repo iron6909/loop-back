@@ -14,6 +14,7 @@ import 'package:path/path.dart' as p;
 import 'package:universal_io/io.dart';
 
 import 'app_logger.dart';
+import '../utils/file_cleanup.dart';
 
 const _logTag = 'ReliableHttpDownloader';
 
@@ -286,8 +287,8 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
     required bool allowResume,
   }) async {
     if (allowResume) return;
-    await _deleteIfExists(partFile);
-    await _deleteIfExists(metaFile);
+    await deleteFileQuietly(partFile);
+    await deleteFileQuietly(metaFile);
   }
 
   Future<void> _waitBeforeRetry(
@@ -366,7 +367,7 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
         final existingLength = await _lengthIfExists(partFile);
         if (expectedSize != null && existingLength == expectedSize) {
           await _replaceWithPart(partFile: partFile, targetFile: targetFile);
-          await _deleteIfExists(metaFile);
+          await deleteFileQuietly(metaFile);
           onProgress?.call(existingLength, expectedSize);
           return ReliableDownloadResult(
             savePath: targetFile.path,
@@ -374,8 +375,8 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
             resumed: true,
           );
         }
-        await _deleteIfExists(partFile);
-        await _deleteIfExists(metaFile);
+        await deleteFileQuietly(partFile);
+        await deleteFileQuietly(metaFile);
         shouldResume = false;
         continue;
       }
@@ -403,8 +404,8 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
         );
       }
       if (shouldResume && statusCode == 200) {
-        await _deleteIfExists(partFile);
-        await _deleteIfExists(metaFile);
+        await deleteFileQuietly(partFile);
+        await deleteFileQuietly(metaFile);
         state.rangeUnsupported = true;
       }
 
@@ -440,7 +441,7 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
         );
       }
       await _replaceWithPart(partFile: partFile, targetFile: targetFile);
-      await _deleteIfExists(metaFile);
+      await deleteFileQuietly(metaFile);
       return ReliableDownloadResult(
         savePath: targetFile.path,
         bytesWritten: bytesWritten,
@@ -598,8 +599,8 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
     if (identityKey == null || identityKey.isEmpty) return length;
     final meta = await _readMeta(metaFile);
     if (meta?['identityKey'] == identityKey) return length;
-    await _deleteIfExists(partFile);
-    await _deleteIfExists(metaFile);
+    await deleteFileQuietly(partFile);
+    await deleteFileQuietly(metaFile);
     return 0;
   }
 
@@ -651,8 +652,8 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
     required File metaFile,
   }) async {
     if (value == null || value.isEmpty) {
-      await _deleteIfExists(partFile);
-      await _deleteIfExists(metaFile);
+      await deleteFileQuietly(partFile);
+      await deleteFileQuietly(metaFile);
       throw const ReliableDownloadException(
         'Partial download response is missing Content-Range.',
         kind: ReliableDownloadFailure.integrity,
@@ -661,8 +662,8 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
     final match = RegExp(r'^bytes\s+(\d+)-\d+/(\d+|\*)$').firstMatch(value);
     final start = match == null ? null : int.tryParse(match.group(1) ?? '');
     if (start != expectedStart) {
-      await _deleteIfExists(partFile);
-      await _deleteIfExists(metaFile);
+      await deleteFileQuietly(partFile);
+      await deleteFileQuietly(metaFile);
       throw ReliableDownloadException(
         'Partial download response starts at ${start ?? 'unknown'}, expected $expectedStart.',
         kind: ReliableDownloadFailure.integrity,
@@ -752,13 +753,6 @@ class DioReliableHttpDownloader implements ReliableHttpDownloader {
   Future<int> _lengthIfExists(File file) async {
     if (!await file.exists()) return 0;
     return file.length();
-  }
-
-  Future<void> _deleteIfExists(File file) async {
-    if (!await file.exists()) return;
-    try {
-      await file.delete();
-    } catch (_) {}
   }
 }
 

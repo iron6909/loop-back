@@ -9,6 +9,7 @@ import 'audio_import_cancel.dart';
 import 'audio_import_file_copy.dart';
 import 'audio_import_models.dart';
 import 'audio_transcode_service.dart';
+import '../../../utils/file_cleanup.dart';
 
 /// 音频落盘结果。
 ///
@@ -97,7 +98,7 @@ class AudioFinalizationService {
           cancelToken: cancelToken,
         );
       } else {
-        await _deleteIfExists(sourceFile);
+        await deleteFileQuietly(sourceFile);
       }
 
       AppLogger.log(
@@ -117,7 +118,7 @@ class AudioFinalizationService {
         'failed trace=$traceId canceled=${cancelToken?.isCancelled ?? false} '
             'error=${error.runtimeType} elapsed_ms=${stopwatch.elapsedMilliseconds}',
       );
-      await _deleteIfExists(sourceFile);
+      await deleteFileQuietly(sourceFile);
       rethrow;
     }
   }
@@ -167,7 +168,7 @@ class AudioFinalizationService {
     } finally {
       // 兜底清理临时产物：成功 move 后 tmpOutput 已不存在；命中已有文件、
       // fingerprint/move 抛异常等情形在此删除残留（Android 无 /tmp 自动清理）。
-      await _deleteIfExists(tmpOutput);
+      await deleteFileQuietly(tmpOutput);
     }
   }
 
@@ -201,10 +202,10 @@ class AudioFinalizationService {
           destination: finalFile,
           cancelToken: cancelToken,
         );
-        await _deleteIfExists(sourceFile);
+        await deleteFileQuietly(sourceFile);
         return;
       } catch (e) {
-        await _deleteIfExists(finalFile);
+        await deleteFileQuietly(finalFile);
         if (e is DioException && CancelToken.isCancel(e)) rethrow;
         if (e is! FileSystemException) rethrow;
         throw AudioImportException(
@@ -214,12 +215,5 @@ class AudioFinalizationService {
         );
       }
     }
-  }
-
-  Future<void> _deleteIfExists(File file) async {
-    if (!await file.exists()) return;
-    try {
-      await file.delete();
-    } catch (_) {}
   }
 }
