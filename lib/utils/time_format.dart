@@ -138,3 +138,15 @@ class _EnMessages implements timeago.LookupMessages {
   @override
   String wordSeparator() => ' ';
 }
+
+/// 已完成大阶段标题文案。
+///
+/// 使用相对时间，但显式带上“完成于 / Completed”前缀，避免误读成逾期时间。
+String formatCompletedStageTimeLabel(
+  BuildContext context,
+  DateTime completedAt,
+) {
+  final ago = formatTimeAgo(context, completedAt);
+  final isZh = Localizations.localeOf(context).languageCode == 'zh';
+  return isZh ? '完成于$ago' : 'Completed $ago';
+}

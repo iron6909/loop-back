@@ -11,10 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 
 import '../database/enums.dart';
-import '../models/practice_completion_result.dart';
 import '../features/rating_prompt/domain/rating_prompt_policy.dart';
-import '../features/rating_prompt/rating_prompt_providers.dart';
-import '../features/rating_prompt/rating_prompt_presentation_guard.dart';
 import '../models/audio_item.dart';
 import '../models/learning_progress.dart';
 import '../models/media_learning_startup.dart';
@@ -54,6 +51,7 @@ import '../utils/paragraph_grouping.dart';
 import '../utils/playback_speed_default.dart';
 import '../utils/review_launch_planner.dart';
 import '../utils/audio_item_actions.dart';
+import '../utils/learning_practice_navigation.dart';
 import '../utils/time_format.dart';
 import '../widgets/blind_listen_paragraph_sheet.dart';
 import '../widgets/common/app_popup_menu.dart';
@@ -81,146 +79,6 @@ import '../database/providers.dart';
 import '../providers/learning_session/sentence_playback_engine.dart';
 
 const _durationDebugLogTag = 'MediaDuration';
-
-/// 统一打开音频或视频盲听任务，避免首次学习与复习入口各自维护媒体分流。
-///
-/// 自由练习的补做目标只在媒体加载成功后写入，加载失败和取消不会提前改变学习进度语义。
-Future<void> _openBlindListenPractice({
-  required BuildContext context,
-  required WidgetRef ref,
-  required AudioItem audioItem,
-  required String? collectionId,
-  required List<List<Sentence>> paragraphs,
-  required BlindListenSettings settings,
-  required LearningStage stage,
-  required String loadKey,
-  bool isFreePlay = false,
-  LearningStage? catchUpStage,
-  SubStageType? catchUpSubStage,
-}) async {
-  final session = ref.read(learningSessionProvider.notifier);
-  final route = AppRoutes.blindListenPlayer(collectionId, audioItem.id);
-  if (!context.mounted) return;
-  context.push(
-    route,
-    extra: MediaLearningStartup(
-      loadKey: loadKey,
-      showVideoLoading: audioItem.isVideo,
-      load: () async {
-        final result = await session.enterBlindListenMode(
-          audioItem,
-          paragraphs: paragraphs,
-          settings: settings,
-          stage: stage,
-          isFreePlay: isFreePlay,
-        );
-        if (result == MediaLoadResult.ready &&
-            catchUpStage != null &&
-            catchUpSubStage != null) {
-          session.setCatchUp(catchUpStage, catchUpSubStage);
-        }
-        return result;
-      },
-      cancel: session.cancelBlindListenEntry,
-    ),
-  );
-}
-
-/// 通过统一媒体启动链路打开音频或视频复述任务。
-Future<void> _openRetellPractice({
-  required BuildContext context,
-  required WidgetRef ref,
-  required AudioItem audioItem,
-  required String? collectionId,
-  required List<List<Sentence>> paragraphs,
-  required String loadKey,
-  bool isFreePlay = false,
-  LearningStage? catchUpStage,
-  SubStageType? catchUpSubStage,
-}) async {
-  final session = ref.read(learningSessionProvider.notifier);
-  if (!context.mounted) return;
-  await _pushPracticeAndWaitForTransition(
-    context,
-    AppRoutes.retellPlayer(collectionId, audioItem.id),
-    ref: ref,
-    event: RatingPromptEvent.retellCompleted,
-    extra: MediaLearningStartup(
-      loadKey: loadKey,
-      showVideoLoading: audioItem.isVideo,
-      load: () => session.enterRetellMode(
-        audioItem,
-        paragraphs,
-        isFreePlay: isFreePlay,
-        catchUpStage: catchUpStage,
-        catchUpSubStage: catchUpSubStage,
-      ),
-      cancel: session.cancelRetellEntry,
-    ),
-  );
-}
-
-/// 推入练习页，等待 root 退场完成后在原计划页仍可见时检查评分资格。
-Future<void> _pushPracticeAndWaitForTransition(
-  BuildContext context,
-  String route, {
-  Object? extra,
-  required WidgetRef ref,
-  required RatingPromptEvent event,
-}) async {
-  final transition = rootRouteObserver.watchNextPop();
-  final presentation = RatingPromptPresentationGuard(
-    context: context,
-    isRootRouteCurrent: () => transition.returnedToPreviousRoute,
-  );
-  try {
-    final result = await context.push<PracticeCompletionResult>(
-      route,
-      extra: extra,
-    );
-    if (result == PracticeCompletionResult.completed) {
-      await transition.completed;
-      if (!context.mounted) return;
-      await _requestRatingAfterPractice(
-        ref,
-        event,
-        canPresent: () => presentation.canPresent,
-      );
-    }
-  } finally {
-    transition.cancel();
-  }
-}
-
-/// 评分邀请失败由独立协调器处理，不改变练习完成后的导航行为。
-Future<void> _requestRatingAfterPractice(
-  WidgetRef ref,
-  RatingPromptEvent event, {
-  required bool Function() canPresent,
-}) async {
-  try {
-    await ref
-        .read(ratingPromptCoordinatorProvider)
-        .maybeRequest(event, canPresent: canPresent);
-  } catch (error, stackTrace) {
-    AppLogger.log(
-      'RatingPrompt',
-      'coordinator unavailable error=$error\n$stackTrace',
-    );
-  }
-}
-
-/// 已完成大阶段标题文案。
-///
-/// 使用相对时间，但显式带上“完成于 / Completed”前缀，避免误读成逾期时间。
-String formatCompletedStageTimeLabel(
-  BuildContext context,
-  DateTime completedAt,
-) {
-  final ago = formatTimeAgo(context, completedAt);
-  final isZh = Localizations.localeOf(context).languageCode == 'zh';
-  return isZh ? '完成于$ago' : 'Completed $ago';
-}
 
 /// 逐句精听入口弹窗的「停顿下拉显示值」← 已解析设置。
 ///
@@ -990,7 +848,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
           sentences,
           targetDuration,
         );
-        await _openBlindListenPractice(
+        await openBlindListenPractice(
           context: context,
           ref: ref,
           audioItem: audioItem,
@@ -1160,7 +1018,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
     if (isSummary) {
       // reviewRetellSummary：全文作为单个段落；停顿/速度已由复习简报落入偏好,
       // enterRetellMode 内部按槽位 resolve 出完整设置。
-      await _openRetellPractice(
+      await openRetellPractice(
         context: context,
         ref: ref,
         audioItem: audioItem,
@@ -1220,7 +1078,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
               sentences,
               targetDuration,
             );
-            await _openRetellPractice(
+            await openRetellPractice(
               context: context,
               ref: ref,
               audioItem: audioItem,
@@ -1306,7 +1164,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
           sentences,
           targetDuration,
         );
-        await _openBlindListenPractice(
+        await openBlindListenPractice(
           context: context,
           ref: ref,
           audioItem: audioItem,
@@ -1517,7 +1375,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
           );
           return;
         }
-        await _pushPracticeAndWaitForTransition(
+        await pushPracticeAndWaitForTransition(
           context,
           AppRoutes.listenAndRepeatPlayer(
             widget.collectionId,
@@ -1630,7 +1488,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
               targetDuration,
             );
 
-            await _openRetellPractice(
+            await openRetellPractice(
               context: context,
               ref: ref,
               audioItem: audioItem,
@@ -2228,7 +2086,7 @@ class _FirstStudySection extends ConsumerWidget {
           sentences,
           targetDuration,
         );
-        await _openBlindListenPractice(
+        await openBlindListenPractice(
           context: context,
           ref: ref,
           audioItem: audioItem,
@@ -2407,7 +2265,7 @@ class _FirstStudySection extends ConsumerWidget {
           );
           return;
         }
-        await _pushPracticeAndWaitForTransition(
+        await pushPracticeAndWaitForTransition(
           context,
           AppRoutes.listenAndRepeatPlayer(collectionId, audioItemId),
           ref: ref,
@@ -2525,7 +2383,7 @@ class _FirstStudySection extends ConsumerWidget {
               targetDuration,
             );
 
-            await _openRetellPractice(
+            await openRetellPractice(
               context: context,
               ref: ref,
               audioItem: audioItem,
@@ -2746,7 +2604,7 @@ class _ReviewRoundSection extends ConsumerWidget {
           sentences,
           targetDuration,
         );
-        await _openBlindListenPractice(
+        await openBlindListenPractice(
           context: context,
           ref: ref,
           audioItem: audioItem,
@@ -2887,7 +2745,7 @@ class _ReviewRoundSection extends ConsumerWidget {
 
     if (isSummary) {
       // 全文复述：全文作为单个段落，无需选择时长
-      await _openRetellPractice(
+      await openRetellPractice(
         context: context,
         ref: ref,
         audioItem: audioItem,
@@ -2939,7 +2797,7 @@ class _ReviewRoundSection extends ConsumerWidget {
           sentences,
           targetDuration,
         );
-        await _openRetellPractice(
+        await openRetellPractice(
           context: context,
           ref: ref,
           audioItem: audioItem,
