@@ -41,50 +41,41 @@ const double _sentenceTopPadding = AppSpacing.xs;
 /// 句子与内联翻译之间的留白，保持译文贴近原句。
 const double _sentenceBottomPadding = AppSpacing.xs;
 
-/// 标注模式句子卡片
+/// 句子标注卡片的展示数据。
 ///
-/// 句子文本经 [SelectableSentenceText] 渲染（点词查词 + 系统标准选区），
-/// 内部管理翻译/解析的加载状态和意群显示开关。
-///
-/// 工具栏可以通过 [showToolbar] 控制是否在卡片内部渲染。
-/// 当 [showToolbar] 为 false 时，外部可通过 [GlobalKey] 获取
-/// [SentenceAnnotationCardState] 并调用 [SentenceAnnotationCardState.buildToolbar]
-/// 在其他位置渲染工具栏。
-class SentenceAnnotationCard extends ConsumerStatefulWidget {
+/// 只放「要画什么」，不放回调；回调在 [SentenceAnnotationActions] 里。分成两组是为了
+/// 让新功能只扩模型、不再往组件构造函数上追加参数。
+class SentenceAnnotationData {
+  const SentenceAnnotationData({
+    required this.text,
+    this.cachedTranslation,
+    this.cachedAnalysis,
+    this.audioItemId,
+    this.sentenceIndex,
+    this.sentenceStartMs,
+    this.sentenceEndMs,
+    this.inlineFeedback,
+    this.highlightedSegments,
+    this.wordHighlightBinding,
+    this.senseGroupResult,
+    this.senseGroupTimings,
+    this.playingSenseGroupIndex,
+    this.playedSenseGroupIndices = const {},
+    this.hasWordTimestamps = false,
+    this.savedGroupTexts = const {},
+    this.sentenceGuideStep,
+    this.senseGroupGuideStep,
+    this.analysisGuideStep,
+  });
+
   /// 句子文本
   final String text;
-
-  /// 请求翻译回调（返回译文的字段级增量流，逐帧渐显；与 [onRequestAnalysis] 同构）
-  final Stream<String> Function(
-    CancelToken cancelToken,
-    SentenceAiRequestSource source,
-  )?
-  onRequestTranslation;
-
-  /// 请求解析回调（返回结构化解析的字段级增量流，逐帧渐显）
-  final Stream<SentenceAnalysis> Function(
-    CancelToken cancelToken,
-    SentenceAiRequestSource source,
-  )?
-  onRequestAnalysis;
 
   /// 已缓存的翻译文本
   final String? cachedTranslation;
 
   /// 已缓存的结构化解析（命中时自动展开）
   final SentenceAnalysis? cachedAnalysis;
-
-  /// 是否在首帧后自动加载翻译。
-  final bool autoLoadTranslation;
-
-  /// 是否在首帧后自动加载解析。
-  final bool autoLoadAnalysis;
-
-  /// 用户手动点击翻译按钮时触发。
-  final VoidCallback? onTranslationUserIntent;
-
-  /// 用户手动点击解析按钮时触发。
-  final VoidCallback? onAnalysisUserIntent;
 
   /// 来源音频 ID（用于词典弹窗收藏单词时记录来源）
   final String? audioItemId;
@@ -113,14 +104,75 @@ class SentenceAnnotationCard extends ConsumerStatefulWidget {
   /// 各意群时间范围（对应当前显示的粒度）
   final List<SenseGroupTiming>? senseGroupTimings;
 
-  /// 意群粒度切换时的回调（传入当前显示的意群列表，用于重新计算时间范围）
-  final void Function(List<String> chunks)? onSenseGroupModeChanged;
-
   /// 正在播放的意群索引
   final int? playingSenseGroupIndex;
 
   /// 已播放过的意群索引集合
   final Set<int> playedSenseGroupIndices;
+
+  /// 是否有词级时间戳（决定拆意群按钮是否可用）
+  final bool hasWordTimestamps;
+
+  /// 已收藏的意群文本集合（归一化后，用于 badge 橙色高亮）
+  final Set<String> savedGroupTexts;
+
+  /// 新手引导步骤：指向句子文本区域（点词查词典、长按复制）
+  final GuideStep? sentenceGuideStep;
+
+  /// 新手引导步骤：指向意群按钮
+  final GuideStep? senseGroupGuideStep;
+
+  /// 新手引导步骤：指向解析按钮
+  final GuideStep? analysisGuideStep;
+}
+
+/// 句子标注卡片的回调与自动加载开关。
+class SentenceAnnotationActions {
+  const SentenceAnnotationActions({
+    this.onRequestTranslation,
+    this.onRequestAnalysis,
+    this.autoLoadTranslation = false,
+    this.autoLoadAnalysis = false,
+    this.onTranslationUserIntent,
+    this.onAnalysisUserIntent,
+    this.onSenseGroupModeChanged,
+    this.onTapSenseGroup,
+    this.onRequestSenseGroups,
+    this.autoLoadSenseGroups = false,
+    this.onAwaitSenseGroupFine,
+    this.onToolbarStateChanged,
+    this.onToolbarButtonTapped,
+    this.onTapGroupWithRect,
+  });
+
+  /// 请求翻译回调（返回译文的字段级增量流，逐帧渐显；与 [onRequestAnalysis] 同构）
+  final Stream<String> Function(
+    CancelToken cancelToken,
+    SentenceAiRequestSource source,
+  )?
+  onRequestTranslation;
+
+  /// 请求解析回调（返回结构化解析的字段级增量流，逐帧渐显）
+  final Stream<SentenceAnalysis> Function(
+    CancelToken cancelToken,
+    SentenceAiRequestSource source,
+  )?
+  onRequestAnalysis;
+
+  /// 是否在首帧后自动加载翻译。
+  final bool autoLoadTranslation;
+
+  /// 是否在首帧后自动加载解析。
+  final bool autoLoadAnalysis;
+
+  /// 用户手动点击翻译按钮时触发。
+  final VoidCallback? onTranslationUserIntent;
+
+  /// 用户手动点击解析按钮时触发。
+  final VoidCallback? onAnalysisUserIntent;
+
+  /// 意群粒度切换时的回调（传入当前显示的意群列表，用于重新计算时间范围）
+  final void Function(List<String> chunks)? onSenseGroupModeChanged;
 
   /// 点击意群回调
   final void Function(int groupIndex)? onTapSenseGroup;
@@ -138,14 +190,34 @@ class SentenceAnnotationCard extends ConsumerStatefulWidget {
   /// fine 已就绪（或缓存命中已含完整 fine）则立即返回。为空时不等待（向后兼容）。
   final Future<void> Function()? onAwaitSenseGroupFine;
 
-  /// 是否有词级时间戳（决定拆意群按钮是否可用）
-  final bool hasWordTimestamps;
+  /// 工具栏状态变化回调
+  ///
+  /// 当 `showToolbar` 为 false 时，卡片内部状态（翻译/解析加载、意群切换）
+  /// 变化后调用此回调，通知外部刷新工具栏。
+  final VoidCallback? onToolbarStateChanged;
 
-  /// 已收藏的意群文本集合（归一化后，用于 badge 橙色高亮）
-  final Set<String> savedGroupTexts;
+  /// 用户点击工具栏按钮（意群/翻译/解析）时触发，通知外部切换到手动模式
+  final VoidCallback? onToolbarButtonTapped;
 
   /// 点击意群回调（附带 badge 全局位置，用于显示工具条）
   final void Function(int groupIndex, Rect globalRect)? onTapGroupWithRect;
+}
+
+/// 标注模式句子卡片
+///
+/// 句子文本经 [SelectableSentenceText] 渲染（点词查词 + 系统标准选区），
+/// 内部管理翻译/解析的加载状态和意群显示开关。
+///
+/// 工具栏可以通过 [showToolbar] 控制是否在卡片内部渲染。
+/// 当 [showToolbar] 为 false 时，外部可通过 [GlobalKey] 获取
+/// [SentenceAnnotationCardState] 并调用 [SentenceAnnotationCardState.buildToolbar]
+/// 在其他位置渲染工具栏。
+class SentenceAnnotationCard extends ConsumerStatefulWidget {
+  /// 展示数据：句子、缓存、意群、引导步骤。
+  final SentenceAnnotationData data;
+
+  /// 回调与自动加载开关。
+  final SentenceAnnotationActions actions;
 
   /// 是否在卡片内部渲染工具栏
   ///
@@ -154,63 +226,14 @@ class SentenceAnnotationCard extends ConsumerStatefulWidget {
   /// [SentenceAnnotationCardState.buildToolbar] 在其他位置渲染。
   final bool showToolbar;
 
-  /// 工具栏状态变化回调
-  ///
-  /// 当 [showToolbar] 为 false 时，卡片内部状态（翻译/解析加载、意群切换）
-  /// 变化后调用此回调，通知外部刷新工具栏。
-  final VoidCallback? onToolbarStateChanged;
-
-  /// 用户点击工具栏按钮（意群/翻译/解析）时触发，通知外部切换到手动模式
-  final VoidCallback? onToolbarButtonTapped;
-
-  /// 新手引导步骤：指向句子文本区域（点词查词典、长按复制）
-  final GuideStep? sentenceGuideStep;
-
-  /// 新手引导步骤：指向意群按钮
-  final GuideStep? senseGroupGuideStep;
-
-  /// 新手引导步骤：指向解析按钮
-  final GuideStep? analysisGuideStep;
-
   /// 原文与译文的横向内边距；解析面板始终占满可用宽度。
   final double contentHorizontalPadding;
 
   const SentenceAnnotationCard({
     super.key,
-    required this.text,
-    this.onRequestTranslation,
-    this.onRequestAnalysis,
-    this.cachedTranslation,
-    this.cachedAnalysis,
-    this.autoLoadTranslation = false,
-    this.autoLoadAnalysis = false,
-    this.onTranslationUserIntent,
-    this.onAnalysisUserIntent,
-    this.audioItemId,
-    this.sentenceIndex,
-    this.sentenceStartMs,
-    this.sentenceEndMs,
-    this.inlineFeedback,
-    this.highlightedSegments,
-    this.wordHighlightBinding,
-    this.senseGroupResult,
-    this.senseGroupTimings,
-    this.onSenseGroupModeChanged,
-    this.playingSenseGroupIndex,
-    this.playedSenseGroupIndices = const {},
-    this.onTapSenseGroup,
-    this.onRequestSenseGroups,
-    this.autoLoadSenseGroups = false,
-    this.onAwaitSenseGroupFine,
-    this.hasWordTimestamps = false,
+    required this.data,
+    this.actions = const SentenceAnnotationActions(),
     this.showToolbar = true,
-    this.onToolbarStateChanged,
-    this.onToolbarButtonTapped,
-    this.savedGroupTexts = const {},
-    this.onTapGroupWithRect,
-    this.sentenceGuideStep,
-    this.senseGroupGuideStep,
-    this.analysisGuideStep,
     this.contentHorizontalPadding = 0,
   });
 
@@ -252,26 +275,27 @@ class SentenceAnnotationCardState
   void initState() {
     super.initState();
     // 有意群数据时自动显示大意群
-    if (widget.senseGroupResult != null &&
-        widget.senseGroupResult!.medium.isNotEmpty) {
+    if (widget.data.senseGroupResult != null &&
+        widget.data.senseGroupResult!.medium.isNotEmpty) {
       _senseGroupMode = SenseGroupMode.medium;
     }
     // 预存缓存内容（有缓存时自动展开，无需用户点击按钮）
-    if (widget.cachedTranslation != null &&
-        widget.cachedTranslation!.isNotEmpty) {
-      _translationContent = widget.cachedTranslation;
+    if (widget.data.cachedTranslation != null &&
+        widget.data.cachedTranslation!.isNotEmpty) {
+      _translationContent = widget.data.cachedTranslation;
       _translationState = ContentLoadState.loaded;
       _translationExpanded = true;
       _translationActivated = true;
     }
-    if (widget.cachedAnalysis != null && widget.cachedAnalysis!.isNotEmpty) {
-      _analysisContent = widget.cachedAnalysis;
+    if (widget.data.cachedAnalysis != null &&
+        widget.data.cachedAnalysis!.isNotEmpty) {
+      _analysisContent = widget.data.cachedAnalysis;
       _analysisState = ContentLoadState.loaded;
       _analysisExpanded = true;
       _analysisActivated = true;
     }
     // 首帧构建后通知外部工具栏刷新（解决 GlobalKey 时序问题）
-    if (widget.onToolbarStateChanged != null) {
+    if (widget.actions.onToolbarStateChanged != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _notifyToolbar();
       });
@@ -288,24 +312,26 @@ class SentenceAnnotationCardState
     // 意群数据从无到有时自动进入 medium 模式
     // 兜底逻辑：_onTapSenseGroup 的 await 返回时 widget 可能还没更新，
     // 此处在 parent rebuild 后再次检查并进入正确模式。
-    if (widget.senseGroupResult != null &&
-        widget.senseGroupResult!.medium.isNotEmpty &&
-        oldWidget.senseGroupResult == null &&
+    if (widget.data.senseGroupResult != null &&
+        widget.data.senseGroupResult!.medium.isNotEmpty &&
+        oldWidget.data.senseGroupResult == null &&
         _senseGroupMode == SenseGroupMode.off) {
       setState(() => _senseGroupMode = SenseGroupMode.medium);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          widget.onSenseGroupModeChanged?.call(widget.senseGroupResult!.medium);
+          widget.actions.onSenseGroupModeChanged?.call(
+            widget.data.senseGroupResult!.medium,
+          );
           _notifyToolbar();
         }
       });
     }
     // 缓存内容变化时自动展示或收折
-    if (widget.cachedTranslation != oldWidget.cachedTranslation) {
+    if (widget.data.cachedTranslation != oldWidget.data.cachedTranslation) {
       final hasContent =
-          widget.cachedTranslation != null &&
-          widget.cachedTranslation!.isNotEmpty;
-      _translationContent = widget.cachedTranslation;
+          widget.data.cachedTranslation != null &&
+          widget.data.cachedTranslation!.isNotEmpty;
+      _translationContent = widget.data.cachedTranslation;
       if (hasContent) {
         _translationState = ContentLoadState.loaded;
         _translationExpanded = true;
@@ -319,10 +345,11 @@ class SentenceAnnotationCardState
         if (mounted) _notifyToolbar();
       });
     }
-    if (widget.cachedAnalysis != oldWidget.cachedAnalysis) {
+    if (widget.data.cachedAnalysis != oldWidget.data.cachedAnalysis) {
       final hasContent =
-          widget.cachedAnalysis != null && widget.cachedAnalysis!.isNotEmpty;
-      _analysisContent = widget.cachedAnalysis;
+          widget.data.cachedAnalysis != null &&
+          widget.data.cachedAnalysis!.isNotEmpty;
+      _analysisContent = widget.data.cachedAnalysis;
       if (hasContent) {
         _analysisState = ContentLoadState.loaded;
         _analysisExpanded = true;
@@ -337,15 +364,17 @@ class SentenceAnnotationCardState
       });
     }
     // 意群数据变化时通知工具栏刷新
-    if (widget.senseGroupResult != oldWidget.senseGroupResult) {
+    if (widget.data.senseGroupResult != oldWidget.data.senseGroupResult) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _notifyToolbar();
       });
     }
-    if (widget.text != oldWidget.text ||
-        widget.autoLoadTranslation != oldWidget.autoLoadTranslation ||
-        widget.autoLoadAnalysis != oldWidget.autoLoadAnalysis ||
-        widget.autoLoadSenseGroups != oldWidget.autoLoadSenseGroups) {
+    if (widget.data.text != oldWidget.data.text ||
+        widget.actions.autoLoadTranslation !=
+            oldWidget.actions.autoLoadTranslation ||
+        widget.actions.autoLoadAnalysis != oldWidget.actions.autoLoadAnalysis ||
+        widget.actions.autoLoadSenseGroups !=
+            oldWidget.actions.autoLoadSenseGroups) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         _triggerInitialAutoLoads();
@@ -357,33 +386,33 @@ class SentenceAnnotationCardState
 
   /// 通知外部工具栏状态已变化
   void _notifyToolbar() {
-    widget.onToolbarStateChanged?.call();
+    widget.actions.onToolbarStateChanged?.call();
   }
 
   /// 首帧后自动加载翻译/解析。
   void _triggerInitialAutoLoads() {
-    if (widget.autoLoadTranslation) {
+    if (widget.actions.autoLoadTranslation) {
       AppLogger.log(
         'SentenceAnnotation',
-        '自动加载翻译: start text="${widget.text}"',
+        '自动加载翻译: start text="${widget.data.text}"',
       );
       unawaited(
         _runAutoLoad('translation', () => _requestTranslation(automatic: true)),
       );
     }
-    if (widget.autoLoadAnalysis) {
+    if (widget.actions.autoLoadAnalysis) {
       AppLogger.log(
         'SentenceAnnotation',
-        '自动加载解析: start text="${widget.text}"',
+        '自动加载解析: start text="${widget.data.text}"',
       );
       unawaited(
         _runAutoLoad('analysis', () => _requestAnalysis(automatic: true)),
       );
     }
-    if (widget.autoLoadSenseGroups) {
+    if (widget.actions.autoLoadSenseGroups) {
       AppLogger.log(
         'SentenceAnnotation',
-        '自动加载意群: start text="${widget.text}"',
+        '自动加载意群: start text="${widget.data.text}"',
       );
       unawaited(
         _runAutoLoad('senseGroup', () => _requestSenseGroups(automatic: true)),
@@ -402,7 +431,7 @@ class SentenceAnnotationCardState
 
   /// 获取当前模式下应显示的意群列表（off 时返回 null）
   List<String>? get _activeSenseGroups {
-    final result = widget.senseGroupResult;
+    final result = widget.data.senseGroupResult;
     if (result == null) return null;
     return switch (_senseGroupMode) {
       SenseGroupMode.medium => result.medium,
@@ -417,26 +446,26 @@ class SentenceAnnotationCardState
   /// - 两种结果相同：off → medium → off
   /// - 两种结果不同：off → medium（大意群）→ fine（小意群）→ off
   Future<void> _onTapSenseGroup() async {
-    final result = widget.senseGroupResult;
+    final result = widget.data.senseGroupResult;
 
     if (result != null && result.medium.isNotEmpty) {
       // 已有有效数据，切换显示模式
       // 仅从 off 进入 medium 时触发手动模式（首次激活）
       if (_senseGroupMode == SenseGroupMode.off) {
-        widget.onToolbarButtonTapped?.call();
+        widget.actions.onToolbarButtonTapped?.call();
       }
       final prevMode = _senseGroupMode;
 
       // medium→fine：fine 可能尚未流完（后端 medium 先返回、fine 后返回）。
       // 先 await fine 就绪（流已结束则立即返回），await 期间 AsyncToggleButton 自动显示加载。
       if (prevMode == SenseGroupMode.medium && !result.areBothEqual) {
-        if (widget.onAwaitSenseGroupFine != null) {
+        if (widget.actions.onAwaitSenseGroupFine != null) {
           setState(() => _senseGroupState = ContentLoadState.loading);
           _notifyToolbar();
-          await widget.onAwaitSenseGroupFine!.call();
+          await widget.actions.onAwaitSenseGroupFine!.call();
         }
         if (!mounted) return;
-        final ready = widget.senseGroupResult;
+        final ready = widget.data.senseGroupResult;
         // await 后 fine 仍空（出错/无 fine）→ 放弃切换，保持 medium
         if (ready == null || ready.fine.isEmpty) return;
         // fine 完整后再判定是否与 medium 等同：等同则回 off，否则进 fine
@@ -445,7 +474,7 @@ class SentenceAnnotationCardState
             : SenseGroupMode.fine;
         setState(() => _senseGroupMode = nextMode);
         AppLogger.log('SenseGroup', '切换模式: $prevMode → $nextMode');
-        widget.onSenseGroupModeChanged?.call(_activeSenseGroups ?? []);
+        widget.actions.onSenseGroupModeChanged?.call(_activeSenseGroups ?? []);
         _notifyToolbar();
         setState(() => _senseGroupState = ContentLoadState.loaded);
         return;
@@ -464,12 +493,12 @@ class SentenceAnnotationCardState
       });
       AppLogger.log('SenseGroup', '切换模式: $prevMode → $_senseGroupMode');
       // 通知外部重新计算时间范围 + 停止播放（off 时传空列表）
-      widget.onSenseGroupModeChanged?.call(_activeSenseGroups ?? []);
+      widget.actions.onSenseGroupModeChanged?.call(_activeSenseGroups ?? []);
       _notifyToolbar();
-    } else if (widget.onRequestSenseGroups != null) {
+    } else if (widget.actions.onRequestSenseGroups != null) {
       // 无数据时 await 异步请求，按钮自动显示 loading
       // （空结果不会被父组件缓存，因此可重复点击重试）
-      widget.onToolbarButtonTapped?.call();
+      widget.actions.onToolbarButtonTapped?.call();
       AppLogger.log('SenseGroup', '无数据，发起 API 请求...');
       await _requestSenseGroups(automatic: false);
     }
@@ -484,11 +513,11 @@ class SentenceAnnotationCardState
       );
       return;
     }
-    if (automatic && widget.senseGroupResult != null) {
+    if (automatic && widget.data.senseGroupResult != null) {
       AppLogger.log('SentenceAnnotation', '意群自动加载跳过: reason=hasContent');
       return;
     }
-    final request = widget.onRequestSenseGroups;
+    final request = widget.actions.onRequestSenseGroups;
     if (request == null) {
       AppLogger.log(
         'SentenceAnnotation',
@@ -508,14 +537,16 @@ class SentenceAnnotationCardState
       if (!mounted) return;
       // 请求完成后，父组件已通过 setState 将 senseGroupResult 传入。
       // 显式进入 medium 模式（不依赖 didUpdateWidget 的时序）。
-      if (widget.senseGroupResult != null &&
-          widget.senseGroupResult!.medium.isNotEmpty) {
+      if (widget.data.senseGroupResult != null &&
+          widget.data.senseGroupResult!.medium.isNotEmpty) {
         setState(() {
           _senseGroupMode = SenseGroupMode.medium;
           _senseGroupState = ContentLoadState.loaded;
         });
         AppLogger.log('SenseGroup', 'API 返回后进入 medium 模式');
-        widget.onSenseGroupModeChanged?.call(widget.senseGroupResult!.medium);
+        widget.actions.onSenseGroupModeChanged?.call(
+          widget.data.senseGroupResult!.medium,
+        );
       } else {
         setState(() => _senseGroupState = ContentLoadState.idle);
       }
@@ -534,7 +565,7 @@ class SentenceAnnotationCardState
   /// 与流式解析一致）。返回的 Future 在流结束（完成/出错）时 settle，供按钮收起
   /// loading。auth/quota 异常向上抛出交由 glue 弹登录/订阅。
   Future<void> _onTapTranslation() async {
-    widget.onTranslationUserIntent?.call();
+    widget.actions.onTranslationUserIntent?.call();
     await _requestTranslation(automatic: false);
   }
 
@@ -553,7 +584,7 @@ class SentenceAnnotationCardState
       return;
     }
     if (!automatic) {
-      widget.onToolbarButtonTapped?.call();
+      widget.actions.onToolbarButtonTapped?.call();
     }
     if (!_translationActivated) {
       _translationActivated = true;
@@ -566,7 +597,7 @@ class SentenceAnnotationCardState
       _notifyToolbar();
       return;
     }
-    if (widget.onRequestTranslation == null) {
+    if (widget.actions.onRequestTranslation == null) {
       AppLogger.log(
         'SentenceAnnotation',
         '翻译请求跳过: source=$source reason=noCallback',
@@ -587,6 +618,7 @@ class SentenceAnnotationCardState
     final cancelToken = CancelToken();
     _translationCancelToken = cancelToken;
     _translationSub = widget
+        .actions
         .onRequestTranslation!(
           cancelToken,
           automatic
@@ -667,7 +699,7 @@ class SentenceAnnotationCardState
   /// 渐显（与流式查词一致）。返回的 Future 在流结束（完成/出错）时 settle，供按钮
   /// 收起 loading。auth/quota 异常向上抛出交由 glue 弹登录/订阅。
   Future<void> _onTapAnalysis() async {
-    widget.onAnalysisUserIntent?.call();
+    widget.actions.onAnalysisUserIntent?.call();
     await _requestAnalysis(automatic: false);
   }
 
@@ -686,7 +718,7 @@ class SentenceAnnotationCardState
       return;
     }
     if (!automatic) {
-      widget.onToolbarButtonTapped?.call();
+      widget.actions.onToolbarButtonTapped?.call();
     }
     if (!_analysisActivated) {
       _analysisActivated = true;
@@ -699,7 +731,7 @@ class SentenceAnnotationCardState
       _notifyToolbar();
       return;
     }
-    if (widget.onRequestAnalysis == null) {
+    if (widget.actions.onRequestAnalysis == null) {
       AppLogger.log(
         'SentenceAnnotation',
         '解析请求跳过: source=$source reason=noCallback',
@@ -720,6 +752,7 @@ class SentenceAnnotationCardState
     final cancelToken = CancelToken();
     _analysisCancelToken = cancelToken;
     _analysisSub = widget
+        .actions
         .onRequestAnalysis!(
           cancelToken,
           automatic
@@ -802,13 +835,15 @@ class SentenceAnnotationCardState
 
   // -- 工具栏相关 --
 
-  bool get _isSenseGroupEnabled => widget.onRequestSenseGroups != null;
+  bool get _isSenseGroupEnabled => widget.actions.onRequestSenseGroups != null;
 
   bool get _hasTranslation =>
-      widget.onRequestTranslation != null || widget.cachedTranslation != null;
+      widget.actions.onRequestTranslation != null ||
+      widget.data.cachedTranslation != null;
 
   bool get _hasAnalysis =>
-      widget.onRequestAnalysis != null || widget.cachedAnalysis != null;
+      widget.actions.onRequestAnalysis != null ||
+      widget.data.cachedAnalysis != null;
 
   /// 是否有任何可用的工具栏按钮
   bool get hasToolbarButtons =>
@@ -871,7 +906,7 @@ class SentenceAnnotationCardState
       children: [
         Expanded(
           flex: _toolbarButtonFlex(l10n.annotationBtnAnalysis, context),
-          child: _wrapGuide(widget.analysisGuideStep, analysisBtn),
+          child: _wrapGuide(widget.data.analysisGuideStep, analysisBtn),
         ),
         const SizedBox(width: AppSpacing.s),
         Expanded(
@@ -881,7 +916,7 @@ class SentenceAnnotationCardState
         const SizedBox(width: AppSpacing.s),
         Expanded(
           flex: _toolbarButtonFlex(senseGroupLabel, context),
-          child: _wrapGuide(widget.senseGroupGuideStep, senseGroupBtn),
+          child: _wrapGuide(widget.data.senseGroupGuideStep, senseGroupBtn),
         ),
       ],
     );
@@ -915,42 +950,43 @@ class SentenceAnnotationCardState
         _activeSenseGroups != null &&
         _activeSenseGroups!.isNotEmpty;
 
-    final segments = widget.highlightedSegments;
+    final segments = widget.data.highlightedSegments;
     final playbackText =
         !showSenseGroupBlocks && segments != null && segments.isNotEmpty
         ? segments.map((segment) => segment.text).join()
-        : widget.text;
+        : widget.data.text;
     final Widget sentenceBody = WordHighlightBuilder(
       text: playbackText,
-      binding: widget.wordHighlightBinding,
+      binding: widget.data.wordHighlightBinding,
       builder: (context, activeWordIndex) => showSenseGroupBlocks
           ? SenseGroupText(
               chunks: _activeSenseGroups!,
-              timings: widget.senseGroupTimings ?? const [],
-              playingGroupIndex: widget.playingSenseGroupIndex,
-              playedGroupIndices: widget.playedSenseGroupIndices,
-              onTapGroup: widget.onTapSenseGroup ?? (_) {},
-              savedGroupTexts: widget.savedGroupTexts,
-              onTapGroupWithRect: widget.onTapGroupWithRect,
-              highlightedSegments: widget.highlightedSegments,
+              timings: widget.data.senseGroupTimings ?? const [],
+              playingGroupIndex: widget.data.playingSenseGroupIndex,
+              playedGroupIndices: widget.data.playedSenseGroupIndices,
+              onTapGroup: widget.actions.onTapSenseGroup ?? (_) {},
+              savedGroupTexts: widget.data.savedGroupTexts,
+              onTapGroupWithRect: widget.actions.onTapGroupWithRect,
+              highlightedSegments: widget.data.highlightedSegments,
               activeWordIndex: activeWordIndex,
             )
           : SelectableSentenceText(
-              text: widget.text,
+              text: widget.data.text,
               style: theme.textTheme.titleMedium?.copyWith(
                 height: 1.6,
                 color: theme.colorScheme.onSurface,
               ),
-              highlightedSegments: widget.highlightedSegments,
+              highlightedSegments: widget.data.highlightedSegments,
               activeWordIndex: activeWordIndex,
               origin: DictionaryLookupOrigin(
-                audioItemId: widget.audioItemId,
-                sentenceIndex: widget.sentenceIndex,
-                sentenceText: widget.text,
-                sentenceStartMs: widget.sentenceStartMs,
-                sentenceEndMs: widget.sentenceEndMs,
+                audioItemId: widget.data.audioItemId,
+                sentenceIndex: widget.data.sentenceIndex,
+                sentenceText: widget.data.text,
+                sentenceStartMs: widget.data.sentenceStartMs,
+                sentenceEndMs: widget.data.sentenceEndMs,
               ),
-              onBeforeLookup: () => widget.onToolbarButtonTapped?.call(),
+              onBeforeLookup: () =>
+                  widget.actions.onToolbarButtonTapped?.call(),
             ),
     );
 
@@ -960,7 +996,7 @@ class SentenceAnnotationCardState
         // 句子文本 — 意群色块模式或系统可选文本。
         // 底部收紧，让译文紧跟原句。
         _wrapGuide(
-          widget.sentenceGuideStep,
+          widget.data.sentenceGuideStep,
           Padding(
             padding: EdgeInsets.only(
               left: widget.contentHorizontalPadding,
@@ -982,7 +1018,7 @@ class SentenceAnnotationCardState
         ],
 
         // 附加反馈区域
-        if (widget.inlineFeedback case final inlineFeedback?) ...[
+        if (widget.data.inlineFeedback case final inlineFeedback?) ...[
           const SizedBox(height: AppSpacing.l),
           Align(alignment: Alignment.centerRight, child: inlineFeedback),
         ],

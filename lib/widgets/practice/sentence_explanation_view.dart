@@ -1056,87 +1056,91 @@ class _SentenceExplanationViewState
               ),
               content: SentenceAnnotationCard(
                 key: _cardKey,
-                text: _text,
-                wordHighlightBinding: _wordHighlightBinding,
                 contentHorizontalPadding: widget.contentHorizontalPadding,
                 showToolbar: false,
-                onToolbarStateChanged: _toolbarNotifier.notify,
-                onRequestTranslation: ai != null
-                    ? (cancelToken, source) async* {
-                        final (previous, next) =
-                            await resolveTranslationContext();
-                        await for (final t in ai.getTranslationStream(
-                          _text,
-                          previous: previous,
-                          next: next,
-                          targetLanguage: nativeLanguage,
-                          cancelToken: cancelToken,
-                        )) {
-                          if (t.translation.isNotEmpty) {
-                            ref
-                                .read(usageTrackerProvider)
-                                .record(UsageEvent.translationSucceeded);
+                data: SentenceAnnotationData(
+                  text: _text,
+                  wordHighlightBinding: _wordHighlightBinding,
+                  cachedTranslation: cachedTranslation,
+                  cachedAnalysis: cachedAnalysis,
+                  audioItemId: widget.audioItemId,
+                  sentenceIndex: _sentenceIndex,
+                  sentenceStartMs: _sentenceStartMs,
+                  sentenceEndMs: _sentenceEndMs,
+                  senseGroupResult: _senseGroupResult,
+                  senseGroupTimings: _senseGroupTimings,
+                  playingSenseGroupIndex: _playingSenseGroupIndex,
+                  playedSenseGroupIndices: _playedSenseGroupIndices,
+                  hasWordTimestamps: wordTimestamps != null,
+                  highlightedSegments: widget.highlightedSegments,
+                  savedGroupTexts: savedTexts,
+                  sentenceGuideStep: sentenceStep,
+                  senseGroupGuideStep: senseGroupStep,
+                  analysisGuideStep: analysisStep,
+                ),
+                actions: SentenceAnnotationActions(
+                  onToolbarStateChanged: _toolbarNotifier.notify,
+                  onRequestTranslation: ai != null
+                      ? (cancelToken, source) async* {
+                          final (previous, next) =
+                              await resolveTranslationContext();
+                          await for (final t in ai.getTranslationStream(
+                            _text,
+                            previous: previous,
+                            next: next,
+                            targetLanguage: nativeLanguage,
+                            cancelToken: cancelToken,
+                          )) {
+                            if (t.translation.isNotEmpty) {
+                              ref
+                                  .read(usageTrackerProvider)
+                                  .record(UsageEvent.translationSucceeded);
+                            }
+                            yield t.translation;
                           }
-                          yield t.translation;
                         }
-                      }
-                    : null,
-                onRequestAnalysis: ai != null
-                    ? (cancelToken, source) async* {
-                        await for (final analysis in ai.getAnalysisStream(
-                          _text,
-                          targetLanguage: nativeLanguage,
-                          cancelToken: cancelToken,
-                        )) {
-                          if (analysis.isNotEmpty) {
-                            ref
-                                .read(usageTrackerProvider)
-                                .record(UsageEvent.analysisSucceeded);
+                      : null,
+                  onRequestAnalysis: ai != null
+                      ? (cancelToken, source) async* {
+                          await for (final analysis in ai.getAnalysisStream(
+                            _text,
+                            targetLanguage: nativeLanguage,
+                            cancelToken: cancelToken,
+                          )) {
+                            if (analysis.isNotEmpty) {
+                              ref
+                                  .read(usageTrackerProvider)
+                                  .record(UsageEvent.analysisSucceeded);
+                            }
+                            yield analysis;
                           }
-                          yield analysis;
                         }
-                      }
-                    : null,
-                cachedTranslation: cachedTranslation,
-                cachedAnalysis: cachedAnalysis,
-                autoLoadTranslation:
-                    shouldAutoLoadSentenceAi &&
-                    autoShowAiTranslation &&
-                    translationContextReady,
-                autoLoadAnalysis:
-                    shouldAutoLoadSentenceAi && autoShowAiAnalysis,
-                onTranslationUserIntent: () {
-                  ref
-                      .read(usageTrackerProvider)
-                      .record(UsageEvent.translationTapped);
-                },
-                onAnalysisUserIntent: () {
-                  ref
-                      .read(usageTrackerProvider)
-                      .record(UsageEvent.analysisTapped);
-                },
-                audioItemId: widget.audioItemId,
-                sentenceIndex: _sentenceIndex,
-                sentenceStartMs: _sentenceStartMs,
-                sentenceEndMs: _sentenceEndMs,
-                senseGroupResult: _senseGroupResult,
-                senseGroupTimings: _senseGroupTimings,
-                onSenseGroupModeChanged: _handleModeChanged,
-                playingSenseGroupIndex: _playingSenseGroupIndex,
-                playedSenseGroupIndices: _playedSenseGroupIndices,
-                onTapSenseGroup: _handleTapSenseGroup,
-                onRequestSenseGroups: _requestSenseGroups,
-                autoLoadSenseGroups:
-                    shouldAutoLoadSentenceAi && autoShowAiSenseGroups,
-                onAwaitSenseGroupFine: _awaitSenseGroupFine,
-                hasWordTimestamps: wordTimestamps != null,
-                highlightedSegments: widget.highlightedSegments,
-                savedGroupTexts: savedTexts,
-                onTapGroupWithRect: _showActionBar,
-                onToolbarButtonTapped: widget.onToolbarButtonTapped,
-                sentenceGuideStep: sentenceStep,
-                senseGroupGuideStep: senseGroupStep,
-                analysisGuideStep: analysisStep,
+                      : null,
+                  autoLoadTranslation:
+                      shouldAutoLoadSentenceAi &&
+                      autoShowAiTranslation &&
+                      translationContextReady,
+                  autoLoadAnalysis:
+                      shouldAutoLoadSentenceAi && autoShowAiAnalysis,
+                  onTranslationUserIntent: () {
+                    ref
+                        .read(usageTrackerProvider)
+                        .record(UsageEvent.translationTapped);
+                  },
+                  onAnalysisUserIntent: () {
+                    ref
+                        .read(usageTrackerProvider)
+                        .record(UsageEvent.analysisTapped);
+                  },
+                  onSenseGroupModeChanged: _handleModeChanged,
+                  onTapSenseGroup: _handleTapSenseGroup,
+                  onRequestSenseGroups: _requestSenseGroups,
+                  autoLoadSenseGroups:
+                      shouldAutoLoadSentenceAi && autoShowAiSenseGroups,
+                  onAwaitSenseGroupFine: _awaitSenseGroupFine,
+                  onTapGroupWithRect: _showActionBar,
+                  onToolbarButtonTapped: widget.onToolbarButtonTapped,
+                ),
               ),
             ),
           ),

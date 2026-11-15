@@ -5,6 +5,9 @@ import 'package:loop_back/widgets/selection/app_selectable_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loop_back/models/sense_group_result.dart';
+import 'package:loop_back/models/speech_practice_models.dart';
+import 'package:loop_back/models/word_highlight_binding.dart';
+import 'package:loop_back/widgets/guide_flow.dart';
 import 'package:loop_back/models/sentence_ai_result.dart';
 import 'package:loop_back/services/provider/provider_http_client.dart';
 import 'package:loop_back/utils/sense_group_timing.dart';
@@ -82,7 +85,7 @@ void main() {
   group('SentenceAnnotationCard — 基本渲染', () {
     cardTest('显示句子文本', (tester) async {
       await tester.pumpWidget(
-        createTestApp(SentenceAnnotationCard(text: 'Hello world')),
+        createTestApp(_annotationCard(text: 'Hello world')),
       );
 
       // 句子正文走自有选区组件（平台手柄画笔 + tight 高亮），不再用 SelectableText。
@@ -97,7 +100,7 @@ void main() {
     cardTest('有 AI 回调时显示三个工具栏按钮', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             onRequestTranslation: _translate('翻译'),
             onRequestAnalysis: _dummyStream,
@@ -119,7 +122,7 @@ void main() {
       var requested = false;
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             onRequestTranslation: _translate('翻译'),
             onRequestAnalysis: _dummyStream,
@@ -140,9 +143,7 @@ void main() {
     });
 
     cardTest('无 AI 回调和缓存时翻译/解析按钮禁用', (tester) async {
-      await tester.pumpWidget(
-        createTestApp(SentenceAnnotationCard(text: 'Test')),
-      );
+      await tester.pumpWidget(createTestApp(_annotationCard(text: 'Test')));
 
       // 无回调/缓存时按钮不渲染（因为三个按钮都无法使用）
       expect(find.byIcon(Icons.translate), findsNothing);
@@ -158,7 +159,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test sentence',
             onRequestTranslation: (_, __) {
               requested = true;
@@ -191,7 +192,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test sentence',
             onRequestTranslation: (_, __) => controller.stream,
           ),
@@ -221,7 +222,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             cachedTranslation: '已缓存的翻译',
             onRequestTranslation: (_, __) {
@@ -241,10 +242,7 @@ void main() {
     cardTest('内联翻译紧跟在原句下方', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          const SentenceAnnotationCard(
-            text: 'Test sentence',
-            cachedTranslation: '已缓存的翻译',
-          ),
+          _annotationCard(text: 'Test sentence', cachedTranslation: '已缓存的翻译'),
         ),
       );
 
@@ -263,7 +261,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             onRequestTranslation: (_, __) {
               callCount++;
@@ -291,7 +289,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             onRequestTranslation: (_, __) {
               callCount++;
@@ -317,7 +315,7 @@ void main() {
     cardTest('展开后再次点击可折叠', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             onRequestTranslation: _translate('翻译内容'),
             onRequestAnalysis: _dummyStream,
@@ -347,7 +345,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Auto',
             autoLoadTranslation: true,
             autoLoadAnalysis: true,
@@ -396,7 +394,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Auto groups',
             autoLoadSenseGroups: true,
             hasWordTimestamps: true,
@@ -425,7 +423,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Cached',
             autoLoadTranslation: true,
             autoLoadAnalysis: true,
@@ -456,7 +454,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Empty analysis',
             autoLoadAnalysis: true,
             onRequestAnalysis: (_, __) {
@@ -490,7 +488,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test sentence',
             onRequestTranslation: _translate('翻译'),
             onRequestAnalysis: (_, __) {
@@ -534,7 +532,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Hello',
             onRequestAnalysis: (cancelToken, _) {
               captured = cancelToken;
@@ -560,7 +558,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Hello',
             onRequestAnalysis: (_, __) {
               callCount++;
@@ -591,7 +589,7 @@ void main() {
       );
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Hello',
             cachedAnalysis: cached,
             onRequestAnalysis: (_, __) => _stream(cached),
@@ -617,7 +615,7 @@ void main() {
       );
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             onRequestTranslation: _translate('翻译OK'),
             onRequestAnalysis: (_, __) => _stream(analysis),
@@ -649,7 +647,7 @@ void main() {
       );
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             cachedTranslation: '缓存翻译',
             onRequestTranslation: _translate('缓存翻译'),
@@ -674,7 +672,7 @@ void main() {
       var requested = false;
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test sentence here',
             onRequestTranslation: _translate('翻译'),
             hasWordTimestamps: true,
@@ -708,7 +706,7 @@ void main() {
 
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Hello world',
             onRequestTranslation: _translate('翻译'),
             senseGroupResult: senseGroupResult,
@@ -740,7 +738,7 @@ void main() {
       final completer = Completer<void>();
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             onRequestTranslation: _translate('翻译'),
             hasWordTimestamps: true,
@@ -808,7 +806,7 @@ void main() {
       final analysis = _analysis(grammar: [(point, note)]);
       await tester.pumpWidget(
         createTestApp(
-          SentenceAnnotationCard(
+          _annotationCard(
             text: 'Test',
             cachedAnalysis: analysis,
             onRequestAnalysis: (_, __) => _stream(analysis),
@@ -876,4 +874,98 @@ void main() {
       expect(findIpaChip('/tə/'), findsOneWidget);
     });
   });
+}
+
+/// 测试用构造器：沿用旧的扁平参数，内部拆成 data / actions。
+///
+/// 组件本身已改为 `SentenceAnnotationCard(data:, actions:)`；测试里 20+ 处用例
+/// 关心的只是「传了哪些数据/回调」，用一个局部 helper 保持用例可读。
+Widget _annotationCard({
+  Key? key,
+  required String text,
+  Stream<String> Function(
+    CancelToken cancelToken,
+    SentenceAiRequestSource source,
+  )?
+  onRequestTranslation,
+  Stream<SentenceAnalysis> Function(
+    CancelToken cancelToken,
+    SentenceAiRequestSource source,
+  )?
+  onRequestAnalysis,
+  String? cachedTranslation,
+  SentenceAnalysis? cachedAnalysis,
+  bool autoLoadTranslation = false,
+  bool autoLoadAnalysis = false,
+  VoidCallback? onTranslationUserIntent,
+  VoidCallback? onAnalysisUserIntent,
+  String? audioItemId,
+  int? sentenceIndex,
+  int? sentenceStartMs,
+  int? sentenceEndMs,
+  Widget? inlineFeedback,
+  List<SpeechTranscriptSegment>? highlightedSegments,
+  WordHighlightBinding? wordHighlightBinding,
+  SenseGroupResult? senseGroupResult,
+  List<SenseGroupTiming>? senseGroupTimings,
+  void Function(List<String> chunks)? onSenseGroupModeChanged,
+  int? playingSenseGroupIndex,
+  Set<int> playedSenseGroupIndices = const {},
+  void Function(int groupIndex)? onTapSenseGroup,
+  Future<void> Function(SentenceAiRequestSource source)? onRequestSenseGroups,
+  bool autoLoadSenseGroups = false,
+  Future<void> Function()? onAwaitSenseGroupFine,
+  bool hasWordTimestamps = false,
+  Set<String> savedGroupTexts = const {},
+  void Function(int groupIndex, Rect globalRect)? onTapGroupWithRect,
+  VoidCallback? onToolbarStateChanged,
+  VoidCallback? onToolbarButtonTapped,
+  GuideStep? sentenceGuideStep,
+  GuideStep? senseGroupGuideStep,
+  GuideStep? analysisGuideStep,
+  bool showToolbar = true,
+  double contentHorizontalPadding = 0,
+}) {
+  return SentenceAnnotationCard(
+    key: key,
+    showToolbar: showToolbar,
+    contentHorizontalPadding: contentHorizontalPadding,
+    data: SentenceAnnotationData(
+      text: text,
+      cachedTranslation: cachedTranslation,
+      cachedAnalysis: cachedAnalysis,
+      audioItemId: audioItemId,
+      sentenceIndex: sentenceIndex,
+      sentenceStartMs: sentenceStartMs,
+      sentenceEndMs: sentenceEndMs,
+      inlineFeedback: inlineFeedback,
+      highlightedSegments: highlightedSegments,
+      wordHighlightBinding: wordHighlightBinding,
+      senseGroupResult: senseGroupResult,
+      senseGroupTimings: senseGroupTimings,
+      playingSenseGroupIndex: playingSenseGroupIndex,
+      playedSenseGroupIndices: playedSenseGroupIndices,
+      hasWordTimestamps: hasWordTimestamps,
+      savedGroupTexts: savedGroupTexts,
+      sentenceGuideStep: sentenceGuideStep,
+      senseGroupGuideStep: senseGroupGuideStep,
+      analysisGuideStep: analysisGuideStep,
+    ),
+    actions: SentenceAnnotationActions(
+      onRequestTranslation: onRequestTranslation,
+      onRequestAnalysis: onRequestAnalysis,
+      autoLoadTranslation: autoLoadTranslation,
+      autoLoadAnalysis: autoLoadAnalysis,
+      onTranslationUserIntent: onTranslationUserIntent,
+      onAnalysisUserIntent: onAnalysisUserIntent,
+      onSenseGroupModeChanged: onSenseGroupModeChanged,
+      onTapSenseGroup: onTapSenseGroup,
+      onRequestSenseGroups: onRequestSenseGroups,
+      autoLoadSenseGroups: autoLoadSenseGroups,
+      onAwaitSenseGroupFine: onAwaitSenseGroupFine,
+      onToolbarStateChanged: onToolbarStateChanged,
+      onToolbarButtonTapped: onToolbarButtonTapped,
+      onTapGroupWithRect: onTapGroupWithRect,
+    ),
+  );
 }
