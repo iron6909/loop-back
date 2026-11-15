@@ -55,15 +55,27 @@ void main() {
     );
     expect(tester.widget<Text>(find.text('Hello')).style?.fontSize, 21);
 
-    Future<double> headingSize(double scale) => _headingFontSize(
-      tester,
-      ChatMessageBubble(
-        message: msg(content: '# Title'),
-        textPrefs: ReadingTextPrefs(fontScale: scale),
-      ),
-    );
+    // 每次测量都从干净的树开始：标题字号是本次断言的对象，不能受上一次渲染
+    // 残留的选区/解析缓存影响（Linux CI 上曾因此得到未缩放的字号）。
+    Future<double> headingSize(double scale) async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      return _headingFontSize(
+        tester,
+        ChatMessageBubble(
+          key: ValueKey('heading-font-size-$scale'),
+          message: msg(content: '# Title'),
+          textPrefs: ReadingTextPrefs(fontScale: scale),
+        ),
+      );
+    }
+
     final base = await headingSize(1.0);
-    expect(await headingSize(1.5), closeTo(base * 1.5, 0.01));
+    final scaled = await headingSize(1.5);
+    expect(
+      scaled,
+      closeTo(base * 1.5, 0.01),
+      reason: 'base=$base scaled=$scaled',
+    );
   });
 
   testWidgets('assistant 消息用 markdown 渲染', (tester) async {
