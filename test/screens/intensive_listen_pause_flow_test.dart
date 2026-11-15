@@ -17,7 +17,7 @@ import 'package:loop_back/models/stage_settings_overrides.dart'
 import 'package:loop_back/providers/intensive_listen_prefs_provider.dart';
 import 'package:loop_back/providers/learning_settings_provider.dart'
     show sharedPreferencesProvider;
-import 'package:loop_back/screens/learning_plan_screen.dart'
+import 'package:loop_back/widgets/study/briefing_defaults.dart'
     show intensivePauseChoiceFromSettings, intensivePrefsRecorder;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
