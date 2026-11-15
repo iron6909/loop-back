@@ -53,9 +53,9 @@ import '../models/retell_settings.dart' show KeywordRatio, RetellSettings;
 import '../models/study_stage.dart';
 import '../utils/blind_listen_duration_estimator.dart';
 import '../utils/learning_duration_estimator.dart';
+import '../utils/sub_stage_duration_estimator.dart';
 import '../utils/paragraph_grouping.dart';
 import '../utils/playback_speed_default.dart';
-import '../utils/retell_duration_estimator.dart';
 import '../utils/audio_item_actions.dart';
 import '../utils/time_format.dart';
 import '../widgets/blind_listen_paragraph_sheet.dart';
@@ -963,47 +963,22 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
     );
   }
 
-  /// 预估复习子步骤时长
+  /// 预估复习子步骤时长（口径见 `estimateSubStageDuration`）
   Duration? _estimateReviewDuration(
     SubStageType subStage, {
     int difficultBlindListenRepeatCount = 1,
     int difficultShadowReadingRepeatCount = 3,
     int retellRepeatCount = 1,
   }) {
-    switch (subStage) {
-      case SubStageType.blindListen:
-        // 盲听 = 跳过静音开启时按字幕有效时长，否则按音频总时长
-        return estimateBlindListenSessionDuration(
-          sentences: ref.read(listeningPracticeProvider).sentences,
-          fullAudioDuration: ref.read(audioEngineProvider).totalDuration,
-          skipSilenceEnabled: ref.read(appSettingsProvider).skipSilenceEnabled,
-        );
-      case SubStageType.reviewDifficultPractice:
-        // 难句补练按实际盲听和跟读遍数估时；无限循环不显示有限估时。
-        final lpState = ref.read(listeningPracticeProvider);
-        final difficultDuration = lpState.sentences
-            .where((s) => s.isBookmarked)
-            .fold<Duration>(Duration.zero, (sum, s) => sum + s.duration);
-        return estimateDifficultPracticeDuration(
-          difficultSentenceDuration: difficultDuration,
-          blindListenRepeatCount: difficultBlindListenRepeatCount,
-          shadowReadingRepeatCount: difficultShadowReadingRepeatCount,
-        );
-      case SubStageType.reviewRetellSummary:
-        // 全文复述 = 真实播放（字幕 wall-clock）+ smart 停顿
-        // 全文作为单段，pauseMultiplier=-1 走 smart 模式
-        if (retellRepeatCount == 0) return null;
-        final sentences = ref.read(listeningPracticeProvider).sentences;
-        if (sentences.isEmpty) return null;
-        return estimateRetellSessionDuration(
-          sentences: sentences,
-          targetSeconds: -1,
-          pauseMultiplier: -1,
-          repeatCount: retellRepeatCount,
-        );
-      default:
-        return null;
-    }
+    return estimateSubStageDuration(
+      subStage: subStage,
+      sentences: ref.read(listeningPracticeProvider).sentences,
+      fullAudioDuration: ref.read(audioEngineProvider).totalDuration,
+      skipSilenceEnabled: ref.read(appSettingsProvider).skipSilenceEnabled,
+      difficultBlindListenRepeatCount: difficultBlindListenRepeatCount,
+      difficultShadowReadingRepeatCount: difficultShadowReadingRepeatCount,
+      retellRepeatCount: retellRepeatCount,
+    );
   }
 
   /// 复习盲听：弹段落选择弹窗后进入段落播放
