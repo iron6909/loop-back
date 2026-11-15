@@ -1515,7 +1515,7 @@ void main() {
       // 注意：review0 也有「Listen & Retell」，所以 findsAtLeast(1)。
       expect(find.text('Listen & Retell'), findsAtLeast(1));
 
-      // 找到 firstLearn 区的 _StepCard，验证它的 onTap 非空（可点击进入自由练习）。
+      // 找到 firstLearn 区的 PlanStepCard，验证它的 onTap 非空（可点击进入自由练习）。
       final stepCardFinder = find.ancestor(
         of: find.text('Listen & Retell').first,
         matching: find.byType(InkWell),

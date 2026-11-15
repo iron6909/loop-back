@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 // 学习计划表页面
 //
 // 展示音频的完整学习流程：首次学习（4步）和复习（7步）。
@@ -43,7 +41,6 @@ import '../providers/settings_provider.dart';
 import '../l10n/app_localizations.dart';
 import '../router/app_router.dart';
 import '../services/app_logger.dart';
-import '../services/subtitle_parser.dart';
 import '../theme/app_theme.dart';
 import '../models/blind_listen_settings.dart';
 import '../models/difficult_practice_settings.dart';
@@ -71,9 +68,10 @@ import '../widgets/review/review_briefing_sheet.dart';
 import '../widgets/speech_permission_dialog.dart';
 import '../widgets/study/study_stage_visuals.dart';
 import '../widgets/study/free_play_app_bar_button.dart';
+import '../widgets/study/plan_progress_card.dart';
+import '../widgets/study/plan_step_cards.dart';
+import '../widgets/study/stage_header_row.dart';
 import '../widgets/study/learning_plan_bottom_bar.dart';
-import '../widgets/study/progress_ring_painter.dart';
-import '../widgets/study/study_info_chip.dart';
 import '../widgets/guide_flow.dart';
 import '../widgets/manage_subtitles_sheet.dart';
 import '../providers/listening_practice/bookmark_manager.dart';
@@ -234,21 +232,6 @@ const String _unlockIconAsset = 'assets/icon/unlock.svg';
 
 /// 学习计划首次学习标题左侧图标。
 const String _readingIconAsset = 'assets/icon/reading.svg';
-
-/// 学习计划阶段标题行标题列宽。
-///
-/// 首次学习与各复习轮次共用固定列宽，保证状态图标、状态文案和进度计数
-/// 在不同行之间垂直对齐。
-const double _stageHeaderTitleColumnWidth = 132;
-
-/// 学习计划阶段标题行中文标题列宽。
-const double _stageHeaderZhTitleColumnWidth = 112;
-
-/// 学习计划阶段标题行状态文案列最大宽度。
-const double _stageHeaderStatusTextMaxWidth = 180;
-
-/// 学习计划阶段标题行进度计数列宽。
-const double _stageHeaderProgressColumnWidth = 48;
 
 /// 实时查询指定音频的书签数量（难句数）
 ///
@@ -1843,7 +1826,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(AppSpacing.m),
                 children: [
-                  _ProgressCard(
+                  PlanProgressCard(
                     l10n: l10n,
                     progress: progress,
                     audioItem: audioItem,
@@ -1864,7 +1847,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
                   if ((progress == null || !progress.isStarted) &&
                       hasTranscript) ...[
                     const SizedBox(height: AppSpacing.s),
-                    _WarmUpCard(
+                    PlanWarmUpCard(
                       l10n: l10n,
                       onTap: () => _openFreePlay(context),
                     ),
@@ -1966,416 +1949,6 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
   }
 }
 
-/// 顶部进度卡片 — 圆环进度 + 状态文字 + 逾期徽章 + 音频元信息
-class _ProgressCard extends ConsumerWidget {
-  final AppLocalizations l10n;
-  final LearningProgress? progress;
-  final AudioItem? audioItem;
-  final DateTime now;
-
-  const _ProgressCard({
-    required this.l10n,
-    this.progress,
-    this.audioItem,
-    required this.now,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    // 没有 audioItem 时（理论不出现，因 progress 同源）退化到全局默认 plan。
-    final plan = audioItem == null
-        ? ref.watch(learningPlanProvider)
-        : ref.watch(learningPlanForAudioProvider(audioItem!.id));
-    final completedKeys = audioItem == null
-        ? const <String>{}
-        : ref
-              .watch(learningProgressNotifierProvider)
-              .completionsFor(audioItem!.id);
-    final percent = progress?.progressPercent(plan, completedKeys) ?? 0.0;
-    final percentText = '${(percent * 100).round()}%';
-
-    final isInProgress = _isInProgress();
-    final overdueText = _getOverdueText();
-    // 第一行徽章：进行中显示 In Progress，否则显示逾期
-    final badgeText = isInProgress ? l10n.learningInProgress : overdueText;
-    final badgeIsError = !isInProgress && overdueText != null;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.l),
-        child: Row(
-          children: [
-            // 左侧：圆环进度
-            SizedBox(
-              width: 64,
-              height: 64,
-              child: CustomPaint(
-                painter: ProgressRingPainter(
-                  progress: percent,
-                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                  progressColor: theme.colorScheme.primary,
-                ),
-                child: Center(
-                  child: Text(
-                    percentText,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.m),
-            // 右侧：三行信息
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 第一行：大阶段 + 逾期徽章
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          _getStageText(),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      if (badgeText != null) ...[
-                        const SizedBox(width: AppSpacing.s),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: badgeIsError
-                                ? theme.colorScheme.error.withValues(alpha: 0.1)
-                                : theme.colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            badgeText,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontSize: 10,
-                              color: badgeIsError
-                                  ? theme.colorScheme.error
-                                  : theme.colorScheme.onSurfaceVariant,
-                              fontWeight: badgeIsError
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  // 第二行：子阶段
-                  if (_getSubStageText() case final subStage?) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      subStage,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                  // 第三行：音频元信息
-                  if (audioItem != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    _buildAudioInfo(theme),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 构建音频元信息行
-  Widget _buildAudioInfo(ThemeData theme) {
-    final item = audioItem!;
-    final chips = <Widget>[];
-
-    // 内容异常警告（损坏 / 静音）放在首位，最醒目。
-    final contentWarningLabel = _contentWarningLabel(item.contentStatus);
-    if (contentWarningLabel != null) {
-      chips.add(_buildContentWarningChip(theme, contentWarningLabel));
-    }
-    if (item.totalDuration > 0) {
-      chips.add(
-        StudyInfoChip(
-          icon: Icons.timer_outlined,
-          label: SubtitleParser.formatDuration(
-            Duration(seconds: item.totalDuration),
-          ),
-          theme: theme,
-        ),
-      );
-    }
-    if (item.sentenceCount > 0) {
-      chips.add(
-        StudyInfoChip(
-          icon: Icons.format_list_numbered,
-          label: l10n.sentenceCountLabel(item.sentenceCount),
-          theme: theme,
-        ),
-      );
-    }
-    if (item.wordCount > 0) {
-      chips.add(
-        StudyInfoChip(
-          icon: Icons.text_fields,
-          label: l10n.wordCountLabel(item.wordCount),
-          theme: theme,
-        ),
-      );
-    }
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(
-      spacing: AppSpacing.s,
-      runSpacing: AppSpacing.xs,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: chips,
-    );
-  }
-
-  /// 内容异常警告徽章，与音频列表项的警告徽章风格一致。
-  Widget _buildContentWarningChip(ThemeData theme, String label) {
-    final color = theme.colorScheme.error;
-    return Container(
-      key: const Key('learning_plan_content_warning_badge'),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        border: Border.all(color: color.withValues(alpha: 0.55)),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.warning_amber_rounded, size: 12, color: color),
-          const SizedBox(width: 3),
-          Text(
-            label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              height: 1.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String? _contentWarningLabel(AudioContentStatus? status) {
-    return switch (status) {
-      AudioContentStatus.damaged => l10n.audioContentDamagedWarning,
-      AudioContentStatus.silent => l10n.audioContentSilentWarning,
-      AudioContentStatus.ok || null => null,
-    };
-  }
-
-  /// 第一行：大阶段文字
-  String _getStageText() {
-    if (progress == null || !progress!.isStarted) {
-      return l10n.learningPlanNotStarted;
-    }
-    if (progress!.isCompleted) {
-      return l10n.learningCompleted;
-    }
-    return reviewStageLabel(l10n, progress!.currentStage);
-  }
-
-  /// 第二行：子阶段文字（未开始/已完成时返回 null）
-  String? _getSubStageText() {
-    if (progress == null || !progress!.isStarted || progress!.isCompleted) {
-      return null;
-    }
-    final subStageName = switch (progress!.currentSubStage) {
-      SubStageType.blindListen => l10n.stepBlindListening,
-      SubStageType.intensiveListen => l10n.stepIntensiveListening,
-      SubStageType.listenAndRepeat => l10n.stepShadowing,
-      SubStageType.retell => l10n.stepRetelling,
-      SubStageType.reviewDifficultPractice => l10n.reviewDifficultPracticeTitle,
-      SubStageType.reviewRetellParagraph => l10n.stepRetelling,
-      SubStageType.reviewRetellSummary => l10n.stepRetelling,
-    };
-    return subStageName;
-  }
-
-  /// 是否正在学习中（当前阶段已完成至少 1 个子阶段）
-  bool _isInProgress() {
-    if (progress == null || !progress!.isStarted || progress!.isCompleted) {
-      return false;
-    }
-    return progress!.currentSubStageIndex > 0;
-  }
-
-  /// 获取逾期文案（未逾期返回 null）
-  String? _getOverdueText() {
-    if (progress == null || !progress!.isReviewOverdueAt(now)) return null;
-    final overdue = progress!.overdueDurationAt(now);
-    if (overdue == null || overdue.inDays > 7) return l10n.reviewDue;
-    if (overdue.inDays > 0) return l10n.overdueDays(overdue.inDays);
-    final hours = overdue.inHours.clamp(1, 999);
-    return l10n.overdueHours(hours);
-  }
-}
-
-/// 学习计划阶段标题行。
-///
-/// 固定关键列宽，避免某一行缺少状态文案时影响后续进度计数和展开箭头的列对齐。
-class _StageHeaderRow extends StatelessWidget {
-  final String keyPrefix;
-  final Widget leadingIcon;
-  final String title;
-  final Color? titleColor;
-  final Widget statusIcon;
-  final String? statusText;
-  final Color statusTextColor;
-  final String progressText;
-  final Color progressColor;
-  final bool isExpanded;
-  final VoidCallback onTap;
-
-  const _StageHeaderRow({
-    required this.keyPrefix,
-    required this.leadingIcon,
-    required this.title,
-    this.titleColor,
-    required this.statusIcon,
-    this.statusText,
-    required this.statusTextColor,
-    required this.progressText,
-    required this.progressColor,
-    required this.isExpanded,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isZh = Localizations.localeOf(context).languageCode == 'zh';
-    final titleColumnWidth = isZh
-        ? _stageHeaderZhTitleColumnWidth
-        : _stageHeaderTitleColumnWidth;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.xs,
-          vertical: AppSpacing.xs,
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            const horizontalGaps =
-                AppSpacing.s +
-                AppSpacing.xs +
-                AppSpacing.s +
-                AppSpacing.s +
-                AppSpacing.xs;
-            final fixedWidth =
-                20 +
-                titleColumnWidth +
-                18 +
-                _stageHeaderProgressColumnWidth +
-                24 +
-                horizontalGaps;
-            final statusTextWidth = math
-                .max(0, constraints.maxWidth - fixedWidth)
-                .clamp(0, _stageHeaderStatusTextMaxWidth)
-                .toDouble();
-
-            return Row(
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: Center(child: leadingIcon),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                SizedBox(
-                  key: Key('${keyPrefix}_title_column'),
-                  width: titleColumnWidth,
-                  child: Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: titleColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                SizedBox(
-                  key: Key('${keyPrefix}_status_icon_column'),
-                  width: 18,
-                  height: 18,
-                  child: Center(child: statusIcon),
-                ),
-                const SizedBox(width: AppSpacing.s),
-                SizedBox(
-                  key: Key('${keyPrefix}_status_text_column'),
-                  width: statusTextWidth,
-                  child: Text(
-                    statusText ?? '',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: statusTextColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                const Spacer(),
-                const SizedBox(width: AppSpacing.s),
-                SizedBox(
-                  key: Key('${keyPrefix}_progress_column'),
-                  width: _stageHeaderProgressColumnWidth,
-                  child: Text(
-                    progressText,
-                    textAlign: TextAlign.right,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: progressColor,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                SizedBox(
-                  key: Key('${keyPrefix}_expand_column'),
-                  width: 24,
-                  child: AnimatedRotation(
-                    turns: isExpanded ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      Icons.expand_more,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.4,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
 /// 首次学习区域 — 默认展开，显示 4 个步骤
 ///
 /// 已完成的盲听步骤支持点击进入自由练习模式。
@@ -2409,9 +1982,9 @@ class _FirstStudySection extends ConsumerWidget {
   });
 
   /// 使用统计与任务卡片共用的阶段展示定义，仅补充首次学习描述。
-  _StepData _stepDataForStage(StudyStage stage, String description) {
+  PlanStepData _stepDataForStage(StudyStage stage, String description) {
     final visual = studyStageVisual(stage, l10n);
-    return _StepData(
+    return PlanStepData(
       icon: visual.icon,
       iconColor: visual.iconColor,
       name: visual.name,
@@ -2477,7 +2050,7 @@ class _FirstStudySection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 标题行（可点击展开/折叠）
-        _StageHeaderRow(
+        StudyStageHeaderRow(
           keyPrefix: 'learning_plan_stage_first_learn',
           leadingIcon: SvgPicture.asset(
             _readingIconAsset,
@@ -2586,7 +2159,7 @@ class _FirstStudySection extends ConsumerWidget {
                 onTap = onStartCurrentStage;
               }
 
-              return _StepCard(
+              return PlanStepCard(
                 stepNumber: index + 1,
                 icon: stepData.icon,
                 iconColor: stepData.iconColor,
@@ -3013,362 +2586,6 @@ class _FirstStudySection extends ConsumerWidget {
   }
 }
 
-/// 步骤数据模型（内部使用）
-class _StepData {
-  final IconData icon;
-  final Color? iconColor;
-  final String name;
-  final String description;
-
-  const _StepData({
-    required this.icon,
-    this.iconColor,
-    required this.name,
-    required this.description,
-  });
-}
-
-/// 听前预热卡（横向单行紧凑卡，置于「首次学习」之上）。
-///
-/// 引导用户在正式精听前先用「随心听」整篇泛听、建立内容认知。视觉上用暖奶油
-/// 色填充块（区别于页面其余白底蓝调卡片）+ 内联「推荐先做」小徽章 + 右侧
-/// chevron，整卡可点进入「随心听」播放器（与右上角胶囊同一目的地）。
-///
-/// 作为次要推荐引导，视觉权重刻意低于底部「开始学习」主按钮：取消独立大按钮、
-/// 高度压缩到约一半。显隐由父级按 `!isStarted && hasTranscript` 控制，开始学习
-/// 后自动消失，不计学习进度。
-class _WarmUpCard extends StatelessWidget {
-  final AppLocalizations l10n;
-  final VoidCallback onTap;
-
-  const _WarmUpCard({required this.l10n, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    // 暖橙调配色（亮/暗双套），不读 colorScheme 以避免主题 tertiary 偏色。
-    const amber = Color(0xFFFFB300);
-    final bg = isDark
-        ? Color.alphaBlend(
-            amber.withValues(alpha: 0.12),
-            theme.colorScheme.surface,
-          )
-        : const Color(0xFFFFF4E2);
-    final border = isDark
-        ? amber.withValues(alpha: 0.20)
-        : const Color(0xFFF4D7A8).withValues(alpha: 0.6);
-    final iconBg = amber.withValues(alpha: isDark ? 0.22 : 0.16);
-    final iconFg = isDark ? const Color(0xFFFFB74D) : const Color(0xFFE8870C);
-    final titleColor = isDark
-        ? const Color(0xFFFFE2B8)
-        : const Color(0xFF5A3A12);
-    final descColor = titleColor.withValues(alpha: isDark ? 0.70 : 0.72);
-    final badgeBg = isDark ? amber : const Color(0xFFF38B00);
-    final badgeFg = isDark ? const Color(0xFF3A2400) : Colors.white;
-
-    return Semantics(
-      button: true,
-      label:
-          '${l10n.warmUpCardTitle}. ${l10n.warmUpCardSubtitle}. '
-          '${l10n.warmUpCardBadge}',
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Ink(
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: border, width: 1),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.m,
-                vertical: AppSpacing.s + 2,
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: iconBg,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.headphones_rounded,
-                      size: 20,
-                      color: iconFg,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.s + 4),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                l10n.warmUpCardTitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: titleColor,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.s),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.s,
-                                vertical: 1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: badgeBg,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                l10n.warmUpCardBadge,
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: badgeFg,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.warmUpCardSubtitle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: descColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.s),
-                  ExcludeSemantics(
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 22,
-                      color: iconFg.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 单个步骤卡片 — 支持三态：已完成、当前、未开始
-class _StepCard extends StatelessWidget {
-  final int stepNumber;
-  final IconData icon;
-  final Color? iconColor;
-  final String name;
-  final String description;
-  final bool isCompleted;
-  final bool isCurrent;
-  final bool isFirst;
-  final bool isLast;
-
-  /// 已跳过状态：与 [isCompleted] 互斥（持久化层保证）；显示 ⏭ 灰色图标，
-  /// 文案后缀「已跳过」。
-  final bool isSkipped;
-
-  /// 可选的附加信息（如"已听 X 遍"）
-  final String? subtitle;
-
-  /// 点击回调（如已完成的盲听步骤可点击进入自由练习）
-  final VoidCallback? onTap;
-
-  const _StepCard({
-    required this.stepNumber,
-    required this.icon,
-    this.iconColor,
-    required this.name,
-    required this.description,
-    required this.isCompleted,
-    required this.isCurrent,
-    required this.isFirst,
-    required this.isLast,
-    this.isSkipped = false,
-    this.subtitle,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 左侧时间线（圆形指示器垂直居中）
-          SizedBox(
-            width: 40,
-            child: Column(
-              children: [
-                // 上方竖线（第一个卡片用透明占位）
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: isFirst
-                        ? Colors.transparent
-                        : theme.colorScheme.surfaceContainerHighest,
-                  ),
-                ),
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: isCompleted
-                        ? (theme.brightness == Brightness.dark
-                              ? Colors.transparent
-                              : Colors.green.shade50)
-                        : isSkipped
-                        ? theme.colorScheme.surfaceContainerHighest
-                        : isCurrent
-                        ? null
-                        : theme.colorScheme.surfaceContainerHighest,
-                    border: isCompleted
-                        ? Border.all(
-                            color: theme.brightness == Brightness.dark
-                                ? Colors.green.shade400
-                                : Colors.green,
-                            width: 1.5,
-                          )
-                        : isCurrent && !isSkipped
-                        ? Border.all(color: theme.colorScheme.primary, width: 2)
-                        : null,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: isCompleted
-                        ? Icon(
-                            Icons.check,
-                            size: 16,
-                            color: theme.brightness == Brightness.dark
-                                ? Colors.green.shade300
-                                : Colors.green.shade700,
-                          )
-                        : isSkipped
-                        ? Icon(
-                            Icons.remove,
-                            size: 16,
-                            color: theme.colorScheme.onSurfaceVariant
-                                .withValues(alpha: 0.7),
-                          )
-                        : Text(
-                            '$stepNumber',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isCurrent
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                  ),
-                ),
-                // 下方竖线（最后一个卡片用透明占位）
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: isLast
-                        ? Colors.transparent
-                        : theme.colorScheme.surfaceContainerHighest,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // 右侧卡片内容
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.s),
-              child: Card(
-                clipBehavior: onTap != null ? Clip.antiAlias : Clip.none,
-                child: InkWell(
-                  onTap: onTap,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.m),
-                    child: Row(
-                      children: [
-                        Icon(
-                          icon,
-                          color: isCompleted
-                              ? (iconColor ?? theme.colorScheme.primary)
-                                    .withAlpha(100)
-                              : isSkipped
-                              ? theme.colorScheme.outline
-                              : iconColor ?? theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                        const SizedBox(width: AppSpacing.m),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isSkipped
-                                    ? '$name · ${AppLocalizations.of(context)!.retellSkippedSuffix}'
-                                    : name,
-                                style: theme.textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: isCompleted || isSkipped
-                                      ? theme.colorScheme.outline
-                                      : null,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                description,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: isCompleted
-                                      ? theme.colorScheme.outline
-                                      : theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                              if (subtitle != null) ...[
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  subtitle!,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// 单个复习轮次的数据模型
 class _ReviewStageData {
   final String name;
@@ -3410,9 +2627,9 @@ class _ReviewRoundSection extends ConsumerWidget {
   });
 
   /// 使用统计与任务卡片共用的阶段展示定义，仅补充复习描述。
-  _StepData _stepDataForStage(StudyStage stage, String description) {
+  PlanStepData _stepDataForStage(StudyStage stage, String description) {
     final visual = studyStageVisual(stage, l10n);
-    return _StepData(
+    return PlanStepData(
       icon: visual.icon,
       iconColor: visual.iconColor,
       name: visual.name,
@@ -3482,7 +2699,7 @@ class _ReviewRoundSection extends ConsumerWidget {
   }
 
   /// 复习子阶段名称与描述映射
-  _StepData _subStageData(SubStageType subStage) {
+  PlanStepData _subStageData(SubStageType subStage) {
     final retellSummaryVisual = studyRetellSummaryVisual(l10n);
     return switch (subStage) {
       SubStageType.blindListen => _stepDataForStage(
@@ -3509,7 +2726,7 @@ class _ReviewRoundSection extends ConsumerWidget {
         StudyStage.retell,
         l10n.reviewRetellParagraphDesc,
       ),
-      SubStageType.reviewRetellSummary => _StepData(
+      SubStageType.reviewRetellSummary => PlanStepData(
         icon: retellSummaryVisual.icon,
         iconColor: retellSummaryVisual.iconColor,
         name: retellSummaryVisual.name,
@@ -3846,7 +3063,7 @@ class _ReviewRoundSection extends ConsumerWidget {
         Opacity(
           // 未开始（锁定）轮次进一步弱化，避免抢夺当前/已完成轮次的注意力
           opacity: isFuture ? 0.45 : 1.0,
-          child: _StageHeaderRow(
+          child: StudyStageHeaderRow(
             keyPrefix: 'learning_plan_stage_${review.stage.key}',
             leadingIcon: SvgPicture.asset(
               _refreshIconAsset,
@@ -4016,7 +3233,7 @@ class _ReviewRoundSection extends ConsumerWidget {
                 onTap = onStartCurrentStage;
               }
 
-              return _StepCard(
+              return PlanStepCard(
                 stepNumber: index + 1,
                 icon: subStageData.icon,
                 iconColor: subStageData.iconColor,
