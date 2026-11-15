@@ -78,6 +78,19 @@ void main() {
       expect(orphan.existsSync(), false);
     });
 
+    test('白名单用 Windows 分隔符时仍保留被引用文件', () async {
+      // 回归：内置示例路径手写 `/`，磁盘枚举在 Windows 返回 `\`；任一侧未归一
+      // 就会把仍被引用的文件当孤儿删掉（数据丢失）。
+      final referenced = writeFile('audios/imported/keep.mp3', 1000);
+
+      final result = await cleanupOrphanMediaFiles(
+        referencedRelPaths: {r'audios\imported\keep.mp3'},
+      );
+
+      expect(result.freedBytes, 0);
+      expect(referenced.existsSync(), true);
+    });
+
     test('不触碰 waveforms 目录', () async {
       final wave = writeFile('waveforms/x.wave', 999);
 

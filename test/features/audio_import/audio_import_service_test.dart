@@ -7,6 +7,7 @@ import 'package:loop_back/features/audio_import/audio_registration_service.dart'
 import 'package:loop_back/features/audio_import/audio_import_service.dart';
 import 'package:loop_back/services/background_file_download_service.dart';
 import 'package:loop_back/models/audio_item.dart';
+import 'package:loop_back/utils/path_key.dart';
 import 'package:loop_back/providers/audio_library_provider.dart';
 import 'package:loop_back/providers/collection_provider.dart';
 import 'package:fake_async/fake_async.dart';
@@ -647,7 +648,8 @@ void main() {
       expect(item.name, 'lesson');
       expect(runner.lastDisplayName, item.name);
       // 保留原始格式与扩展名，audioSha256 == originalAudioSha256。
-      expect(item.audioPath, 'audios/imported/sha-original.mp3');
+      // 相对路径用平台分隔符拼（Windows 为 `\`），断言按归一后的键比较。
+      expect(pathKey(item.audioPath ?? ''), 'audios/imported/sha-original.mp3');
       expect(item.totalDuration, 42);
       expect(item.audioSha256, 'sha-original');
       expect(item.originalAudioSha256, 'sha-original');
@@ -885,7 +887,7 @@ void main() {
       );
 
       expect(runner.lastDisplayName, 'Episode 1: Welcome');
-      expect(result.relativePath, 'audios/imported/sha-episode.mp3');
+      expect(pathKey(result.relativePath), 'audios/imported/sha-episode.mp3');
       expect(result.durationSeconds, 61);
       expect(result.audioSha256, 'sha-episode');
       expect(result.originalAudioSha256, 'sha-episode');
@@ -913,7 +915,7 @@ void main() {
         enclosureType: 'audio/mpeg',
       );
 
-      expect(result.relativePath, 'audios/imported/sha-episode.mp3');
+      expect(pathKey(result.relativePath), 'audios/imported/sha-episode.mp3');
       expect(await existingFile.readAsBytes(), [9, 9, 9]);
       expect(await _tmpAudioImportFiles(tmpDir), isEmpty);
     });

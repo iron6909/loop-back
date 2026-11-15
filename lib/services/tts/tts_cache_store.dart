@@ -15,6 +15,7 @@ import 'package:crypto/crypto.dart';
 import 'dart:convert';
 
 import '../../database/daos/tts_cache_dao.dart';
+import '../../utils/path_key.dart';
 import '../../utils/text_normalize.dart';
 import '../app_logger.dart';
 import 'tts_engine.dart';
@@ -201,10 +202,14 @@ class TtsCacheStore {
     try {
       final dir = await _dir();
       if (!await dir.exists()) return 0;
-      final keep = (await _dao.allFilePaths()).toSet();
+      // 索引里存的是合成时拼出的路径（可能是 `/`），目录列举返回平台原生分隔符；
+      // 用 pathKey 归一后再比，否则 Windows 上会把有效缓存当孤儿删掉。
+      final keep = {
+        for (final path in await _dao.allFilePaths()) pathKey(path),
+      };
       await for (final entity in dir.list(followLinks: false)) {
         if (entity is! File) continue;
-        if (keep.contains(entity.path)) continue;
+        if (keep.contains(pathKey(entity.path))) continue;
         try {
           final size = await entity.length();
           await entity.delete();

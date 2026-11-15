@@ -4,9 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:loop_back/services/temp_cleanup_service.dart';
 import 'package:loop_back/utils/app_data_dir.dart';
 
-/// 设置目录修改时间（Directory 无 setLastModifiedSync，借助系统 touch）
+/// 设置目录修改时间（Directory 无 setLastModifiedSync，借助宿主工具）
+///
+/// POSIX 用 `touch`；Windows 没有 touch，用 PowerShell 改 LastWriteTime。
+/// 两个分支都设置同一个绝对时间点，测试断言依赖的是「早于 minAge」而非工具本身。
 void setDirMtime(Directory dir, DateTime time) {
   String two(int n) => n.toString().padLeft(2, '0');
+  if (Platform.isWindows) {
+    final iso =
+        '${time.year.toString().padLeft(4, '0')}-${two(time.month)}-'
+        '${two(time.day)}T${two(time.hour)}:${two(time.minute)}:00';
+    Process.runSync('powershell', [
+      '-NoProfile',
+      '-Command',
+      "(Get-Item -LiteralPath '${dir.path}').LastWriteTime = "
+          "Get-Date '$iso'",
+    ]);
+    return;
+  }
   final ts =
       '${time.year}${two(time.month)}${two(time.day)}'
       '${two(time.hour)}${two(time.minute)}';

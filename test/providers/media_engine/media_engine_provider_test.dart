@@ -13,6 +13,9 @@ import 'package:loop_back/services/media_session_router.dart';
 import 'package:loop_back/utils/app_data_dir.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
+import 'package:loop_back/utils/path_key.dart';
+import '../../helpers/temp_dir_cleanup.dart';
 
 import '../../helpers/shared/fake_media_player_backend.dart';
 
@@ -76,14 +79,14 @@ void main() {
         mediaSessionRouterProvider.overrideWithValue(router),
       ],
     );
-    mediaFile = File('${appDir.path}/loop-back-video-test.mp4');
+    mediaFile = File(p.join(appDir.path, 'loop-back-video-test.mp4'));
     await mediaFile.writeAsBytes(const [0, 1, 2]);
   });
 
   tearDown(() async {
     container.dispose();
     appDataDirectoryOverride = null;
-    if (await appDir.exists()) await appDir.delete(recursive: true);
+    await deleteTempDirQuietly(appDir);
   });
 
   AudioItem item() => AudioItem(
@@ -103,7 +106,7 @@ void main() {
     );
 
     expect(duration, const Duration(seconds: 10));
-    expect(backend.openCalls, [mediaFile.path]);
+    expect(backend.openCalls.map(pathKey).toList(), [pathKey(mediaFile.path)]);
     expect(backend.openInitialPositions, [const Duration(seconds: 4)]);
     expect(backend.rateCalls, [1.25]);
     expect(router.isRouted, isTrue);
@@ -161,7 +164,7 @@ void main() {
     );
 
     expect(duration, const Duration(seconds: 10));
-    expect(backend.openCalls, [mediaFile.path]);
+    expect(backend.openCalls.map(pathKey).toList(), [pathKey(mediaFile.path)]);
     expect(router.isRouted, isFalse);
     expect(router.mediaItem.value, isNull);
   });

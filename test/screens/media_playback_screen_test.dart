@@ -34,6 +34,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
+import 'package:loop_back/utils/path_key.dart';
+import '../helpers/temp_dir_cleanup.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:loop_back/services/app_logger.dart';
@@ -80,9 +83,9 @@ void main() {
     appDataDirectoryOverride = appDir;
     backend = FakeMediaPlayerBackend();
     router = MediaSessionRouter(defaultHandler: BaseAudioHandler());
-    mediaFile = File('${appDir.path}/loop-back-video-screen.mp4');
+    mediaFile = File(p.join(appDir.path, 'loop-back-video-screen.mp4'));
     await mediaFile.writeAsBytes(const [0, 1, 2]);
-    audioFile = File('${appDir.path}/loop-back-audio-screen.mp3');
+    audioFile = File(p.join(appDir.path, 'loop-back-audio-screen.mp3'));
     await audioFile.writeAsBytes(const [0, 1, 2]);
     audioItemDao = FakeAudioItemDao()
       ..transcriptSrtStore['video-screen'] =
@@ -252,7 +255,7 @@ void main() {
     // 再清理临时目录，避免释放流程访问已删除的测试数据库文件。
     await Future<void>.delayed(const Duration(milliseconds: 100));
     appDataDirectoryOverride = null;
-    if (await appDir.exists()) await appDir.delete(recursive: true);
+    await deleteTempDirQuietly(appDir);
   });
 
   testMediaWidgets('加载后渲染视觉区，隐藏画面后显示折叠条', (tester) async {
@@ -333,7 +336,7 @@ void main() {
     );
     await pumpMediaReady(tester, requireVideoView: false);
 
-    expect(backend.openCalls, [audioFile.path]);
+    expect(backend.openCalls.map(pathKey).toList(), [pathKey(audioFile.path)]);
     expect(backend.videoViewSizes, isEmpty);
     expect(find.byKey(const ValueKey('media-visual-surface')), findsNothing);
     expect(find.byKey(const ValueKey('media-control-panel')), findsOneWidget);

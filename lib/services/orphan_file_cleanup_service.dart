@@ -14,6 +14,7 @@ import 'package:path/path.dart' as p;
 
 import '../utils/app_data_dir.dart';
 import '../utils/file_size.dart';
+import '../utils/path_key.dart';
 import 'app_logger.dart';
 import 'temp_cleanup_service.dart' show CleanupResult;
 
@@ -38,6 +39,9 @@ Future<CleanupResult> cleanupOrphanMediaFiles({
   required Set<String> referencedRelPaths,
 }) async {
   final dataDir = await getAppDataDirectory();
+  // 白名单里既有导入时用 p.join 拼出的原生路径，也有内置示例手写的 `/` 路径；
+  // 磁盘枚举返回原生分隔符，统一归一后再比，避免把仍被引用的文件当孤儿删掉。
+  final keep = {for (final path in referencedRelPaths) pathKey(path)};
   var totalBytes = 0;
   var deletedCount = 0;
   var failedCount = 0;
@@ -49,7 +53,7 @@ Future<CleanupResult> cleanupOrphanMediaFiles({
       await for (final entity in dir.list(recursive: true)) {
         if (entity is! File) continue;
         final relPath = p.relative(entity.path, from: dataDir.path);
-        if (referencedRelPaths.contains(relPath)) continue;
+        if (keep.contains(pathKey(relPath))) continue;
         try {
           totalBytes += await entity.length();
           await entity.delete();

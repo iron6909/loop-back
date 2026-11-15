@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:loop_back/services/app_logger.dart';
 import 'package:loop_back/services/background_file_download_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:mocktail/mocktail.dart';
 
 class _FakeFileDownloader extends Mock implements FileDownloader {
@@ -580,7 +581,7 @@ void main() {
 
       expect(result.status, BackgroundDownloadStatus.complete);
       expect(client.uri, Uri.parse('https://cdn.example.com/audio.mp3'));
-      expect(client.savePath, '${dataDir.path}/audio.mp3');
+      expect(client.savePath, p.join(dataDir.path, 'audio.mp3'));
       expect(client.displayName, 'Audio lesson.mp3');
       expect(client.completeNotificationTitle, '下载完成');
       expect(client.failedNotificationTitle, '下载失败');

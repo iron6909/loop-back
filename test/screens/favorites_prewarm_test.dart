@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:path/path.dart' as p;
+import 'package:loop_back/utils/path_key.dart';
 
 import 'package:loop_back/database/app_database.dart';
 import 'package:loop_back/database/daos/audio_item_dao.dart';
@@ -697,8 +699,8 @@ void main() {
     await tester.pump();
     await tester.pumpAndSettle();
 
-    expect(shortAudioPlayer.openedPaths, [
-      '${appDataDir.path}/audios/audio-1.m4a',
+    expect(shortAudioPlayer.openedPaths.map(pathKey).toList(), [
+      pathKey(p.join(appDataDir.path, 'audios', 'audio-1.m4a')),
     ]);
     expect(shortAudioPlayer.openedStarts, [const Duration(milliseconds: 1200)]);
   });
@@ -728,8 +730,8 @@ void main() {
     await tester.pump();
     await tester.pumpAndSettle();
 
-    expect(shortAudioPlayer.openedPaths, [
-      '${appDataDir.path}/audios/audio-2.m4a',
+    expect(shortAudioPlayer.openedPaths.map(pathKey).toList(), [
+      pathKey(p.join(appDataDir.path, 'audios', 'audio-2.m4a')),
     ]);
     expect(shortAudioPlayer.openedStarts, [const Duration(milliseconds: 4000)]);
   });
