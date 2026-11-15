@@ -38,9 +38,10 @@ void main() {
       );
 
       expect(ordered.last, SubStageType.reviewRetellSummary);
-      expect(ordered.take(ordered.length - 1), plan.subStagesFor(
-        LearningStage.review28,
-      ));
+      expect(
+        ordered.take(ordered.length - 1),
+        plan.subStagesFor(LearningStage.review28),
+      );
     });
 
     test('跳过过的历史子步骤同样保留，未完成也未跳过的不显示', () {
