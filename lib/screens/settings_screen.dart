@@ -33,6 +33,7 @@ import '../features/user_region/user_region_override.dart';
 import '../features/user_region/widgets/user_region_override_tile.dart';
 import '../router/app_router.dart';
 import '../services/app_network_image_cache.dart';
+import '../services/cache_cleanup_service.dart';
 import '../services/tts/tts_cache_store.dart';
 import '../services/dictionary_download_manager.dart';
 import '../services/orphan_file_cleanup_service.dart';
@@ -357,56 +358,47 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (confirmed != true || !context.mounted) return;
 
-    // 1. 清空 SQLite 缓存（词级时间戳属于字幕数据，不在此清除）
-    final dao = ref.read(sentenceAiCacheDaoProvider);
-    final deleted = await dao.deleteAll();
-
-    // 2. 清空内存缓存（句子 AI + AI 词典的 L1，否则清缓存后重查仍命中旧结果）
-    ref.read(sentenceAiNotifierProvider).clearMemoryCache();
-    ref.read(aiDictionarySourceProvider).clearMemoryCache();
-
-    // 3. 清理临时目录（录音 .caf 残留、Library/Caches 下 app 自建导出/导入临时目录）
-    final result = await cleanupAllTempFiles();
-
-    // 3.5 清网络图片磁盘缓存（走 flutter_cache_manager API，自动清文件+索引）
-    final imageFreed = await _clearNetworkImageCache();
-
-    // 4. 清理非当前语言的词典文件 + 旧版遗留 dict.db
-    final settings = ref.read(appSettingsProvider);
-    final dictManager = DictionaryDownloadManager();
-    final dictFreed = await dictManager.deleteUnusedDictionaries(
-      settings.nativeLanguage,
-    );
-    dictManager.dispose();
-
-    // 5. 清扫孤儿音频/字幕文件（磁盘有、DB 无引用）+ 全量清波形缓存
-    final referencedRelPaths = await ref
-        .read(audioItemDaoProvider)
-        .getAllReferencedRelPaths();
-    final orphanResult = await cleanupOrphanMediaFiles(
-      referencedRelPaths: referencedRelPaths,
-    );
-    final waveformResult = await cleanupAllWaveforms();
-
-    // 6. 清 TTS 合成音频缓存（可再生的 transient 磁盘缓存，含后台预热产物）
-    final ttsFreed = await _clearTtsCache(ref);
-
-    final totalFreed =
-        result.freedBytes +
-        imageFreed +
-        dictFreed +
-        orphanResult.freedBytes +
-        waveformResult.freedBytes +
-        ttsFreed;
+    // 具体步骤在 CacheCleanupService 里统一编排（可单测）；这里只做接线与提示。
+    final cleanup = await CacheCleanupService(
+      clearAiCacheRows: () => ref.read(sentenceAiCacheDaoProvider).deleteAll(),
+      clearAiMemoryCaches: () {
+        ref.read(sentenceAiNotifierProvider).clearMemoryCache();
+        ref.read(aiDictionarySourceProvider).clearMemoryCache();
+      },
+      clearTempFiles: () async => (await cleanupAllTempFiles()).freedBytes,
+      clearNetworkImages: _clearNetworkImageCache,
+      clearUnusedDictionaries: () async {
+        final settings = ref.read(appSettingsProvider);
+        final manager = DictionaryDownloadManager();
+        try {
+          return await manager.deleteUnusedDictionaries(
+            settings.nativeLanguage,
+          );
+        } finally {
+          manager.dispose();
+        }
+      },
+      clearOrphanMediaFiles: () async {
+        final referencedRelPaths = await ref
+            .read(audioItemDaoProvider)
+            .getAllReferencedRelPaths();
+        final orphan = await cleanupOrphanMediaFiles(
+          referencedRelPaths: referencedRelPaths,
+        );
+        return orphan.freedBytes;
+      },
+      clearWaveforms: () async => (await cleanupAllWaveforms()).freedBytes,
+      clearTtsCache: () => _clearTtsCache(ref),
+    ).run();
 
     if (!context.mounted) return;
     final String message;
-    if (deleted == 0 && totalFreed == 0) {
+    if (cleanup.isEmpty) {
       message = l10n.clearCacheEmpty;
-    } else if (totalFreed > 0) {
-      message = l10n.clearCacheSuccessWithSize(formatBytes(totalFreed));
+    } else if (cleanup.freedBytes > 0) {
+      message = l10n.clearCacheSuccessWithSize(formatBytes(cleanup.freedBytes));
       ref.read(analyticsServiceProvider).track(Events.cacheCleared, {
-        EventParams.bytesFreed: totalFreed,
+        EventParams.bytesFreed: cleanup.freedBytes,
       });
     } else {
       message = l10n.clearCacheSuccess;
