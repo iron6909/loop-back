@@ -1,6 +1,7 @@
 import 'package:universal_io/io.dart';
 import 'package:subtitle/subtitle.dart' as subtitle;
 import '../models/sentence.dart';
+import 'app_logger.dart';
 
 /// 字幕解析错误类型。
 ///
@@ -36,9 +37,13 @@ class SubtitleParser {
       }
 
       final content = await file.readAsString();
-      return parseSubtitleString(content, type: _getSubtitleType(filePath));
+      return await parseSubtitleString(
+        content,
+        type: _getSubtitleType(filePath),
+      );
     } catch (e) {
-      print('Error parsing subtitle: $e');
+      // 容错路径：解析失败降级为空字幕，但要在应用内日志里留线索。
+      AppLogger.log('SubtitleParser', '解析字幕文件失败 $filePath: $e');
       return [];
     }
   }
@@ -64,7 +69,7 @@ class SubtitleParser {
         );
       }).toList();
     } catch (e) {
-      print('Error parsing subtitle: $e');
+      AppLogger.log('SubtitleParser', '解析字幕内容失败: $e');
       return [];
     }
   }

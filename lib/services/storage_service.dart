@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/playback_settings.dart';
+import 'app_logger.dart';
 
 class ListeningPracticeSettingsStore {
   const ListeningPracticeSettingsStore({
@@ -52,7 +53,7 @@ class StorageService {
         bookmark: withBookmarkLoopDefaults(legacy),
       );
     } catch (e) {
-      print('Error loading settings: $e');
+      AppLogger.log('StorageService', '读取播放设置失败，回退默认值: $e');
       return const ListeningPracticeSettingsStore();
     }
   }

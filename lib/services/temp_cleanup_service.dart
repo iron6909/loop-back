@@ -54,7 +54,7 @@ Future<CleanupResult> cleanupStalePdfExportTemp({
 }) async {
   try {
     final cachesDir = await getTemporaryDirectory();
-    return _cleanupDirectory(
+    return await _cleanupDirectory(
       cachesDir,
       minAge: minAge,
       nameFilter: _isShareExportTemp,

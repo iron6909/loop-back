@@ -45,7 +45,11 @@ void _packLogSupportArchive({
         continue;
       }
       final bytes = entity.readAsBytesSync();
-      archive.addFile(ArchiveFile(p.join('logs', name), bytes.length, bytes));
+      // ZIP 规范要求条目名用 `/`；p.join 在 Windows 会写成 `logs\\xxx.log`，
+      // 生成的包在别的系统上解压会得到一个怪文件名。
+      archive.addFile(
+        ArchiveFile(p.posix.join('logs', name), bytes.length, bytes),
+      );
     }
   }
   if (archive.isEmpty) {

@@ -3,8 +3,9 @@ library;
 
 import 'dart:io';
 
-import 'package:loop_back/services/app_logger.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:loop_back/services/app_logger.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   late Directory tempDir;
@@ -90,12 +91,19 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     await AppLogger.clearPersistedLogs();
+    // 断言「清空后仍能落盘」而不是「立即存在空文件」：文件输出库按需建文件的
+    // 时机依赖平台（Windows 上首次写入才建），断言写法不应绑定这个实现细节。
+    AppLogger.log('Test', 'after clear');
+    await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    expect(AppLogger.instance.entries, isEmpty);
+    expect(AppLogger.instance.entries.map((entry) => entry.message).toList(), [
+      'after clear',
+    ]);
     final files = Directory(logDirectory).listSync().whereType<File>().toList();
-    // 清空后会立即恢复轮转输出，因此只留下新的空活动文件。
     expect(files, hasLength(1));
-    expect(files.single.path, endsWith('/app.log'));
-    expect(files.single.readAsStringSync(), isEmpty);
+    expect(p.basename(files.single.path), 'app.log');
+    final content = files.single.readAsStringSync();
+    expect(content, contains('after clear'));
+    expect(content, isNot(contains('to clear')));
   });
 }
