@@ -70,6 +70,10 @@ import '../widgets/retell/retell_briefing_sheet.dart';
 import '../widgets/review/review_briefing_sheet.dart';
 import '../widgets/speech_permission_dialog.dart';
 import '../widgets/study/study_stage_visuals.dart';
+import '../widgets/study/free_play_app_bar_button.dart';
+import '../widgets/study/learning_plan_bottom_bar.dart';
+import '../widgets/study/progress_ring_painter.dart';
+import '../widgets/study/study_info_chip.dart';
 import '../widgets/guide_flow.dart';
 import '../widgets/manage_subtitles_sheet.dart';
 import '../providers/listening_practice/bookmark_manager.dart';
@@ -1824,7 +1828,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
               step: stepFreePlay,
               child: Padding(
                 padding: const EdgeInsets.only(right: AppSpacing.s),
-                child: _FreePlayAppBarButton(
+                child: FreePlayAppBarButton(
                   label: l10n.freePlay,
                   onPressed: () => _openFreePlay(context),
                 ),
@@ -1910,7 +1914,7 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
                 ],
               ),
             ),
-            _BottomButton(
+            LearningPlanBottomBar(
               l10n: l10n,
               progress: progress,
               audioItemId: widget.audioItemId,
@@ -2007,7 +2011,7 @@ class _ProgressCard extends ConsumerWidget {
               width: 64,
               height: 64,
               child: CustomPaint(
-                painter: _ProgressRingPainter(
+                painter: ProgressRingPainter(
                   progress: percent,
                   backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   progressColor: theme.colorScheme.primary,
@@ -2105,7 +2109,7 @@ class _ProgressCard extends ConsumerWidget {
     }
     if (item.totalDuration > 0) {
       chips.add(
-        _InfoChip(
+        StudyInfoChip(
           icon: Icons.timer_outlined,
           label: SubtitleParser.formatDuration(
             Duration(seconds: item.totalDuration),
@@ -2116,7 +2120,7 @@ class _ProgressCard extends ConsumerWidget {
     }
     if (item.sentenceCount > 0) {
       chips.add(
-        _InfoChip(
+        StudyInfoChip(
           icon: Icons.format_list_numbered,
           label: l10n.sentenceCountLabel(item.sentenceCount),
           theme: theme,
@@ -2125,7 +2129,7 @@ class _ProgressCard extends ConsumerWidget {
     }
     if (item.wordCount > 0) {
       chips.add(
-        _InfoChip(
+        StudyInfoChip(
           icon: Icons.text_fields,
           label: l10n.wordCountLabel(item.wordCount),
           theme: theme,
@@ -2226,118 +2230,6 @@ class _ProgressCard extends ConsumerWidget {
     final hours = overdue.inHours.clamp(1, 999);
     return l10n.overdueHours(hours);
   }
-}
-
-/// 学习计划页 AppBar 的「自由练习」入口。
-///
-/// 这里不用普通文字按钮，而是做成轻量 CTA 胶囊，提升可发现性，
-/// 同时控制横向占用，避免在移动端把标题进一步挤压。
-class _FreePlayAppBarButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-
-  const _FreePlayAppBarButton({required this.label, required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final surfaceColor = colorScheme.primaryContainer.withValues(
-      alpha: isDark ? 0.34 : 0.72,
-    );
-    final borderColor = colorScheme.primary.withValues(
-      alpha: isDark ? 0.18 : 0.24,
-    );
-    final iconColor = colorScheme.primary;
-    final labelColor = colorScheme.onPrimaryContainer;
-
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        color: Colors.transparent,
-        elevation: 0,
-        shadowColor: colorScheme.primary.withValues(alpha: 0.12),
-        child: InkWell(
-          key: const Key('learning_plan_free_play_button'),
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(28),
-          child: Ink(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              color: surfaceColor,
-              border: Border.all(color: borderColor),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.headphones_rounded, size: 18, color: iconColor),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                    color: labelColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 圆环进度绘制器
-class _ProgressRingPainter extends CustomPainter {
-  final double progress;
-  final Color backgroundColor;
-  final Color progressColor;
-
-  _ProgressRingPainter({
-    required this.progress,
-    required this.backgroundColor,
-    required this.progressColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2 - 4;
-    const strokeWidth = 6.0;
-
-    // 背景圆环
-    final bgPaint = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(center, radius, bgPaint);
-
-    // 进度圆弧
-    if (progress > 0) {
-      final progressPaint = Paint()
-        ..color = progressColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.round;
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        -math.pi / 2,
-        2 * math.pi * progress,
-        false,
-        progressPaint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ProgressRingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
 }
 
 /// 学习计划阶段标题行。
@@ -4146,37 +4038,6 @@ class _ReviewRoundSection extends ConsumerWidget {
   }
 }
 
-/// 音频信息行 — 显示时长、句子数、单词数
-/// 单个信息标签
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final ThemeData theme;
-
-  const _InfoChip({
-    required this.icon,
-    required this.label,
-    required this.theme,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: theme.colorScheme.outline),
-        const SizedBox(width: 3),
-        Text(
-          label,
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.outline,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// 无字幕提醒横幅 — 提示用户需要上传字幕，支持直接打开字幕管理
 class _NoTranscriptBanner extends StatelessWidget {
   final AppLocalizations l10n;
@@ -4243,218 +4104,6 @@ class _NoTranscriptBanner extends StatelessWidget {
       isScrollControlled: true,
       builder: (_) => ManageSubtitlesSheet(audioItem: audioItem),
     );
-  }
-}
-
-/// 底部固定按钮 — 根据进度显示不同形态：
-///
-/// - 未开始：单按钮「开始学习」（[onPressed] 为 null 时禁用）。
-/// - 进行中（未暂停）：Row[Expanded 1:暂停学习 | Expanded 2:继续学习]，比例 1:2。
-/// - 进行中（已暂停）：单按钮「恢复学习」，点击直接恢复（不弹窗），随后 UI 自动
-///   回到 Row 形态。
-/// - 已学完：单按钮「重置学习进度」，点击弹窗确认后清除全部进度。
-class _BottomButton extends ConsumerWidget {
-  final AppLocalizations l10n;
-  final LearningProgress? progress;
-  final String audioItemId;
-  final String audioItemName;
-  final VoidCallback? onPressed;
-  final GuideStep? startLearningStep;
-  final GuideStep? pauseLearningStep;
-
-  const _BottomButton({
-    required this.l10n,
-    required this.audioItemId,
-    required this.audioItemName,
-    this.progress,
-    required this.onPressed,
-    this.startLearningStep,
-    this.pauseLearningStep,
-  });
-
-  Future<void> _confirmAndPause(BuildContext context, WidgetRef ref) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.pauseLearningConfirmTitle),
-        content: Text(l10n.pauseLearningConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.pauseLearning),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await ref
-          .read(learningProgressNotifierProvider.notifier)
-          .pauseProgress(audioItemId);
-    }
-  }
-
-  Future<void> _resume(WidgetRef ref) {
-    return ref
-        .read(learningProgressNotifierProvider.notifier)
-        .resumeProgress(audioItemId);
-  }
-
-  /// 已学完状态：重置学习进度（与音频列表菜单的「重置学习进度」逻辑一致）
-  Future<void> _confirmAndReset(BuildContext context, WidgetRef ref) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.resetLearningProgressConfirmTitle),
-        content: Text(l10n.resetLearningProgressConfirmMessage(audioItemName)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(ctx).colorScheme.error,
-            ),
-            child: Text(l10n.confirm),
-          ),
-        ],
-      ),
-    );
-    if (confirm == true) {
-      await ref
-          .read(learningProgressNotifierProvider.notifier)
-          .resetProgress(audioItemId);
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.resetLearningProgressDone)));
-      }
-    }
-  }
-
-  Widget _wrap(BuildContext context, Widget body) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.m),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: SafeArea(top: false, child: body),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final hasProgress = progress?.isStarted ?? false;
-    final isPaused = progress?.isPaused ?? false;
-    final isCompleted = progress?.isCompleted ?? false;
-
-    // 已学完：只显示「重置学习进度」按钮，不再提供暂停/继续。
-    if (isCompleted) {
-      final theme = Theme.of(context);
-      return _wrap(
-        context,
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.tonalIcon(
-            onPressed: () => _confirmAndReset(context, ref),
-            icon: Icon(Icons.restart_alt, color: theme.colorScheme.error),
-            label: Text(
-              l10n.resetLearningProgress,
-              style: TextStyle(color: theme.colorScheme.error),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            ),
-          ),
-        ),
-      );
-    }
-
-    // 暂停态：单按钮，文案合并「已暂停 · 恢复学习」，点击直接恢复。
-    // 用 tonal 灰底突出当前是暂停态，与正常态的主色「继续学习」区分。
-    if (hasProgress && isPaused) {
-      final theme = Theme.of(context);
-      return _wrap(
-        context,
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.tonal(
-            onPressed: () => _resume(ref),
-            style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              foregroundColor: theme.colorScheme.onSurfaceVariant,
-            ),
-            child: Text(
-              '${l10n.pausedChipLabel} · ${l10n.resumeLearning}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-      );
-    }
-
-    // 进行中（未暂停）：Row[暂停 | 继续] 1:2
-    if (hasProgress) {
-      final continueButton = FilledButton(
-        onPressed: onPressed,
-        child: Text(l10n.continueLearning),
-      );
-      final guidedContinue = startLearningStep != null
-          ? GuideTarget(step: startLearningStep!, child: continueButton)
-          : continueButton;
-      final pauseButton = FilledButton.tonal(
-        onPressed: () => _confirmAndPause(context, ref),
-        style: FilledButton.styleFrom(
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.surfaceContainerHighest,
-          foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-        child: Text(
-          l10n.pauseLearning,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      );
-      final guidedPause = pauseLearningStep != null
-          ? GuideTarget(step: pauseLearningStep!, child: pauseButton)
-          : pauseButton;
-      return _wrap(
-        context,
-        Row(
-          children: [
-            Expanded(flex: 3, child: guidedPause),
-            const SizedBox(width: AppSpacing.m),
-            Expanded(flex: 5, child: guidedContinue),
-          ],
-        ),
-      );
-    }
-
-    // 未开始：单按钮「开始学习」
-    final startButton = FilledButton(
-      onPressed: onPressed,
-      child: Text(l10n.startLearning),
-    );
-    final guidedStart = startLearningStep != null
-        ? GuideTarget(step: startLearningStep!, child: startButton)
-        : startButton;
-    return _wrap(context, SizedBox(width: double.infinity, child: guidedStart));
   }
 }
 
