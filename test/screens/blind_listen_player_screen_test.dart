@@ -121,6 +121,11 @@ void main() {
       ],
     );
 
+    // 显式标注类型：`playerFactory ?? TestBlindListenPlayer.new` 的联合体在源码侧
+    // 会被推断成 dynamic，导致 avoid_dynamic_calls 报动态调用。
+    final TestBlindListenPlayer Function(BlindListenPlayerState) createPlayer =
+        playerFactory ?? TestBlindListenPlayer.new;
+
     return ProviderScope(
       overrides: [
         listeningPracticeProvider.overrideWith(
@@ -134,7 +139,7 @@ void main() {
         ),
         learningSessionProvider.overrideWith(() => TestLearningSession()),
         blindListenPlayerProvider.overrideWith(
-          () => (playerFactory ?? TestBlindListenPlayer.new)(initialState),
+          () => createPlayer(initialState),
         ),
         ...studyTimeOverrides(),
         ...extraOverrides,

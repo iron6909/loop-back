@@ -260,6 +260,14 @@ void main() {
     playerFactory,
     List<Override> extraOverrides = const [],
   }) {
+    // 显式标注类型：`playerFactory ?? TestRetellPlayer.new` 的联合体在源码侧会被
+    // 推断成 dynamic，导致 avoid_dynamic_calls 报动态调用。
+    final TestRetellPlayer Function(
+      RetellPlayerState,
+      List<List<Sentence>>,
+      Map<int, Set<int>>,
+    )
+    createPlayer = playerFactory ?? TestRetellPlayer.new;
     final testParagraphs = paragraphs ?? createTestParagraphs();
     final testKeywords = keywords ?? {};
     final initialState =
@@ -322,11 +330,7 @@ void main() {
         ),
         learningSessionProvider.overrideWith(() => TestLearningSession()),
         retellPlayerProvider.overrideWith(
-          () => (playerFactory ?? TestRetellPlayer.new)(
-            initialState,
-            testParagraphs,
-            testKeywords,
-          ),
+          () => createPlayer(initialState, testParagraphs, testKeywords),
         ),
         ...studyTimeOverrides(),
         retellRecordingControllerProvider.overrideWith(

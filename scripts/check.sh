@@ -19,6 +19,8 @@ run_step() {
 
 run_step "dart format" dart format --output=none --set-exit-if-changed lib test
 run_step "flutter analyze" flutter analyze --no-fatal-infos
+# info 里还有第三方 deprecation 未清，所以对已清零的 lint 单独硬门禁。
+run_step "lint gate" bash -c "flutter analyze --no-fatal-infos lib test | tee /tmp/lb-analyze.log; ! grep -q avoid_dynamic_calls /tmp/lb-analyze.log"
 run_step "flutter test" flutter test --concurrency=1
 
 # macOS 专属：其余平台（主要是 Windows 主力机）跑到这里算通过。

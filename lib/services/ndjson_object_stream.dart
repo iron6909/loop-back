@@ -69,9 +69,10 @@ Stream<StreamFrame<T>> accumulateNdjsonObject<T>(
       }
       // 一行内可能含多个叶子（一次 flush 的批量），全部应用后只 yield 一帧。
       for (final op in ops) {
-        final p = op is Map ? op['p'] : null;
-        if (p is List) {
-          setPath(acc, p, op['v']);
+        if (op is! Map) continue;
+        final path = op['p'];
+        if (path is List) {
+          setPath(acc, path, op['v']);
         }
       }
       yield StreamFrame(value: fromJson(acc), isFinal: false);

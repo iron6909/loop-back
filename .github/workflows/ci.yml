@@ -13,6 +13,10 @@ on:
       - '**.md'
       - 'docs/**'
 
+# 只读仓库内容：构建与测试不需要写权限，避免默认的写 token 被滥用。
+permissions:
+  contents: read
+
 env:
   # 与主力开发机对齐：格式门禁（dart format）必须本地可跑，否则新 SDK 写出的
   # 代码会在 CI 被判“未格式化”。升级时同步 release.yml 与本地 Flutter。
@@ -41,8 +45,15 @@ jobs:
 
       - name: Run analyze
         # integration_test 由独立设备流程负责，不纳入主 CI 的静态分析门禁。
-        # warning 视为失败（info 不拦），与 AGENTS.md 的硬性规则保持一致。
-        run: flutter analyze --no-fatal-infos lib test
+        # warning 视为失败（info 不拦）：info 里还有第三方 deprecation 未清，
+        # 所以对已清零的 lint 另加一道 grep 门禁。
+        run: |
+          flutter analyze --no-fatal-infos lib test | tee analyze.log
+          if grep -q 'avoid_dynamic_calls' analyze.log; then
+            echo '::error::avoid_dynamic_calls 命中（AGENTS.md §3）'
+            grep 'avoid_dynamic_calls' analyze.log
+            exit 1
+          fi
 
   test:
     runs-on: ubuntu-latest

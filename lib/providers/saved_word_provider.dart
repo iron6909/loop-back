@@ -115,8 +115,13 @@ SavedTextIndex savedTextIndex(SavedTextIndexRef ref) {
 ///
 /// 监听 [savedWordListProvider]，当单词列表变化时批量查询所有字典释义。
 /// 避免每个列表项独立异步查询导致释义延迟闪烁。
+///
+/// `ref` 显式标注生成的 Ref 类型：未标注时源码侧视为 dynamic，
+/// `avoid_dynamic_calls` 会把所有 watch 都报成动态调用。
 @riverpod
-Future<Map<String, DictEntry>> savedWordDictEntries(ref) async {
+Future<Map<String, DictEntry>> savedWordDictEntries(
+  SavedWordDictEntriesRef ref,
+) async {
   final wordsAsync = await ref.watch(savedWordListProvider.future);
   if (wordsAsync.isEmpty) return {};
   final wordStrings = wordsAsync.map((w) => w.word).toList();

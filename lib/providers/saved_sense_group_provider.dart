@@ -76,8 +76,11 @@ class SavedSenseGroupTexts extends _$SavedSenseGroupTexts {
 }
 
 /// 监听单个意群是否已收藏
+///
+/// `ref` 显式标注生成的 Ref 类型：未标注时源码侧视为 dynamic，
+/// `avoid_dynamic_calls` 会把所有 watch 都报成动态调用。
 @riverpod
-Stream<bool> isSenseGroupSaved(ref, String phraseText) {
+Stream<bool> isSenseGroupSaved(IsSenseGroupSavedRef ref, String phraseText) {
   final dao = ref.watch(savedSenseGroupDaoProvider);
   return dao.watchIsSenseGroupSaved(phraseText);
 }
