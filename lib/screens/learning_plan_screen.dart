@@ -56,6 +56,7 @@ import '../utils/learning_duration_estimator.dart';
 import '../utils/sub_stage_duration_estimator.dart';
 import '../utils/paragraph_grouping.dart';
 import '../utils/playback_speed_default.dart';
+import '../utils/review_launch_planner.dart';
 import '../utils/audio_item_actions.dart';
 import '../utils/time_format.dart';
 import '../widgets/blind_listen_paragraph_sheet.dart';
@@ -865,15 +866,14 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
     LearningProgress progress,
   ) async {
     final subStage = progress.currentSubStage;
+    final launch = planReviewLaunch(subStage, autoAdvance: false);
 
-    // 段落复述自带时长选择弹窗，无需再展示复习简报
-    if (subStage == SubStageType.reviewRetellParagraph) {
+    // 段落复述自带时长选择弹窗；盲听自带段落选择弹窗（阶段名与预估时长就在弹窗上）。
+    if (launch == ReviewLaunch.retellParagraph) {
       _startReviewRetell(context, isSummary: false);
       return;
     }
-
-    // 盲听自带段落选择弹窗，阶段名和预估时长直接显示在弹窗上
-    if (subStage == SubStageType.blindListen) {
+    if (launch == ReviewLaunch.blindListen) {
       _startReviewBlindListen(context, stage: progress.currentStage);
       return;
     }
@@ -1161,14 +1161,15 @@ class _LearningPlanScreenState extends ConsumerState<LearningPlanScreen> {
     if (progress == null) return;
     if (!progress.isInReviewStage) return;
 
-    switch (progress.currentSubStage) {
-      case SubStageType.blindListen:
+    switch (planReviewLaunch(progress.currentSubStage, autoAdvance: true)) {
+      case ReviewLaunch.blindListen:
         _startReviewBlindListen(context, stage: progress.currentStage);
-      case SubStageType.reviewRetellParagraph:
+      case ReviewLaunch.retellParagraph:
         _startReviewRetell(context, isSummary: false);
-      case SubStageType.reviewRetellSummary:
+      case ReviewLaunch.retellSummary:
         _startReviewRetell(context, isSummary: true);
-      default:
+      case ReviewLaunch.briefing:
+      case ReviewLaunch.none:
         // 推进后罕见落到难句补练等情况，回到计划页让用户重新选择
         break;
     }
