@@ -34,9 +34,13 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
       - name: Run analyze
         # integration_test 由独立设备流程负责，不纳入主 CI 的静态分析门禁。
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos lib test
+        # warning 视为失败（info 不拦），与 AGENTS.md 的硬性规则保持一致。
+        run: flutter analyze --no-fatal-infos lib test
 
   test:
     runs-on: ubuntu-latest
