@@ -245,10 +245,12 @@ class _MediaVisualSurfaceState extends State<MediaVisualSurface> {
                                 ),
                                 active: isSubtitleMaskEnabled,
                                 tooltip: isSubtitleMaskEnabled
-                                    ? AppLocalizations.of(context)!
-                                          .mediaHideSubtitleMask
-                                    : AppLocalizations.of(context)!
-                                          .mediaShowSubtitleMask,
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.mediaHideSubtitleMask
+                                    : AppLocalizations.of(
+                                        context,
+                                      )!.mediaShowSubtitleMask,
                                 onPressed: _toggleSubtitleMask,
                               ),
                               const SizedBox(width: 8),
@@ -261,10 +263,12 @@ class _MediaVisualSurfaceState extends State<MediaVisualSurface> {
                                 ),
                                 active: state.subtitleVisible,
                                 tooltip: state.subtitleVisible
-                                    ? AppLocalizations.of(context)!
-                                          .mediaHideVideoSubtitles
-                                    : AppLocalizations.of(context)!
-                                          .mediaShowVideoSubtitles,
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.mediaHideVideoSubtitles
+                                    : AppLocalizations.of(
+                                        context,
+                                      )!.mediaShowVideoSubtitles,
                                 onPressed: widget.actions.onSubtitleToggle,
                               ),
                               const SizedBox(width: 8),
@@ -277,10 +281,12 @@ class _MediaVisualSurfaceState extends State<MediaVisualSurface> {
                                 ),
                                 active: true,
                                 tooltip: state.expanded
-                                    ? AppLocalizations.of(context)!
-                                          .mediaExitFullscreen
-                                    : AppLocalizations.of(context)!
-                                          .mediaEnterFullscreen,
+                                    ? AppLocalizations.of(
+                                        context,
+                                      )!.mediaExitFullscreen
+                                    : AppLocalizations.of(
+                                        context,
+                                      )!.mediaEnterFullscreen,
                                 onPressed: widget.actions.onFullscreenToggle,
                               ),
                             ],
@@ -302,8 +308,9 @@ class _MediaVisualSurfaceState extends State<MediaVisualSurface> {
                               key: const ValueKey('media-hide-visual-button'),
                               icon: const Icon(Icons.visibility_off),
                               active: true,
-                              tooltip: AppLocalizations.of(context)!
-                                  .videoHideTrack,
+                              tooltip: AppLocalizations.of(
+                                context,
+                              )!.videoHideTrack,
                               onPressed: widget.actions.onHide,
                             ),
                           ),

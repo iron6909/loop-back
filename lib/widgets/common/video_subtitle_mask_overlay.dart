@@ -211,8 +211,9 @@ class _VideoSubtitleMaskOverlayState extends State<VideoSubtitleMaskOverlay> {
 
   /// 悬浮判定区域是遮罩外扩手柄触控区的部分，鼠标从遮罩移到手柄上不会丢失激发态。
   void _updatePointerPosition(Offset localPosition) {
-    final hoverZone = _maskRectFor(_currentRect)
-        .inflate(_gripTouchThickness - _gripInset);
+    final hoverZone = _maskRectFor(
+      _currentRect,
+    ).inflate(_gripTouchThickness - _gripInset);
     _setPointerInside(hoverZone.contains(localPosition));
   }
 
@@ -321,8 +322,9 @@ class _VideoSubtitleMaskOverlayState extends State<VideoSubtitleMaskOverlay> {
           onHover: (event) => _updatePointerPosition(event.localPosition),
           onExit: (_) => _setPointerInside(false),
           child: MediaQuery(
-            data: MediaQuery.of(context)
-                .copyWith(gestureSettings: _maskGestureSettings),
+            data: MediaQuery.of(
+              context,
+            ).copyWith(gestureSettings: _maskGestureSettings),
             child: Stack(
               children: [
                 Positioned.fromRect(

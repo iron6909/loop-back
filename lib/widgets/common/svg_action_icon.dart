@@ -28,7 +28,9 @@ class SvgActionIcon extends StatelessWidget {
       width: size,
       height: size,
       colorFilter: ColorFilter.mode(
-        color ?? IconTheme.of(context).color ?? Theme.of(context).colorScheme.onSurface,
+        color ??
+            IconTheme.of(context).color ??
+            Theme.of(context).colorScheme.onSurface,
         BlendMode.srcIn,
       ),
     );

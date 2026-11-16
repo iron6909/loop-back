@@ -25634,15 +25634,19 @@ class $$VideoSubtitleMasksTableTableManager
                     >
                   >(state) {
                     if (audioItemId) {
-                      state = state.withJoin(
-                        currentTable: table,
-                        currentColumn: table.audioItemId,
-                        referencedTable: $$VideoSubtitleMasksTableReferences
-                            ._audioItemIdTable(db),
-                        referencedColumn: $$VideoSubtitleMasksTableReferences
-                            ._audioItemIdTable(db)
-                            .id,
-                      ) as T;
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.audioItemId,
+                                referencedTable:
+                                    $$VideoSubtitleMasksTableReferences
+                                        ._audioItemIdTable(db),
+                                referencedColumn:
+                                    $$VideoSubtitleMasksTableReferences
+                                        ._audioItemIdTable(db)
+                                        .id,
+                              )
+                              as T;
                     }
 
                     return state;
