@@ -30,6 +30,7 @@ import '../providers/listening_practice/bookmark_manager.dart';
 import '../providers/favorite_sentence_lifecycle_provider.dart';
 import '../providers/notification_permission_provider.dart';
 import '../providers/sentence_ai_provider.dart';
+import '../providers/video_subtitle_mask_provider.dart';
 import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
 import '../widgets/common/bookmark_toggle_row.dart';
@@ -542,12 +543,20 @@ class _SentenceDetailScreenState extends ConsumerState<SentenceDetailScreen> {
     MediaPlaybackState state,
     SentenceDetailMediaSession session,
   ) {
+    final subtitleMaskProvider = videoSubtitleMaskProvider(
+      widget.args.audioItemId,
+    );
+    // 加载完成前为 null：不显示遮罩，避免先在默认位置闪现再跳到已保存位置。
+    final subtitleMask = ref.watch(subtitleMaskProvider).value;
+    final subtitleMaskNotifier = ref.read(subtitleMaskProvider.notifier);
     return MediaVisualSurface(
       state: MediaVisualSurfaceState(
         visible: state.visualTrackVisible,
         expanded: state.visualTrackExpanded,
         isPlaying: _isPlaying,
         subtitleVisible: state.videoSubtitleVisible,
+        subtitleMask: subtitleMask,
+        videoAspectRatio: state.videoAspectRatio,
       ),
       actions: MediaVisualSurfaceActions(
         onShow: () => unawaited(_setMediaVisible(session, true)),
@@ -558,6 +567,10 @@ class _SentenceDetailScreenState extends ConsumerState<SentenceDetailScreen> {
         ),
         onFullscreenToggle: () =>
             unawaited(_setMediaFullscreen(session, !state.visualTrackExpanded)),
+        onSubtitleMaskToggle: () =>
+            unawaited(subtitleMaskNotifier.toggleEnabled()),
+        onSubtitleMaskRectChanged: (rect) =>
+            unawaited(subtitleMaskNotifier.setRect(rect)),
       ),
       fillAvailableHeight: state.visualTrackExpanded,
       buildVideoView: session.buildVideoView,
