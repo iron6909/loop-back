@@ -5695,4 +5695,35 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get subtitleOnlineModelSettingsHint =>
       '在线模型与 Key 在设置 → 语音识别 → 在线语音服务中配置';
+
+  @override
+  String get favoritesExportMenu => '导出 PDF';
+
+  @override
+  String get favoritesExportDialogTitle => '导出收藏';
+
+  @override
+  String favoritesExportSentencesOption(int count) {
+    return '收藏句子（$count）';
+  }
+
+  @override
+  String favoritesExportWordsOption(int count) {
+    return '收藏词汇（$count）';
+  }
+
+  @override
+  String get favoritesExportConfirm => '导出';
+
+  @override
+  String get favoritesExportTitle => '收藏清单';
+
+  @override
+  String get favoritesExportSentencesSection => '句子';
+
+  @override
+  String get favoritesExportWordsSection => '词汇';
+
+  @override
+  String get favoritesExportUnknownSource => '未知来源';
 }

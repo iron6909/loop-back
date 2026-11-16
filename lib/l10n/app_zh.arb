@@ -2783,5 +2783,14 @@
   "wordTimingSourceMixed": "混合",
   "wordTimingSourceUnknown": "未知",
   "recognitionOnlineNeedsSuitableModel": "该模型没有返回片段时间戳，不能用于字幕；请换一个支持时间戳的模型并重新验证",
-  "subtitleOnlineModelSettingsHint": "在线模型与 Key 在设置 → 语音识别 → 在线语音服务中配置"
+  "subtitleOnlineModelSettingsHint": "在线模型与 Key 在设置 → 语音识别 → 在线语音服务中配置",
+  "favoritesExportMenu": "导出 PDF",
+  "favoritesExportDialogTitle": "导出收藏",
+  "favoritesExportSentencesOption": "收藏句子（{count}）",
+  "favoritesExportWordsOption": "收藏词汇（{count}）",
+  "favoritesExportConfirm": "导出",
+  "favoritesExportTitle": "收藏清单",
+  "favoritesExportSentencesSection": "句子",
+  "favoritesExportWordsSection": "词汇",
+  "favoritesExportUnknownSource": "未知来源"
 }

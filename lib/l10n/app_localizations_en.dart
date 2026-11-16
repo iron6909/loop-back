@@ -5984,4 +5984,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get subtitleOnlineModelSettingsHint =>
       'Configure the online model and key under Settings → Speech recognition → Online speech service';
+
+  @override
+  String get favoritesExportMenu => 'Export PDF';
+
+  @override
+  String get favoritesExportDialogTitle => 'Export saved items';
+
+  @override
+  String favoritesExportSentencesOption(int count) {
+    return 'Saved sentences ($count)';
+  }
+
+  @override
+  String favoritesExportWordsOption(int count) {
+    return 'Saved vocabulary ($count)';
+  }
+
+  @override
+  String get favoritesExportConfirm => 'Export';
+
+  @override
+  String get favoritesExportTitle => 'Saved Items';
+
+  @override
+  String get favoritesExportSentencesSection => 'Sentences';
+
+  @override
+  String get favoritesExportWordsSection => 'Vocabulary';
+
+  @override
+  String get favoritesExportUnknownSource => 'Unknown source';
 }
