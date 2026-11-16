@@ -708,7 +708,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String audioUnsupportedFormat(String ext) {
-    return '不支持的音频格式：$ext。仅支持 MP3、WAV、M4A、AAC、FLAC。';
+    return '不支持的音频格式：$ext。仅支持 MP3、WAV、M4A、AAC、FLAC、OPUS、OGG。';
   }
 
   @override
@@ -719,7 +719,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get audioNoAudioSelected =>
-      '字幕需要和音频一起导入，请把音频文件也选上：MP3、WAV、M4A、AAC、FLAC。';
+      '字幕需要和音频一起导入，请把音频文件也选上：MP3、WAV、M4A、AAC、FLAC、OPUS、OGG。';
 
   @override
   String get audioErrorGenericTitle => '添加音频失败';
@@ -5395,7 +5395,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get folderImportSupportedFormats =>
-      '支持 mp3、wav、m4a、aac、flac，并自动配对同名 .srt / .vtt / .lrc 字幕。';
+      '支持 mp3、wav、m4a、aac、flac、opus、ogg，并自动配对同名 .srt / .vtt / .lrc 字幕。';
 
   @override
   String get folderImportNoSubdirectories => '只读取所选文件夹内的文件，不进入子文件夹。';

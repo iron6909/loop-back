@@ -1403,7 +1403,7 @@ abstract class AppLocalizations {
   /// No description provided for @audioUnsupportedFormat.
   ///
   /// In en, this message translates to:
-  /// **'Unsupported audio format: {ext}. Only MP3, WAV, M4A, AAC, FLAC are supported.'**
+  /// **'Unsupported audio format: {ext}. Only MP3, WAV, M4A, AAC, FLAC, OPUS, OGG are supported.'**
   String audioUnsupportedFormat(String ext);
 
   /// No description provided for @audioErrorUnsupportedTitle.
@@ -1421,7 +1421,7 @@ abstract class AppLocalizations {
   /// No description provided for @audioNoAudioSelected.
   ///
   /// In en, this message translates to:
-  /// **'Subtitles are imported together with their audio. Select the audio file too — MP3, WAV, M4A, AAC, FLAC.'**
+  /// **'Subtitles are imported together with their audio. Select the audio file too — MP3, WAV, M4A, AAC, FLAC, OPUS, OGG.'**
   String get audioNoAudioSelected;
 
   /// No description provided for @audioErrorGenericTitle.
@@ -9917,7 +9917,7 @@ abstract class AppLocalizations {
   /// No description provided for @folderImportSupportedFormats.
   ///
   /// In en, this message translates to:
-  /// **'Supports mp3, wav, m4a, aac and flac, and pairs same-name .srt / .vtt / .lrc subtitles.'**
+  /// **'Supports mp3, wav, m4a, aac, flac, opus and ogg, and pairs same-name .srt / .vtt / .lrc subtitles.'**
   String get folderImportSupportedFormats;
 
   /// No description provided for @folderImportNoSubdirectories.

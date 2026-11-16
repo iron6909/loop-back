@@ -504,6 +504,8 @@ class AudioImportService {
       'audio/mp4' || 'audio/x-m4a' => 'm4a',
       'audio/aac' => 'aac',
       'audio/flac' || 'audio/x-flac' => 'flac',
+      'audio/opus' => 'opus',
+      'audio/ogg' => 'ogg',
       _ => null,
     };
   }

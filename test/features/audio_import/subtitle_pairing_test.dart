@@ -207,7 +207,7 @@ void main() {
       expect(result['clip.mp4'], 'clip.srt');
     });
 
-    test('mov/m4v/mkv 也参与配对', () {
+    test('mov/m4v/mkv/webm/avi 也参与配对', () {
       final result = matchSubtitlesForAudios([
         'a.mov',
         'a.vtt',
@@ -215,10 +215,37 @@ void main() {
         'b.lrc',
         'c.mkv',
         'c.srt',
+        'd.webm',
+        'd.srt',
+        'e.avi',
+        'e.vtt',
       ]);
       expect(result['a.mov'], 'a.vtt');
       expect(result['b.m4v'], 'b.lrc');
       expect(result['c.mkv'], 'c.srt');
+      expect(result['d.webm'], 'd.srt');
+      expect(result['e.avi'], 'e.vtt');
+    });
+
+    test('opus/ogg 按音频导入并参与字幕配对', () {
+      final classification = classifyImportFiles([
+        'a.opus',
+        'a.srt',
+        'b.ogg',
+        'b.vtt',
+      ]);
+      expect(classification.audioNames, ['a.opus', 'b.ogg']);
+      expect(classification.videoNames, isEmpty);
+      expect(classification.rejectedExtensions, isEmpty);
+
+      final result = matchSubtitlesForAudios([
+        'a.opus',
+        'a.srt',
+        'b.ogg',
+        'b.vtt',
+      ]);
+      expect(result['a.opus'], 'a.srt');
+      expect(result['b.ogg'], 'b.vtt');
     });
 
     test('音频+视频混选各自配对同名字幕', () {

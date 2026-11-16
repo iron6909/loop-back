@@ -96,7 +96,10 @@ enum AudioContentStatus {
 
 /// 支持导入的视频扩展名（小写、不含点）。是 mediaType 判定的唯一依据，
 /// 其他文件（如 subtitle_pairing.dart）复用这个常量，不要另外定义一份。
-const videoFileExtensions = {'mp4', 'mov', 'm4v', 'mkv'};
+///
+/// webm（matroska）与 avi 的解封装在 media_kit 与 ffmpeg-kit 两端的构建中均已编入
+/// （media_kit_libs_video，见 pubspec）。
+const videoFileExtensions = {'mp4', 'mov', 'm4v', 'mkv', 'webm', 'avi'};
 
 /// 媒体类型：按文件扩展名派生，不落库。
 enum MediaType { audio, video }

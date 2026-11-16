@@ -393,7 +393,7 @@
   "audioFileNotFound": "Audio file not found. The file may have been deleted.",
   "pickAudioFileFailed": "Failed to select audio file",
   "addAudioFailed": "Failed to add audio",
-  "audioUnsupportedFormat": "Unsupported audio format: {ext}. Only MP3, WAV, M4A, AAC, FLAC are supported.",
+  "audioUnsupportedFormat": "Unsupported audio format: {ext}. Only MP3, WAV, M4A, AAC, FLAC, OPUS, OGG are supported.",
   "@audioUnsupportedFormat": {
     "placeholders": {
       "ext": {
@@ -403,7 +403,7 @@
   },
   "audioErrorUnsupportedTitle": "Unsupported audio format",
   "audioErrorNoAudioTitle": "No audio file selected",
-  "audioNoAudioSelected": "Subtitles are imported together with their audio. Select the audio file too — MP3, WAV, M4A, AAC, FLAC.",
+  "audioNoAudioSelected": "Subtitles are imported together with their audio. Select the audio file too — MP3, WAV, M4A, AAC, FLAC, OPUS, OGG.",
   "audioErrorGenericTitle": "Failed to add audio",
   "pickTranscriptFileFailed": "Failed to select subtitle file",
   "subtitleUnsupportedFormat": "Unsupported subtitle format: .{ext}. Only SRT and VTT files are supported.",
@@ -3278,7 +3278,7 @@
       }
     }
   },
-  "folderImportSupportedFormats": "Supports mp3, wav, m4a, aac and flac, and pairs same-name .srt / .vtt / .lrc subtitles.",
+  "folderImportSupportedFormats": "Supports mp3, wav, m4a, aac, flac, opus and ogg, and pairs same-name .srt / .vtt / .lrc subtitles.",
   "folderImportNoSubdirectories": "Only files directly inside the chosen folder are read; subfolders are skipped.",
   "recognitionModeTitle": "Recognition modes",
   "localModelLibraryTitle": "On-device models",
