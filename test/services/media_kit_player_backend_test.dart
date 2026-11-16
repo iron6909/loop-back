@@ -10,7 +10,9 @@ void main() {
       player: Player(platformPlayer: _TestPlatformPlayer()),
     );
 
-    final video = backend.buildVideoView(viewportSize: const Size(390, 844));
+    final view = backend.buildVideoView(viewportSize: const Size(390, 844));
+    // 纹理门控把 Video 包了一层，取回实际渲染的 Video 再断言行为。
+    final video = (view as ValueListenableBuilder<bool>).child!;
     final pausesInBackground = switch (video) {
       Video(:final pauseUponEnteringBackgroundMode) =>
         pauseUponEnteringBackgroundMode,
