@@ -1485,7 +1485,6 @@ class _RetellPlayerScreenState extends ConsumerState<RetellPlayerScreen>
           visualTrackVisible: state.visualTrackVisible,
           visualTrackExpanded: state.expanded,
           videoSubtitleVisible: state.subtitleVisible,
-          videoAspectRatio: state.videoAspectRatio,
         );
       },
       setVisible: session.setVisible,

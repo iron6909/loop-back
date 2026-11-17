@@ -208,8 +208,6 @@ flutter:
     - assets/icon/unlock.svg
     # 视频条目左侧媒体图标（资源库卡片区分音/视频）
     - assets/icon/video-2.svg
-    # 视频画面字幕遮罩开关图标（currentColor 由开关态着色，关闭态叠加斜线）
-    - assets/icon/subtitle_mask.svg
     # PDF 导出品牌角标（96px 小图，1024 原图 190KB 直接嵌会撑大每份 PDF）
     - assets/icon/app-icon-96.png
     # chatbot 气泡操作栏图标（复刻 ChatGPT 线条风格，currentColor 随主题着色）

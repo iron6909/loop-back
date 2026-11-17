@@ -5348,16 +5348,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaShowVideoSubtitles => 'Show video subtitles';
 
   @override
-  String get mediaShowSubtitleMask => 'Cover on-screen subtitles';
-
-  @override
-  String get mediaHideSubtitleMask => 'Remove subtitle cover';
-
-  @override
-  String get mediaSubtitleMaskLabel =>
-      'Subtitle cover. Drag to move, pinch or drag an edge handle to resize';
-
-  @override
   String get videoLoopWhole => 'Loop all';
 
   @override

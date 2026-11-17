@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../database/providers.dart';
 import '../../providers/media_engine/media_engine_provider.dart';
-import '../../providers/video_subtitle_mask_provider.dart';
 import '../../services/media_fullscreen_service.dart';
 import 'media_visual_surface.dart';
 
@@ -16,7 +15,6 @@ class PracticeMediaPresentationState {
     required this.visualTrackVisible,
     required this.expanded,
     required this.subtitleVisible,
-    required this.videoAspectRatio,
   });
 
   /// 当前任务是否使用 MediaEngine，false 时宿主不创建视频呈现资源。
@@ -30,9 +28,6 @@ class PracticeMediaPresentationState {
 
   /// 当前是否已加载并显示字幕轨。
   final bool subtitleVisible;
-
-  /// 已解码视频的宽高比，供讲解页定位字幕遮罩；未知时为 null。
-  final double? videoAspectRatio;
 }
 
 /// 构建学习页内容，并注入统一媒体状态和视频画面。
@@ -155,9 +150,6 @@ class _PracticeMediaPresentationHostState
           visualTrackVisible: _visible,
           expanded: _expanded,
           subtitleVisible: _subtitleVisible,
-          videoAspectRatio: ref
-              .read(mediaEngineProvider.notifier)
-              .videoAspectRatio,
         ),
         setVisible: _setVisible,
         setSubtitleVisible: _setSubtitleVisible,
@@ -242,20 +234,32 @@ class _PracticeMediaPresentationHostState
 
   @override
   Widget build(BuildContext context) {
-    // 宽高比在媒体 ready 后即确定，随后的播放状态重建会带上最新值；未知时遮罩
-    // 退回按整个画面定位。
-    final videoAspectRatio = widget.enabled
-        ? ref.read(mediaEngineProvider.notifier).videoAspectRatio
-        : null;
     final presentation = PracticeMediaPresentationState(
       enabled: widget.enabled,
       visualTrackVisible: widget.enabled && _visible,
       expanded: widget.enabled && _expanded,
       subtitleVisible: widget.enabled && _subtitleVisible,
-      videoAspectRatio: videoAspectRatio,
     );
     final surface = widget.enabled && !widget.suppressVisualView
-        ? _buildVisualSurface(videoAspectRatio)
+        ? MediaVisualSurface(
+            state: MediaVisualSurfaceState(
+              visible: _visible,
+              expanded: _expanded,
+              isPlaying: widget.isPlaying,
+              subtitleVisible: _subtitleVisible,
+            ),
+            actions: MediaVisualSurfaceActions(
+              onShow: () => unawaited(_setVisible(true)),
+              onHide: () => unawaited(_setVisible(false)),
+              onPlayPause: widget.onPlayPause,
+              onSubtitleToggle: () => unawaited(_toggleSubtitle()),
+              onFullscreenToggle: () => unawaited(_toggleFullscreen()),
+            ),
+            fillAvailableHeight: _expanded,
+            buildVideoView: (size) => ref
+                .read(mediaEngineProvider.notifier)
+                .buildVideoView(viewportSize: size),
+          )
         : widget.enabled
         ? const AspectRatio(
             aspectRatio: 16 / 9,
@@ -263,38 +267,5 @@ class _PracticeMediaPresentationHostState
           )
         : const SizedBox.shrink();
     return widget.builder(context, presentation, surface);
-  }
-
-  /// 只在真正显示视频画面时订阅遮罩设置，纯音频任务不读取遮罩数据。
-  Widget _buildVisualSurface(double? videoAspectRatio) {
-    final subtitleMaskProvider = videoSubtitleMaskProvider(widget.audioItemId);
-    // 加载完成前为 null：不显示遮罩，避免先在默认位置闪现再跳到已保存位置。
-    final subtitleMask = ref.watch(subtitleMaskProvider).value;
-    final subtitleMaskNotifier = ref.read(subtitleMaskProvider.notifier);
-    return MediaVisualSurface(
-      state: MediaVisualSurfaceState(
-        visible: _visible,
-        expanded: _expanded,
-        isPlaying: widget.isPlaying,
-        subtitleVisible: _subtitleVisible,
-        subtitleMask: subtitleMask,
-        videoAspectRatio: videoAspectRatio,
-      ),
-      actions: MediaVisualSurfaceActions(
-        onShow: () => unawaited(_setVisible(true)),
-        onHide: () => unawaited(_setVisible(false)),
-        onPlayPause: widget.onPlayPause,
-        onSubtitleToggle: () => unawaited(_toggleSubtitle()),
-        onFullscreenToggle: () => unawaited(_toggleFullscreen()),
-        onSubtitleMaskToggle: () =>
-            unawaited(subtitleMaskNotifier.toggleEnabled()),
-        onSubtitleMaskRectChanged: (rect) =>
-            unawaited(subtitleMaskNotifier.setRect(rect)),
-      ),
-      fillAvailableHeight: _expanded,
-      buildVideoView: (size) => ref
-          .read(mediaEngineProvider.notifier)
-          .buildVideoView(viewportSize: size),
-    );
   }
 }

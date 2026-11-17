@@ -33,7 +33,6 @@ import 'tables/tts_cache.dart';
 import 'tables/memory_schedules.dart';
 import 'tables/memory_review_events.dart';
 import 'tables/memory_review_queue_entries.dart';
-import 'tables/video_subtitle_masks.dart';
 import '../models/study_stage.dart';
 import 'daos/audio_item_dao.dart';
 import 'daos/collection_dao.dart';
@@ -52,7 +51,6 @@ import 'daos/study_statistics_dao.dart';
 import 'daos/tts_cache_dao.dart';
 import 'daos/memory_schedule_dao.dart';
 import 'daos/favorite_review_dao.dart';
-import 'daos/video_subtitle_mask_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -82,7 +80,6 @@ part 'app_database.g.dart';
     MemorySchedules,
     MemoryReviewEvents,
     MemoryReviewQueueEntries,
-    VideoSubtitleMasks,
   ],
   daos: [
     AudioItemDao,
@@ -102,13 +99,15 @@ part 'app_database.g.dart';
     TtsCacheDao,
     MemoryScheduleDao,
     FavoriteReviewDao,
-    VideoSubtitleMaskDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   /// 当前 schema 版本（静态访问，用于导入前版本检查）
+  ///
+  /// v63 曾用于视频字幕遮罩表（`video_subtitle_masks`）。该功能因体验问题已移除，
+  /// 不再建表；版本号保留不回收，避免已升到 63 的库被判成「比当前版本新」。
   static const currentSchemaVersion = 63;
 
   @override
@@ -908,12 +907,6 @@ class AppDatabase extends _$AppDatabase {
         if (from < 58) {
           await _createFavoriteReviewIndexes();
           await _migrateLegacyFavoriteMemorySchedules();
-        }
-        // v62→v63：新增按视频保存的字幕遮罩设置表。
-        //
-        // 上游为 v67→v68（EchoLoop schema 68）；本仓 schema 独立编号，落到 63。
-        if (from < 63) {
-          await m.createTable(videoSubtitleMasks);
         }
       },
     );

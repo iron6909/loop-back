@@ -275,7 +275,6 @@ class _BlindListenPlayerScreenState
           visualTrackVisible: state.visualTrackVisible,
           visualTrackExpanded: state.expanded,
           videoSubtitleVisible: state.subtitleVisible,
-          videoAspectRatio: state.videoAspectRatio,
         );
       },
       setVisible: session.setVisible,
