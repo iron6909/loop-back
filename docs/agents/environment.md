@@ -16,6 +16,11 @@
 
 - 安装用 `adb install -r --no-streaming`。streaming 模式在部分设备（vivo）推包后不回包，
   命令会挂到超时，但安装其实已经生效。
+- **vivo 上 `--no-streaming` 也可能挂死**（实测 188 MB dev debug 包挂 10 分钟不回包）。
+  可靠路径是 `adb push <apk> /data/local/tmp/` + `adb shell pm install -r -d /data/local/tmp/<apk>`，
+  并在设备上点掉 vivo 安装器的「Continue installing」确认页（不点则命令一直挂着）。
+- **不要把 apk 推到 `/sdcard/Download` 再 `pm install`**：system_server 读不了 FUSE 下的文件，
+  报 `Unable to open file: /sdcard/Download/...`（avc denied fuse），必须放 `/data/local/tmp`。
 - 因此**验收以 `dumpsys package <包名>` 的 `versionName` / `lastUpdateTime` 为准**，不以
   `adb install` 的返回值为准。
 - Maestro CLI 多数机器没装，`scripts/test_maestro_android.sh` 跑不了；改用 adb 手工脚本，
