@@ -51,6 +51,7 @@ import 'dictionary_settings_screen.dart';
 import 'display_settings_screen.dart';
 import 'tts_settings_screen.dart';
 import 'learning_settings_screen.dart';
+import 'download_tasks_screen.dart';
 import 'log_viewer_screen.dart';
 import 'playback_settings_screen.dart';
 import 'reading_text_settings_screen.dart';
@@ -591,6 +592,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           trailing: const Icon(Icons.chevron_right),
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(builder: (_) => const LogViewerScreen()),
+          ),
+        ),
+        ListTile(
+          leading: _emojiIcon('📥'),
+          title: const Text('下载任务'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => const DownloadTasksScreen(),
+            ),
           ),
         ),
         ListTile(
