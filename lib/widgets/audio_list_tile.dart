@@ -134,7 +134,7 @@ class AudioListTile extends ConsumerWidget {
     // 本单项的下载进度（播客单集 / 社区合集音频共用同一套行内进度展示）。
     // double? 语义：null 表示未在下载本项；非 null（含 -1 不定态）表示正在下载。
     final podcastDownloadState = _podcastDownloadState(
-      ref.watch(podcastDownloadControllerProvider),
+      ref.watch(podcastDownloadControllerProvider)[audioItem.id],
     );
     // 社区合集已停止同步，不再订阅社区下载进度；仅播客单集仍可懒下载。
     final double? downloadProgress = podcastDownloadState?.progress;
@@ -291,7 +291,7 @@ class AudioListTile extends ConsumerWidget {
   }
 
   /// 当前卡片对应的 podcast 单集正在通过链接导入下载时，返回下载状态。
-  AudioImportDownloading? _podcastDownloadState(AudioImportState state) {
+  AudioImportDownloading? _podcastDownloadState(AudioImportState? state) {
     final enclosureUrl = audioItem.podcastEnclosureUrl;
     if (audioItem.isAudioReady || enclosureUrl == null) return null;
     if (state is! AudioImportDownloading) return null;
@@ -898,7 +898,7 @@ class AudioListTile extends ConsumerWidget {
         onSelected: (value) {
           if (value == 'cancelDownload') {
             unawaited(
-              ref.read(podcastDownloadControllerProvider.notifier).cancel(),
+              ref.read(podcastDownloadControllerProvider.notifier).cancel(audioItem.id),
             );
           } else if (value == 'togglePin') {
             ref.read(audioLibraryProvider.notifier).togglePin(audioItem.id);
@@ -1160,7 +1160,7 @@ class AudioListTile extends ConsumerWidget {
     }
     // 仅在确实失败时提示；并发占用（另一单集正在下载）静默忽略，
     // 不误报"下载失败"。
-    final state = ref.read(podcastDownloadControllerProvider);
+    final state = ref.read(podcastDownloadControllerProvider)[audioItem.id];
     if (state is! AudioImportFailed) return;
     final detail = _downloadFailureDetail(
       l10n,

@@ -41,34 +41,56 @@ class _AudioListTileWrapper extends ConsumerWidget {
 
 class _DownloadingAudioImportController extends PodcastDownloadController {
   @override
-  AudioImportState build() => const AudioImportDownloading(
-    displayName: 'https://example.com/episode.mp3',
-    progress: 0.42,
-    receivedBytes: 42,
-    totalBytes: 100,
-  );
+  Map<String, AudioImportState> build() {
+    final items = ref.watch(audioLibraryProvider.select((s) => s.audioItems));
+    if (items.isEmpty) return const {};
+    return {
+      items.first.id: const AudioImportDownloading(
+        displayName: 'https://example.com/episode.mp3',
+        progress: 0.42,
+        receivedBytes: 42,
+        totalBytes: 100,
+      ),
+    };
+  }
+
+  @override
+  Future<void> cancel(String audioItemId) async {
+    state = Map.of(state)..remove(audioItemId);
+  }
 }
 
 class _PendingAudioImportController extends PodcastDownloadController {
   final Completer<bool> _completer = Completer<bool>();
 
+  String? _itemId;
+
   @override
-  AudioImportState build() => const AudioImportIdle();
+  Map<String, AudioImportState> build() => const {};
 
   @override
   Future<bool> downloadPodcastEpisode(AudioItem item) {
     // 立即进入下载态（不定进度），承载行内进度条；下载结果由测试控制。
-    state = AudioImportDownloading(
-      displayName: item.podcastEnclosureUrl!,
-      progress: -1.0,
-    );
+    _itemId = item.id;
+    state = {
+      item.id: AudioImportDownloading(
+        displayName: item.podcastEnclosureUrl!,
+        progress: -1.0,
+      ),
+    };
     return _completer.future;
+  }
+
+  @override
+  Future<void> cancel(String audioItemId) async {
+    state = Map.of(state)..remove(audioItemId);
   }
 
   void complete([bool ok = false]) {
     if (!_completer.isCompleted) {
       // 收尾置回 idle，停止不定进度动画，避免 pumpAndSettle 超时。
-      state = const AudioImportIdle();
+      final id = _itemId;
+      if (id != null) state = Map.of(state)..remove(id);
       _completer.complete(ok);
     }
   }
@@ -76,13 +98,15 @@ class _PendingAudioImportController extends PodcastDownloadController {
 
 class _FailingAudioImportController extends PodcastDownloadController {
   @override
-  AudioImportState build() => const AudioImportIdle();
+  Map<String, AudioImportState> build() => const {};
 
   @override
   Future<bool> downloadPodcastEpisode(AudioItem item) async {
-    state = const AudioImportFailed(
-      AudioImportException(AudioImportFailureCode.network, 'network blocked'),
-    );
+    state = {
+      item.id: const AudioImportFailed(
+        AudioImportException(AudioImportFailureCode.network, 'network blocked'),
+      ),
+    };
     return false;
   }
 }

@@ -174,10 +174,7 @@ void main() {
       // podcast 元字段保留
       expect(updated.podcastEpisodeGuid, 'guid-1');
       // 收尾回到 idle
-      expect(
-        container.read(podcastDownloadControllerProvider),
-        isA<AudioImportIdle>(),
-      );
+      expect(container.read(podcastDownloadControllerProvider), isEmpty);
     });
 
     test('下载失败置 AudioImportFailed 且不修改条目', () async {
@@ -196,7 +193,7 @@ void main() {
       final items = container.read(audioLibraryProvider).audioItems;
       expect(items.single.audioPath, isNull);
       expect(
-        container.read(podcastDownloadControllerProvider),
+        container.read(podcastDownloadControllerProvider)['ep-1'],
         isA<AudioImportFailed>(),
       );
     });
@@ -228,13 +225,10 @@ void main() {
       final download = notifier.downloadPodcastEpisode(item);
       final token = await service.started.future;
 
-      await notifier.cancel();
+      await notifier.cancel(item.id);
 
       expect(token.isCancelled, isTrue);
-      expect(
-        container.read(podcastDownloadControllerProvider),
-        isA<AudioImportIdle>(),
-      );
+      expect(container.read(podcastDownloadControllerProvider), isEmpty);
       expect(await download, isFalse);
       expect(
         container.read(audioLibraryProvider).audioItems.single.audioPath,
@@ -316,10 +310,7 @@ void main() {
         final updated = container.read(audioLibraryProvider).audioItems.single;
         expect(updated.audioPath, 'audios/imported/episode.m4a');
         expect(updated.transcriptSource, isNull);
-        expect(
-          container.read(podcastDownloadControllerProvider),
-          isA<AudioImportIdle>(),
-        );
+        expect(container.read(podcastDownloadControllerProvider), isEmpty);
       });
 
       test('字幕解析后没有任何句子时不入库', () async {
@@ -449,7 +440,7 @@ void main() {
         final download = notifier.downloadPodcastEpisode(item);
         await downloader.started.future;
 
-        await notifier.cancel();
+        await notifier.cancel(item.id);
 
         expect(downloader.cancelToken?.isCancelled, isTrue);
         await download;
@@ -479,9 +470,10 @@ void main() {
 
       // 播客下载置 Failed，但链接导入 controller 仍为初始 idle。
       expect(
-        container.read(podcastDownloadControllerProvider),
+        container.read(podcastDownloadControllerProvider)['ep-1'],
         isA<AudioImportFailed>(),
       );
+
       expect(
         container.read(audioImportControllerProvider),
         isA<AudioImportIdle>(),
