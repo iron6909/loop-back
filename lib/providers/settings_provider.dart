@@ -63,6 +63,12 @@ Locale matchUiLocale(Locale systemLocale) {
   return const Locale('en');
 }
 
+/// 解析实际生效的界面语言：显式设置优先，否则跟随系统。
+///
+/// 非界面组件（下载通知、后台服务）拿不到 `Localizations`，用它得到与界面一致的语言。
+Locale resolveUiLocale(Locale? settingLocale, Locale systemLocale) =>
+    settingLocale ?? matchUiLocale(systemLocale);
+
 /// 根据系统 locale 匹配母语。
 ///
 /// 匹配规则：
