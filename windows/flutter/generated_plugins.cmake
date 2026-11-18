@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   charset_converter
+  connectivity_plus
   ffmpeg_kit_flutter_new_min
   flutter_inappwebview_windows
   flutter_secure_storage_windows
