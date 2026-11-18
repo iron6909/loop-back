@@ -86,6 +86,7 @@ class KokoroModelManager {
 
   KokoroModelManager({
     Dio? dio,
+    ReliableHttpDownloader? downloader,
     KokoroModelSpec? spec,
     this.baseUrlOverride,
     this.modelsRootResolver,
@@ -103,7 +104,7 @@ class KokoroModelManager {
             receiveTimeout: const Duration(seconds: 30),
           ),
         );
-    _downloader = DioReliableHttpDownloader(dio: _dio);
+    _downloader = downloader ?? DioReliableHttpDownloader(dio: _dio);
     _archiveInstaller = ResourceArchiveInstaller(_downloader);
     _fileInstaller = AsrResourceInstaller(_downloader);
   }

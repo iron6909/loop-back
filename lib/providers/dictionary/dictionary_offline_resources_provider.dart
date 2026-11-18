@@ -14,6 +14,7 @@ import '../../services/download/download_failure.dart';
 import '../../services/reliable_http_downloader.dart';
 import '../dictionary_provider.dart';
 import '../offline_asr_settings_provider.dart';
+import '../download_provider.dart';
 
 /// 单个语言变体离线词典的安装/下载状态。
 class DictionaryResourceState {
@@ -45,7 +46,9 @@ final dictionaryResourceProvider =
 class DictionaryResourceNotifier
     extends FamilyNotifier<DictionaryResourceState, String> {
   CancelToken? _cancelToken;
-  late final DictionaryDownloadManager _manager = DictionaryDownloadManager();
+  late final DictionaryDownloadManager _manager = DictionaryDownloadManager(
+    downloader: ref.read(queuedReliableDownloaderProvider),
+  );
 
   @override
   DictionaryResourceState build(String arg) {

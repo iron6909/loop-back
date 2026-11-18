@@ -17,6 +17,7 @@ import '../../services/tts/piper_model_manager.dart';
 import '../../services/tts/piper_model_catalog.dart';
 import '../offline_asr_settings_provider.dart' show offlineAsrSettingsProvider;
 import 'tts_settings_provider.dart';
+import '../download_provider.dart';
 
 // ---------------------------------------------------------------------------
 // State
@@ -102,7 +103,10 @@ final piperModelManagerProvider = Provider.family<PiperModelManager, String>((
   voiceId,
 ) {
   final voice = piperVoiceById(voiceId) ?? piperVoices.first;
-  final manager = PiperModelManager(voice: voice);
+  final manager = PiperModelManager(
+    voice: voice,
+    downloader: ref.watch(queuedReliableDownloaderProvider),
+  );
   ref.onDispose(manager.dispose);
   return manager;
 });

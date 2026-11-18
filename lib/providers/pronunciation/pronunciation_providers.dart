@@ -14,6 +14,7 @@ import '../../utils/text_normalize.dart';
 import '../offline_asr_settings_provider.dart';
 import '../short_audio_player_provider.dart';
 import '../tts/tts_controller_provider.dart';
+import '../download_provider.dart';
 
 enum PronunciationLibraryStatus {
   notDownloaded,
@@ -41,7 +42,9 @@ class PronunciationLibraryState {
 
 final pronunciationLibraryManagerProvider =
     Provider<PronunciationLibraryManager>((ref) {
-      final manager = PronunciationLibraryManager();
+      final manager = PronunciationLibraryManager(
+        downloader: ref.watch(queuedReliableDownloaderProvider),
+      );
       ref.onDispose(manager.dispose);
       return manager;
     });

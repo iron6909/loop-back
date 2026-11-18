@@ -14,6 +14,8 @@ import '../services/resource_download_registry.dart';
 import '../services/download/download_resource.dart';
 import '../services/download/download_task_coordinator.dart';
 import '../services/download/download_task_store.dart';
+import '../services/download/queued_reliable_downloader.dart';
+import '../services/reliable_http_downloader.dart';
 import '../providers/shared_preferences_provider.dart'
     show sharedPreferencesProvider;
 import 'review_reminder_provider.dart';
@@ -79,6 +81,14 @@ final backgroundFileDownloadServiceProvider =
         completionNotifier: _desktopDownloadCompletionNotifier(ref),
       ),
     );
+
+/// 模型下载也走同一条队列：把 [ReliableHttpDownloader] 的实现换成队列版，
+/// 于是 ASR / TTS / 词典 / 发音库与用户文件共享并发、重试、续传与通知。
+final queuedReliableDownloaderProvider = Provider<ReliableHttpDownloader>(
+  (ref) => QueuedReliableHttpDownloader(
+    queue: ref.watch(backgroundFileDownloadServiceProvider),
+  ),
+);
 
 /// 启动后可静默拉取的资源 ID；业务模块注册后由应用壳在首帧后触发。
 final startupDownloadResourceIdsProvider = Provider<List<String>>(

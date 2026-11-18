@@ -15,6 +15,7 @@ import '../services/reliable_http_downloader.dart';
 import '../services/startup_trace.dart';
 import 'offline_asr_settings_provider.dart';
 import 'settings_provider.dart';
+import 'download_provider.dart';
 
 part 'dictionary_provider.g.dart';
 
@@ -75,7 +76,9 @@ class DictionaryState {
 @Riverpod(keepAlive: true)
 class Dictionary extends _$Dictionary {
   CancelToken? _cancelToken;
-  final DictionaryDownloadManager _manager = DictionaryDownloadManager();
+  late final DictionaryDownloadManager _manager = DictionaryDownloadManager(
+    downloader: ref.read(queuedReliableDownloaderProvider),
+  );
 
   @override
   DictionaryState build() {

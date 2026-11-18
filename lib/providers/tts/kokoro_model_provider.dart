@@ -16,6 +16,7 @@ import '../../services/tts/kokoro_model_catalog.dart';
 import '../../services/tts/kokoro_model_manager.dart';
 import '../offline_asr_settings_provider.dart' show offlineAsrSettingsProvider;
 import 'tts_settings_provider.dart';
+import '../download_provider.dart';
 
 // ---------------------------------------------------------------------------
 // State
@@ -98,7 +99,10 @@ final initialKokoroModelStateProvider = Provider<KokoroModelsState>(
 /// Kokoro 模型管理器（按变体的 family，各自绑定规格）。
 final kokoroModelManagerProvider =
     Provider.family<KokoroModelManager, KokoroModelVariant>((ref, variant) {
-      final manager = KokoroModelManager(spec: kokoroSpecOf(variant));
+      final manager = KokoroModelManager(
+        spec: kokoroSpecOf(variant),
+        downloader: ref.watch(queuedReliableDownloaderProvider),
+      );
       ref.onDispose(manager.dispose);
       return manager;
     });

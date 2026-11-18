@@ -6,10 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/asr/asr_model_manager.dart';
 import '../services/asr/offline_asr_engine.dart';
 import '../services/asr/sherpa_onnx_engine.dart';
+import 'download_provider.dart';
 
 /// ASR 模型管理器 Provider（单例）。
 final asrModelManagerProvider = Provider<AsrModelManager>((ref) {
-  final manager = AsrModelManager();
+  final manager = AsrModelManager(
+    downloader: ref.watch(queuedReliableDownloaderProvider),
+  );
   ref.onDispose(manager.dispose);
   return manager;
 });

@@ -76,6 +76,7 @@ class PiperModelManager {
   PiperModelManager({
     required this.voice,
     Dio? dio,
+    ReliableHttpDownloader? downloader,
     this.baseUrlOverride,
     this.modelsRootResolver,
     Map<String, AsrPublicResourceSpec>? resourceRegistryOverride,
@@ -91,7 +92,7 @@ class PiperModelManager {
             receiveTimeout: const Duration(seconds: 30),
           ),
         );
-    _downloader = DioReliableHttpDownloader(dio: _dio);
+    _downloader = downloader ?? DioReliableHttpDownloader(dio: _dio);
     _archiveInstaller = ResourceArchiveInstaller(_downloader);
     _fileInstaller = AsrResourceInstaller(_downloader);
   }
