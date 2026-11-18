@@ -898,7 +898,9 @@ class AudioListTile extends ConsumerWidget {
         onSelected: (value) {
           if (value == 'cancelDownload') {
             unawaited(
-              ref.read(podcastDownloadControllerProvider.notifier).cancel(audioItem.id),
+              ref
+                  .read(podcastDownloadControllerProvider.notifier)
+                  .cancel(audioItem.id),
             );
           } else if (value == 'togglePin') {
             ref.read(audioLibraryProvider.notifier).togglePin(audioItem.id);

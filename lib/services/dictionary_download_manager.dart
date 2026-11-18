@@ -24,12 +24,12 @@ class DictionaryDownloadManager {
     Map<String, DictionarySpec>? specs,
     ReliableHttpDownloader? downloader,
   }) : specs = specs ?? dictionarySpecs,
-      _dio = Dio(
-        BaseOptions(
-          connectTimeout: const Duration(seconds: 15),
-          receiveTimeout: const Duration(minutes: 5),
-        ),
-      ) {
+       _dio = Dio(
+         BaseOptions(
+           connectTimeout: const Duration(seconds: 15),
+           receiveTimeout: const Duration(minutes: 5),
+         ),
+       ) {
     _downloader = downloader ?? DioReliableHttpDownloader(dio: _dio);
     _installer = ResourceArchiveInstaller(_downloader);
   }
